@@ -1,0 +1,12 @@
+{
+  "name": "graphql-service",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "description": "",
+  "main": "codegen-plugin.ts",
+  "scripts": {},
+  "author": "",
+  "license": "ISC",
+  "dependencies": {},
+  "devDependencies": {}
+}

@@ -1,0 +1,168 @@
+scalar Email
+scalar Date
+scalar NonNegativeDecimal
+scalar Long
+
+type Query {
+    ### App API
+    apps: [App]
+    app(name: String): App
+    ### User API
+    users: [User] # Get all users in the system
+    user(email: Email): User
+    ### Endpoint API
+    endpoint(ref: ID, app: String, path: String): Endpoint
+    endpoints: [Endpoint] # Get all endpoints in the system
+    ### Subscriptions API
+    subscription(subscriber: String, app: String): Subscribe
+
+    stripePaymentAccept(stripeSessionId: String!): StripePaymentAccept
+}
+
+type Mutation {
+    resetTables: Boolean
+
+    createUser(email: Email!): User
+
+    createApp(
+        name: String!
+        owner: String!
+        gatewayMode: GatewayMode = Proxy
+        # endpoints: [EndpointInput]
+        description: String
+    ): App
+
+    createEndpoint(
+        app: String!
+        path: String!
+        destination: String!
+        description: String
+    ): Endpoint
+
+    createPricing(
+        app: String!
+        name: String!
+        callToAction: String!
+        minMonthlyCharge: String!
+        chargePerRequest: String!
+    ): Pricing
+
+    createSubscription(
+        app: String!
+        pricing: String!
+        subscriber: String!
+    ): Subscribe
+
+    createUsageLog(
+        app: String!
+        path: String!
+        subscriber: Email!
+        volume: Int! = 1
+    ): UsageLog
+
+    createStripePaymentAccept(
+        user: String!
+        amountCents: Int!
+        currency: String!
+        status: String!
+        stripeSessionId: String!
+        stripePaymentIntent: String!
+        stripeSessionObject: String!
+    ): StripePaymentAccept
+}
+
+type User {
+    email: Email!
+    author: String!
+    apps: [App]
+    subscriptions: [Subscribe]
+    balance: String
+    stripeCustomerId: String
+    stripeConnectAccountId: String
+
+    updateUser(stripeCustomerId: String, stripeConnectAccountId: String): User
+}
+
+type App {
+    name: String!
+    description: String
+    owner: User
+    endpoints: [Endpoint]
+    ownedByYou: Boolean
+    pricingPlans: [Pricing]
+    gatewayMode: GatewayMode
+
+    updateApp(description: String, gatewayMode: GatewayMode): App
+    deleteApp: App
+}
+
+type Endpoint {
+    path: String!
+    description: String
+    destination: String
+    ref: String!
+
+    updateEndpoint(
+        path: String
+        destination: String
+        description: String
+    ): Endpoint
+
+    deleteEndpoint: Endpoint
+}
+
+type Pricing {
+    app: App!
+    name: String!
+    callToAction: String!
+    minMonthlyCharge: String!
+    chargePerRequest: String!
+    freeQuota: Int!
+
+    deletePricing: Pricing
+}
+
+type Subscribe {
+    pricing: Pricing!
+    subscriber: User!
+    app: App!
+    createdAt: Int!
+
+    deleteSubscription: Subscribe
+}
+
+type UsageLog {
+    subscriber: User!
+    app: App!
+    endpoint: Endpoint!
+    volume: Int!
+    createdAt: Long!
+}
+
+type UsageMetric {
+    subscriber: Email!
+    app: App!
+    endpoint: Endpoint!
+    volume: Int!
+    periodStart: Int
+
+    increase(by: Int = 1): UsageMetric
+}
+
+type StripePaymentAccept {
+    user: User!
+    amountCents: Int!
+    currency: String!
+    status: String!
+    stripeSessionObject: String!
+    stripePaymentIntent: String!
+    stripeSessionId: String!
+    createdAt: Long!
+
+    settlePayment(stripeSessionObject: String!): StripePaymentAccept
+}
+
+enum GatewayMode {
+    proxy
+    redirect
+}

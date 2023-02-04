@@ -1,0 +1,83 @@
+{
+  "body": "----------------------------587252491932623318649686\r\nContent-Disposition: form-data; name=\"amount_cents\"\r\n\r\n20000\r\n----------------------------587252491932623318649686--\r\n",
+  "headers": {
+    "Accept": "*/*",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
+    "Content-Length": "172",
+    "Content-Type": "multipart/form-data; boundary=--------------------------587252491932623318649686",
+    "Host": "127.0.0.1:3000",
+    "Postman-Token": "ac643255-f03a-42f3-a125-627b5c739a1a",
+    "User-Agent": "PostmanRuntime/7.28.4",
+    "X-Forwarded-Port": "3000",
+    "X-Forwarded-Proto": "http"
+  },
+  "httpMethod": "POST",
+  "isBase64Encoded": false,
+  "multiValueHeaders": {
+    "Accept": [
+      "*/*"
+    ],
+    "Accept-Encoding": [
+      "gzip, deflate, br"
+    ],
+    "Connection": [
+      "keep-alive"
+    ],
+    "Content-Length": [
+      "172"
+    ],
+    "Content-Type": [
+      "multipart/form-data; boundary=--------------------------587252491932623318649686"
+    ],
+    "Host": [
+      "127.0.0.1:3000"
+    ],
+    "Postman-Token": [
+      "ac643255-f03a-42f3-a125-627b5c739a1a"
+    ],
+    "User-Agent": [
+      "PostmanRuntime/7.28.4"
+    ],
+    "X-Forwarded-Port": [
+      "3000"
+    ],
+    "X-Forwarded-Proto": [
+      "http"
+    ]
+  },
+  "multiValueQueryStringParameters": null,
+  "path": "/checkout",
+  "pathParameters": null,
+  "queryStringParameters": null,
+  "requestContext": {
+    "accountId": "123456789012",
+    "apiId": "1234567890",
+    "domainName": "127.0.0.1:3000",
+    "extendedRequestId": null,
+    "httpMethod": "POST",
+    "identity": {
+      "accountId": null,
+      "apiKey": null,
+      "caller": null,
+      "cognitoAuthenticationProvider": null,
+      "cognitoAuthenticationType": null,
+      "cognitoIdentityPoolId": null,
+      "sourceIp": "127.0.0.1",
+      "user": null,
+      "userAgent": "Custom User Agent String",
+      "userArn": null
+    },
+    "path": "/checkout",
+    "protocol": "HTTP/1.1",
+    "requestId": "2a8758b6-595f-4e68-b8fb-c4255bb6416b",
+    "requestTime": "02/Feb/2023:21:16:16 +0000",
+    "requestTimeEpoch": 1675372576,
+    "resourceId": "123456",
+    "resourcePath": "/checkout",
+    "stage": "DEV"
+  },
+  "resource": "/checkout",
+  "stageVariables": null,
+  "version": "1.0"
+}

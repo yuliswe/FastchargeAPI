@@ -1,0 +1,7 @@
+requests
+stripe
+gql[requests]
+pyjwt[crypto]
+blessed
+click
+colorama

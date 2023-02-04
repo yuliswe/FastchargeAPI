@@ -1,0 +1,36 @@
+# This configuration file tells GraphQL Code Generator how
+# to generate types based on our schema.
+schema: "./schema/App.graphql"
+generates:
+  # Specify where our generated types should live.
+  ./__generated__/resolvers-types.ts:
+    plugins:
+      - "typescript"
+      - "typescript-resolvers"
+    config:
+      useIndexSignature: true
+      # More on this below!
+      contextType: "../server#RequestContext"
+      mapperTypeSuffix: "Data"
+      # makeResolverTypeCallable: true
+      # wrapFieldDefinitions: true
+      # resolverTypeWrapperSignature: "{[k in keyof T]: (T[k] | ((args: any, context: RequestContext, info: GraphQLResolveInfo) => T[k]) | ((args: any, context: RequestContext, info: GraphQLResolveInfo) => Promise<T[k]>))}"
+      useTypeImports: true
+      typesPrefix: GQL
+      # avoidOptionals: true
+      # defaultMapper: "{[k in keyof {T}]: {T}[k] | (() => {T})}"
+      mappers:
+        App: ../dynamoose/models#App
+        User: ../dynamoose/models#User
+        Endpoint: ../dynamoose/models#Endpoint
+        Pricing: ../dynamoose/models#Pricing
+        Subscribe: ../dynamoose/models#Subscribe
+        UsageLog: ../dynamoose/models#UsageLog
+        StripePaymentAccept: ../dynamoose/models#StripePaymentAccept
+      enumValues:
+        GatewayMode: ../dynamoose/models#GatewayMode
+      scalars:
+        Email: string
+  # ./__generated__/dynamoose-types.ts:
+  #   plugins:
+  #     - ./codegen-plugin/codegen-plugin.js

@@ -4,3 +4,5 @@
 .nodevenv
 node_modules
 dist
+build
+*.pyc

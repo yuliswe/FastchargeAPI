@@ -1,0 +1,38 @@
+{
+  "name": "graphql-service",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "app.ts",
+  "scripts": {
+    "gen": "tsc -p ./codegen-plugin && graphql-codegen --config codegen.yml",
+    "build": "npm run gen && tsc",
+    "start": "node --experimental-specifier-resolution=node ./dist/devserver.js",
+    "watch": "nodemon -e yml,ts,graphql -i ./__generated__ --exec \"npm run build && npm run start || exit 1\"",
+    "watch-gen": "nodemon -e yml,ts,graphql -i ./__generated__ --exec \"tsc -p ./codegen-plugin && graphql-codegen --config codegen.yml\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@apollo/server": "^4.3.1",
+    "@as-integrations/aws-lambda": "^2.0.0",
+    "@aws-sdk/client-dynamodb": "^3.258.0",
+    "@aws/dynamodb-data-mapper": "^0.7.3",
+    "@aws/dynamodb-data-mapper-annotations": "^0.7.3",
+    "@types/object-hash": "^3.0.2",
+    "dataloader": "^2.1.0",
+    "dynamoose": "^3.1.0",
+    "graphql": "^16.6.0",
+    "graphql-scalars": "^1.20.1",
+    "object-hash": "^3.0.0"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^2.16.4",
+    "@graphql-codegen/typescript": "^2.8.7",
+    "@graphql-codegen/typescript-resolvers": "^2.7.12",
+    "@types/jest": "^29.4.0",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "^18.11.18"
+  }
+}

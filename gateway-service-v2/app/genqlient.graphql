@@ -1,0 +1,16 @@
+query GetAppRoutes($app: String) {
+    app(name: $app) {
+        name
+        gatewayMode
+        endpoints {
+            path
+            destination
+        }
+    }
+}
+
+mutation BillUsage($user_email: Email!, $app_name: String!, $path: String!) {
+    createUsageLog(subscriber: $user_email, app: $app_name, path: $path) {
+        createdAt
+    }
+}

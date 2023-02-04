@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "experimentalDecorators": true, /* Enable experimental support for TC39 stage 2 draft decorators. */
+    "rootDirs": [
+      "./"
+    ],
+    "outDir": "dist",
+    "lib": [
+      "es2022"
+    ],
+    "target": "es2022",
+    "module": "ES2022",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "types": [
+      "node",
+      "mocha",
+    ]
+  }
+}

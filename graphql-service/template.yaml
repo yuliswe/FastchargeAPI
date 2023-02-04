@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+    graphql-service
+
+    Sample SAM Template for graphql-service
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+    Function:
+        Timeout: 3
+
+Resources:
+    ApolloFunction:
+        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+        Properties:
+            CodeUri: apollo/
+            Handler: lambdaHandler.lambdaHandler
+            Runtime: nodejs18.x
+            Architectures:
+                - arm64
+            Events:
+                GET:
+                    Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+                    Properties:
+                        Path: /
+                        Method: get
+                POST:
+                    Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+                    Properties:
+                        Path: /
+                        Method: post
+        Metadata: # Manage esbuild properties
+            BuildMethod: esbuild
+            BuildProperties:
+                Minify: true
+                Target: "es2020"
+                Sourcemap: true
+                EntryPoints:
+                    - app.ts
+
+Outputs:
+    # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+    # Find out more about other implicit resources you can reference within SAM
+    # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+    ApolloApi:
+        Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+        Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+    ApolloFunction:
+        Description: "Hello World Lambda Function ARN"
+        Value: !GetAtt ApolloFunction.Arn
+    ApolloFunctionIamRole:
+        Description: "Implicit IAM Role created for Hello World function"
+        Value: !GetAtt ApolloFunctionRole.Arn

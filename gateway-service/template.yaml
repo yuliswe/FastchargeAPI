@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  gateway-service
+
+  Sample SAM Template for gateway-service
+
+Parameters:
+  Stage:
+    Type: String
+    Default: DEV
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+    MemorySize: 128
+
+Resources:
+  PublicAPIs:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Stage
+      MethodSettings:
+        - LoggingLevel: ERROR
+          MetricsEnabled: True
+          ResourcePath: '/*' # allows for logging on any resource
+          HttpMethod: '*' # allows for logging on any method
+      Auth:
+        ApiKeyRequired: false
+
+  RedirectGateway:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: app/
+      Handler: redirect.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        - arm64
+      Events:
+        GET:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /{proxy+}
+            Method: get
+            RestApiId: !Ref PublicAPIs
+        POST:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: post
+            RestApiId: !Ref PublicAPIs
+        DELETE:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: delete
+            RestApiId: !Ref PublicAPIs
+        PUT:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: put
+            RestApiId: !Ref PublicAPIs
+        PATCH:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: patch
+            RestApiId: !Ref PublicAPIs
+
+Outputs:
+  # PublicAPIs is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  GETApi:
+    Description: "API Gateway endpoint URL for DEV stage for Hello World function"
+    Value: !Sub "https://${PublicAPIs}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/"
+  RedirectGateway:
+    Description: "Hello World Lambda Function ARN"
+    Value: !GetAtt RedirectGateway.Arn
+  RedirectGatewayIamRole:
+    Description: "Implicit IAM Role created for Hello World function"
+    Value: !GetAtt RedirectGatewayRole.Arn
