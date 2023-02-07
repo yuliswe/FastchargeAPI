@@ -13,7 +13,9 @@ endpoint_secret = (
     "whsec_d8a3c6653fc3e20da28d132c385d70d4ba605eb850b00cc2f3819399acfc6df8"
 )
 
+# TODO: Need to make the event handling idempotent
 
+# Read:
 def lambda_handler(event, context):
     # print(json.dumps(event))
 

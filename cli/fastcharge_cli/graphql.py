@@ -4,11 +4,16 @@ from gql.transport.exceptions import TransportQueryError
 from .login import read_auth_file, read_user_from_auth_file
 from .exceptions import AlreadyExists, NotFound
 from click import echo
+import os
 
 
 def make_client(id_token: str, user_email: str) -> Client:
+    if os.environ.get("TEST") == "1":
+        url = "http://localhost:4001/"
+    else:
+        url = "http://localhost:4000/"
     transport = AIOHTTPTransport(
-        url="http://localhost:4000/",
+        url,
         headers={
             "Authorization": id_token,
             "X-User-Email": user_email,
@@ -36,9 +41,15 @@ class GQLClient:
 
 
 def get_client_info() -> tuple[Client, str]:
+    """This function returns a tuple of (client, user_email). Is it root
+    function that identifies the user for the cli."""
+    if os.environ.get("TEST") == "1":
+        email = os.environ.get("USER")
+        return GQLClient("", email), email
+
     user = read_user_from_auth_file()
     if user is None:
-        echo("You must be logged in to create an app.")
+        echo("You must be logged in.")
         exit(1)
 
     auth = read_auth_file()

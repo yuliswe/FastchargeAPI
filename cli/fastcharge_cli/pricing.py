@@ -1,7 +1,7 @@
 from typing import Optional
-from .app import AppInfo, get_app, get_app_or_prompt_exit
+from .dev_app import AppInfo, get_app, get_app_or_prompt_exit
 from .graphql import get_client_info
-from .group import fastcharge
+from .groups import fastcharge
 import click
 from gql import gql
 import colorama

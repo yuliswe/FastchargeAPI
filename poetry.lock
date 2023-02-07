@@ -502,6 +502,18 @@ files = [
 ]
 
 [[package]]
+name = "contextlib2"
+version = "21.6.0"
+description = "Backports and enhancements for the contextlib module"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "contextlib2-21.6.0-py2.py3-none-any.whl", hash = "sha256:3fbdb64466afd23abaf6c977627b75b6139a5a3e8ce38405c5b413aed7a0471f"},
+    {file = "contextlib2-21.6.0.tar.gz", hash = "sha256:ab1e2bfe1d01d968e1b7e8d9023bc51ef3509bba217bb730cee3827e1ee82869"},
+]
+
+[[package]]
 name = "cryptography"
 version = "39.0.0"
 description = "cryptography is a package which provides cryptographic recipes and primitives to Python developers."
@@ -1426,6 +1438,18 @@ typing-inspect = ">=0.4.0"
 
 [package.extras]
 dev = ["Sphinx (>=5.1.1)", "black (==22.10.0)", "coverage (>=4.5.4)", "fixit (==0.1.1)", "flake8 (>=3.7.8,<5)", "hypothesis (>=4.36.0)", "hypothesmith (>=0.0.4)", "jinja2 (==3.1.2)", "jupyter (>=1.0.0)", "maturin (>=0.8.3,<0.14)", "nbsphinx (>=0.4.2)", "prompt-toolkit (>=2.0.9)", "pyre-check (==0.9.9)", "setuptools-rust (>=1.5.2)", "setuptools-scm (>=6.0.1)", "slotscheck (>=0.7.1)", "sphinx-rtd-theme (>=0.4.3)", "ufmt (==2.0.1)", "usort (==1.0.5)"]
+
+[[package]]
+name = "libtmux"
+version = "0.21.0"
+description = "Typed scripting library / ORM / API wrapper for tmux"
+category = "main"
+optional = false
+python-versions = ">=3.7,<4.0"
+files = [
+    {file = "libtmux-0.21.0-py3-none-any.whl", hash = "sha256:b557b49549b40e11ffa23fafae8da85be6577feeecfbe4fac4402200cbaaf21c"},
+    {file = "libtmux-0.21.0.tar.gz", hash = "sha256:dc30b94ac25571c438a853ec75102fe5f1a2d7c8195b5ebdc6f71106760b15b3"},
+]
 
 [[package]]
 name = "markdown-it-py"
@@ -2357,6 +2381,21 @@ files = [
 pyasn1 = ">=0.1.3"
 
 [[package]]
+name = "schema"
+version = "0.7.5"
+description = "Simple data validation library"
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "schema-0.7.5-py2.py3-none-any.whl", hash = "sha256:f3ffdeeada09ec34bf40d7d79996d9f7175db93b7a5065de0faa7f41083c1e6c"},
+    {file = "schema-0.7.5.tar.gz", hash = "sha256:f06717112c61895cabc4707752b88716e8420a8819d71404501e114f91043197"},
+]
+
+[package.dependencies]
+contextlib2 = ">=0.5.5"
+
+[[package]]
 name = "setuptools"
 version = "66.1.1"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
@@ -2700,4 +2739,4 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.10"
-content-hash = "9e8ede45d3babb303efef4be9acc802fa50752b6a025cf04faf779bfc0c76dbb"
+content-hash = "0a5c91fe43c18cb04852a3acd8bf1d532382218fcacabd0ed33fe3c67ea06fc9"

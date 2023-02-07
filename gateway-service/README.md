@@ -1,47 +1,79 @@
 # gateway-service
 
-This project contains source code and supporting files for a serverless application that you can deploy with the SAM CLI. It includes the following files and folders.
-
-- hello_world - Code for the application's Lambda function.
-- events - Invocation events that you can use to invoke the function.
-- tests - Unit tests for the application code. 
-- template.yaml - A template that defines the application's AWS resources.
-
-The application uses several AWS resources, including Lambda functions and an API Gateway API. These resources are defined in the `template.yaml` file in this project. You can update the template to add AWS resources through the same deployment process that updates your application code.
-
-If you prefer to use an integrated development environment (IDE) to build and test your application, you can use the AWS Toolkit.  
-The AWS Toolkit is an open source plug-in for popular IDEs that uses the SAM CLI to build and deploy serverless applications on AWS. The AWS Toolkit also adds a simplified step-through debugging experience for Lambda function code. See the following links to get started.
-
-* [CLion](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [GoLand](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [IntelliJ](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [WebStorm](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [Rider](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [PhpStorm](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [PyCharm](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [RubyMine](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [DataGrip](https://docs.aws.amazon.com/toolkit-for-jetbrains/latest/userguide/welcome.html)
-* [VS Code](https://docs.aws.amazon.com/toolkit-for-vscode/latest/userguide/welcome.html)
-* [Visual Studio](https://docs.aws.amazon.com/toolkit-for-visual-studio/latest/user-guide/welcome.html)
-
-## Deploy the sample application
-
-The Serverless Application Model Command Line Interface (SAM CLI) is an extension of the AWS CLI that adds functionality for building and testing Lambda applications. It uses Docker to run your functions in an Amazon Linux environment that matches Lambda. It can also emulate your application's build environment and API.
-
-To use the SAM CLI, you need the following tools.
-
-* SAM CLI - [Install the SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
-* [Python 3 installed](https://www.python.org/downloads/)
-* Docker - [Install Docker community edition](https://hub.docker.com/search/?type=edition&offering=community)
-
-To build and deploy your application for the first time, run the following in your shell:
+This is a sample template for gateway-service - Below is a brief explanation of what we have generated for you:
 
 ```bash
-sam build --use-container
+.
+├── Makefile                    <-- Make to automate build
+├── README.md                   <-- This instructions file
+├── hello-world                 <-- Source code for a lambda function
+│   ├── main.go                 <-- Lambda function code
+│   └── main_test.go            <-- Unit tests
+└── template.yaml
+```
+
+## Requirements
+
+* AWS CLI already configured with Administrator permission
+* [Docker installed](https://www.docker.com/community-edition)
+* [Golang](https://golang.org)
+* SAM CLI - [Install the SAM CLI](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-install.html)
+
+## Setup process
+
+### Installing dependencies & building the target 
+
+In this example we use the built-in `sam build` to automatically download all the dependencies and package our build target.   
+Read more about [SAM Build here](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-cli-command-reference-sam-build.html) 
+
+The `sam build` command is wrapped inside of the `Makefile`. To execute this simply run
+ 
+```shell
+make
+```
+
+### Local development
+
+**Invoking function locally through local API Gateway**
+
+```bash
+sam local start-api
+```
+
+If the previous command ran successfully you should now be able to hit the following local endpoint to invoke your function `http://localhost:3000/hello`
+
+**SAM CLI** is used to emulate both Lambda and API Gateway locally and uses our `template.yaml` to understand how to bootstrap this environment (runtime, where the source code is, etc.) - The following excerpt is what the CLI will read in order to initialize an API and its routes:
+
+```yaml
+...
+Events:
+    HelloWorld:
+        Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+        Properties:
+            Path: /hello
+            Method: get
+```
+
+## Packaging and deployment
+
+AWS Lambda Golang runtime requires a flat folder with the executable generated on build step. SAM will use `CodeUri` property to know where to look up for the application:
+
+```yaml
+...
+    FirstFunction:
+        Type: AWS::Serverless::Function
+        Properties:
+            CodeUri: hello_world/
+            ...
+```
+
+To deploy your application for the first time, run the following in your shell:
+
+```bash
 sam deploy --guided
 ```
 
-The first command will build the source of your application. The second command will package and deploy your application to AWS, with a series of prompts:
+The command will package and deploy your application to AWS, with a series of prompts:
 
 * **Stack Name**: The name of the stack to deploy to CloudFormation. This should be unique to your account and region, and a good starting point would be something matching your project name.
 * **AWS Region**: The AWS region you want to deploy your app to.
@@ -51,80 +83,58 @@ The first command will build the source of your application. The second command 
 
 You can find your API Gateway Endpoint URL in the output values displayed after deployment.
 
-## Use the SAM CLI to build and test locally
+### Testing
 
-Build your application with the `sam build --use-container` command.
+We use `testing` package that is built-in in Golang and you can simply run the following command to run our tests:
 
-```bash
-gateway-service$ sam build --use-container
+```shell
+go test -v ./hello-world/
+```
+# Appendix
+
+### Golang installation
+
+Please ensure Go 1.x (where 'x' is the latest version) is installed as per the instructions on the official golang website: https://golang.org/doc/install
+
+A quickstart way would be to use Homebrew, chocolatey or your linux package manager.
+
+#### Homebrew (Mac)
+
+Issue the following command from the terminal:
+
+```shell
+brew install golang
 ```
 
-The SAM CLI installs dependencies defined in `hello_world/requirements.txt`, creates a deployment package, and saves it in the `.aws-sam/build` folder.
+If it's already installed, run the following command to ensure it's the latest version:
 
-Test a single function by invoking it directly with a test event. An event is a JSON document that represents the input that the function receives from the event source. Test events are included in the `events` folder in this project.
-
-Run functions locally and invoke them with the `sam local invoke` command.
-
-```bash
-gateway-service$ sam local invoke HelloWorldFunction --event events/event.json
+```shell
+brew update
+brew upgrade golang
 ```
 
-The SAM CLI can also emulate your application's API. Use the `sam local start-api` to run the API locally on port 3000.
+#### Chocolatey (Windows)
 
-```bash
-gateway-service$ sam local start-api
-gateway-service$ curl http://localhost:3000/
+Issue the following command from the powershell:
+
+```shell
+choco install golang
 ```
 
-The SAM CLI reads the application template to determine the API's routes and the functions that they invoke. The `Events` property on each function's definition includes the route and method for each path.
+If it's already installed, run the following command to ensure it's the latest version:
 
-```yaml
-      Events:
-        HelloWorld:
-          Type: Api
-          Properties:
-            Path: /hello
-            Method: get
+```shell
+choco upgrade golang
 ```
 
-## Add a resource to your application
-The application template uses AWS Serverless Application Model (AWS SAM) to define application resources. AWS SAM is an extension of AWS CloudFormation with a simpler syntax for configuring common serverless application resources such as functions, triggers, and APIs. For resources not included in [the SAM specification](https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md), you can use standard [AWS CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html) resource types.
+## Bringing to the next level
 
-## Fetch, tail, and filter Lambda function logs
+Here are a few ideas that you can use to get more acquainted as to how this overall process works:
 
-To simplify troubleshooting, SAM CLI has a command called `sam logs`. `sam logs` lets you fetch logs generated by your deployed Lambda function from the command line. In addition to printing the logs on the terminal, this command has several nifty features to help you quickly find the bug.
+* Create an additional API resource (e.g. /hello/{proxy+}) and return the name requested through this new path
+* Update unit test to capture that
+* Package & Deploy
 
-`NOTE`: This command works for all AWS Lambda functions; not just the ones you deploy using SAM.
+Next, you can use the following resources to know more about beyond hello world samples and how others structure their Serverless applications:
 
-```bash
-gateway-service$ sam logs -n HelloWorldFunction --stack-name gateway-service --tail
-```
-
-You can find more information and examples about filtering Lambda function logs in the [SAM CLI Documentation](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-logging.html).
-
-## Tests
-
-Tests are defined in the `tests` folder in this project. Use PIP to install the test dependencies and run tests.
-
-```bash
-gateway-service$ pip install -r tests/requirements.txt --user
-# unit test
-gateway-service$ python -m pytest tests/unit -v
-# integration test, requiring deploying the stack first.
-# Create the env variable AWS_SAM_STACK_NAME with the name of the stack we are testing
-gateway-service$ AWS_SAM_STACK_NAME=<stack-name> python -m pytest tests/integration -v
-```
-
-## Cleanup
-
-To delete the sample application that you created, use the AWS CLI. Assuming you used your project name for the stack name, you can run the following:
-
-```bash
-aws cloudformation delete-stack --stack-name gateway-service
-```
-
-## Resources
-
-See the [AWS SAM developer guide](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/what-is-sam.html) for an introduction to SAM specification, the SAM CLI, and serverless application concepts.
-
-Next, you can use AWS Serverless Application Repository to deploy ready to use Apps that go beyond hello world samples and learn how authors developed their applications: [AWS Serverless Application Repository main page](https://aws.amazon.com/serverless/serverlessrepo/)
+* [AWS Serverless Application Repository](https://aws.amazon.com/serverless/serverlessrepo/)

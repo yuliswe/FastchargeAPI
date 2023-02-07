@@ -22,6 +22,7 @@
     "@aws/dynamodb-data-mapper-annotations": "^0.7.3",
     "@types/object-hash": "^3.0.2",
     "dataloader": "^2.1.0",
+    "decimal.js-light": "^2.5.1",
     "dynamoose": "^3.1.0",
     "graphql": "^16.6.0",
     "graphql-scalars": "^1.20.1",

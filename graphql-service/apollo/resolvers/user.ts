@@ -10,6 +10,7 @@ import {
     GQLUser,
     GQLUserResolvers,
     GQLUserUpdateUserArgs,
+    GQLUserUsageLogsArgs,
 } from "../__generated__/resolvers-types";
 
 export const userResolvers: GQLResolvers & {
@@ -31,7 +32,6 @@ export const userResolvers: GQLResolvers & {
             info: GraphQLResolveInfo
         ) {
             let apps = await context.batched.App.many({ owner: parent.email });
-            context.batched.App.prime(apps);
             let visableApps = await Can.viewAppFilter(apps, context);
             return visableApps;
         },
@@ -64,6 +64,25 @@ export const userResolvers: GQLResolvers & {
                 stripeConnectAccountId,
             });
             return user;
+        },
+
+        async usageLogs(
+            parent: User,
+            args: GQLUserUsageLogsArgs,
+            context,
+            info
+        ) {
+            let { app, path, limit, start } = args;
+            let usage = await context.batched.UsageLog.many(
+                {
+                    subscriber: parent.email,
+                    app,
+                },
+                {
+                    limit,
+                }
+            );
+            return usage;
         },
     },
     Query: {

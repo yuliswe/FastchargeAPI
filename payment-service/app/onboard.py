@@ -48,8 +48,10 @@ def handle_lambda(event, context):
     # but is revisiting the page becuase they didn't complete the onboarding the
     # previous time.
     account_id = check_existing_connected_account(user_email)
+    print(colorama.Fore.YELLOW + f"account_id: {account_id}" + colorama.Fore.RESET)
 
     for attempts in (0, 1):
+        print(colorama.Fore.YELLOW + f"attempts {attempts}: " + colorama.Fore.RESET)
         if account_id is None:
             # Bascially calls this API. See supported arguments:
             # API: https://stripe.com/docs/api/accounts/create
@@ -58,14 +60,25 @@ def handle_lambda(event, context):
                 type="express",
                 email=user_email,
             )["id"]
+            print(
+                colorama.Fore.YELLOW
+                + f"created new stripe account: {account_id}"
+                + colorama.Fore.RESET
+            )
 
         try:
+            print(
+                colorama.Fore.YELLOW
+                + f"resuing stripe account id: {account_id}"
+                + colorama.Fore.RESET
+            )
             link = stripe.AccountLink.create(
                 account=account_id,
                 refresh_url=refresh_url,
                 return_url=return_url,
                 type="account_onboarding",
             )
+            break
         except Exception as e:
             # Usually the account_id we retrieved from the DB is correct. If somehow
             # this account_id is corrupted, we can try to make a new account for

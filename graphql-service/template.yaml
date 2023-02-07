@@ -1,54 +1,97 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-    graphql-service
+  graphql-service
 
-    Sample SAM Template for graphql-service
+  Sample SAM Template for graphql-service
+
+Parameters:
+  Stage:
+    Type: String
+    Default: DEV
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
-    Function:
-        Timeout: 3
+  Function:
+    Timeout: 30
+    MemorySize: 256
 
 Resources:
-    ApolloFunction:
-        Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-        Properties:
-            CodeUri: apollo/
-            Handler: lambdaHandler.lambdaHandler
-            Runtime: nodejs18.x
-            Architectures:
-                - arm64
-            Events:
-                GET:
-                    Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-                    Properties:
-                        Path: /
-                        Method: get
-                POST:
-                    Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-                    Properties:
-                        Path: /
-                        Method: post
-        Metadata: # Manage esbuild properties
-            BuildMethod: esbuild
-            BuildProperties:
-                Minify: true
-                Target: "es2020"
-                Sourcemap: true
-                EntryPoints:
-                    - app.ts
+  # This is a custom build layer. See:
+  # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/building-layers.html
+  CopyDependencies:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      ContentUri: ./apollo
+      CompatibleRuntimes:
+        - nodejs18.x
+    Metadata:
+      BuildMethod: makefile              # Required to have AWS SAM build this layer
+
+  GenerateCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain 
+    Type: AWS::CertificateManager::Certificate
+    Properties: 
+      DomainName: "api.graphql.fastchargeapi.com"
+      ValidationMethod: DNS
+      DomainValidationOptions:
+      - DomainName: "api.graphql.fastchargeapi.com"
+        HostedZoneId: Z0358815GI2I8U5CTHXW
+        
+  UnprotectedAPIs:
+    Type: AWS::Serverless::Api
+    Properties:
+      Domain:
+        DomainName: "api.graphql.fastchargeapi.com"
+        CertificateArn: !Ref GenerateCertificate.Arn
+        Route53:
+          HostedZoneId: Z0358815GI2I8U5CTHXW
+      StageName: !Ref Stage
+      MethodSettings:
+        - LoggingLevel: ERROR
+          MetricsEnabled: True
+          ResourcePath: "/*" # allows for logging on any resource
+          HttpMethod: "*" # allows for logging on any method
+      Auth:
+        ApiKeyRequired: false
+
+  ApolloFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: apollo
+      Handler: lambdaHandler.lambdaHandler
+      Runtime: nodejs18.x
+      Architectures:
+        - arm64
+      Events:
+        GET:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /
+            Method: get
+        POST:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /
+            Method: post
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2022"
+        Sourcemap: true
+        EntryPoints:
+          - lambdaHandler.ts
 
 Outputs:
-    # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
-    # Find out more about other implicit resources you can reference within SAM
-    # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-    ApolloApi:
-        Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-        Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
-    ApolloFunction:
-        Description: "Hello World Lambda Function ARN"
-        Value: !GetAtt ApolloFunction.Arn
-    ApolloFunctionIamRole:
-        Description: "Implicit IAM Role created for Hello World function"
-        Value: !GetAtt ApolloFunctionRole.Arn
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  UnprotectedAPIs:
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${UnprotectedAPIs}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
+  ApolloFunction:
+    Description: "ApolloFunction ARN"
+    Value: !GetAtt ApolloFunction.Arn
+  ApolloFunctionIamRole:
+    Description: "Implicit IAM Role created (ApolloFunctionRole)"
+    Value: !GetAtt ApolloFunctionRole.Arn

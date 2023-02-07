@@ -12,7 +12,8 @@ import {
 import React from "react";
 import { HomePage } from "./connected-components/HomePage";
 import { AuthPage } from "./connected-components/AuthPage";
-import { OnboardPage } from "./connected-components/Onboard";
+import { OnboardPage } from "./connected-components/OnboardPage";
+import { TopUpPage } from "./connected-components/TopupPage";
 
 const router = createBrowserRouter([
     {
@@ -26,6 +27,10 @@ const router = createBrowserRouter([
     {
         path: "/onboard",
         element: <OnboardPage />,
+    },
+    {
+        path: "/topup",
+        element: <TopUpPage />,
     },
 ]);
 const root = createRoot(document.getElementById('root')!);

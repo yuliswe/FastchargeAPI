@@ -6,6 +6,10 @@ def get_stripe_api_secret_key() -> str:
     return "sk_test_51MSgLaB24cItJ1WSPJhxovkHWjbcIcnCVmYlgCpN16acN7HUUlaLWxxcxtJT46hrvA0QHyqwWl1jxH3JeiM7ZTSi0077ZcdUOZ"
 
 
+def get_stripe_api_public_key() -> str:
+    return "pk_test_51MSgLaB24cItJ1WS4qVcbQqqUBy63OndE77nEdPjHZoCDdl7YpeK1BQmJmfpW77J60hHAV8dAiIXYRrLjDjoNGU800y1oqtNBY"
+
+
 def get_stripe_endpoint_secret() -> str:
     return "whsec_d8a3c6653fc3e20da28d132c385d70d4ba605eb850b00cc2f3819399acfc6df8"
 

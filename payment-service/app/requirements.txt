@@ -5,3 +5,4 @@ pyjwt[crypto]
 blessed
 click
 colorama
+schema

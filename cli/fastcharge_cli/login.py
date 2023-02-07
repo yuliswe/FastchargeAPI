@@ -8,8 +8,8 @@ from multiprocessing.connection import Listener
 import json
 import jwt
 from cryptography.x509 import load_pem_x509_certificate
-from .group import fastcharge
-from . import login_server
+from .groups import fastcharge_dev, fastcharge_client
+from . import server
 from pathos.multiprocessing import ProcessPool
 import diskcache
 from click import echo
@@ -47,9 +47,19 @@ def read_auth_file() -> Optional[dict[str, str]]:
         return None
 
 
-@fastcharge.command("login")
-def fastcharge_login():
-    """Login to your account on cli,"""
+@fastcharge_client.command("login")
+def fastcharge_client_login():
+    """Login to your account."""
+    do_login()
+
+
+@fastcharge_dev.command("login")
+def fastcharge_dev_login():
+    """Login to your account."""
+    do_login()
+
+
+def do_login():
     if user := read_user_from_auth_file():
         echo(user)
         return user
@@ -61,7 +71,7 @@ def fastcharge_login():
     )
     os.environ["FASTCHARGE_SOCKET_PORT"] = str(socket_port)
     with ProcessPool(1) as pool:
-        pool.apipe(login_server.app.run, host="localhost", port=callback_port)
+        pool.apipe(server.app.run, host="localhost", port=callback_port)
         echo("Please authenticate in the browser.")
         conn = Listener(("localhost", socket_port)).accept()
         req: flask.request = conn.recv()
@@ -74,9 +84,19 @@ def fastcharge_login():
     return user
 
 
-@fastcharge.command("logout")
-def fastcharge_logout():
-    """Log off your account on cli,"""
+@fastcharge_client.command("logout")
+def fastcharge_client_logout():
+    """Log off your account."""
+    do_login()
+
+
+@fastcharge_dev.command("logout")
+def fastcharge_dev_logout():
+    """Log off your account."""
+    do_login()
+
+
+def do_logout():
     auth_file_path.unlink(missing_ok=True)
 
 
@@ -152,7 +172,3 @@ def get_token_or_refresh(id_token: str, refresh_token: str):
         new_id_token = refresh_id_token(refresh_token)
         write_to_auth_file(new_id_token, refresh_token)
         return new_id_token
-
-
-if __name__ == "__main__":
-    fastcharge()

@@ -4,11 +4,11 @@ from typing import Optional
 from gql import gql
 from utils.session import get_current_user
 from utils.stripe import get_stripe_api_secret_key
-
 from utils.graphql import get_graphql_client
 
 import stripe
 import colorama
+import schema as s
 
 stripe.api_key = get_stripe_api_secret_key()
 
@@ -22,19 +22,47 @@ def lambda_handler(event, context):
 
 
 def handle_lambda(event, context):
+    if event["httpMethod"] != "POST":
+        return {
+            "statusCode": 200,
+            "headers": {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Headers": "*",
+            },
+            "body": json.dumps(
+                {
+                    "message": "Please use POST.",
+                }
+            ),
+        }
     user_email, error = get_current_user(context)
     if error is not None:
         return error
 
-    if event["httpMethod"] != "POST":
-        return {"statusCode": 400, "body": "Please use POST."}
-    if not (body := event["body"]):
-        return {"statusCode": 400, "body": "Please provide amount_cents."}
-    else:
-        data = json.loads(body)
-    if (amount_cents := data.get("amount_cents")) is None:
-        return {"statusCode": 400, "body": "Please provide amount_cents."}
-    amount_cents = int(data["amount_cents"])
+    schema = s.Schema(
+        {
+            "amount_cents": int,
+            "success_url": str,
+            "cancel_url": str,
+        }
+    )
+    body = event["body"]
+    try:
+        data = schema.validate(json.loads(body) if body else {})
+    except s.SchemaError as e:
+        print(colorama.Fore.RED + str(e) + colorama.Fore.RESET, body)
+        return {
+            "statusCode": 400,
+            "headers": {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Headers": "*",
+            },
+            "body": json.dumps(
+                {
+                    "ValidationError": str(e),
+                }
+            ),
+        }
     try:
         session = stripe.checkout.Session.create(
             line_items=[
@@ -44,16 +72,21 @@ def handle_lambda(event, context):
                         "product_data": {
                             "name": f"Top up your FastchargeAPI account: {user_email}",
                         },
-                        "unit_amount": amount_cents,
+                        "unit_amount": int(data["amount_cents"]),
+                        "tax_behavior": "exclusive",
                     },
                     "quantity": 1,
                 }
             ],
+            automatic_tax={
+                "enabled": True,
+            },
+            currency="usd",
             customer=identify_existing_customer(user_email) or None,
             customer_email=user_email,
             mode="payment",
-            success_url="http://localhost:4242/success",
-            cancel_url="http://localhost:4242/cancel",
+            success_url=data["success_url"],
+            cancel_url=data["cancel_url"],
             customer_creation="always",
         )
     except Exception as e:
@@ -61,13 +94,16 @@ def handle_lambda(event, context):
         return {"statusCode": 500, "body": str(e)}
 
     return {
-        "statusCode": 303,
+        "statusCode": 200,
+        "headers": {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Headers": "*",
+        },
         "body": json.dumps(
             {
                 "location": session.url,
             }
         ),
-        "headers": {"Location": session.url},
     }
 
 

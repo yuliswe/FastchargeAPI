@@ -20,7 +20,7 @@ Globals:
     TracingEnabled: true
 
 Resources:
-  PublicAPIs:
+  UnprotectedAPIs:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Ref Stage
@@ -48,7 +48,7 @@ Resources:
           FirebaseTokenAuthorizer:
             FunctionArn: !GetAtt FirebaseTokenAuthorizer.Arn
 
-  CreateCheckoutSession:
+  StripeCheckoutSession:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: app/
@@ -65,6 +65,12 @@ Resources:
             RestApiId: !Ref ProtectedAPIs
             Path: /checkout
             Method: post
+        OPTIONS:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            RestApiId: !Ref UnprotectedAPIs
+            Path: /checkout
+            Method: options
 
   StripeConnectOnboard:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -98,7 +104,7 @@ Resources:
         POST:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
-            RestApiId: !Ref PublicAPIs
+            RestApiId: !Ref UnprotectedAPIs
             Path: /onboard/accept
             Method: post
 
@@ -116,8 +122,44 @@ Resources:
         POST:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
-            RestApiId: !Ref PublicAPIs
+            RestApiId: !Ref UnprotectedAPIs
             Path: /accept
+            Method: post
+
+  GetDashboardLoginLink:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: app/
+      Handler: dashboard_login.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        # - x86_64
+        - arm64 # if you are using Apple M1
+      Timeout: 30
+      Events:
+        GET:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            RestApiId: !Ref ProtectedAPIs
+            Path: /dashboard-login
+            Method: get
+
+  Payout:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: app/
+      Handler: payout.lambda_handler
+      Runtime: python3.9
+      Architectures:
+        # - x86_64
+        - arm64 # if you are using Apple M1
+      Timeout: 30
+      Events:
+        POST:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            RestApiId: !Ref ProtectedAPIs
+            Path: /payout
             Method: post
 
   FirebaseTokenAuthorizer:
@@ -151,9 +193,9 @@ Resources:
   #     AutoConfigurationEnabled: 'true'
   #   DependsOn: ApplicationResourceGroup
 Outputs:
-  PublicAPIs:
-    Description: API PublicAPIs endpoint URL for DEV stage for Hello World function
-    Value: !Sub "https://${PublicAPIs}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/echo"
+  UnprotectedAPIs:
+    Description: API UnprotectedAPIs endpoint URL for DEV stage for Hello World function
+    Value: !Sub "https://${UnprotectedAPIs}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/echo"
   ProtectedAPIs:
-    Description: API PublicAPIs endpoint URL for DEV stage for Hello World function
+    Description: API UnprotectedAPIs endpoint URL for DEV stage for Hello World function
     Value: !Sub "https://${ProtectedAPIs}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/echo"

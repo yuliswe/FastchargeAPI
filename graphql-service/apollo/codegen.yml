@@ -27,6 +27,7 @@ generates:
         Subscribe: ../dynamoose/models#Subscribe
         UsageLog: ../dynamoose/models#UsageLog
         StripePaymentAccept: ../dynamoose/models#StripePaymentAccept
+        StripeTransfer: ../dynamoose/models#StripeTransfer
       enumValues:
         GatewayMode: ../dynamoose/models#GatewayMode
       scalars:

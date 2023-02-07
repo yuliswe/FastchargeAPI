@@ -1,2 +1,0 @@
-requests
-pyjwt[crypto]==2.6.0

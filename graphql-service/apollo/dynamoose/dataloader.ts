@@ -1,5 +1,5 @@
 import DataLoader from "dataloader";
-import { ModelType } from "dynamoose/dist/General";
+import { InputKey, ModelType } from "dynamoose/dist/General";
 import { Item } from "dynamoose/dist/Item";
 import { AlreadyExists, NotFound, UpdateContainsPrimaryKey } from "../errors";
 import { AppModel, User, UserModel } from "./models";
@@ -25,11 +25,11 @@ function extractKeysFromItems<I extends Item>(
     item: Partial<I>
 ): Partial<I> {
     let hashKeyName = model.table().hashKey;
-    let rangeKeyName: string | undefined = model.table().rangeKey;
+    let rangeKeyName: keyof I | undefined = model.table().rangeKey as keyof I;
     let query = {
-        [hashKeyName]: item[hashKeyName],
+        [hashKeyName]: item[hashKeyName as keyof I],
     } as Partial<I>;
-    if (rangeKeyName !== undefined) {
+    if (rangeKeyName != undefined) {
         query[rangeKeyName] = item[rangeKeyName];
     }
     return query;
@@ -39,8 +39,8 @@ async function assignDefaults<I extends Item>(item: I): Promise<I> {
     // TODO: There is a bug with item.withDefaults(), in that in converts a Date
     // type to a string. This may cause issues when the item is saved back to
     // the DB, failing the validation because the DB expects a Date type.
-    let defaults = await item.withDefaults();
-    for (let key of Object.keys(item)) {
+    let defaults = (await item.withDefaults()) as I;
+    for (let key of Object.keys(item) as (keyof I)[]) {
         // This is a temporary fix, but if the item's date field is undefined
         // (maybe an old object before a schema added a new date field), then
         // the problem still exists. The workaround is to not ever use the Date
@@ -51,6 +51,15 @@ async function assignDefaults<I extends Item>(item: I): Promise<I> {
     }
     return item;
 }
+
+type PrimaryKey = string | number;
+type BatchOptions = {
+    limit?: number;
+};
+type BatchKey<I extends Item> = {
+    query: PrimaryKey | Partial<I>;
+    options?: BatchOptions;
+};
 
 /**
  * Used by DataLoader, this function takes a list of filter conditions and
@@ -71,49 +80,124 @@ async function assignDefaults<I extends Item>(item: I): Promise<I> {
  * @returns
  */
 function createBatchGet<I extends Item>(model: ModelType<I>) {
-    return async (keys: (string | Partial<I>)[]): Promise<(I[] | null)[]> => {
-        // BatchGet does not support using only partition keys
-        if (keys.every((key) => typeof key === "string")) {
-            let items = (await model.batchGet(keys as string[])) as I[];
-            items = await Promise.all(items.map(assignDefaults));
-            let keyMap = new Map<string, I[]>();
-            for (let item of items) {
-                let keyName = model.table().hashKey;
-                let key = hash.MD5(item[keyName]);
-                if (!keyMap.has(key)) {
-                    keyMap.set(key, []);
-                }
-                let arr = keyMap.get(key);
-                arr.push(item);
+    return async (bkArray: BatchKey<I>[]): Promise<I[][]> => {
+        // Type 1 is when the query contains only a hashKey, and the table only
+        // has a hashKey as well (no rangeKey)
+        let batch1: PrimaryKey[] = [];
+        // Type 2 is when the query contains a hashKey and a rangeKey, and the
+        // table has both a hashKey and a rangeKey.
+        let batch2: Partial<I>[] = [];
+        // Other types are unbatchable
+        let unbatchable: number[] = [];
+        let bkType: number[] = [];
+        let resultArr: I[][] = Array(bkArray.length).fill([]);
+        let hashKeyName = model.table().hashKey as keyof I & string;
+        let rangeKeyName = model.table().rangeKey as
+            | (keyof I & string)
+            | undefined;
+        for (let [index, bk] of bkArray.entries()) {
+            if (
+                hashKeyName &&
+                !rangeKeyName &&
+                typeof bk.query === "string" &&
+                (!bk.options || Object.keys(bk.options).length == 0)
+            ) {
+                batch1.push(bk.query);
+                bkType.push(1);
+            } else if (
+                hashKeyName &&
+                !rangeKeyName &&
+                typeof bk.query === "object" &&
+                Object.keys(bk.query).length === 1 &&
+                Object.keys(bk.query)[0] === hashKeyName &&
+                (!bk.options || Object.keys(bk.options).length == 0)
+            ) {
+                batch1.push(bk.query[hashKeyName as PrimaryKey]);
+                bkType.push(1);
+            } else if (
+                hashKeyName &&
+                rangeKeyName &&
+                typeof bk.query === "object" &&
+                Object.keys(bk.query).length === 2 &&
+                Object.keys(bk.query).includes(hashKeyName) &&
+                Object.keys(bk.query).includes(rangeKeyName) &&
+                (!bk.options || Object.keys(bk.options).length == 0)
+            ) {
+                batch2.push(bk.query);
+                bkType.push(2);
+            } else {
+                // could be a pk (string or object) with options
+                unbatchable.push(index);
+                bkType.push(3);
             }
-            let result: I[][] = [];
-            for (let key of keys) {
-                result.push(keyMap.get(hash.MD5(key)) || []);
-            }
-            return result;
-        } else {
-            // Fallback to querying for each key
-            let result: I[][] = [];
-            let promises: Promise<I[]>[] = [];
-            for (let key of keys) {
-                promises.push(
-                    (async () => {
-                        let items = await model.query(key).exec();
-                        return await Promise.all(items.map(assignDefaults));
-                    })()
-                );
-            }
-            for (let item of await Promise.allSettled(promises)) {
-                if (item.status === "fulfilled") {
-                    result.push(item.value);
-                } else if (item.reason instanceof ResourceNotFoundException) {
-                    result.push([]);
-                } else {
-                    throw item.reason;
-                }
-            }
-            return result;
         }
+
+        function queryUnbatchable(index: number): Promise<I[]> {
+            let bk = bkArray[index];
+            let query;
+            if (typeof bk.query === "string") {
+                query = model.query(hashKeyName).eq(bk.query);
+            } else if (typeof bk.query === "object") {
+                query = model.query(bk.query);
+            }
+            if (bk.options) {
+                if (bk.options.limit) {
+                    query = query.limit(bk.options.limit);
+                }
+            }
+            return query.exec();
+        }
+
+        // Type 1 and 2 can be batched at once.
+        let [result1, result2, ...result3] = await Promise.all([
+            batch1.length > 0 ? model.batchGet(batch1) : [], // an array of I
+            batch2.length > 0 ? model.batchGet(batch2 as InputKey[]) : [], // an array of I
+            ...unbatchable.map(queryUnbatchable), // multiple arrays of I[]
+        ]);
+
+        for (let [index, items] of result3.entries()) {
+            resultArr[unbatchable[index]] = await Promise.all(
+                items.map(assignDefaults)
+            );
+        }
+
+        let keyMap1 = new Map<PrimaryKey, I[]>();
+        for (let item of result1) {
+            // batch1 only contains hashKey
+            item = await assignDefaults(item);
+            let key = item[hashKeyName] as PrimaryKey;
+            if (keyMap1.has(key)) {
+                keyMap1.get(key)?.push(item);
+            } else {
+                keyMap1.set(key, [item]);
+            }
+        }
+
+        let keyMap2 = new Map<string, I[]>();
+        for (let item of result2) {
+            // batch2 only contains hashKey and rangeKey
+            item = await assignDefaults(item);
+            let key = [item[hashKeyName], item[rangeKeyName]].toString();
+            if (keyMap2.has(key)) {
+                keyMap2.get(key)?.push(item);
+            } else {
+                keyMap2.set(key, [item]);
+            }
+        }
+
+        for (let [index, type] of bkType.entries()) {
+            if (type === 1) {
+                resultArr[index] = keyMap1.get(batch1[index]) || [];
+            } else if (type === 2) {
+                let key = [
+                    batch2[index][hashKeyName],
+                    batch2[index][rangeKeyName],
+                ].toString();
+                resultArr[index] = keyMap2.get(key) || [];
+            }
+        }
+
+        return resultArr;
     };
 }
 
@@ -131,6 +215,29 @@ function stripUndefinedKeys<T>(object: T) {
     return data;
 }
 
+// class Cache {
+//     _cache = new Map<string, any>();
+//     constructor() {}
+//     get(key: string) {
+//         console.log(this._cache);
+//         console.log("Cache.get", key);
+//         return this._cache.get(key);
+//     }
+//     set(key: string, value: any) {
+//         console.log("Cache.set", key, value);
+//         this._cache.set(key, value);
+//         console.log(this._cache);
+//     }
+//     delete(key: string) {
+//         console.log("Cache.delete", key);
+//         this._cache.delete(key);
+//     }
+//     clear() {
+//         console.log("Cache.clear");
+//         this._cache.clear();
+//     }
+// }
+
 export class Batched<I extends Item> {
     /**
      * Wrapps the dataloader to provide a get method that throws a NotFound
@@ -139,14 +246,15 @@ export class Batched<I extends Item> {
      * Note: You must create an instance for every request. The cache is not
      * meant to be persistent.
      */
-    public loader: DataLoader<string | Partial<I>, I[]>;
+    public loader: DataLoader<BatchKey<I>, I[]>;
     constructor(public model: ModelType<I>) {
         this.loader = new DataLoader(createBatchGet(model), {
-            cacheKeyFn(key: string | Partial<I>) {
-                if (typeof key === "string") {
-                    return key;
+            // cacheMap: new Cache(),
+            cacheKeyFn(bk: BatchKey<I>) {
+                if (typeof bk.query === "string" && bk.options === undefined) {
+                    return bk.query;
                 } else {
-                    return hash.MD5(key);
+                    return hash.MD5(bk);
                 }
             },
         });
@@ -200,11 +308,14 @@ export class Batched<I extends Item> {
      * dynamoose.Model.query().
      * @returns An array of objects of the model type.
      */
-    async many(key: string | Partial<I>): Promise<I[]> {
+    async many(key: string | Partial<I>, options?: BatchOptions): Promise<I[]> {
         if (!key) {
             return [];
         }
-        let result = await this.loader.load(key);
+        let result = await this.loader.load({
+            query: key,
+            options,
+        });
         return await Promise.all(result);
     }
 
@@ -326,7 +437,6 @@ export class Batched<I extends Item> {
         }
         let updated = await this.get(query);
         Object.assign(updated, newVals);
-        console.log("Updating", original, "with", newVals, "to", updated);
 
         return (await updated.save()) as I;
     }

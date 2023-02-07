@@ -3,9 +3,9 @@ from typing import Optional
 from blessings import Terminal
 
 from .pricing import PricingInfo, pretty_print_app_pricing
-from .app import AppInfo, get_app
+from .dev_app import AppInfo, get_app
 from .graphql import get_client_info
-from .group import fastcharge
+from .groups import fastcharge
 import click
 from gql import gql
 import colorama
@@ -75,19 +75,19 @@ def subscribe_list():
 @fastcharge_subscribe.command("subscribe", aliases=["sub"])
 @click.argument("app_name", required=True)
 @click.option("-p", "--plan", help="Plan to subscribe to.")
-def subscribe_subscribe(app_name: str, plan: Optional[str] = None):
+def fastcharge_subscribe_sub(app_name: str, plan: Optional[str] = None):
     """Subscribe to an app."""
     client, email = get_client_info()
     app = get_app(app_name)
     if app is None:
         echo(colorama.Fore.RED + f'An app with the name "{app_name}" does not exist.')
-        return
+        exit(1)
     # Get the pricing plan the user is currently subscribed to.
     try:
         current_sub = client.execute(
             gql(
                 """
-                    query GetCurrentSubscription($user_email: String, $app_name: String) {
+                    query GetCurrentSubscription($user_email: Email, $app_name: String) {
                         subscription(subscriber: $user_email, app: $app_name) {
                             pricing {
                                 name
@@ -145,7 +145,7 @@ def subscribe_subscribe(app_name: str, plan: Optional[str] = None):
         result = client.execute(
             gql(
                 """
-                mutation Subscribe($subscriber: String!, $app: String!, $pricing: String!) {
+                mutation Subscribe($subscriber: Email!, $app: String!, $pricing: String!) {
                     createSubscription(subscriber: $subscriber, app: $app, pricing: $pricing) {
                         pricing {
                             name
@@ -182,7 +182,7 @@ def subscribe_subscribe(app_name: str, plan: Optional[str] = None):
 
 @fastcharge_subscribe.command("unsubscribe", aliases=["unsub"])
 @click.argument("app_name", required=True)
-def subscribe_subscribe(app_name: str):
+def fastcharge_subscribe_unsub(app_name: str):
     """Unsubscribe to a app."""
     try:
         subscription = unsubscribe(app_name)
@@ -211,7 +211,7 @@ def unsubscribe(app_name: str):
     subscription = client.execute(
         gql(
             """
-            query Unsubscribe($subscriber: String!, $app: String!) {
+            query Unsubscribe($subscriber: Email!, $app: String!) {
                 subscription(subscriber: $subscriber, app: $app) {
                     deleteSubscription {
                         pricing {

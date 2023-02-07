@@ -1,7 +1,7 @@
 scalar Email
 scalar Date
 scalar NonNegativeDecimal
-scalar Long
+scalar Timestamp
 
 type Query {
     ### App API
@@ -14,7 +14,7 @@ type Query {
     endpoint(ref: ID, app: String, path: String): Endpoint
     endpoints: [Endpoint] # Get all endpoints in the system
     ### Subscriptions API
-    subscription(subscriber: String, app: String): Subscribe
+    subscription(subscriber: Email, app: String): Subscribe
 
     stripePaymentAccept(stripeSessionId: String!): StripePaymentAccept
 }
@@ -50,7 +50,7 @@ type Mutation {
     createSubscription(
         app: String!
         pricing: String!
-        subscriber: String!
+        subscriber: Email!
     ): Subscribe
 
     createUsageLog(
@@ -69,6 +69,15 @@ type Mutation {
         stripePaymentIntent: String!
         stripeSessionObject: String!
     ): StripePaymentAccept
+
+    createStripeTransfer(
+        receiver: Email!
+        withdrawCents: Int!
+        receiveCents: Int!
+        currency: String!
+        stripeTransferId: String!
+        stripeTransferObject: String!
+    ): StripeTransfer
 }
 
 type User {
@@ -79,6 +88,13 @@ type User {
     balance: String
     stripeCustomerId: String
     stripeConnectAccountId: String
+
+    usageLogs(
+        app: String!
+        path: String
+        limit: Int = 5
+        start: Int = 0
+    ): [UsageLog]
 
     updateUser(stripeCustomerId: String, stripeConnectAccountId: String): User
 }
@@ -136,18 +152,18 @@ type UsageLog {
     app: App!
     endpoint: Endpoint!
     volume: Int!
-    createdAt: Long!
+    createdAt: Timestamp!
 }
 
-type UsageMetric {
-    subscriber: Email!
-    app: App!
-    endpoint: Endpoint!
-    volume: Int!
-    periodStart: Int
+# type UsageMetric {
+#     subscriber: Email!
+#     app: App!
+#     endpoint: Endpoint!
+#     volume: Int!
+#     periodStart: Int
 
-    increase(by: Int = 1): UsageMetric
-}
+#     increase(by: Int = 1): UsageMetric
+# }
 
 type StripePaymentAccept {
     user: User!
@@ -157,7 +173,7 @@ type StripePaymentAccept {
     stripeSessionObject: String!
     stripePaymentIntent: String!
     stripeSessionId: String!
-    createdAt: Long!
+    createdAt: Timestamp!
 
     settlePayment(stripeSessionObject: String!): StripePaymentAccept
 }
@@ -165,4 +181,17 @@ type StripePaymentAccept {
 enum GatewayMode {
     proxy
     redirect
+}
+
+type StripeTransfer {
+    receiver: User!
+    withdrawCents: Int!
+    receiveCents: Int!
+    stripeTransferId: String!
+    stripeTransferObject: String!
+    createdAt: Timestamp!
+    oldBalance: String
+    newBalance: String
+    currency: String
+    settleStripeTransfer: StripeTransfer
 }

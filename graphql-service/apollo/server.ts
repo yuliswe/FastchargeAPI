@@ -12,7 +12,6 @@ import {
     User,
     UserModel,
 } from "./dynamoose/models";
-import * as tables from "./dynamoose/tables";
 import { GraphQLFormattedError } from "graphql";
 import { formatDynamooseError } from "./dynamoose/error";
 import { resolvers as scalarResolvers } from "graphql-scalars";
@@ -28,6 +27,7 @@ import { subscribeResolvers } from "./resolvers/subscription";
 import customScalars from "./scalars";
 import { usageLogResolvers } from "./resolvers/usage";
 import { stripePaymentAcceptResolvers } from "./resolvers/payment";
+import { stripeTransferResolvers } from "./resolvers/transfer";
 
 initializeDB();
 
@@ -59,6 +59,7 @@ const resolvers: GQLResolvers = {
     Subscribe: subscribeResolvers.Subscribe,
     UsageLog: usageLogResolvers.UsageLog,
     StripePaymentAccept: stripePaymentAcceptResolvers.StripePaymentAccept,
+    StripeTransfer: stripeTransferResolvers.StripeTransfer,
     Query: {
         ...appResolvers.Query,
         ...userResolvers.Query,
@@ -67,6 +68,7 @@ const resolvers: GQLResolvers = {
         ...pricingResolvers.Query,
         ...usageLogResolvers.Query,
         ...stripePaymentAcceptResolvers.Query,
+        ...stripeTransferResolvers.Query,
     },
     Mutation: {
         ...appResolvers.Mutation,
@@ -76,9 +78,7 @@ const resolvers: GQLResolvers = {
         ...pricingResolvers.Mutation,
         ...usageLogResolvers.Mutation,
         ...stripePaymentAcceptResolvers.Mutation,
-        resetTables(parent, args, context, info) {
-            return tables.resetTables();
-        },
+        ...stripeTransferResolvers.Mutation,
     },
 };
 

@@ -4,7 +4,6 @@ from utils.stripe import get_stripe_api_secret_key
 from utils.graphql import get_graphql_client
 import stripe
 from gql import gql
-from gql.transport.requests import RequestsHTTPTransport
 import colorama
 
 stripe.api_key = get_stripe_api_secret_key()

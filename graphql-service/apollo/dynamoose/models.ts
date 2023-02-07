@@ -1,6 +1,42 @@
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
-import { tableConfigs } from "./tables";
+import { TableClass } from "dynamoose/dist/Table/types";
+
+let MAKE_TABLE = false;
+
+if (process.env.TEST == "1") {
+    MAKE_TABLE = true;
+    dynamoose.aws.ddb.local("http://localhost:9001/");
+    console.warn("Using local database http://localhost:9001/");
+} else {
+    // Create new DynamoDB instance
+    const ddb = new dynamoose.aws.ddb.DynamoDB({
+        region: "us-east-1",
+    });
+
+    // Set DynamoDB instance to the Dynamoose DDB instance
+    dynamoose.aws.ddb.set(ddb);
+    console.warn("Using remote database us-east-1");
+}
+
+const tableConfigs = {
+    create: MAKE_TABLE,
+    update: MAKE_TABLE,
+    initialize: true,
+    throughput: "ON_DEMAND" as const,
+    prefix: "dev__",
+    suffix: "",
+    waitForActive: {
+        enabled: MAKE_TABLE,
+        check: {
+            timeout: 128_000,
+            frequency: 1000,
+        },
+    },
+    expires: null,
+    tags: {},
+    tableClass: TableClass.standard,
+};
 
 // declare module "dynamoose/dist/Model" {
 //     interface Model<T> {
@@ -206,6 +242,32 @@ const StripePaymentAcceptTableSchema = new dynamoose.Schema(
     }
 );
 
+const StripeTransferTableSchema = new dynamoose.Schema(
+    {
+        receiver: {
+            hashKey: true,
+            ...String_Required_NotEmpty("receiver"),
+        },
+        createdAt: { type: Number, rangeKey: true, default: () => Date.now() },
+        receiveCents: { type: Number, required: true },
+        withdrawCents: { type: Number, required: true },
+        previousBalance: { type: String }, // Available when the payment is settled
+        newBalance: { type: String }, // Available when the payment is settled
+        currency: { ...String_Required_NotEmpty("currency") },
+        stripeTransferId: {
+            ...String_Required_NotEmpty("stripePaymentIntent"),
+        },
+        stripeTransferObject: { type: Object, required: true },
+    },
+    {
+        timestamps: {
+            updatedAt: "updatedAt",
+        },
+    }
+);
+
+// const PayoutTableSchema = new dynamoose.Schema({});
+
 // const UsageMetricTableSchema = new dynamoose.Schema(
 //     {
 //         subscriber: { hashKey: true, ...String_REQUIRED_NON_EMPTY },
@@ -294,6 +356,18 @@ export class StripePaymentAccept extends Item {
     oldBalance: string;
     newBalance: string;
 }
+export class StripeTransfer extends Item {
+    receiver: string;
+    withdrawCents: number;
+    receiveCents: number;
+    currency: string;
+    status: string;
+    stripeTransferObject: object;
+    stripeTransferId: string;
+    createdAt: number;
+    oldBalance: string;
+    newBalance: string;
+}
 
 export const AppModel = dynamoose.model<App>("App", AppTableSchema, {
     ...tableConfigs,
@@ -324,5 +398,10 @@ export const UsageLogModel = dynamoose.model<UsageLog>(
 export const StripePaymentAcceptModel = dynamoose.model<StripePaymentAccept>(
     "StripePaymentAccept",
     StripePaymentAcceptTableSchema,
+    { ...tableConfigs }
+);
+export const StripeTransferModel = dynamoose.model<StripeTransfer>(
+    "StripeTransfer",
+    StripeTransferTableSchema,
     { ...tableConfigs }
 );

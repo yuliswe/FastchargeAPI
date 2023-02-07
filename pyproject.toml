@@ -31,6 +31,8 @@ lambda-cache = "^0.8.1"
 joblib = "^1.2.0"
 diskcache = "^5.4.0"
 stripe = "^5.0.0"
+schema = "^0.7.5"
+libtmux = "^0.21.0"
 
 [tool.poetry.dev-dependencies]
 

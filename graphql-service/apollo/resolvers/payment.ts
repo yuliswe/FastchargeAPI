@@ -11,7 +11,7 @@ import {
     GQLResolvers,
     GQLStripePaymentAcceptResolvers,
 } from "../__generated__/resolvers-types";
-import Decimal from "decimal";
+import Decimal from "decimal.js-light";
 import { Denied } from "../errors";
 import { Can } from "../permissions";
 /**
@@ -38,6 +38,16 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
             JSON.stringify(parent.stripeSessionObject),
         createdAt: (parent) => parent.createdAt,
 
+        /**
+         * Important: This method must be idempotent. It must be safe to call
+         * this more than once without adding more money to the user's balance.
+         * TODO: add idempotency
+         * @param parent
+         * @param param1
+         * @param context
+         * @param info
+         * @returns
+         */
         async settlePayment(
             parent: StripePaymentAccept,
             { stripeSessionObject },

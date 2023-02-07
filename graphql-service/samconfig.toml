@@ -1,0 +1,11 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "graphql-service"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ku0vhjb0ewl6"
+s3_prefix = "graphql-service"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Stage=\"DEV\""
+image_repositories = []

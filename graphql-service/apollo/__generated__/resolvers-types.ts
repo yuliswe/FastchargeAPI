@@ -1,13 +1,12 @@
 import type { GatewayMode } from '../dynamoose/models';
 import type { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
-import type { App as AppData, User as UserData, Endpoint as EndpointData, Pricing as PricingData, Subscribe as SubscribeData, UsageLog as UsageLogData, StripePaymentAccept as StripePaymentAcceptData } from '../dynamoose/models';
+import type { App as AppData, User as UserData, Endpoint as EndpointData, Pricing as PricingData, Subscribe as SubscribeData, UsageLog as UsageLogData, StripePaymentAccept as StripePaymentAcceptData, StripeTransfer as StripeTransferData } from '../dynamoose/models';
 import type { RequestContext } from '../server';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
-export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 export type EnumResolverSignature<T, AllowedValues = any> = { [key in keyof T]?: AllowedValues };
 export type RequireFields<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: NonNullable<T[P]> };
 /** All built-in and custom scalars, mapped to their actual values */
@@ -19,8 +18,8 @@ export type Scalars = {
   Float: number;
   Date: any;
   Email: string;
-  Long: any;
   NonNegativeDecimal: any;
+  Timestamp: any;
 };
 
 export type GQLApp = {
@@ -67,6 +66,7 @@ export type GQLMutation = {
   createEndpoint?: Maybe<GQLEndpoint>;
   createPricing?: Maybe<GQLPricing>;
   createStripePaymentAccept?: Maybe<GQLStripePaymentAccept>;
+  createStripeTransfer?: Maybe<GQLStripeTransfer>;
   createSubscription?: Maybe<GQLSubscribe>;
   createUsageLog?: Maybe<GQLUsageLog>;
   createUser?: Maybe<GQLUser>;
@@ -110,10 +110,20 @@ export type GQLMutationCreateStripePaymentAcceptArgs = {
 };
 
 
+export type GQLMutationCreateStripeTransferArgs = {
+  currency: Scalars['String'];
+  receiveCents: Scalars['Int'];
+  receiver: Scalars['Email'];
+  stripeTransferId: Scalars['String'];
+  stripeTransferObject: Scalars['String'];
+  withdrawCents: Scalars['Int'];
+};
+
+
 export type GQLMutationCreateSubscriptionArgs = {
   app: Scalars['String'];
   pricing: Scalars['String'];
-  subscriber: Scalars['String'];
+  subscriber: Scalars['Email'];
 };
 
 
@@ -172,7 +182,7 @@ export type GQLQueryStripePaymentAcceptArgs = {
 
 export type GQLQuerySubscriptionArgs = {
   app?: InputMaybe<Scalars['String']>;
-  subscriber?: InputMaybe<Scalars['String']>;
+  subscriber?: InputMaybe<Scalars['Email']>;
 };
 
 
@@ -183,7 +193,7 @@ export type GQLQueryUserArgs = {
 export type GQLStripePaymentAccept = {
   __typename?: 'StripePaymentAccept';
   amountCents: Scalars['Int'];
-  createdAt: Scalars['Long'];
+  createdAt: Scalars['Timestamp'];
   currency: Scalars['String'];
   settlePayment?: Maybe<GQLStripePaymentAccept>;
   status: Scalars['String'];
@@ -198,6 +208,20 @@ export type GQLStripePaymentAcceptSettlePaymentArgs = {
   stripeSessionObject: Scalars['String'];
 };
 
+export type GQLStripeTransfer = {
+  __typename?: 'StripeTransfer';
+  createdAt: Scalars['Timestamp'];
+  currency?: Maybe<Scalars['String']>;
+  newBalance?: Maybe<Scalars['String']>;
+  oldBalance?: Maybe<Scalars['String']>;
+  receiveCents: Scalars['Int'];
+  receiver: GQLUser;
+  settleStripeTransfer?: Maybe<GQLStripeTransfer>;
+  stripeTransferId: Scalars['String'];
+  stripeTransferObject: Scalars['String'];
+  withdrawCents: Scalars['Int'];
+};
+
 export type GQLSubscribe = {
   __typename?: 'Subscribe';
   app: GQLApp;
@@ -210,25 +234,10 @@ export type GQLSubscribe = {
 export type GQLUsageLog = {
   __typename?: 'UsageLog';
   app: GQLApp;
-  createdAt: Scalars['Long'];
+  createdAt: Scalars['Timestamp'];
   endpoint: GQLEndpoint;
   subscriber: GQLUser;
   volume: Scalars['Int'];
-};
-
-export type GQLUsageMetric = {
-  __typename?: 'UsageMetric';
-  app: GQLApp;
-  endpoint: GQLEndpoint;
-  increase?: Maybe<GQLUsageMetric>;
-  periodStart?: Maybe<Scalars['Int']>;
-  subscriber: Scalars['Email'];
-  volume: Scalars['Int'];
-};
-
-
-export type GQLUsageMetricIncreaseArgs = {
-  by?: InputMaybe<Scalars['Int']>;
 };
 
 export type GQLUser = {
@@ -241,12 +250,21 @@ export type GQLUser = {
   stripeCustomerId?: Maybe<Scalars['String']>;
   subscriptions?: Maybe<Array<Maybe<GQLSubscribe>>>;
   updateUser?: Maybe<GQLUser>;
+  usageLogs?: Maybe<Array<Maybe<GQLUsageLog>>>;
 };
 
 
 export type GQLUserUpdateUserArgs = {
   stripeConnectAccountId?: InputMaybe<Scalars['String']>;
   stripeCustomerId?: InputMaybe<Scalars['String']>;
+};
+
+
+export type GQLUserUsageLogsArgs = {
+  app: Scalars['String'];
+  limit?: InputMaybe<Scalars['Int']>;
+  path?: InputMaybe<Scalars['String']>;
+  start?: InputMaybe<Scalars['Int']>;
 };
 
 export type WithIndex<TObject> = TObject & Record<string, any>;
@@ -327,16 +345,16 @@ export type GQLResolversTypes = ResolversObject<{
   GatewayMode: GatewayMode;
   ID: ResolverTypeWrapper<Scalars['ID']>;
   Int: ResolverTypeWrapper<Scalars['Int']>;
-  Long: ResolverTypeWrapper<Scalars['Long']>;
   Mutation: ResolverTypeWrapper<{}>;
   NonNegativeDecimal: ResolverTypeWrapper<Scalars['NonNegativeDecimal']>;
   Pricing: ResolverTypeWrapper<PricingData>;
   Query: ResolverTypeWrapper<{}>;
   String: ResolverTypeWrapper<Scalars['String']>;
   StripePaymentAccept: ResolverTypeWrapper<StripePaymentAcceptData>;
+  StripeTransfer: ResolverTypeWrapper<StripeTransferData>;
   Subscribe: ResolverTypeWrapper<SubscribeData>;
+  Timestamp: ResolverTypeWrapper<Scalars['Timestamp']>;
   UsageLog: ResolverTypeWrapper<UsageLogData>;
-  UsageMetric: ResolverTypeWrapper<Omit<GQLUsageMetric, 'app' | 'endpoint' | 'increase'> & { app: GQLResolversTypes['App'], endpoint: GQLResolversTypes['Endpoint'], increase?: Maybe<GQLResolversTypes['UsageMetric']> }>;
   User: ResolverTypeWrapper<UserData>;
 }>;
 
@@ -349,16 +367,16 @@ export type GQLResolversParentTypes = ResolversObject<{
   Endpoint: EndpointData;
   ID: Scalars['ID'];
   Int: Scalars['Int'];
-  Long: Scalars['Long'];
   Mutation: {};
   NonNegativeDecimal: Scalars['NonNegativeDecimal'];
   Pricing: PricingData;
   Query: {};
   String: Scalars['String'];
   StripePaymentAccept: StripePaymentAcceptData;
+  StripeTransfer: StripeTransferData;
   Subscribe: SubscribeData;
+  Timestamp: Scalars['Timestamp'];
   UsageLog: UsageLogData;
-  UsageMetric: Omit<GQLUsageMetric, 'app' | 'endpoint' | 'increase'> & { app: GQLResolversParentTypes['App'], endpoint: GQLResolversParentTypes['Endpoint'], increase?: Maybe<GQLResolversParentTypes['UsageMetric']> };
   User: UserData;
 }>;
 
@@ -395,15 +413,12 @@ export type GQLEndpointResolvers<ContextType = RequestContext, ParentType extend
 
 export type GQLGatewayModeResolvers = EnumResolverSignature<{ proxy?: any, redirect?: any }, GQLResolversTypes['GatewayMode']>;
 
-export interface GQLLongScalarConfig extends GraphQLScalarTypeConfig<GQLResolversTypes['Long'], any> {
-  name: 'Long';
-}
-
 export type GQLMutationResolvers<ContextType = RequestContext, ParentType extends GQLResolversParentTypes['Mutation'] = GQLResolversParentTypes['Mutation']> = ResolversObject<{
   createApp?: Resolver<Maybe<GQLResolversTypes['App']>, ParentType, ContextType, RequireFields<GQLMutationCreateAppArgs, 'name' | 'owner'>>;
   createEndpoint?: Resolver<Maybe<GQLResolversTypes['Endpoint']>, ParentType, ContextType, RequireFields<GQLMutationCreateEndpointArgs, 'app' | 'destination' | 'path'>>;
   createPricing?: Resolver<Maybe<GQLResolversTypes['Pricing']>, ParentType, ContextType, RequireFields<GQLMutationCreatePricingArgs, 'app' | 'callToAction' | 'chargePerRequest' | 'minMonthlyCharge' | 'name'>>;
   createStripePaymentAccept?: Resolver<Maybe<GQLResolversTypes['StripePaymentAccept']>, ParentType, ContextType, RequireFields<GQLMutationCreateStripePaymentAcceptArgs, 'amountCents' | 'currency' | 'status' | 'stripePaymentIntent' | 'stripeSessionId' | 'stripeSessionObject' | 'user'>>;
+  createStripeTransfer?: Resolver<Maybe<GQLResolversTypes['StripeTransfer']>, ParentType, ContextType, RequireFields<GQLMutationCreateStripeTransferArgs, 'currency' | 'receiveCents' | 'receiver' | 'stripeTransferId' | 'stripeTransferObject' | 'withdrawCents'>>;
   createSubscription?: Resolver<Maybe<GQLResolversTypes['Subscribe']>, ParentType, ContextType, RequireFields<GQLMutationCreateSubscriptionArgs, 'app' | 'pricing' | 'subscriber'>>;
   createUsageLog?: Resolver<Maybe<GQLResolversTypes['UsageLog']>, ParentType, ContextType, RequireFields<GQLMutationCreateUsageLogArgs, 'app' | 'path' | 'subscriber' | 'volume'>>;
   createUser?: Resolver<Maybe<GQLResolversTypes['User']>, ParentType, ContextType, RequireFields<GQLMutationCreateUserArgs, 'email'>>;
@@ -438,7 +453,7 @@ export type GQLQueryResolvers<ContextType = RequestContext, ParentType extends G
 
 export type GQLStripePaymentAcceptResolvers<ContextType = RequestContext, ParentType extends GQLResolversParentTypes['StripePaymentAccept'] = GQLResolversParentTypes['StripePaymentAccept']> = ResolversObject<{
   amountCents?: Resolver<GQLResolversTypes['Int'], ParentType, ContextType>;
-  createdAt?: Resolver<GQLResolversTypes['Long'], ParentType, ContextType>;
+  createdAt?: Resolver<GQLResolversTypes['Timestamp'], ParentType, ContextType>;
   currency?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
   settlePayment?: Resolver<Maybe<GQLResolversTypes['StripePaymentAccept']>, ParentType, ContextType, RequireFields<GQLStripePaymentAcceptSettlePaymentArgs, 'stripeSessionObject'>>;
   status?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
@@ -446,6 +461,20 @@ export type GQLStripePaymentAcceptResolvers<ContextType = RequestContext, Parent
   stripeSessionId?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
   stripeSessionObject?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
   user?: Resolver<GQLResolversTypes['User'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
+export type GQLStripeTransferResolvers<ContextType = RequestContext, ParentType extends GQLResolversParentTypes['StripeTransfer'] = GQLResolversParentTypes['StripeTransfer']> = ResolversObject<{
+  createdAt?: Resolver<GQLResolversTypes['Timestamp'], ParentType, ContextType>;
+  currency?: Resolver<Maybe<GQLResolversTypes['String']>, ParentType, ContextType>;
+  newBalance?: Resolver<Maybe<GQLResolversTypes['String']>, ParentType, ContextType>;
+  oldBalance?: Resolver<Maybe<GQLResolversTypes['String']>, ParentType, ContextType>;
+  receiveCents?: Resolver<GQLResolversTypes['Int'], ParentType, ContextType>;
+  receiver?: Resolver<GQLResolversTypes['User'], ParentType, ContextType>;
+  settleStripeTransfer?: Resolver<Maybe<GQLResolversTypes['StripeTransfer']>, ParentType, ContextType>;
+  stripeTransferId?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
+  stripeTransferObject?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
+  withdrawCents?: Resolver<GQLResolversTypes['Int'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -458,21 +487,15 @@ export type GQLSubscribeResolvers<ContextType = RequestContext, ParentType exten
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export interface GQLTimestampScalarConfig extends GraphQLScalarTypeConfig<GQLResolversTypes['Timestamp'], any> {
+  name: 'Timestamp';
+}
+
 export type GQLUsageLogResolvers<ContextType = RequestContext, ParentType extends GQLResolversParentTypes['UsageLog'] = GQLResolversParentTypes['UsageLog']> = ResolversObject<{
   app?: Resolver<GQLResolversTypes['App'], ParentType, ContextType>;
-  createdAt?: Resolver<GQLResolversTypes['Long'], ParentType, ContextType>;
+  createdAt?: Resolver<GQLResolversTypes['Timestamp'], ParentType, ContextType>;
   endpoint?: Resolver<GQLResolversTypes['Endpoint'], ParentType, ContextType>;
   subscriber?: Resolver<GQLResolversTypes['User'], ParentType, ContextType>;
-  volume?: Resolver<GQLResolversTypes['Int'], ParentType, ContextType>;
-  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
-}>;
-
-export type GQLUsageMetricResolvers<ContextType = RequestContext, ParentType extends GQLResolversParentTypes['UsageMetric'] = GQLResolversParentTypes['UsageMetric']> = ResolversObject<{
-  app?: Resolver<GQLResolversTypes['App'], ParentType, ContextType>;
-  endpoint?: Resolver<GQLResolversTypes['Endpoint'], ParentType, ContextType>;
-  increase?: Resolver<Maybe<GQLResolversTypes['UsageMetric']>, ParentType, ContextType, RequireFields<GQLUsageMetricIncreaseArgs, 'by'>>;
-  periodStart?: Resolver<Maybe<GQLResolversTypes['Int']>, ParentType, ContextType>;
-  subscriber?: Resolver<GQLResolversTypes['Email'], ParentType, ContextType>;
   volume?: Resolver<GQLResolversTypes['Int'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
@@ -486,6 +509,7 @@ export type GQLUserResolvers<ContextType = RequestContext, ParentType extends GQ
   stripeCustomerId?: Resolver<Maybe<GQLResolversTypes['String']>, ParentType, ContextType>;
   subscriptions?: Resolver<Maybe<Array<Maybe<GQLResolversTypes['Subscribe']>>>, ParentType, ContextType>;
   updateUser?: Resolver<Maybe<GQLResolversTypes['User']>, ParentType, ContextType, Partial<GQLUserUpdateUserArgs>>;
+  usageLogs?: Resolver<Maybe<Array<Maybe<GQLResolversTypes['UsageLog']>>>, ParentType, ContextType, RequireFields<GQLUserUsageLogsArgs, 'app' | 'limit' | 'start'>>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -495,15 +519,15 @@ export type GQLResolvers<ContextType = RequestContext> = ResolversObject<{
   Email?: GraphQLScalarType;
   Endpoint?: GQLEndpointResolvers<ContextType>;
   GatewayMode?: GQLGatewayModeResolvers;
-  Long?: GraphQLScalarType;
   Mutation?: GQLMutationResolvers<ContextType>;
   NonNegativeDecimal?: GraphQLScalarType;
   Pricing?: GQLPricingResolvers<ContextType>;
   Query?: GQLQueryResolvers<ContextType>;
   StripePaymentAccept?: GQLStripePaymentAcceptResolvers<ContextType>;
+  StripeTransfer?: GQLStripeTransferResolvers<ContextType>;
   Subscribe?: GQLSubscribeResolvers<ContextType>;
+  Timestamp?: GraphQLScalarType;
   UsageLog?: GQLUsageLogResolvers<ContextType>;
-  UsageMetric?: GQLUsageMetricResolvers<ContextType>;
   User?: GQLUserResolvers<ContextType>;
 }>;
 

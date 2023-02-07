@@ -1,0 +1,40 @@
+query GetAppRoutes($app: String) {
+    app(name: $app) {
+        name
+        gatewayMode
+        endpoints {
+            path
+            destination
+        }
+    }
+}
+
+mutation BillUsage($userEmail: Email!, $app_name: String!, $path: String!) {
+    createUsageLog(subscriber: $userEmail, app: $app_name, path: $path) {
+        createdAt
+    }
+}
+
+query GetUserSubscriptionPlan($userEmail: Email!, $app: String!) {
+    subscription(subscriber: $userEmail, app: $app) {
+        pricing {
+            name
+            minMonthlyCharge
+            chargePerRequest
+        }
+    }
+}
+
+query GetUserBalance($userEmail: Email!) {
+    user(email: $userEmail) {
+        balance
+    }
+}
+
+query GetPreviousCallTimestamp($userEmail: Email!, $app: String!) {
+    user(email: $userEmail) {
+        usageLogs(app: $app, limit: 1) {
+            createdAt
+        }
+    }
+}
