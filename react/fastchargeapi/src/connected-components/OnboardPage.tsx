@@ -4,9 +4,9 @@ import { connect } from "react-redux";
 import { RootAppState } from "../states/RootAppState";
 import axios from "axios";
 import { OnboardAppState } from "../states/OnBoardAppState";
-import { CircularProgress, Typography } from '@mui/material';
-type _State = {
-};
+import { CircularProgress, Typography } from "@mui/material";
+import { AppContext, ReactAppContextType } from "../AppContext";
+type _State = {};
 
 type _Props = {
     onboardAppState: OnboardAppState;
@@ -18,6 +18,10 @@ type _Props = {
  * better user experience.
  */
 class _Onboard extends React.Component<_Props, _State> {
+    static contextType = ReactAppContextType;
+    get _context() {
+        return this.context as AppContext;
+    }
     /**
      * Redirect to this url when the user returns from the Stripe onboard
      * webpage. It must be the same host or localhost. If left empty, then upon
@@ -25,7 +29,9 @@ class _Onboard extends React.Component<_Props, _State> {
      * ?success=true query param.
      */
     getRedirectUrl(): string {
-        let url = new URLSearchParams(document.location.search).get("redirect_url");
+        let url = new URLSearchParams(document.location.search).get(
+            "redirect_url"
+        );
         if (url && !this.urlIsAllowed(url)) {
             throw new Error("redirect_url must be the same domain.");
         }
@@ -34,11 +40,16 @@ class _Onboard extends React.Component<_Props, _State> {
 
     urlIsAllowed(url: string): boolean {
         let parsedUrl = new URL(url);
-        return parsedUrl.host === document.location.host || parsedUrl.host === "localhost";
+        return (
+            parsedUrl.host === document.location.host ||
+            parsedUrl.host === "localhost"
+        );
     }
 
     isSuccess(): boolean {
-        return new URLSearchParams(document.location.search).get("success") != null;
+        return (
+            new URLSearchParams(document.location.search).get("success") != null
+        );
     }
 
     /**
@@ -47,14 +58,42 @@ class _Onboard extends React.Component<_Props, _State> {
      * redirect: redirects to the redirect_url
      */
     get behaviorOnSuccess(): "stay" | "redirect" {
-        return (new URLSearchParams(document.location.search).get("behavior") || "stay") as typeof this.behaviorOnSuccess;
+        return (new URLSearchParams(document.location.search).get("behavior") ||
+            "stay") as typeof this.behaviorOnSuccess;
     }
 
     getBackendUrl(): string {
-        let url = new URL("http://localhost:3000/onboard")
-        url.searchParams.append("return_url", document.location.href + "?success=true")
-        url.searchParams.append("refresh_url", document.location.href)
+        let url = new URL(`${this._context.paymentGatewayHost}/onboard`);
+        url.searchParams.append(
+            "return_url",
+            document.location.href + "?success=true"
+        );
+        url.searchParams.append("refresh_url", document.location.href);
         return url.href;
+    }
+
+    /**
+     * Used for interaction with the cli. Post the payment result to this url.
+     */
+    getPostResultUrl(): string {
+        return (
+            new URLSearchParams(document.location.search).get("post_result") ||
+            ""
+        );
+    }
+
+    /**
+     * Used for interaction with the cli. Post the payment result to this url.
+     * {
+     *     status: "success" | "canceled"
+     * }
+     */
+    async postResultToCli() {
+        if (this.getPostResultUrl()) {
+            await axios.post(this.getPostResultUrl(), {
+                status: this.isSuccess() ? "success" : "canceled",
+            });
+        }
     }
 
     constructor(props: _Props) {
@@ -65,39 +104,62 @@ class _Onboard extends React.Component<_Props, _State> {
     async componentDidMount() {
         // If the user is already onboarded, then redirect to the redirect_url
         if (this.isSuccess()) {
-            let redirect = this.getRedirectUrl()
+            if (this.getPostResultUrl()) {
+                await this.postResultToCli();
+            }
+            let redirect = this.getRedirectUrl();
             if (redirect) {
                 document.location.href = redirect;
             }
-        } else { // Otherwise start the onboarding process
-            let { location } = await (await axios.post(this.getBackendUrl())).data
-            document.location.href = location
+        } else {
+            // Otherwise start the onboarding process
+            let { location } = await (
+                await axios.post(this.getBackendUrl())
+            ).data;
+            document.location.href = location;
         }
     }
 
     renderSuccessPage() {
-        return <Typography>Onboarding successful. You can close this page.</Typography>
+        return (
+            <Typography>
+                Onboarding successful. You can close this page.
+            </Typography>
+        );
     }
 
     renderLoadingPage() {
-        return <React.Fragment>
-            <Typography>Onboarding your account with Stripe. This could take up to a minute. Please wait.</Typography>
-            <CircularProgress />
-        </React.Fragment>
+        return (
+            <React.Fragment>
+                <Typography>
+                    Onboarding your account with Stripe. This could take up to a
+                    minute. Please wait.
+                </Typography>
+                <CircularProgress />
+            </React.Fragment>
+        );
     }
 
     render() {
         return (
             <React.Fragment>
                 <Helmet>
-                    <script src="https://accounts.google.com/gsi/client" async defer></script>
+                    <script
+                        src="https://accounts.google.com/gsi/client"
+                        async
+                        defer
+                    ></script>
                 </Helmet>
-                {this.isSuccess() ? this.renderSuccessPage() : this.renderLoadingPage()}
+                {this.isSuccess()
+                    ? this.renderSuccessPage()
+                    : this.renderLoadingPage()}
             </React.Fragment>
         );
     }
 }
 
-export const OnboardPage = connect<_Props, {}, {}, RootAppState>((rootAppState: RootAppState) => ({
-    onboardAppState: rootAppState.home,
-}))(_Onboard);
+export const OnboardPage = connect<_Props, {}, {}, RootAppState>(
+    (rootAppState: RootAppState) => ({
+        onboardAppState: rootAppState.home,
+    })
+)(_Onboard);
