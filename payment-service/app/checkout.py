@@ -15,20 +15,24 @@ stripe.api_key = get_stripe_api_secret_key()
 
 def lambda_handler(event, context):
     try:
-        return handle_lambda(event, context)
+        if event["httpMethod"] == "OPTIONS":  # Needed for the frontend CORS
+            response = {"statusCode": 200}
+        else:
+            response = handle_lambda(event, context)
     except Exception as e:
         print(colorama.Fore.RED + str(e) + colorama.Fore.RESET)
-        return {"statusCode": 500, "body": "Internal server error."}
+        response = {"statusCode": 500, "body": "Internal server error."}
+    response.setdefault("headers", {})
+    response["headers"]["Access-Control-Allow-Origin"] = "*"  # CORS
+    response["headers"]["Access-Control-Allow-Methods"] = "*"  # CORS
+    response["headers"]["Access-Control-Allow-Headers"] = "*"  # CORS
+    return response
 
 
 def handle_lambda(event, context):
     if event["httpMethod"] != "POST":
         return {
             "statusCode": 200,
-            "headers": {
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Headers": "*",
-            },
             "body": json.dumps(
                 {
                     "message": "Please use POST.",
@@ -53,10 +57,6 @@ def handle_lambda(event, context):
         print(colorama.Fore.RED + str(e) + colorama.Fore.RESET, body)
         return {
             "statusCode": 400,
-            "headers": {
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Headers": "*",
-            },
             "body": json.dumps(
                 {
                     "ValidationError": str(e),
@@ -95,10 +95,6 @@ def handle_lambda(event, context):
 
     return {
         "statusCode": 200,
-        "headers": {
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Headers": "*",
-        },
         "body": json.dumps(
             {
                 "location": session.url,

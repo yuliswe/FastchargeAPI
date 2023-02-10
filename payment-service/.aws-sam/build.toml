@@ -8,6 +8,6 @@ architecture = "arm64"
 handler = "checkout.lambda_handler"
 manifest_hash = ""
 packagetype = "Zip"
-functions = ["StripeCheckoutSession", "StripeConnectOnboard", "StripeConnectOnboardAcceptWebhook", "AcceptPaymentWebhook", "GetDashboardLoginLink", "Payout", "FirebaseTokenAuthorizer"]
+functions = ["StripeCheckoutSession", "StripeConnectOnboard", "StripeConnectOnboardAcceptWebhook", "AcceptPaymentWebhook", "GetDashboardLoginLink", "Payout"]
 
 [layer_build_definitions]

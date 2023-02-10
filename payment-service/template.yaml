@@ -9,6 +9,9 @@ Parameters:
   Stage:
     Type: String
     Default: DEV
+  HostName: 
+    Type: String
+    Default: "api.payment.fastchargeapi.com"
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -20,33 +23,47 @@ Globals:
     TracingEnabled: true
 
 Resources:
-  UnprotectedAPIs:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: !Ref Stage
-      MethodSettings:
-        - LoggingLevel: ERROR
-          MetricsEnabled: True
-          ResourcePath: "/*" # allows for logging on any resource
-          HttpMethod: "*" # allows for logging on any method
-      Auth:
-        ApiKeyRequired: false
+  GenerateCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain 
+    Type: AWS::CertificateManager::Certificate
+    Properties: 
+      DomainName: !Ref HostName
+      ValidationMethod: DNS
+      DomainValidationOptions:
+      - DomainName: !Ref HostName
+        HostedZoneId: Z0358815GI2I8U5CTHXW
 
-  ProtectedAPIs:
+  APIGateway:
     Type: AWS::Serverless::Api
     Properties:
+      Domain:
+        DomainName: !Ref HostName
+        CertificateArn: !Ref GenerateCertificate
+        Route53:
+          HostedZoneId: Z0358815GI2I8U5CTHXW
       StageName: !Ref Stage
       MethodSettings:
         - LoggingLevel: ERROR
           MetricsEnabled: True
           ResourcePath: "/*" # allows for logging on any resource
           HttpMethod: "*" # allows for logging on any method
-      Auth:
+      Auth: # Uses the FirebaseTokenAuthorizer to identify the session user. 
         ApiKeyRequired: false
         DefaultAuthorizer: FirebaseTokenAuthorizer
         Authorizers:
           FirebaseTokenAuthorizer:
-            FunctionArn: !GetAtt FirebaseTokenAuthorizer.Arn
+            FunctionArn: arn:aws:lambda:us-east-1:887279901853:function:auth-service-FirebaseTokenAuthorizer-P6dNbG2HV6tE
+      GatewayResponses: 
+        UNAUTHORIZED: # This block allows customizing the message shown to user that are not logged in.
+          StatusCode: 401
+          ResponseTemplates:
+            "application/json": '{ "message": "Please login." }'
+        ACCESS_DENIED: # This block allows customizing the message shown to user denied.
+          StatusCode: 403
+          ResponseTemplates:
+            "application/json": '{ "message": "Denied" }'
+      Cors:
+        AllowMethods: "'*'"
+        AllowOrigin: "'*'"
 
   StripeCheckoutSession:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -55,22 +72,25 @@ Resources:
       Handler: checkout.lambda_handler
       Runtime: python3.9
       Architectures:
-        # - x86_64
         - arm64 # if you are using Apple M1
       Timeout: 30
       Events:
         POST:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
-            RestApiId: !Ref ProtectedAPIs
+            RestApiId: !Ref APIGateway
             Path: /checkout
             Method: post
+            Auth: 
+              Authorizer: NONE
         OPTIONS:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
-            RestApiId: !Ref UnprotectedAPIs
+            RestApiId: !Ref APIGateway
             Path: /checkout
             Method: options
+            Auth: 
+              Authorizer: NONE
 
   StripeConnectOnboard:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -79,16 +99,23 @@ Resources:
       Handler: onboard.lambda_handler
       Runtime: python3.9
       Architectures:
-        # - x86_64
         - arm64 # if you are using Apple M1
       Timeout: 30
       Events:
         POST:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
-            RestApiId: !Ref ProtectedAPIs
+            RestApiId: !Ref APIGateway
             Path: /onboard
             Method: post
+        OPTIONS:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            RestApiId: !Ref APIGateway
+            Path: /onboard
+            Method: options
+            Auth: 
+              Authorizer: NONE
 
   StripeConnectOnboardAcceptWebhook:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -97,16 +124,17 @@ Resources:
       Handler: onboard_accept.lambda_handler
       Runtime: python3.9
       Architectures:
-        # - x86_64
         - arm64 # if you are using Apple M1
       Timeout: 30
       Events:
         POST:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
-            RestApiId: !Ref UnprotectedAPIs
+            RestApiId: !Ref APIGateway
             Path: /onboard/accept
             Method: post
+            Auth: 
+              Authorizer: NONE
 
   AcceptPaymentWebhook:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -115,16 +143,17 @@ Resources:
       Handler: accept.lambda_handler
       Runtime: python3.9
       Architectures:
-        # - x86_64
         - arm64 # if you are using Apple M1
       Timeout: 30
       Events:
         POST:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
-            RestApiId: !Ref UnprotectedAPIs
+            RestApiId: !Ref APIGateway
             Path: /accept
             Method: post
+            Auth: 
+              Authorizer: NONE
 
   GetDashboardLoginLink:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -133,14 +162,13 @@ Resources:
       Handler: dashboard_login.lambda_handler
       Runtime: python3.9
       Architectures:
-        # - x86_64
         - arm64 # if you are using Apple M1
       Timeout: 30
       Events:
         GET:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
-            RestApiId: !Ref ProtectedAPIs
+            RestApiId: !Ref APIGateway
             Path: /dashboard-login
             Method: get
 
@@ -151,26 +179,15 @@ Resources:
       Handler: payout.lambda_handler
       Runtime: python3.9
       Architectures:
-        # - x86_64
         - arm64 # if you are using Apple M1
       Timeout: 30
       Events:
         POST:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
-            RestApiId: !Ref ProtectedAPIs
+            RestApiId: !Ref APIGateway
             Path: /payout
             Method: post
-
-  FirebaseTokenAuthorizer:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: app/
-      Handler: authorizer.lambda_handler
-      Runtime: python3.9
-      Architectures:
-        # - x86_64
-        - arm64 # if you are using Apple M1
 
   # ApplicationResourceGroup:
   #   Type: AWS::ResourceGroups::Group
@@ -193,9 +210,6 @@ Resources:
   #     AutoConfigurationEnabled: 'true'
   #   DependsOn: ApplicationResourceGroup
 Outputs:
-  UnprotectedAPIs:
-    Description: API UnprotectedAPIs endpoint URL for DEV stage for Hello World function
-    Value: !Sub "https://${UnprotectedAPIs}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/echo"
-  ProtectedAPIs:
-    Description: API UnprotectedAPIs endpoint URL for DEV stage for Hello World function
-    Value: !Sub "https://${ProtectedAPIs}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/echo"
+  APIGateway:
+    Description: API APIGateway endpoint URL for DEV stage for Hello World function
+    Value: !Sub "https://${APIGateway}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/echo"

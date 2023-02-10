@@ -20,10 +20,18 @@ endpoint_secret = get_stripe_endpoint_secret()
 
 def lambda_handler(event, context):
     try:
-        return handle_lambda(event, context)
+        if event["httpMethod"] == "OPTIONS":  # Needed for the frontend CORS
+            response = {"statusCode": 200}
+        else:
+            response = handle_lambda(event, context)
     except Exception as e:
         print(colorama.Fore.RED + str(e) + colorama.Fore.RESET)
-        return {"statusCode": 500, "body": "Internal server error."}
+        response = {"statusCode": 500, "body": "Internal server error."}
+    response.setdefault("headers", {})
+    response["headers"]["Access-Control-Allow-Origin"] = "*"  # CORS
+    response["headers"]["Access-Control-Allow-Methods"] = "*"  # CORS
+    response["headers"]["Access-Control-Allow-Headers"] = "*"  # CORS
+    return response
 
 
 def handle_lambda(event, context):
@@ -31,6 +39,16 @@ def handle_lambda(event, context):
     Creates a Stripe Express account and returns a link to the onboarding. See
     https://stripe.com/docs/connect/express-accounts for details on the flow.
     """
+    if event["httpMethod"] != "POST":
+        return {
+            "statusCode": 200,
+            "body": json.dumps(
+                {
+                    "message": "Please use POST.",
+                }
+            ),
+        }
+
     user_email, error = get_current_user(context)
     if error is not None:
         return error
