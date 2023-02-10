@@ -105,7 +105,7 @@ def read_valid_user_from_auth_file() -> Optional[dict[str, str]]:
     return None
 
 
-def read_valid_id_token_from_auth_file() -> Optional[dict[str, str]]:
+def read_valid_id_token_from_auth_file() -> Optional[str]:
     """Get the id token from the auth file. If the file doesn't exist, return
     None. If the id token is invalid, refresh it and return the new id token. If
     unable to refresh, return None."""

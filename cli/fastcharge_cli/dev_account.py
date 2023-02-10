@@ -44,7 +44,7 @@ def fastcharge_dev_account_info():
         variable_values={"user_email": user_email},
     )["user"]
     # login_link = "https://connect.stripe.com/app/express"
-    login_link = get_dashboard_login_link(user_email)
+    login_link = get_dashboard_login_link()
     if user["stripeConnectAccountId"]:
         echo(
             terminal.green
@@ -149,17 +149,16 @@ def fastcharge_account_dev_withdraw(amount: str):
     echo(f"Your FastchargeAPI account estimated new balance: ${balance - withdraw:.2f}")
     echo()
     if input("Continue? (y/N)").strip().lower() == "y":
-        response = HttpClient(user_email).post(
-            "/payout", json={"withdraw_cents": withdraw_cents}
-        )
+        response = HttpClient().post("/payout", json={"withdraw_cents": withdraw_cents})
         echo(terminal.green + terminal.bold + "Payout request sent." + terminal.normal)
-        login_url = HttpClient(user_email).get("/dashboard-login").json()["location"]
         echo("Login to Stripe to view your payout status:")
-        echo(terminal.blue + " " + login_url + terminal.normal)
+        echo(terminal.blue + " " + get_dashboard_login_link() + terminal.normal)
 
 
-def get_dashboard_login_link(user_email: str) -> str:
-    return HttpClient(user_email).get("/dashboard-login").json()["location"]
+def get_dashboard_login_link() -> str:
+    response = HttpClient().get("/dashboard-login")
+    dashboard_url = response.json()["location"]
+    return dashboard_url
 
 
 @fastcharge_dev_account.command("topup")
@@ -173,7 +172,7 @@ def fastcharge_account_topup(amount: float):
     amount_cents = int(amount * 100)
     client, user_email = get_client_info()
     with start_local_server() as (port, conn):
-        response = HttpClient(user_email).post(
+        response = HttpClient().post(
             "/checkout",
             json={
                 "amount_cents": amount_cents,
