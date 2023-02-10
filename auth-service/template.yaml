@@ -20,78 +20,26 @@ Globals:
     TracingEnabled: true
 
 Resources:
-  PublicAPIs:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: !Ref Stage
-      MethodSettings:
-        - LoggingLevel: ERROR
-          MetricsEnabled: True
-          ResourcePath: '/*' # allows for logging on any resource
-          HttpMethod: '*' # allows for logging on any method
-      Auth:
-        ApiKeyRequired: false
-
-  ProxyFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+  FirebaseTokenAuthorizer:
+    Type: AWS::Serverless::Function
     Properties:
       CodeUri: app/
-      Handler: proxy.lambda_handler
+      Handler: authorizer.lambda_handler
       Runtime: python3.9
       Architectures:
-      - arm64
-      Events:
-        ProxyGet:
-          Type: Api
-          Properties:
-            Path: /
-            Method: get
-        ProxyPost:
-          Type: Api
-          Properties:
-            Path: /
-            Method: post
-        ProxyDelete:
-          Type: Api
-          Properties:
-            Path: /
-            Method: delete
-        ProxyPut:
-          Type: Api
-          Properties:
-            Path: /
-            Method: put
+        # - x86_64
+        - arm64 # if you are using Apple M1
 
-  ApplicationResourceGroup:
-    Type: AWS::ResourceGroups::Group
-    Properties:
-      Name:
-        Fn::Join:
-        - ''
-        - - ApplicationInsights-SAM-
-          - Ref: AWS::StackName
-      ResourceQuery:
-        Type: CLOUDFORMATION_STACK_1_0
-  ApplicationInsightsMonitoring:
-    Type: AWS::ApplicationInsights::Application
-    Properties:
-      ResourceGroupName:
-        Fn::Join:
-        - ''
-        - - ApplicationInsights-SAM-
-          - Ref: AWS::StackName
-      AutoConfigurationEnabled: 'true'
-    DependsOn: ApplicationResourceGroup
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  ProxyApi:
-    Description: API Gateway endpoint URL for Prod stage for Hello World function
-    Value: !Sub "https://${PublicAPIs}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/echo"
-  ProxyFunction:
-    Description: Hello World Lambda Function ARN
-    Value: !GetAtt ProxyFunction.Arn
-  ProxyFunctionIamRole:
-    Description: Implicit IAM Role created for Hello World function
-    Value: !GetAtt ProxyFunctionRole.Arn
+  # ProxyApi:
+  #   Description: API Gateway endpoint URL for Prod stage for Hello World function
+  #   Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/echo"
+  FirebaseTokenAuthorizer:
+    Description: FirebaseTokenAuthorizer ARN
+    Value: !GetAtt FirebaseTokenAuthorizer.Arn
+  FirebaseTokenAuthorizerIamRole:
+    Description: Implicit IAM Role created for FirebaseTokenAuthorizer
+    Value: !GetAtt FirebaseTokenAuthorizerRole.Arn
