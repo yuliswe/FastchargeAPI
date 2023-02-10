@@ -18,14 +18,27 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	lru "github.com/hashicorp/golang-lru/v2"
 	"github.com/shopspring/decimal"
 
 	"github.com/Khan/genqlient/graphql"
 )
 
 var graphqlService string
+var client graphql.Client
 
-var client = graphql.NewClient(graphqlService, http.DefaultClient)
+func main() {
+	if os.Getenv("DEV") == "1" {
+		fmt.Println(color.Red, "DEV mode enabled", color.Reset)
+		graphqlService = "http://host.docker.internal:4000"
+		fmt.Println(color.Green, "Connecting to", graphqlService, color.Reset)
+	} else {
+		graphqlService = "https://api.graphql.fastchargeapi.com"
+		fmt.Println(color.Green, "Connecting to", graphqlService, color.Reset)
+	}
+	client = graphql.NewClient(graphqlService, http.DefaultClient)
+	lambda.Start(handler)
+}
 
 /*
 This service is expected to be put behind an authentication proxy such as an
@@ -36,12 +49,6 @@ aws authorizer. The role of this function is upon receiving a request:
  3. Respond a redirect to the client with the destination url.
 */
 func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
-	if os.Getenv("DEV") == "1" {
-		fmt.Println(color.Red + "DEV mode enabled" + color.Reset)
-		graphqlService = "http://host.docker.internal:4000"
-	} else {
-		graphqlService = "http://internal.fastchargeapi.com:4000"
-	}
 	if response, err := handle(request); err == nil {
 		return response, nil
 	} else {
@@ -51,43 +58,49 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 }
 
 func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
-	if os.Getenv("DEV") == "1" {
-		fmt.Println(color.Red + "DEV mode enabled" + color.Reset)
-	}
-	fmt.Println(color.Yellow, "Request: ", request, color.Reset)
+	//fmt.Println(color.Yellow, "Lambda Request:", request, color.Reset)
 	path := request.Path
 	app := strings.Split(request.Headers["Host"], ".")[0]
+	if app == "api" { // this is reserved for our internal api
+		response := apiGatewayErrorResponse(404, "NOT_FOUND", "App Not Found: "+app)
+		return &response, nil
+	}
+	//fmt.Println("Identifying user")
 	user, errResp := getUser(request)
 	if errResp != nil {
 		return errResp, nil
 	}
+	//fmt.Println("Checking is user is allowed to access app", app, "user:", user)
 	if allowed, reason := userIsAllowedToAccess(user, app, path); !allowed {
-		fmt.Println(color.Red, "User ", user, " is not allowed to access ", app, path, color.Reset)
+		//fmt.Println(color.Red, "User ", user, " is not allowed to access ", app, path, color.Reset)
 		return reason, nil
 	}
-	fastchargeUserToken, err := createUserUsageToken(app, user)
-	if err != nil {
-		panic(fmt.Sprintln("Cannot generate _fct: ", err))
-	}
+	//fmt.Println("Creating a usage token for user", user, "on app", app, "for path", path)
+	// fastchargeUserToken, err := createUserUsageToken(app, user)
+	// if err != nil {
+	// 	panic(fmt.Sprintln("Cannot generate _fct: ", err))
+	// }
+	fastchargeUserToken := ""
+	//fmt.Println("Getting route for app", app, "and path", path)
 	if destination, mode, found := getRoute(app, path); !found {
-		response := apiGatewayErrorResponse(404, "NOT_FOUND", "Not Found: "+path)
+		response := apiGatewayErrorResponse(404, "NOT_FOUND", "Path Not Found: "+path)
 		return &response, nil
 	} else {
 		switch mode {
 		case RedirectMode:
 			if response, err := makeRedirectResponse(destination, request, fastchargeUserToken); err != nil {
-				fmt.Println(color.Red, "Error making a redirect response", err.Error(), color.Reset)
+				//fmt.Println(color.Red, "Error making a redirect response", err.Error(), color.Reset)
 				return &response, err
 			} else {
-				billUsage(user, app, path)
+				// billUsage(user, app, path)
 				return &response, nil
 			}
 		default:
 			if response, err := makeForwardResponse(destination, request, fastchargeUserToken); err != nil {
-				fmt.Println(color.Red, "Error making a forward response", err.Error(), color.Reset)
+				//fmt.Println(color.Red, "Error making a forward response", err.Error(), color.Reset)
 				return response, err
 			} else {
-				billUsage(user, app, path)
+				// billUsage(user, app, path)
 				return response, nil
 			}
 		}
@@ -103,8 +116,13 @@ func getUser(request events.APIGatewayProxyRequest) (string, *events.APIGatewayP
 		userEmail = user.(string)
 	}
 	if userEmail == "" {
-		response := apiGatewayErrorResponse(401, "UNAUTHORIZED", "You must be logged in to access this resource.")
-		return "", &response
+		if os.Getenv("DEV") == "1" {
+			response := apiGatewayErrorResponse(401, "UNAUTHORIZED", "DEV mode enabled. You must provide the X-User-Email header.")
+			return "", &response
+		} else {
+			response := apiGatewayErrorResponse(401, "UNAUTHORIZED", "You must be logged in to access this resource.")
+			return "", &response
+		}
 	} else {
 		return userEmail, nil
 	}
@@ -114,7 +132,7 @@ func getUser(request events.APIGatewayProxyRequest) (string, *events.APIGatewayP
 Handles the request when the app route uses the redirect mode.
 */
 func makeRedirectResponse(destination string, request events.APIGatewayProxyRequest, fastchargeUserToken string) (events.APIGatewayProxyResponse, error) {
-	fmt.Println(color.Yellow+"Redirecting to", destination+color.Reset)
+	//fmt.Println(color.Yellow+"Redirecting to", destination+color.Reset)
 	var destinationUrl *url.URL
 	if url, err := url.Parse(destination); err != nil {
 		return events.APIGatewayProxyResponse{
@@ -139,7 +157,7 @@ func makeRedirectResponse(destination string, request events.APIGatewayProxyRequ
 Handles the request when the app route uses the proxy mode.
 */
 func makeForwardResponse(destination string, request events.APIGatewayProxyRequest, fastchargeUserToken string) (*events.APIGatewayProxyResponse, error) {
-	fmt.Println(color.Yellow, "Forwarding to", destination, color.Reset)
+	//fmt.Println(color.Yellow, "Forwarding to", destination, color.Reset)
 	var destinationUrl *url.URL
 	if url, err := url.Parse(destination); err != nil {
 		response := apiGatewayErrorResponse(404, "NOT_FOUND", "Not Found: "+destination)
@@ -159,7 +177,7 @@ func makeForwardResponse(destination string, request events.APIGatewayProxyReque
 
 	forwardRequest, err := http.NewRequest(request.HTTPMethod, destinationUrl.String(), strings.NewReader(requestBody))
 	if err != nil {
-		fmt.Println(color.Red, "Error creating a forward request", err.Error(), color.Reset)
+		//fmt.Println(color.Red, "Error creating a forward request", err.Error(), color.Reset)
 		return nil, err
 	}
 
@@ -176,14 +194,8 @@ func makeForwardResponse(destination string, request events.APIGatewayProxyReque
 	}
 	forwardRequest.Header.Set("X-FCT", fastchargeUserToken)
 	forwardRequest.Header.Set("Host", destinationUrl.Host)
-
-	// println(fmt.Scolor.Yellow("Forwarding request to ", destinationUrl.String(), urlParams.Encode()))
-	// for k, v := range forwardRequest.Header {
-	// 	color.Yellow(fmt.Println("Header: ", k, v))
-	// }
-	fmt.Println(color.Yellow, forwardRequest, color.Reset)
+	forwardRequest.Header.Set("Accept-Encoding", "identity")
 	if response, err := http.DefaultClient.Do(forwardRequest); err != nil {
-		// println("Error: ", err.Error())
 		response := apiGatewayErrorResponse(502, "BAD_GATEWAY", "Bad Gateway: "+err.Error())
 		return &response, nil
 	} else {
@@ -216,6 +228,7 @@ func makeForwardResponse(destination string, request events.APIGatewayProxyReque
 			headers[key] = response.Header.Get(key)
 		}
 		headers["Content-Encoding"] = "identity"
+		delete(headers, "Content-Length")
 		response := events.APIGatewayProxyResponse{
 			StatusCode: response.StatusCode,
 			Headers:    headers,
@@ -237,8 +250,6 @@ type AppRouteInfo struct {
 	PathDestination map[string]string
 }
 
-var routeCache = map[string]AppRouteInfo{}
-
 func parseGatewayMode(mode string) GatewayMode {
 	switch mode {
 	case "proxy":
@@ -250,31 +261,37 @@ func parseGatewayMode(mode string) GatewayMode {
 	}
 }
 
+var getRouteCache, _ = lru.New[string, AppRouteInfo](1000)
+
 /*
 Gets the route from the cache. If the route is not in the cache, it will query
 the resource server.
 */
-func getRoute(app string, path string) (destination string, gatewayMode GatewayMode, err bool) {
-	if appRoutes, ok := routeCache[app]; ok {
-		if destination, ok := appRoutes.PathDestination[path]; ok {
+func getRoute(app string, path string) (destination string, gatewayMode GatewayMode, found bool) {
+	appRoutes, found := getRouteCache.Get(app)
+	if found {
+		if destination, found := appRoutes.PathDestination[path]; found {
 			return destination, appRoutes.GatewayMode, true
 		}
 	}
-	fmt.Println(color.Yellow, "Getting route for ", app, path, color.Reset)
+	fmt.Println(color.Yellow, "Getting route for", app, path, color.Reset)
 	if routes, err := GetAppRoutes(context.Background(), client, app); err != nil {
-		fmt.Println(color.Yellow, "Error getting routes for ", app, err, err, color.Reset)
+		fmt.Println(color.Red, "Error getting routes for", app, err, color.Reset)
 	} else {
-		fmt.Println(color.Yellow, "Got routes for ", app, routes, color.Reset)
-		routeCache[app] = AppRouteInfo{
+		// fmt.Println(color.Yellow, "Got routes for", app, routes, color.Reset)
+		appRoutes = AppRouteInfo{
 			GatewayMode:     parseGatewayMode(routes.App.GatewayMode),
 			PathDestination: map[string]string{},
 		}
 		for _, endpoint := range routes.App.Endpoints {
-			routeCache[app].PathDestination[endpoint.Path] = endpoint.Destination
+			appRoutes.PathDestination[endpoint.Path] = endpoint.Destination
 		}
+		getRouteCache.Add(app, appRoutes)
 	}
-	elem, found := routeCache[app].PathDestination[path]
-	return elem, routeCache[app].GatewayMode, found
+	if destination, found := appRoutes.PathDestination[path]; found {
+		return destination, appRoutes.GatewayMode, found
+	}
+	return "", ProxyMode, false
 }
 
 func createUserUsageToken(app string, user string) (string, error) {
@@ -290,11 +307,12 @@ func createUserUsageToken(app string, user string) (string, error) {
 }
 
 func billUsage(user string, app string, path string) {
-	fmt.Println(color.Yellow, "Billing usage for", user, app, path, color.Reset)
-	if result, err := BillUsage(context.Background(), client, user, app, path); err == nil {
-		fmt.Println(color.Yellow, "Billing usage: ", result, color.Reset)
+	//fmt.Println(color.Yellow, "Billing usage for", user, app, path, color.Reset)
+	if _, err := BillUsage(context.Background(), client, user, app, path); err == nil {
+
+		//fmt.Println(color.Yellow, "Billing usage: ", result, color.Reset)
 	} else {
-		fmt.Println(color.Yellow, "Error billing usage: ", err, color.Reset)
+		//fmt.Println(color.Yellow, "Error billing usage: ", err, color.Reset)
 	}
 }
 
@@ -361,7 +379,7 @@ func getEndpointCost(subscription GetUserSubscriptionPlanSubscriptionSubscribe, 
 
 func getPrivousCallTime(user string, app string) int64 {
 	if result, err := GetPreviousCallTimestamp(context.Background(), client, user, app); err != nil {
-		fmt.Println(color.Yellow, "Error getting previous call timestamp: %s", err.Error(), color.Reset)
+		//fmt.Println(color.Red, "Error getting previous call timestamp:", err.Error(), color.Reset)
 		return 0
 	} else if len(result.User.UsageLogs) == 0 {
 		return 0
@@ -388,8 +406,4 @@ func getPublicKey() []byte {
     MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE9CR7SW0cTqQBG1vxWnkjk5dO7zfv
     UeueXgubjSD6i6vcmHdetZ25/ItESQDBmX0LL2qYaPzqTJHbWKxqL+6CtA==
     -----END PUBLIC KEY-----`)
-}
-
-func main() {
-	lambda.Start(handler)
 }

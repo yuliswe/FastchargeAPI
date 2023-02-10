@@ -1,4 +1,4 @@
-.PHONY: build gen watch start
+.PHONY: build gen watch start warm watch-warm
 
 build:
 	make gen
@@ -7,10 +7,17 @@ build:
 
 start: 
 	make build
-	sam local start-api -p 5000
+	DEV=1 sam local start-api -p 6000
+
+warm:
+	make build
+	DEV=1 sam local start-api -p 6000 --warm-containers eager
 
 gen:
 	go run github.com/Khan/genqlient
 
 watch:
-	nodemon -e go,graphql,yaml -i generated__graphql.go -x "DEV=1 make start || exit 1"
+	nodemon -e go,graphql,yaml -i generated__graphql.go --signal SIGINT -x "make start || exit 1"
+
+watch-warm:
+	nodemon -e go,graphql,yaml -i generated__graphql.go --signal SIGINT -x "make warm || exit 1"

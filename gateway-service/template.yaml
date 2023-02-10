@@ -14,7 +14,10 @@ Parameters:
 Globals:
   Function:
     Timeout: 5
-    MemorySize: 128
+    MemorySize: 3008
+    Tracing: Active
+  Api:
+    TracingEnabled: true
 
 Resources:
   GenerateCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain 
@@ -23,26 +26,38 @@ Resources:
       DomainName: "*.fastchargeapi.com"
       ValidationMethod: DNS
       DomainValidationOptions:
-      - DomainName: !Ref "*.fastchargeapi.com"
+      - DomainName: "*.fastchargeapi.com"
         HostedZoneId: Z0358815GI2I8U5CTHXW
 
-  UnprotectedAPIs:
+  GatewayAPI:
     Type: AWS::Serverless::Api
     Properties:
-      Domain:
+      Domain: # Configure the domain of the API
         DomainName: "*.fastchargeapi.com"
-        CertificateArn: !Ref GenerateCertificate.Arn
+        CertificateArn: !Ref GenerateCertificate
         Route53:
           HostedZoneId: Z0358815GI2I8U5CTHXW
-
       StageName: !Ref Stage
       MethodSettings:
         - LoggingLevel: ERROR
           MetricsEnabled: True
           ResourcePath: "/*" # allows for logging on any resource
           HttpMethod: "*" # allows for logging on any method
-      Auth:
+      Auth: # Uses the FirebaseTokenAuthorizer to identify the session user. 
         ApiKeyRequired: false
+        DefaultAuthorizer: FirebaseTokenAuthorizer
+        Authorizers:
+          FirebaseTokenAuthorizer:
+            FunctionArn: arn:aws:lambda:us-east-1:887279901853:function:auth-service-FirebaseTokenAuthorizer-P6dNbG2HV6tE
+      GatewayResponses: 
+        UNAUTHORIZED: # This block allows customizing the message shown to user that are not logged in.
+          StatusCode: 401
+          ResponseTemplates:
+            "application/json": '{ "message": "Please login." }'
+        ACCESS_DENIED: # This block allows customizing the message shown to user denied.
+          StatusCode: 403
+          ResponseTemplates:
+            "application/json": '{ "message": "Denied" }'
 
   GatewayFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -60,17 +75,16 @@ Resources:
           Properties:
             Path: /{proxy+}
             Method: ANY
-            RestApiId: !Ref UnprotectedAPIs
-
+            RestApiId: !Ref GatewayAPI
       Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
         Variables:
-          DEV: 1
+          DEV: 0 # Set to 1 to bypass authentication
 
 Outputs:
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
   GatewayAPI:
     Description: "API Gateway endpoint URL for Prod environment for First Function"
-    Value: !Sub "https://${UnprotectedAPIs}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
+    Value: !Sub "https://${GatewayAPI}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
   GatewayFunction:
     Description: "First Lambda Function ARN"
     Value: !GetAtt GatewayFunction.Arn
