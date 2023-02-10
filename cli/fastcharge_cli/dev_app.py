@@ -7,7 +7,7 @@ from .exceptions import AlreadyExists, NotFound
 from .graphql import get_client_info
 from gql import gql
 from gql.transport.exceptions import TransportQueryError
-from .login import read_user_from_auth_file, read_auth_file
+from .login import read_valid_user_from_auth_file, read_auth_file
 from dataclasses import dataclass
 import colorama
 from click_aliases import ClickAliasedGroup
@@ -93,7 +93,7 @@ class AppInfo:
     description: str
 
     def pretty_print(self):
-        echo(terminal.blue + terminal.bold + self.name + terminal.normal)
+        echo(terminal.blue + terminal.bold + f"{self.name}:" + terminal.normal)
         echo(
             terminal.dim
             + " "

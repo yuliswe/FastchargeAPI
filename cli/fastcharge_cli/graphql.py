@@ -1,19 +1,16 @@
 from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
 from gql.transport.exceptions import TransportQueryError
-from .login import read_auth_file, read_user_from_auth_file
+from .login import read_auth_file, read_valid_user_from_auth_file
 from .exceptions import AlreadyExists, NotFound
 from click import echo
+from .config import graphql_host
 import os
 
 
 def make_client(id_token: str, user_email: str) -> Client:
-    if os.environ.get("TEST") == "1":
-        url = "http://localhost:4001/"
-    else:
-        url = "http://localhost:4000/"
     transport = AIOHTTPTransport(
-        url,
+        graphql_host,
         headers={
             "Authorization": id_token,
             "X-User-Email": user_email,
@@ -47,7 +44,7 @@ def get_client_info() -> tuple[Client, str]:
         email = os.environ.get("USER")
         return GQLClient("", email), email
 
-    user = read_user_from_auth_file()
+    user = read_valid_user_from_auth_file()
     if user is None:
         echo("You must be logged in.")
         exit(1)

@@ -3,27 +3,30 @@ import webbrowser
 
 from blessings import Terminal
 
+from .local_server import LocalServerResponse, start_local_server
+
 from .http import HttpClient
 from .dev_app import get_app, get_app_or_prompt_exit
 from .graphql import get_client_info
-from .groups import fastcharge
+from .groups import fastcharge_dev
 import click
 from gql import gql
 from dataclasses import dataclass
 from click import echo
+from . import config
 
 terminal = Terminal()
 
 
-@fastcharge.group("account")
+@fastcharge_dev.group("account")
 @click.help_option("-h", "--help")
-def fastcharge_account():
+def fastcharge_dev_account():
     """View your account balance and metics."""
 
 
-@fastcharge_account.command("info")
+@fastcharge_dev_account.command("info")
 @click.help_option("-h", "--help")
-def fastcharge_account_info():
+def fastcharge_dev_account_info():
     """Show account information."""
     client, user_email = get_client_info()
     echo(f"Account: {user_email}")
@@ -70,10 +73,10 @@ def fastcharge_account_info():
     echo()
 
 
-@fastcharge_account.command("withdraw")
+@fastcharge_dev_account.command("withdraw")
 @click.help_option("-h", "--help")
 @click.argument("amount", type=float, required=True)
-def fastcharge_account_withdraw(amount: str):
+def fastcharge_account_dev_withdraw(amount: str):
     """Withdraw account balance to your Stripe account."""
     client, user_email = get_client_info()
     user = client.execute(
@@ -159,27 +162,42 @@ def get_dashboard_login_link(user_email: str) -> str:
     return HttpClient(user_email).get("/dashboard-login").json()["location"]
 
 
-@fastcharge_account.command("topup")
+@fastcharge_dev_account.command("topup")
 @click.help_option("-h", "--help")
 @click.argument("amount", type=float, required=True)
 def fastcharge_account_topup(amount: float):
-    """Top up your FastchargeAPI account."""
+    """Top up your FastchargeAPI account.
+
+    Top up your account in USD.
+    """
     amount_cents = int(amount * 100)
     client, user_email = get_client_info()
-    response = HttpClient(user_email).post(
-        "/checkout",
-        json={
-            "amount_cents": amount_cents,
-            "success_url": "http://localhost:8000/topup?success=true",
-            "cancel_url": "http://localhost:8000/topup?cancel=true",
-        },
-    )
-    data = response.json()
-    webbrowser.open_new(data["location"])
+    with start_local_server() as (port, conn):
+        response = HttpClient(user_email).post(
+            "/checkout",
+            json={
+                "amount_cents": amount_cents,
+                "success_url": f"{config.react_host}/topup?success=true&post_result=http://localhost:{port}",
+                "cancel_url": f"{config.react_host}/topup?cancel=true&post_result=http://localhost:{port}",
+            },
+        )
+        data = response.json()
+        location = data["location"]
+        echo("Please complete payment in browser:")
+        echo(terminal.blue + " " + location + terminal.normal)
+        webbrowser.open_new(location)
+        res: LocalServerResponse = conn.recv()  # blocks until payment is complete
+        if res.json["status"] == "success":
+            echo(terminal.green + "Payment successful." + terminal.normal)
+        elif res.json["status"] == "canceled":
+            echo(terminal.red + "Payment canceled." + terminal.normal)
 
 
-@fastcharge_account.command("connect-stripe")
+@fastcharge_dev_account.command("connect-stripe")
 @click.help_option("-h", "--help")
 def fastcharge_account_connect_stripe():
     """Connect your Stripe account to FastchargeAPI."""
-    webbrowser.open_new(f"http://localhost:8000/onboard")
+
+    echo("Please complete the onboarding in browser:")
+    echo(terminal.blue + " " + f"{config.react_host}/onboard" + terminal.normal)
+    webbrowser.open_new(f"{config.react_host}/onboard")

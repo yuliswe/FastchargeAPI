@@ -13,6 +13,7 @@ from click_aliases import ClickAliasedGroup
 from .exceptions import AlreadyExists, NotFound
 from click import echo
 import re
+import emoji
 
 terminal = Terminal()
 
@@ -176,28 +177,25 @@ def api_list(app_name: str):
         echo(
             terminal.blue
             + terminal.bold
-            + f"All endpoints of app \"{app['name']}\":"
+            + f"\"{app['name']}\" endpoints:\n"
             + terminal.normal
         )
-        echo(f"\n Gateway mode: {app['gatewayMode']}\n")
+        # echo(f"\n Gateway mode: {app['gatewayMode']}\n")
         if app["endpoints"]:
             for endpoint_i, endpoint in enumerate(app["endpoints"]):
                 endpoint = APIInfo(**endpoint)
                 url = f"https://{app['name']}.fastchargeapi.com{endpoint.path}"
                 echo(terminal.bold, nl=False)
                 echo(" Ref id:      " + endpoint.ref)
-                echo(" Path:        " + endpoint.path + terminal.normal)
-                echo(" Endpoint:    " + url)
-                echo(" Destination: " + endpoint.destination)
+                echo(" Endpoint:    " + f"{url} ~> {endpoint.destination}")
                 echo(
                     colorama.Style.DIM
-                    + f"  {endpoint.description or 'No description.'}"
+                    + f" {endpoint.description or 'No description.'}"
                     + colorama.Style.RESET_ALL
                 )
                 echo()
         else:
-            echo(colorama.Style.RESET_ALL + " No API available.")
-        echo("\n")
+            echo(colorama.Style.RESET_ALL + "No API available.")
 
 
 @fastcharge_dev_api.command("update", aliases=["up"])
