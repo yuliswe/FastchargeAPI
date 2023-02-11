@@ -76,7 +76,7 @@ def launch_stripe_listen_onboard():
 
 def launch_gateway_service():
     run(
-        'TEST=1 nodemon -e go,graphql -i generated__graphql.go -x "make build && sam local start-api -p 5001"',
+        'TEST=1 nodemon -e go,graphql -i generated__graphql.go --signal SIGINT -x "make build && sam local start-api -p 6001"',
         cwd=project_root / "gateway-service",
         shell=True,
         check=True,

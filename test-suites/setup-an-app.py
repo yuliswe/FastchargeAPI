@@ -54,9 +54,9 @@ if __name__ == "__main__":
         "https://google.com",
     )
 
-    prompt("Visit http://TestApp.localhost:5001/google", pause=True)
+    prompt("Visit http://TestApp.localhost:6001/google", pause=True)
     response = requests.get(
-        "http://localhost:5001/google",
-        headers={"Host": "TestApp.localhost:5001"},
+        "http://localhost:6001/google",
+        headers={"Host": "TestApp.localhost:6001"},
     )
     print(response)

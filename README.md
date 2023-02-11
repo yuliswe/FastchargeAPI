@@ -18,7 +18,7 @@ source ./devenv.bash
 
 * GraphQL Apollo: http://localhost:4000
 * ReactJs frontend: http://localhost:8000
-* Gateway service `sam local start-api -p 5000`: http://localhost:5000
+* Gateway service `sam local start-api -p 6000`: http://localhost:6000
 * Payment service `sam local start-api -p 3000`: http://localhost:3000
 * DynamoDB `docker compose -f ./dynamodb.yml up`: http://localhost:9000
 
