@@ -3,6 +3,8 @@ import webbrowser
 
 from blessings import Terminal
 
+from .dev_stripe import get_dashboard_login_link
+
 from .local_server import LocalServerResponse, start_local_server
 
 from .http import HttpClient
@@ -21,7 +23,7 @@ terminal = Terminal()
 @fastcharge_dev.group("account")
 @click.help_option("-h", "--help")
 def fastcharge_dev_account():
-    """View your account balance and metics."""
+    """View your account balance and metics"""
 
 
 @fastcharge_dev_account.command("info")
@@ -44,7 +46,7 @@ def fastcharge_dev_account_info():
         variable_values={"user_email": user_email},
     )["user"]
     # login_link = "https://connect.stripe.com/app/express"
-    login_link = get_dashboard_login_link()
+    login_link = "https://connect.stripe.com/express_login"
     if user["stripeConnectAccountId"]:
         echo(
             terminal.green
@@ -77,7 +79,10 @@ def fastcharge_dev_account_info():
 @click.help_option("-h", "--help")
 @click.argument("amount", type=float, required=True)
 def fastcharge_account_dev_withdraw(amount: str):
-    """Withdraw account balance to your Stripe account."""
+    """Withdraw account balance to your Stripe account.
+
+    Amount in USD.
+    """
     client, user_email = get_client_info()
     user = client.execute(
         gql(
@@ -155,19 +160,13 @@ def fastcharge_account_dev_withdraw(amount: str):
         echo(terminal.blue + " " + get_dashboard_login_link() + terminal.normal)
 
 
-def get_dashboard_login_link() -> str:
-    response = HttpClient().get("/dashboard-login")
-    dashboard_url = response.json()["location"]
-    return dashboard_url
-
-
 @fastcharge_dev_account.command("topup")
 @click.help_option("-h", "--help")
 @click.argument("amount", type=float, required=True)
 def fastcharge_account_topup(amount: float):
     """Top up your FastchargeAPI account.
 
-    Top up your account in USD.
+    Amount in USD.
     """
     amount_cents = int(amount * 100)
     client, user_email = get_client_info()
@@ -190,13 +189,3 @@ def fastcharge_account_topup(amount: float):
             echo(terminal.green + "Payment successful." + terminal.normal)
         elif res.json["status"] == "canceled":
             echo(terminal.red + "Payment canceled." + terminal.normal)
-
-
-@fastcharge_dev_account.command("connect-stripe")
-@click.help_option("-h", "--help")
-def fastcharge_account_connect_stripe():
-    """Connect your Stripe account to FastchargeAPI."""
-
-    echo("Please complete the onboarding in browser:")
-    echo(terminal.blue + " " + f"{config.react_host}/onboard" + terminal.normal)
-    webbrowser.open_new(f"{config.react_host}/onboard")

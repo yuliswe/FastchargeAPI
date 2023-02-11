@@ -21,7 +21,7 @@ terminal = Terminal()
 @fastcharge_dev.group("api", cls=ClickAliasedGroup)
 @click.help_option("-h", "--help")
 def fastcharge_dev_api():
-    """Manage API endpoints for an existing app."""
+    """Manage API endpoints for an existing app"""
     pass
 
 

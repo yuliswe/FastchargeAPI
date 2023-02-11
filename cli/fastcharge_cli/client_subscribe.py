@@ -5,7 +5,7 @@ from blessings import Terminal
 from .pricing import PricingInfo, pretty_print_app_pricing
 from .dev_app import AppInfo, get_app
 from .graphql import get_client_info
-from .groups import fastcharge
+from .groups import fastcharge_client
 import click
 from gql import gql
 import colorama
@@ -17,14 +17,14 @@ from .exceptions import NotFound
 terminal = Terminal()
 
 
-@fastcharge.group("subscription", cls=ClickAliasedGroup)
+@fastcharge_client.group("sub", cls=ClickAliasedGroup, aliases=["subscription"])
 @click.help_option("-h", "--help")
 def fastcharge_subscribe():
     """Manage your account subscriptions."""
     pass
 
 
-@fastcharge_subscribe.command("list", aliases=["ls"])
+@fastcharge_subscribe.command("ls", aliases=["list"])
 def subscribe_list():
     """List your subscriptions."""
     client, email = get_client_info()
@@ -72,10 +72,10 @@ def subscribe_list():
         echo()
 
 
-@fastcharge_subscribe.command("subscribe", aliases=["sub"])
+@fastcharge_subscribe.command("add")
 @click.argument("app_name", required=True)
 @click.option("-p", "--plan", help="Plan to subscribe to.")
-def fastcharge_subscribe_sub(app_name: str, plan: Optional[str] = None):
+def fastcharge_subscription_add(app_name: str, plan: Optional[str] = None):
     """Subscribe to an app."""
     client, email = get_client_info()
     app = get_app(app_name)
@@ -180,10 +180,10 @@ def fastcharge_subscribe_sub(app_name: str, plan: Optional[str] = None):
     )
 
 
-@fastcharge_subscribe.command("unsubscribe", aliases=["unsub"])
+@fastcharge_subscribe.command("rm", aliases=["remove"])
 @click.argument("app_name", required=True)
-def fastcharge_subscribe_unsub(app_name: str):
-    """Unsubscribe to a app."""
+def fastcharge_subscription_remove(app_name: str):
+    """Unsubscribe from an app."""
     try:
         subscription = unsubscribe(app_name)
     except NotFound:

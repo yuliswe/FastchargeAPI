@@ -19,7 +19,7 @@ terminal = Terminal()
 @fastcharge_dev.group("app", cls=ClickAliasedGroup)
 @click.help_option("-h", "--help")
 def fastcharge_dev_app():
-    """Create and manage apps."""
+    """Create and manage apps"""
     pass
 
 

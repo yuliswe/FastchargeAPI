@@ -1,7 +1,7 @@
 from typing import Optional
 from .dev_app import AppInfo, get_app, get_app_or_prompt_exit
 from .graphql import get_client_info
-from .groups import fastcharge
+from .groups import fastcharge_dev
 import click
 from gql import gql
 import colorama
@@ -22,10 +22,10 @@ class PricingInfo:
     chargePerRequest: str
 
 
-@fastcharge.group("pricing", cls=ClickAliasedGroup)
+@fastcharge_dev.group("pricing", cls=ClickAliasedGroup)
 @click.help_option("-h", "--help")
 def fastcharge_pricing():
-    """Manage pricing for an existing app."""
+    """Manage pricing for an existing app"""
 
 
 @fastcharge_pricing.command("list", aliases=["ls"])
