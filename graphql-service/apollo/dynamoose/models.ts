@@ -10,12 +10,12 @@ if (process.env.TEST == "1") {
     console.warn("Using local database http://localhost:9001/");
 } else {
     // Create new DynamoDB instance
-    const ddb = new dynamoose.aws.ddb.DynamoDB({
-        region: "us-east-1",
-    });
+    // const ddb = new dynamoose.aws.ddb.DynamoDB({
+    //     region: "us-east-1",
+    // });
 
-    // Set DynamoDB instance to the Dynamoose DDB instance
-    dynamoose.aws.ddb.set(ddb);
+    // // Set DynamoDB instance to the Dynamoose DDB instance
+    // dynamoose.aws.ddb.set(ddb);
     console.warn("Using remote database us-east-1");
 }
 

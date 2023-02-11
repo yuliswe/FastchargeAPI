@@ -1,7 +1,7 @@
 # This makefile is not intended to be run directly, but is used by AWS SAM as a
 # build step.
 build-CopyDependencies:
-	echo *
-	mkdir -p "$(ARTIFACTS_DIR)/../ApolloFunction/schema"
-	cp ./schema/*.graphql "$(ARTIFACTS_DIR)/../ApolloFunction/schema"
-
+	mkdir -p "$(ARTIFACTS_DIR)/schema"
+	cp ./schema/*.graphql "$(ARTIFACTS_DIR)/schema"
+	mkdir -p "$(ARTIFACTS_DIR)/../ApolloServer/schema"
+	cp ./schema/*.graphql "$(ARTIFACTS_DIR)/../ApolloServer/schema"

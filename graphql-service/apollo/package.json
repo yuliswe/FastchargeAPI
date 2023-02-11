@@ -8,8 +8,8 @@
     "gen": "tsc -p ./codegen-plugin && graphql-codegen --config codegen.yml",
     "build": "npm run gen && tsc",
     "start": "node --experimental-specifier-resolution=node ./dist/devserver.js",
-    "watch": "nodemon -e yml,ts,graphql -i ./__generated__ --exec \"npm run build && npm run start || exit 1\"",
-    "watch-gen": "nodemon -e yml,ts,graphql -i ./__generated__ --exec \"tsc -p ./codegen-plugin && graphql-codegen --config codegen.yml\"",
+    "watch": "nodemon -e yml,ts,graphql -i ./__generated__ --signal SIGINT -x \"npm run build && npm run start || exit 1\"",
+    "watch-gen": "nodemon -e yml,ts,graphql -i ./__generated__ --signal SIGINT -x \"tsc -p ./codegen-plugin && graphql-codegen --config codegen.yml\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

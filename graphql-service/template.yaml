@@ -13,8 +13,11 @@ Parameters:
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 30
-    MemorySize: 256
+    Timeout: 3
+    MemorySize: 3008
+    Tracing: Active
+  Api:
+    TracingEnabled: true
 
 Resources:
   # This is a custom build layer. See:
@@ -37,12 +40,21 @@ Resources:
       - DomainName: "api.graphql.fastchargeapi.com"
         HostedZoneId: Z0358815GI2I8U5CTHXW
         
-  UnprotectedAPIs:
+  GenerateIAMCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain 
+    Type: AWS::CertificateManager::Certificate
+    Properties: 
+      DomainName: "api.iam.graphql.fastchargeapi.com"
+      ValidationMethod: DNS
+      DomainValidationOptions:
+      - DomainName: "api.iam.graphql.fastchargeapi.com"
+        HostedZoneId: Z0358815GI2I8U5CTHXW
+
+  APIGateway:
     Type: AWS::Serverless::Api
     Properties:
       Domain:
         DomainName: "api.graphql.fastchargeapi.com"
-        CertificateArn: !Ref GenerateCertificate.Arn
+        CertificateArn: !Ref GenerateCertificate
         Route53:
           HostedZoneId: Z0358815GI2I8U5CTHXW
       StageName: !Ref Stage
@@ -51,28 +63,69 @@ Resources:
           MetricsEnabled: True
           ResourcePath: "/*" # allows for logging on any resource
           HttpMethod: "*" # allows for logging on any method
-      Auth:
+      Auth: # Uses the FirebaseTokenAuthorizer to identify the session user. 
         ApiKeyRequired: false
+        DefaultAuthorizer: FirebaseTokenAuthorizer
+        Authorizers:
+          FirebaseTokenAuthorizer:
+            FunctionArn: arn:aws:lambda:us-east-1:887279901853:function:auth-service-FirebaseTokenAuthorizer-P6dNbG2HV6tE
+      Cors:
+        AllowMethods: "'*'"
+        AllowOrigin: "'*'"
 
-  ApolloFunction:
+  # Create another gateway with IAM based authentication
+  APIGatewayIAM:
+    Type: AWS::Serverless::Api
+    Properties:
+      Domain:
+        DomainName: "api.iam.graphql.fastchargeapi.com"
+        CertificateArn: !Ref GenerateIAMCertificate
+        Route53:
+          HostedZoneId: Z0358815GI2I8U5CTHXW
+      StageName: !Ref Stage
+      MethodSettings:
+        - LoggingLevel: ERROR
+          MetricsEnabled: True
+          ResourcePath: "/*" # allows for logging on any resource
+          HttpMethod: "*" # allows for logging on any method
+      Auth: # Uses the FirebaseTokenAuthorizer to identify the session user. 
+        DefaultAuthorizer: AWS_IAM
+
+  ApolloServer:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      CodeUri: apollo
+      CodeUri: ./apollo
       Handler: lambdaHandler.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
         - arm64
+      Policies:
+        - AmazonDynamoDBFullAccess # Give the Lambda service access to poll your DynamoDB Stream
       Events:
-        GET:
+        Get:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Path: /
             Method: get
-        POST:
+            RestApiId: !Ref APIGateway
+        Post:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Path: /
             Method: post
+            RestApiId: !Ref APIGateway
+        GetIAM:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /
+            Method: get
+            RestApiId: !Ref APIGatewayIAM
+        PostIAM:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /
+            Method: post
+            RestApiId: !Ref APIGatewayIAM
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -86,12 +139,12 @@ Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  UnprotectedAPIs:
+  APIGateway:
     Description: "API Gateway endpoint URL"
-    Value: !Sub "https://${UnprotectedAPIs}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
-  ApolloFunction:
-    Description: "ApolloFunction ARN"
-    Value: !GetAtt ApolloFunction.Arn
-  ApolloFunctionIamRole:
-    Description: "Implicit IAM Role created (ApolloFunctionRole)"
-    Value: !GetAtt ApolloFunctionRole.Arn
+    Value: !Sub "https://${APIGateway}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
+  ApolloServer:
+    Description: "ApolloServer ARN"
+    Value: !GetAtt ApolloServer.Arn
+  ApolloServerIamRole:
+    Description: "Implicit IAM Role created (ApolloServerRole)"
+    Value: !GetAtt ApolloServerRole.Arn
