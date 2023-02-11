@@ -6,3 +6,5 @@ blessed
 click
 colorama
 schema
+boto3
+aws-requests-auth

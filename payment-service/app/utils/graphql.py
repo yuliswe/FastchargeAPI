@@ -1,12 +1,26 @@
-from gql import Client, gql
+from gql import Client
 from gql.transport.requests import RequestsHTTPTransport
 from . import signing
 import os
+import boto3
+from botocore.auth import SigV4Auth
+from botocore.awsrequest import AWSRequest
+import requests
+from aws_requests_auth.aws_auth import AWSRequestsAuth
 
-graphql_service = "https://api.graphql.fastchargeapi.com"
+from aws_requests_auth.boto_utils import BotoAWSRequestsAuth
 
-if os.environ.get("LOCAL") == "1":
+auth = BotoAWSRequestsAuth(
+    aws_host="api.iam.graphql.fastchargeapi.com",
+    aws_region="us-east-1",
+    aws_service="execute-api",
+)
+
+graphql_service = "https://api.iam.graphql.fastchargeapi.com"
+
+if os.environ.get("LOCAL_GRAPHQL") == "1":
     graphql_service = "http://host.docker.internal:4000"
+    auth = None
 
 
 def get_graphql_client() -> Client:
@@ -15,6 +29,8 @@ def get_graphql_client() -> Client:
         headers={
             "Authorization": signing.get_payment_service_idtoken(),
             "X-User-Email": "payment-service@fastcharge-api.com",
+            "Content-Type": "application/json",
         },
+        auth=auth,
     )
     return Client(transport=transport, fetch_schema_from_transport=True)

@@ -74,6 +74,8 @@ Resources:
       Architectures:
         - arm64 # if you are using Apple M1
       Timeout: 30
+      Policies:
+        - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
       Events:
         POST:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -101,6 +103,8 @@ Resources:
       Architectures:
         - arm64 # if you are using Apple M1
       Timeout: 30
+      Policies:
+        - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
       Events:
         POST:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -126,6 +130,8 @@ Resources:
       Architectures:
         - arm64 # if you are using Apple M1
       Timeout: 30
+      Policies:
+        - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
       Events:
         POST:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -145,6 +151,8 @@ Resources:
       Architectures:
         - arm64 # if you are using Apple M1
       Timeout: 30
+      Policies:
+        - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
       Events:
         POST:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -164,6 +172,8 @@ Resources:
       Architectures:
         - arm64 # if you are using Apple M1
       Timeout: 30
+      Policies:
+        - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
       Events:
         GET:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -181,6 +191,8 @@ Resources:
       Architectures:
         - arm64 # if you are using Apple M1
       Timeout: 30
+      Policies:
+        - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
       Events:
         POST:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -189,26 +201,6 @@ Resources:
             Path: /payout
             Method: post
 
-  # ApplicationResourceGroup:
-  #   Type: AWS::ResourceGroups::Group
-  #   Properties:
-  #     Name:
-  #       Fn::Join:
-  #       - ''
-  #       - - ApplicationInsights-SAM-
-  #         - Ref: AWS::StackName
-  #     ResourceQuery:
-  #       Type: CLOUDFORMATION_STACK_1_0
-  # ApplicationInsightsMonitoring:
-  #   Type: AWS::ApplicationInsights::Application
-  #   Properties:
-  #     ResourceGroupName:
-  #       Fn::Join:
-  #       - ''
-  #       - - ApplicationInsights-SAM-
-  #         - Ref: AWS::StackName
-  #     AutoConfigurationEnabled: 'true'
-  #   DependsOn: ApplicationResourceGroup
 Outputs:
   APIGateway:
     Description: API APIGateway endpoint URL for DEV stage for Hello World function
