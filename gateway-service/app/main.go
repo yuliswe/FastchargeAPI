@@ -16,6 +16,11 @@ import (
 	"github.com/TwiN/go-color"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+
+	"github.com/aws/aws-sdk-go/aws/session"
+	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
+	"github.com/sha1sum/aws_signing_client"
+
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	lru "github.com/hashicorp/golang-lru/v2"
@@ -28,16 +33,24 @@ var graphqlService string
 var client graphql.Client
 
 func main() {
-	if os.Getenv("DEV") == "1" {
-		fmt.Println(color.Red, "DEV mode enabled", color.Reset)
+	client = createGraphQLClient()
+	lambda.Start(handler)
+}
+
+func createGraphQLClient() graphql.Client {
+	if os.Getenv("LOCAL_GRAPHQL") == "1" {
 		graphqlService = "http://host.docker.internal:4000"
 		fmt.Println(color.Green, "Connecting to", graphqlService, color.Reset)
 	} else {
-		graphqlService = "https://api.graphql.fastchargeapi.com"
+		graphqlService = "https://api.iam.graphql.fastchargeapi.com"
 		fmt.Println(color.Green, "Connecting to", graphqlService, color.Reset)
 	}
-	client = graphql.NewClient(graphqlService, http.DefaultClient)
-	lambda.Start(handler)
+	// doc https://github.com/sha1sum/aws_signing_client
+	sess := session.Must(session.NewSession())
+	credentials := sess.Config.Credentials
+	var signer = v4.NewSigner(credentials)
+	var awsClient, _ = aws_signing_client.New(signer, nil, "execute-api", "us-east-1")
+	return graphql.NewClient(graphqlService, awsClient)
 }
 
 /*
@@ -109,15 +122,16 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 
 func getUser(request events.APIGatewayProxyRequest) (string, *events.APIGatewayProxyResponse) {
 	var userEmail string
-	if os.Getenv("DEV") == "1" {
+	if os.Getenv("TRUST_X_USER_EMAIL_HEADER") == "1" {
+		fmt.Println(color.Red, "TRUST_X_USER_EMAIL_HEADER enabled. Reading user from the X-User-Email header.", color.Reset)
 		userEmail = request.Headers["X-User-Email"]
 	}
 	if user, found := request.RequestContext.Authorizer["userEmail"]; found {
 		userEmail = user.(string)
 	}
 	if userEmail == "" {
-		if os.Getenv("DEV") == "1" {
-			response := apiGatewayErrorResponse(401, "UNAUTHORIZED", "DEV mode enabled. You must provide the X-User-Email header.")
+		if os.Getenv("TRUST_X_USER_EMAIL_HEADER") == "1" {
+			response := apiGatewayErrorResponse(401, "UNAUTHORIZED", "TRUST_X_USER_EMAIL_HEADER enabled. You must provide the X-User-Email header.")
 			return "", &response
 		} else {
 			response := apiGatewayErrorResponse(401, "UNAUTHORIZED", "You must be logged in to access this resource.")
@@ -331,7 +345,7 @@ func userIsAllowedToAccess(user string, app string, path string) (bool, *events.
 	// In order to access an endpoint, the user must be subscribed to the app,
 	// and have enough balance.
 	var subscription GetUserSubscriptionPlanSubscriptionSubscribe
-	if result, err := GetUserSubscriptionPlan(context.Background(), client, user, app); err == nil {
+	if result, err := GetUserSubscriptionPlan(context.Background(), client, user, app); err != nil {
 		response := apiGatewayErrorResponse(402, "NOT_SUBSCRIBED", "You are not subscribed to this app.")
 		return false, &response
 	} else {

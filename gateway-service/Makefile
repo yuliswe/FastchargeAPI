@@ -7,11 +7,11 @@ build:
 
 start: 
 	make build
-	DEV=1 sam local start-api -p 6000
+	sam local start-api -p 6000 --env-vars ./devenv.json
 
 warm:
 	make build
-	DEV=1 sam local start-api -p 6000 --warm-containers eager
+	sam local start-api -p 6000 --warm-containers eager --env-vars ./devenv.json
 
 gen:
 	go run github.com/Khan/genqlient

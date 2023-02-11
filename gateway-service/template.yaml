@@ -57,7 +57,7 @@ Resources:
         ACCESS_DENIED: # This block allows customizing the message shown to user denied.
           StatusCode: 403
           ResponseTemplates:
-            "application/json": '{ "message": "Denied" }'
+            "application/json": '{ "message": "Authorization expired." }'
 
   GatewayFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -76,9 +76,12 @@ Resources:
             Path: /{proxy+}
             Method: ANY
             RestApiId: !Ref GatewayAPI
+      Policies:
+        - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
       Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
         Variables:
-          DEV: 0 # Set to 1 to bypass authentication
+          TRUST_X_USER_EMAIL_HEADER: "" # Set to 1 to bypass authentication
+          LOCAL_GRAPHQL: "" # Set to 1 to use http://host.docker.internal:4000 as the graphql server
 
 Outputs:
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
