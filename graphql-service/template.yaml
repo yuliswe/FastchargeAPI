@@ -13,7 +13,7 @@ Parameters:
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 3
+    Timeout: 1
     MemorySize: 3008
     Tracing: Active
   Api:
@@ -59,7 +59,7 @@ Resources:
           HostedZoneId: Z0358815GI2I8U5CTHXW
       StageName: !Ref Stage
       MethodSettings:
-        - LoggingLevel: ERROR
+        - LoggingLevel: INFO
           MetricsEnabled: True
           ResourcePath: "/*" # allows for logging on any resource
           HttpMethod: "*" # allows for logging on any method
@@ -72,7 +72,7 @@ Resources:
       Cors:
         AllowMethods: "'*'"
         AllowOrigin: "'*'"
-
+        
   # Create another gateway with IAM based authentication
   APIGatewayIAM:
     Type: AWS::Serverless::Api
@@ -84,7 +84,7 @@ Resources:
           HostedZoneId: Z0358815GI2I8U5CTHXW
       StageName: !Ref Stage
       MethodSettings:
-        - LoggingLevel: ERROR
+        - LoggingLevel: INFO
           MetricsEnabled: True
           ResourcePath: "/*" # allows for logging on any resource
           HttpMethod: "*" # allows for logging on any method
@@ -114,12 +114,29 @@ Resources:
             Path: /
             Method: post
             RestApiId: !Ref APIGateway
-        GetIAM:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            Path: /
-            Method: get
-            RestApiId: !Ref APIGatewayIAM
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2022"
+        Sourcemap: true
+        EntryPoints:
+          - lambdaHandler.ts
+
+  ApolloServerIAM:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: ./apollo
+      Handler: lambdaHandler.lambdaHandler
+      Runtime: nodejs18.x
+      Architectures:
+        - arm64
+      Policies:
+        - AmazonDynamoDBFullAccess # Give the Lambda service access to poll your DynamoDB Stream
+      Environment:
+        Variables:
+          TRUST_X_USER_EMAIL_HEADER: "0" # WARNING: X-User-Email must not be trusted in production.
+      Events:
         PostIAM:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:

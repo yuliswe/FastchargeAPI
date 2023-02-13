@@ -1,0 +1,5 @@
+{
+    "ApolloServerIAM": {
+        "TRUST_X_USER_EMAIL_HEADER": "1"
+    }
+}

@@ -16,10 +16,26 @@ export class AlreadyExists extends GraphQLError {
     }
 }
 
+export class BadInput extends GraphQLError {
+    constructor(public msg: string) {
+        super(msg, {
+            extensions: { code: "BAD_USER_INPUT" },
+        });
+    }
+}
+
 export class Denied extends GraphQLError {
     constructor() {
         super(`You do not have permission to perform this action.`, {
             extensions: { code: "PERMISSION_DENIED" },
+        });
+    }
+}
+
+export class Unauthorized extends GraphQLError {
+    constructor() {
+        super(`You must log in to perform this action.`, {
+            extensions: { code: "UNAUTHORIZED" },
         });
     }
 }

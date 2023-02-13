@@ -51,7 +51,10 @@
       "cognitoAuthenticationProvider": null,
       "userArn": null,
       "userAgent": "Custom User Agent String",
-      "user": null
+      "user": null,
+      "authorizer": {
+        "firebaseUserId": "1234567890"
+      }
     },
     "path": "/prod/path/to/resource",
     "resourcePath": "/{proxy+}",
