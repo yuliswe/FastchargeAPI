@@ -19,9 +19,8 @@
     "eslint-plugin-n": "^15.6.1",
     "eslint-plugin-promise": "^6.1.1",
     "eslint-plugin-react": "^7.32.1",
+    "nodeman": "^1.1.2",
     "prettier": "^2.7.1",
-    "typescript": "^4.9.4",
-    "nodeman": "^1.1.2"
-  },
-  "dependencies": {}
+    "typescript": "^4.9.4"
+  }
 }
