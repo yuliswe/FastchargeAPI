@@ -13,7 +13,7 @@ Parameters:
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 5
+    Timeout: 2
     MemorySize: 3008
     Tracing: Active
   Api:
@@ -78,6 +78,7 @@ Resources:
             RestApiId: !Ref GatewayAPI
       Policies:
         - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
+        - AWSLambdaRole # This will allow this lambda to send http request to the graphql api
       Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
         Variables:
           TRUST_X_USER_EMAIL_HEADER: "" # Set to 1 to bypass authentication

@@ -17,40 +17,15 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 
-	"github.com/aws/aws-sdk-go/aws/session"
-	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
-	"github.com/sha1sum/aws_signing_client"
-
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	lru "github.com/hashicorp/golang-lru/v2"
 	"github.com/shopspring/decimal"
-
-	"github.com/Khan/genqlient/graphql"
 )
 
-var graphqlService string
-var client graphql.Client
-
 func main() {
-	client = createGraphQLClient()
-	lambda.Start(handler)
-}
-
-func createGraphQLClient() graphql.Client {
-	if os.Getenv("LOCAL_GRAPHQL") == "1" {
-		graphqlService = "http://host.docker.internal:4000"
-		fmt.Println(color.Green, "Connecting to", graphqlService, color.Reset)
-	} else {
-		graphqlService = "https://api.iam.graphql.fastchargeapi.com"
-		fmt.Println(color.Green, "Connecting to", graphqlService, color.Reset)
-	}
-	// doc https://github.com/sha1sum/aws_signing_client
-	sess := session.Must(session.NewSession())
-	credentials := sess.Config.Credentials
-	var signer = v4.NewSigner(credentials)
-	var awsClient, _ = aws_signing_client.New(signer, nil, "execute-api", "us-east-1")
-	return graphql.NewClient(graphqlService, awsClient)
+	initGraphQLClient()
+	lambda.Start(lambdaHandler)
 }
 
 /*
@@ -61,7 +36,7 @@ aws authorizer. The role of this function is upon receiving a request:
  2. Send a request to the resource server to bill the usage (concurrently).
  3. Respond a redirect to the client with the destination url.
 */
-func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
+func lambdaHandler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
 	if response, err := handle(request); err == nil {
 		return response, nil
 	} else {
@@ -71,18 +46,20 @@ func handler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResp
 }
 
 func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
-	//fmt.Println(color.Yellow, "Lambda Request:", request, color.Reset)
 	path := request.Path
-	app := strings.Split(request.Headers["Host"], ".")[0]
-	if app == "api" { // this is reserved for our internal api
-		response := apiGatewayErrorResponse(404, "NOT_FOUND", "App Not Found: "+app)
-		return &response, nil
-	}
-	//fmt.Println("Identifying user")
-	user, errResp := getUser(request)
+	app, errResp := parseAppName(request)
 	if errResp != nil {
 		return errResp, nil
 	}
+
+	//fmt.Println("Identifying user")
+	user, errResp := parseUser(request)
+	if errResp != nil {
+		return errResp, nil
+	}
+
+	setGraphqlClientUser(user)
+
 	//fmt.Println("Checking is user is allowed to access app", app, "user:", user)
 	if allowed, reason := userIsAllowedToAccess(user, app, path); !allowed {
 		//fmt.Println(color.Red, "User ", user, " is not allowed to access ", app, path, color.Reset)
@@ -102,7 +79,7 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 		switch mode {
 		case RedirectMode:
 			if response, err := makeRedirectResponse(destination, request, fastchargeUserToken); err != nil {
-				//fmt.Println(color.Red, "Error making a redirect response", err.Error(), color.Reset)
+				fmt.Println(color.Red, "Error making a redirect response", err, color.Reset)
 				return &response, err
 			} else {
 				// billUsage(user, app, path)
@@ -110,7 +87,7 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 			}
 		default:
 			if response, err := makeForwardResponse(destination, request, fastchargeUserToken); err != nil {
-				//fmt.Println(color.Red, "Error making a forward response", err.Error(), color.Reset)
+				fmt.Println(color.Red, "Error making a forward response", err, color.Reset)
 				return response, err
 			} else {
 				// billUsage(user, app, path)
@@ -120,7 +97,31 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 	}
 }
 
-func getUser(request events.APIGatewayProxyRequest) (string, *events.APIGatewayProxyResponse) {
+func parseAppName(request events.APIGatewayProxyRequest) (string, *events.APIGatewayProxyResponse) {
+	host := request.Headers["host"]
+	if host == "" {
+		host = request.Headers["Host"]
+	}
+	if host == "" {
+		host = request.RequestContext.DomainName
+	}
+	if host == "" {
+		response := apiGatewayErrorResponse(404, "NOT_FOUND", "Host header is missing")
+		return "", &response
+	}
+	app := strings.Split(host, ".")[0]
+	if app == "" {
+		response := apiGatewayErrorResponse(404, "NOT_FOUND", "App name is missing. Host: "+host)
+		return "", &response
+	}
+	if app == "api" { // this is reserved for our internal api
+		response := apiGatewayErrorResponse(404, "NOT_FOUND", "App Not Found: "+app)
+		return "", &response
+	}
+	return app, nil
+}
+
+func parseUser(request events.APIGatewayProxyRequest) (string, *events.APIGatewayProxyResponse) {
 	var userEmail string
 	if os.Getenv("TRUST_X_USER_EMAIL_HEADER") == "1" {
 		fmt.Println(color.Red, "TRUST_X_USER_EMAIL_HEADER enabled. Reading user from the X-User-Email header.", color.Reset)
@@ -289,7 +290,7 @@ func getRoute(app string, path string) (destination string, gatewayMode GatewayM
 		}
 	}
 	fmt.Println(color.Yellow, "Getting route for", app, path, color.Reset)
-	if routes, err := GetAppRoutes(context.Background(), client, app); err != nil {
+	if routes, err := GetAppRoutes(context.Background(), getGraphQLClient(), app); err != nil {
 		fmt.Println(color.Red, "Error getting routes for", app, err, color.Reset)
 	} else {
 		// fmt.Println(color.Yellow, "Got routes for", app, routes, color.Reset)
@@ -322,11 +323,10 @@ func createUserUsageToken(app string, user string) (string, error) {
 
 func billUsage(user string, app string, path string) {
 	//fmt.Println(color.Yellow, "Billing usage for", user, app, path, color.Reset)
-	if _, err := BillUsage(context.Background(), client, user, app, path); err == nil {
-
-		//fmt.Println(color.Yellow, "Billing usage: ", result, color.Reset)
+	if _, err := BillUsage(context.Background(), getGraphQLClient(), user, app, path); err != nil {
+		fmt.Println(color.Yellow, "Error billing usage: ", err, color.Reset)
 	} else {
-		//fmt.Println(color.Yellow, "Error billing usage: ", err, color.Reset)
+		// fmt.Println(color.Yellow, "Billing usage: ", result, color.Reset)
 	}
 }
 
@@ -345,7 +345,8 @@ func userIsAllowedToAccess(user string, app string, path string) (bool, *events.
 	// In order to access an endpoint, the user must be subscribed to the app,
 	// and have enough balance.
 	var subscription GetUserSubscriptionPlanSubscriptionSubscribe
-	if result, err := GetUserSubscriptionPlan(context.Background(), client, user, app); err != nil {
+	if result, err := GetUserSubscriptionPlan(context.Background(), getGraphQLClient(), user, app); err != nil {
+		fmt.Println(color.Red, "Error getting subscription for", user, app, "Error:", err, color.Reset)
 		response := apiGatewayErrorResponse(402, "NOT_SUBSCRIBED", "You are not subscribed to this app.")
 		return false, &response
 	} else {
@@ -360,14 +361,16 @@ func userIsAllowedToAccess(user string, app string, path string) (bool, *events.
 }
 
 func getUserBalance(user string) decimal.Decimal {
-	if result, err := GetUserBalance(context.Background(), client, user); err == nil {
-		if balance, err := decimal.NewFromString(result.User.Balance); err == nil {
-			return balance
-		} else {
-			return decimal.NewFromInt(0)
-		}
-	} else {
+	if result, err := GetUserBalance(context.Background(), getGraphQLClient(), user); err != nil {
+		fmt.Println(color.Red, "Error getting balance for", user, "Error:", err, color.Reset)
 		return decimal.NewFromInt(0)
+	} else {
+		if balance, err := decimal.NewFromString(result.User.Balance); err != nil {
+			fmt.Println(color.Red, "Error parsing balance:", err, color.Reset)
+			return decimal.NewFromInt(0)
+		} else {
+			return balance
+		}
 	}
 }
 
@@ -379,12 +382,14 @@ func getEndpointCost(subscription GetUserSubscriptionPlanSubscriptionSubscribe, 
 	if getPrivousCallTime(user, app) < time.Now().UnixMilli()-oneMonthMili {
 		montly, err := decimal.NewFromString(subscription.Pricing.MinMonthlyCharge) // in dollars
 		if err != nil {
+			fmt.Println(color.Red, "Error parsing min monthly charge:", err.Error(), color.Reset)
 			montly = decimal.NewFromInt(0)
 		}
 		cost = cost.Add(montly)
 	}
 	perCall, err := decimal.NewFromString(subscription.Pricing.ChargePerRequest) // in dollars
 	if err != nil {
+		fmt.Println(color.Red, "Error parsing charge per request:", err.Error(), color.Reset)
 		perCall = decimal.NewFromInt(0)
 	}
 	cost = cost.Add(perCall)
@@ -392,8 +397,8 @@ func getEndpointCost(subscription GetUserSubscriptionPlanSubscriptionSubscribe, 
 }
 
 func getPrivousCallTime(user string, app string) int64 {
-	if result, err := GetPreviousCallTimestamp(context.Background(), client, user, app); err != nil {
-		//fmt.Println(color.Red, "Error getting previous call timestamp:", err.Error(), color.Reset)
+	if result, err := GetPreviousCallTimestamp(context.Background(), getGraphQLClient(), user, app); err != nil {
+		fmt.Println(color.Red, "Error getting previous call timestamp:", err.Error(), color.Reset)
 		return 0
 	} else if len(result.User.UsageLogs) == 0 {
 		return 0
