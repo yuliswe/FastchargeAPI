@@ -30,6 +30,7 @@ def get_graphql_client() -> Client:
             "Authorization": signing.get_payment_service_idtoken(),
             "X-User-Email": "payment-service@fastcharge-api.com",
             "Content-Type": "application/json",
+            "X-Service-Name": "payment",
         },
         auth=auth,
     )

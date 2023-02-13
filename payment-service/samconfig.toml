@@ -2,10 +2,10 @@ version = 0.1
 [default]
 [default.deploy]
 [default.deploy.parameters]
-stack_name = "payment-gateway"
+stack_name = "payment-service"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ku0vhjb0ewl6"
-s3_prefix = "payment-gateway"
+s3_prefix = "payment-service"
 region = "us-east-1"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Stage=\"DEV\""
+parameter_overrides = "Stage=\"DEV\" HostName=\"api.payment.fastchargeapi.com\""
 image_repositories = []

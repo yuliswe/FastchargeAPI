@@ -73,9 +73,10 @@ Resources:
       Runtime: python3.9
       Architectures:
         - arm64 # if you are using Apple M1
-      Timeout: 30
+      Timeout: 10
       Policies:
         - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
+        - AWSLambdaRole # This will allow this lambda to send http request to the graphql api
       Events:
         POST:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -102,9 +103,10 @@ Resources:
       Runtime: python3.9
       Architectures:
         - arm64 # if you are using Apple M1
-      Timeout: 30
+      Timeout: 10
       Policies:
         - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
+        - AWSLambdaRole # This will allow this lambda to send http request to the graphql api
       Events:
         POST:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -129,9 +131,10 @@ Resources:
       Runtime: python3.9
       Architectures:
         - arm64 # if you are using Apple M1
-      Timeout: 30
+      Timeout: 10
       Policies:
         - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
+        - AWSLambdaRole # This will allow this lambda to send http request to the graphql api
       Events:
         POST:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -150,9 +153,10 @@ Resources:
       Runtime: python3.9
       Architectures:
         - arm64 # if you are using Apple M1
-      Timeout: 30
+      Timeout: 10
       Policies:
         - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
+        - AWSLambdaRole # This will allow this lambda to send http request to the graphql api
       Events:
         POST:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -171,9 +175,10 @@ Resources:
       Runtime: python3.9
       Architectures:
         - arm64 # if you are using Apple M1
-      Timeout: 30
+      Timeout: 10
       Policies:
         - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
+        - AWSLambdaRole # This will allow this lambda to send http request to the graphql api
       Events:
         GET:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -190,9 +195,10 @@ Resources:
       Runtime: python3.9
       Architectures:
         - arm64 # if you are using Apple M1
-      Timeout: 30
+      Timeout: 10
       Policies:
         - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
+        - AWSLambdaRole # This will allow this lambda to send http request to the graphql api
       Events:
         POST:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
