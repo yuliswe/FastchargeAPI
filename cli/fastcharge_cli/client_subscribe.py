@@ -2,7 +2,7 @@ from typing import Optional
 
 from blessings import Terminal
 
-from .pricing import PricingInfo, pretty_print_app_pricing
+from .dev_pricing import PricingInfo, pretty_print_app_pricing
 from .dev_app import AppInfo, get_app
 from .graphql import get_client_info
 from .groups import fastcharge_client
@@ -17,14 +17,14 @@ from .exceptions import NotFound
 terminal = Terminal()
 
 
-@fastcharge_client.group("sub", cls=ClickAliasedGroup, aliases=["subscription"])
+@fastcharge_client.group("subscription", cls=ClickAliasedGroup, aliases=["sub"])
 @click.help_option("-h", "--help")
 def fastcharge_subscribe():
     """Manage your account subscriptions."""
     pass
 
 
-@fastcharge_subscribe.command("ls", aliases=["list"])
+@fastcharge_subscribe.command("list", aliases=["ls"])
 def subscribe_list():
     """List your subscriptions."""
     client, email = get_client_info()
@@ -180,7 +180,7 @@ def fastcharge_subscription_add(app_name: str, plan: Optional[str] = None):
     )
 
 
-@fastcharge_subscribe.command("rm", aliases=["remove"])
+@fastcharge_subscribe.command("remove", aliases=["rm"])
 @click.argument("app_name", required=True)
 def fastcharge_subscription_remove(app_name: str):
     """Unsubscribe from an app."""

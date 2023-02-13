@@ -24,11 +24,11 @@ class PricingInfo:
 
 @fastcharge_dev.group("pricing", cls=ClickAliasedGroup)
 @click.help_option("-h", "--help")
-def fastcharge_pricing():
+def fastcharge_dev_pricing():
     """Manage pricing for an existing app"""
 
 
-@fastcharge_pricing.command("list", aliases=["ls"])
+@fastcharge_dev_pricing.command("list", aliases=["ls"])
 @click.option("-a", "--app", "app_name", help="Show pricing for a specific app.")
 @click.help_option("-h", "--help")
 def pricing_list(app_name: str):
@@ -119,7 +119,7 @@ def pretty_print_app_pricing(app_info: dict):
         echo()
 
 
-@fastcharge_pricing.command("add")
+@fastcharge_dev_pricing.command("add")
 @click.option(
     "-a", "--app", "app_name", help="Show pricing for a specific app.", required=True
 )
