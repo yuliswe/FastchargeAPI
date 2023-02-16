@@ -8,6 +8,7 @@ import {
     useLocation,
     useNavigate,
     useParams,
+    useSearchParams,
 } from "react-router-dom";
 import { AppContextProvider, defaulAppContext } from "./AppContext";
 import { AuthPage } from "./connected-components/AuthPage";
@@ -19,6 +20,7 @@ import {
     LinkProps as RouterLinkProps,
 } from "react-router-dom";
 import { LinkProps } from "@mui/material/Link";
+import { SearchResultPage } from "./connected-components/SearchResultPage";
 
 const router = createBrowserRouter([
     {
@@ -37,6 +39,10 @@ const router = createBrowserRouter([
         path: "/",
         element: <WithContext children={<HomePage />} />,
     },
+    {
+        path: "/search",
+        element: <WithContext children={<SearchResultPage />} />,
+    },
 ]);
 
 function WithContext(props: React.PropsWithChildren) {
@@ -48,6 +54,7 @@ function WithContext(props: React.PropsWithChildren) {
     const location = useLocation();
     const navigate = useNavigate();
     const params = useParams();
+    const query = useSearchParams();
 
     function getTheme() {
         const blue = "#3772FF";
@@ -165,6 +172,22 @@ function WithContext(props: React.PropsWithChildren) {
                         location,
                         navigate,
                         params,
+                        query: query[0],
+                        setQuery: query[1],
+                        updateQuery: (newQuery) => {
+                            let current = query[0];
+                            let search = new URLSearchParams(
+                                current?.toString()
+                            );
+                            for (let key of Object.keys(newQuery)) {
+                                if (newQuery[key] == null) {
+                                    search.delete(key);
+                                } else {
+                                    search.set(key, newQuery[key]!);
+                                }
+                            }
+                            query[1](search.toString());
+                        },
                     },
                 }}
             >

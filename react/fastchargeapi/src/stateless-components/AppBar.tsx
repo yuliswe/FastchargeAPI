@@ -16,8 +16,32 @@ import {
     Typography,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import { AppContext, ReactAppContextType } from "../AppContext";
+import { createSearchParams } from "react-router-dom";
 // import { } from "react-router-dom";
-export class AppBar extends React.PureComponent {
+
+type State = {
+    searchText: string;
+};
+
+export class AppBar extends React.Component<{}, State> {
+    static contextType = ReactAppContextType;
+    get _context(): AppContext {
+        return this.context as AppContext;
+    }
+
+    constructor(props: any) {
+        super(props);
+        this.state = {
+            searchText: "",
+        };
+    }
+
+    componentDidMount(): void {
+        this.setState({
+            searchText: this._context.route?.query.get("q") || "",
+        });
+    }
     render() {
         return (
             <Stack>
@@ -93,7 +117,27 @@ export class AppBar extends React.PureComponent {
                                     >
                                         <SearchIcon />
                                     </IconButton>
-                                    <InputBase placeholder="Search" fullWidth />
+                                    <InputBase
+                                        placeholder="Search"
+                                        fullWidth
+                                        value={this.state.searchText}
+                                        onKeyDown={(event) => {
+                                            if (event.key === "Enter") {
+                                                this._context.route?.navigate({
+                                                    pathname: "/search",
+                                                    search: createSearchParams({
+                                                        q: this.state
+                                                            .searchText,
+                                                    }).toString(),
+                                                });
+                                            }
+                                        }}
+                                        onChange={(event) => {
+                                            this.setState({
+                                                searchText: event.target.value,
+                                            });
+                                        }}
+                                    />
                                 </Paper>
                                 <Paper
                                     sx={{
@@ -103,7 +147,11 @@ export class AppBar extends React.PureComponent {
                                         borderTopLeftRadius: 0,
                                     }}
                                 >
-                                    <ButtonBase sx={{ color: "white", mx: 2 }}>
+                                    <ButtonBase
+                                        component={Link}
+                                        sx={{ color: "white", mx: 2 }}
+                                        href={`/search?q=${this.state.searchText}`}
+                                    >
                                         <Typography>Search</Typography>
                                     </ButtonBase>
                                 </Paper>

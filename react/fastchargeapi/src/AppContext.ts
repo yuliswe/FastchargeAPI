@@ -1,5 +1,10 @@
 import React from "react";
-import { Params, Location, NavigateFunction } from "react-router-dom";
+import {
+    Params,
+    Location,
+    NavigateFunction,
+    useSearchParams,
+} from "react-router-dom";
 
 export const defaulAppContext = {
     DEV: false,
@@ -13,6 +18,9 @@ export const defaulAppContext = {
         location: Location;
         navigate: NavigateFunction;
         params: Params<string>;
+        query: ReturnType<typeof useSearchParams>[0];
+        setQuery: ReturnType<typeof useSearchParams>[1];
+        updateQuery: (query: Record<string, string | null>) => void;
     } | null,
 };
 
