@@ -1,4 +1,3 @@
-import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { Provider } from "react-redux";
 import { reduxStore } from "./store-config";
@@ -13,47 +12,17 @@ import { OnboardPage } from "./connected-components/OnboardPage";
 import { TopUpPage } from "./connected-components/TopupPage";
 import { AppContextProvider, defaulAppContext } from "./AppContext";
 import { initializeFirebase } from "./firebase";
+import "./App.css";
+import App from "./App";
 
 initializeFirebase();
 
-const router = createBrowserRouter([
-    {
-        path: "/",
-        element: <HomePage />,
-    },
-    {
-        path: "/auth",
-        element: <AuthPage />,
-    },
-    {
-        path: "/onboard",
-        element: <OnboardPage />,
-    },
-    {
-        path: "/topup",
-        element: <TopUpPage />,
-    },
-]);
 const root = createRoot(document.getElementById("root")!);
 root.render(
     <React.StrictMode>
-        <AppContextProvider value={defaulAppContext}>
-            <Provider store={reduxStore}>
-                <HelmetProvider>
-                    <Helmet>
-                        <link
-                            rel="stylesheet"
-                            href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
-                        />
-                        <link
-                            rel="stylesheet"
-                            href="https://fonts.googleapis.com/icon?family=Material+Icons"
-                        />
-                    </Helmet>
-                    <RouterProvider router={router} />
-                </HelmetProvider>
-            </Provider>
-        </AppContextProvider>
+        <Provider store={reduxStore}>
+            <App />
+        </Provider>
     </React.StrictMode>
 );
 
