@@ -14,14 +14,18 @@ import {
     Toolbar,
     Link,
     Typography,
+    Menu,
+    MenuItem,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { createSearchParams } from "react-router-dom";
+import { AccountCircle } from "@mui/icons-material";
 // import { } from "react-router-dom";
 
 type State = {
     searchText: string;
+    anchorEl: HTMLElement | null;
 };
 
 export class AppBar extends React.Component<{}, State> {
@@ -34,8 +38,25 @@ export class AppBar extends React.Component<{}, State> {
         super(props);
         this.state = {
             searchText: "",
+            anchorEl: null,
         };
     }
+
+    handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        // setAuth(event.target.checked);
+    };
+
+    handleMenu = (event: React.MouseEvent<HTMLElement>) => {
+        this.setState({
+            anchorEl: event.currentTarget,
+        });
+    };
+
+    handleClose = () => {
+        this.setState({
+            anchorEl: null,
+        });
+    };
 
     componentDidMount(): void {
         this.setState({
@@ -111,8 +132,10 @@ export class AppBar extends React.Component<{}, State> {
                                         py: 0.25,
                                         borderBottomRightRadius: 0,
                                         borderTopRightRadius: 0,
+                                        borderBottomLeftRadius: 5,
+                                        borderTopLeftRadius: 5,
                                         display: "flex",
-                                        bgcolor: "grey.300",
+                                        bgcolor: "grey.200",
                                         flexGrow: 1,
                                     }}
                                 >
@@ -150,11 +173,16 @@ export class AppBar extends React.Component<{}, State> {
                                         display: "flex",
                                         borderBottomLeftRadius: 0,
                                         borderTopLeftRadius: 0,
+                                        borderTopRightRadius: 5,
+                                        borderBottomRightRadius: 5,
                                     }}
                                 >
                                     <ButtonBase
                                         component={Link}
-                                        sx={{ color: "white", px: 2 }}
+                                        sx={{
+                                            color: "white",
+                                            px: 2,
+                                        }}
                                         href={`/search?q=${this.state.searchText}`}
                                     >
                                         <Typography>Search</Typography>
@@ -170,6 +198,61 @@ export class AppBar extends React.Component<{}, State> {
                                     <ButtonBase sx={{ color: "black", px: 3 }}>
                                         <Typography>Sign In</Typography>
                                     </ButtonBase>
+                                    <Box>
+                                        <IconButton
+                                            size="large"
+                                            aria-label="account of current user"
+                                            aria-controls="menu-appbar"
+                                            aria-haspopup="true"
+                                            onClick={this.handleMenu}
+                                            color="inherit"
+                                        >
+                                            <AccountCircle />
+                                        </IconButton>
+                                        <Menu
+                                            id="menu-appbar"
+                                            anchorEl={this.state.anchorEl}
+                                            anchorOrigin={{
+                                                vertical: "bottom",
+                                                horizontal: "right",
+                                            }}
+                                            PaperProps={{
+                                                elevation: 1,
+                                                sx: {
+                                                    // backgroundColor: "background.default",
+                                                    borderRadius: 5,
+                                                },
+                                            }}
+                                            keepMounted
+                                            transformOrigin={{
+                                                vertical: "top",
+                                                horizontal: "right",
+                                            }}
+                                            open={Boolean(this.state.anchorEl)}
+                                            onClose={this.handleClose}
+                                        >
+                                            <MenuItem
+                                                onClick={this.handleClose}
+                                            >
+                                                Profile
+                                            </MenuItem>
+                                            <MenuItem
+                                                onClick={this.handleClose}
+                                            >
+                                                <Link
+                                                    href="/account"
+                                                    underline="none"
+                                                >
+                                                    My account
+                                                </Link>
+                                            </MenuItem>
+                                            <MenuItem
+                                                onClick={this.handleClose}
+                                            >
+                                                Sign out
+                                            </MenuItem>
+                                        </Menu>
+                                    </Box>
                                 </Paper>
                             </Stack>
                         </Toolbar>

@@ -95,6 +95,7 @@ class _Home extends React.Component<_Props, _State> {
                             <Grid item xs={6}>
                                 <Paper
                                     className="terminal"
+                                    elevation={20}
                                     sx={{
                                         borderRadius: 5,
                                     }}
@@ -181,6 +182,7 @@ class _Home extends React.Component<_Props, _State> {
                                         </Typography>
                                         <Paper
                                             className="terminal"
+                                            elevation={20}
                                             sx={{
                                                 borderRadius: 5,
                                             }}
@@ -218,6 +220,7 @@ class _Home extends React.Component<_Props, _State> {
                                         </Typography>
                                         <Paper
                                             className="terminal"
+                                            elevation={20}
                                             sx={{
                                                 borderRadius: 5,
                                             }}
@@ -396,6 +399,7 @@ class _Home extends React.Component<_Props, _State> {
                                         </Typography>
                                         <Paper
                                             className="terminal"
+                                            elevation={20}
                                             sx={{
                                                 borderRadius: 5,
                                             }}
@@ -433,6 +437,7 @@ class _Home extends React.Component<_Props, _State> {
                                         </Typography>
                                         <Paper
                                             className="terminal"
+                                            elevation={20}
                                             sx={{
                                                 borderRadius: 5,
                                             }}
@@ -471,6 +476,7 @@ class _Home extends React.Component<_Props, _State> {
                                         </Typography>
                                         <Paper
                                             className="terminal"
+                                            elevation={20}
                                             sx={{
                                                 borderRadius: 5,
                                             }}

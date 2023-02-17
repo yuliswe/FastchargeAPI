@@ -83,7 +83,10 @@ class _SearchResultPage extends React.Component<Props, {}> {
                                         bgcolor: "transparent",
                                     }}
                                 >
-                                    <Link href={`/apis/appname`}>
+                                    <Link
+                                        href={`/apis/appname`}
+                                        underline="hover"
+                                    >
                                         <Typography variant="h6" my={2}>
                                             API-FOOTBALL API
                                         </Typography>

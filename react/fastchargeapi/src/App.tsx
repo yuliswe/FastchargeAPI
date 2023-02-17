@@ -15,14 +15,15 @@ import { AuthPage } from "./connected-components/AuthPage";
 import { OnboardPage } from "./connected-components/OnboardPage";
 import { TopUpPage } from "./connected-components/TopupPage";
 import React from "react";
-import {
-    Link as RouterLink,
-    LinkProps as RouterLinkProps,
-} from "react-router-dom";
+import { LinkProps as RouterLinkProps } from "react-router-dom";
 import { LinkProps } from "@mui/material/Link";
 import { SearchResultPage } from "./connected-components/SearchResultPage";
 import { HashLink } from "react-router-hash-link";
 import { AppDetailPage } from "./connected-components/AppDetailPage";
+import { AccountPage } from "./connected-components/AccountPage";
+import { DashboardPage } from "./connected-components/DashboardPage";
+import { MyAppsPage } from "./connected-components/MyAppsPage";
+import { SubscriptionsPage } from "./connected-components/SubscriptionsPage";
 
 const router = createBrowserRouter([
     {
@@ -48,6 +49,24 @@ const router = createBrowserRouter([
     {
         path: "/apis/:appId",
         element: <WithContext children={<AppDetailPage />} />,
+    },
+    {
+        path: "/account",
+        element: <WithContext children={<AccountPage />} />,
+        children: [
+            {
+                path: "",
+                element: <WithContext children={<DashboardPage />} />,
+            },
+            {
+                path: "my-apps",
+                element: <WithContext children={<MyAppsPage />} />,
+            },
+            {
+                path: "subscriptions",
+                element: <WithContext children={<SubscriptionsPage />} />,
+            },
+        ],
     },
 ]);
 
@@ -113,6 +132,11 @@ function WithContext(props: React.PropsWithChildren) {
                         elevation: 1,
                     },
                 },
+                MuiMenu: {
+                    defaultProps: {
+                        elevation: 1,
+                    },
+                },
                 MuiButton: {
                     styleOverrides: {
                         root: {
@@ -148,9 +172,9 @@ function WithContext(props: React.PropsWithChildren) {
                     styleOverrides: {
                         root: {
                             textDecoration: "none",
-                            "&:hover": {
-                                textDecoration: "underline",
-                            },
+                            // "&:hover": {
+                            //     textDecoration: "underline",
+                            // },
                         },
                     },
                     defaultProps: {
