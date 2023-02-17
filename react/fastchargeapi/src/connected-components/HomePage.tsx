@@ -241,7 +241,7 @@ class _Home extends React.Component<_Props, _State> {
                         </Grid>
                     </Container>
                 </Box>
-                <Box bgcolor="white" py={15}>
+                <Box bgcolor="background.paper" py={15} id="tag-pricing">
                     <Container maxWidth="lg">
                         <Grid container spacing={5}>
                             <Grid item xs={6}>

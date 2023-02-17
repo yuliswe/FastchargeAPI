@@ -21,6 +21,8 @@ import {
 } from "react-router-dom";
 import { LinkProps } from "@mui/material/Link";
 import { SearchResultPage } from "./connected-components/SearchResultPage";
+import { HashLink } from "react-router-hash-link";
+import { AppDetailPage } from "./connected-components/AppDetailPage";
 
 const router = createBrowserRouter([
     {
@@ -43,6 +45,10 @@ const router = createBrowserRouter([
         path: "/search",
         element: <WithContext children={<SearchResultPage />} />,
     },
+    {
+        path: "/apis/:appId",
+        element: <WithContext children={<AppDetailPage />} />,
+    },
 ]);
 
 function WithContext(props: React.PropsWithChildren) {
@@ -64,11 +70,18 @@ function WithContext(props: React.PropsWithChildren) {
         const red = "#DF2935";
         const LinkBehavior = React.forwardRef<
             HTMLAnchorElement,
-            Omit<RouterLinkProps, "to"> & { href: RouterLinkProps["to"] }
+            Omit<RouterLinkProps, "to"> & {
+                href: RouterLinkProps["to"];
+                isHash: boolean;
+            }
         >((props, ref) => {
             const { href, ...other } = props;
             // Map href (MUI) -> to (react-router)
-            return <RouterLink ref={ref} to={href} {...other} />;
+            // if (isHash) {
+            return <HashLink ref={ref} to={href} {...other} />;
+            // } else {
+            //     return <RouterLink ref={ref} to={href} {...other} />;
+            // }
         });
         return createTheme({
             // spacing: [0, 4, 8, 16, 32, 64],
@@ -76,7 +89,7 @@ function WithContext(props: React.PropsWithChildren) {
             // spacing: mediaQuerySm ? 2 : mediaQueryMd ? 4 : 8,
             palette: {
                 background: {
-                    default: white,
+                    default: "#fff",
                     paper: white,
                 },
                 primary: {
@@ -95,6 +108,11 @@ function WithContext(props: React.PropsWithChildren) {
                         elevation: 0,
                     },
                 },
+                MuiAppBar: {
+                    defaultProps: {
+                        elevation: 1,
+                    },
+                },
                 MuiButton: {
                     styleOverrides: {
                         root: {
@@ -102,7 +120,9 @@ function WithContext(props: React.PropsWithChildren) {
                             textTransform: "none",
                         },
                     },
-                    defaultProps: {},
+                    defaultProps: {
+                        disableElevation: true,
+                    },
                 },
                 MuiTypography: {
                     styleOverrides: {
@@ -125,7 +145,16 @@ function WithContext(props: React.PropsWithChildren) {
                     },
                 },
                 MuiLink: {
+                    styleOverrides: {
+                        root: {
+                            textDecoration: "none",
+                            "&:hover": {
+                                textDecoration: "underline",
+                            },
+                        },
+                    },
                     defaultProps: {
+                        color: "primary.contrastText",
                         component: LinkBehavior,
                     } as LinkProps,
                 },

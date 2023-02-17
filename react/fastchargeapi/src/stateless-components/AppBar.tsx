@@ -57,9 +57,14 @@ export class AppBar extends React.Component<{}, State> {
                                 Enpowering developers
                             </Typography>
                             <Stack direction="row" spacing={5} mx={5}>
-                                <Typography variant="body1" sx={{}}>
-                                    Pricing
-                                </Typography>
+                                <Link href="/#tag-pricing">
+                                    <Typography
+                                        variant="body1"
+                                        color="primary.contrastText"
+                                    >
+                                        Pricing
+                                    </Typography>
+                                </Link>
                                 <Typography variant="body1" sx={{}}>
                                     Documentation
                                 </Typography>
@@ -69,7 +74,7 @@ export class AppBar extends React.Component<{}, State> {
                 </MUIAppBar>
                 <MUIAppBar
                     position="static"
-                    sx={{ bgcolor: "background.paper" }}
+                    sx={{ bgcolor: "background.default" }}
                 >
                     <Container maxWidth="xl">
                         <Toolbar>
@@ -79,7 +84,7 @@ export class AppBar extends React.Component<{}, State> {
                                     spacing={1}
                                     alignItems="center"
                                 >
-                                    <Icon component="img" src="./logo2.png" />
+                                    <Icon component="img" src="/logo2.png" />
                                     <Typography
                                         variant="h6"
                                         component="div"
@@ -149,7 +154,7 @@ export class AppBar extends React.Component<{}, State> {
                                 >
                                     <ButtonBase
                                         component={Link}
-                                        sx={{ color: "white", mx: 2 }}
+                                        sx={{ color: "white", px: 2 }}
                                         href={`/search?q=${this.state.searchText}`}
                                     >
                                         <Typography>Search</Typography>
@@ -162,7 +167,7 @@ export class AppBar extends React.Component<{}, State> {
                                         ml: 3,
                                     }}
                                 >
-                                    <ButtonBase sx={{ color: "black", mx: 3 }}>
+                                    <ButtonBase sx={{ color: "black", px: 3 }}>
                                         <Typography>Sign In</Typography>
                                     </ButtonBase>
                                 </Paper>

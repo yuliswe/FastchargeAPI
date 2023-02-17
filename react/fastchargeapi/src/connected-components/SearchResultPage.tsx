@@ -7,7 +7,7 @@ import {
     Container,
     FormControl,
     FormControlLabel,
-    FormLabel,
+    Link,
     Grid,
     List,
     Paper,
@@ -18,7 +18,6 @@ import {
 } from "@mui/material";
 import { SearchAppState } from "../states/SearchAppState";
 import { AppContext, ReactAppContextType } from "../AppContext";
-import { createSearchParams } from "react-router-dom";
 
 type Props = {
     searchAppState: SearchAppState;
@@ -81,11 +80,14 @@ class _SearchResultPage extends React.Component<Props, {}> {
                                         py: 3,
                                         borderBottom: 1,
                                         borderBottomColor: "divider",
+                                        bgcolor: "transparent",
                                     }}
                                 >
-                                    <Typography variant="h6" my={2}>
-                                        API-FOOTBALL API
-                                    </Typography>
+                                    <Link href={`/apis/appname`}>
+                                        <Typography variant="h6" my={2}>
+                                            API-FOOTBALL API
+                                        </Typography>
+                                    </Link>
                                     <Typography variant="body1" my={2}>
                                         +960 football leagues & cups. Livescore
                                         (15s), live & pre-match odds, events,
