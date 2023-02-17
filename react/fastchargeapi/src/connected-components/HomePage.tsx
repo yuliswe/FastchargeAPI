@@ -143,11 +143,11 @@ class _Home extends React.Component<_Props, _State> {
                                 </Typography>
                                 <Stack mt={12} spacing={1}>
                                     <Typography variant="body1">
-                                        <b>--name:</b> Speciy the name for the
+                                        <b>--name:</b> Specify the name for the
                                         pricing plan.
                                     </Typography>
                                     <Typography variant="body1">
-                                        <b>--app:</b> Speciy app to which the
+                                        <b>--app:</b> Specify app to which the
                                         pricing plan belongs.
                                     </Typography>
                                     <Typography variant="body1">

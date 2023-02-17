@@ -169,7 +169,7 @@ export class AppBar extends React.Component<{}, State> {
                                 </Paper>
                                 <Paper
                                     sx={{
-                                        bgcolor: "black",
+                                        bgcolor: "secondary.main",
                                         display: "flex",
                                         borderBottomLeftRadius: 0,
                                         borderTopLeftRadius: 0,
@@ -180,7 +180,7 @@ export class AppBar extends React.Component<{}, State> {
                                     <ButtonBase
                                         component={Link}
                                         sx={{
-                                            color: "white",
+                                            color: "secondary.contrastText",
                                             px: 2,
                                         }}
                                         href={`/search?q=${this.state.searchText}`}

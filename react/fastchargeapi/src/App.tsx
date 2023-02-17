@@ -24,6 +24,7 @@ import { AccountPage } from "./connected-components/AccountPage";
 import { DashboardPage } from "./connected-components/DashboardPage";
 import { MyAppsPage } from "./connected-components/MyAppsPage";
 import { SubscriptionsPage } from "./connected-components/SubscriptionsPage";
+import { MyAppDetailPage } from "./connected-components/MyAppDetailPage";
 
 const router = createBrowserRouter([
     {
@@ -61,6 +62,10 @@ const router = createBrowserRouter([
             {
                 path: "my-apps",
                 element: <WithContext children={<MyAppsPage />} />,
+            },
+            {
+                path: "my-apps/:app",
+                element: <WithContext children={<MyAppDetailPage />} />,
             },
             {
                 path: "subscriptions",
@@ -115,7 +120,7 @@ function WithContext(props: React.PropsWithChildren) {
                     main: yellow,
                 },
                 secondary: {
-                    main: blue,
+                    main: black,
                 },
             },
             shape: {
@@ -146,6 +151,13 @@ function WithContext(props: React.PropsWithChildren) {
                     },
                     defaultProps: {
                         disableElevation: true,
+                    },
+                },
+                MuiOutlinedInput: {
+                    styleOverrides: {
+                        root: {
+                            borderRadius: 5,
+                        },
                     },
                 },
                 MuiTypography: {
