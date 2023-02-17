@@ -25,6 +25,7 @@ import { DashboardPage } from "./connected-components/DashboardPage";
 import { MyAppsPage } from "./connected-components/MyAppsPage";
 import { SubscriptionsPage } from "./connected-components/SubscriptionsPage";
 import { MyAppDetailPage } from "./connected-components/MyAppDetailPage";
+import { SubscriptionDetailPage } from "./connected-components/SubscriptionDetailPage";
 
 const router = createBrowserRouter([
     {
@@ -70,6 +71,10 @@ const router = createBrowserRouter([
             {
                 path: "subscriptions",
                 element: <WithContext children={<SubscriptionsPage />} />,
+            },
+            {
+                path: "subscriptions/:subscriptionId",
+                element: <WithContext children={<SubscriptionDetailPage />} />,
             },
         ],
     },

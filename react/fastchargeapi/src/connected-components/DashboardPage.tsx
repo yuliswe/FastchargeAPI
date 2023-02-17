@@ -67,7 +67,7 @@ class _DashboardPage extends React.Component<Props, State> {
             <Box>
                 <Grid container>
                     <Grid item flexGrow={1}>
-                        <Typography variant="h6">Credit</Typography>
+                        <Typography variant="h6">Account</Typography>
                         <Typography
                             variant="body1"
                             fontSize={30}

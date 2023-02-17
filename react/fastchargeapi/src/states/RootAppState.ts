@@ -6,6 +6,8 @@ import { AccountAppState } from "./AccountAppState";
 import { SubscriptionsAppState } from "./SubscriptionsAppState";
 import { DashboardAppState } from "./DashboardAppState";
 import { MyAppsAppState } from "./MyAppsAppState";
+import { SubscriptionDetailAppState } from "./SubscriptionDetailAppState";
+import { MyAppDetailAppState } from "./MyAppDetailAppState";
 
 export class RootAppState extends AppState {
     home = new HomeAppState({});
@@ -15,7 +17,8 @@ export class RootAppState extends AppState {
     subscriptions = new SubscriptionsAppState({});
     dashboard = new DashboardAppState({});
     myApps = new MyAppsAppState({});
-    myAppDetail = new AppDetailAppState({});
+    myAppDetail = new MyAppDetailAppState({});
+    subscriptionDetail = new SubscriptionDetailAppState({});
 
     constructor(props: PartialProps<RootAppState>) {
         super();

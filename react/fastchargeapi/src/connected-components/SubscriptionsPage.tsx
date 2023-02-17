@@ -10,13 +10,14 @@ import {
     Grid,
     Stack,
     Typography,
+    Link,
 } from "@mui/material";
 import { SubscriptionsAppState } from "../states/SubscriptionsAppState";
 type Props = {
     subscriptionsAppState: SubscriptionsAppState;
 };
 class _SubscriptionsPage extends React.Component<Props> {
-    getAppsList() {
+    getSubsList() {
         return [
             {
                 name: "My App",
@@ -25,6 +26,7 @@ class _SubscriptionsPage extends React.Component<Props> {
                 published: new Date(),
                 subscribedTo: "Basic Plan",
                 subscribed: false,
+                subscriptionId: "1234567890",
             },
             {
                 name: "My App",
@@ -33,13 +35,14 @@ class _SubscriptionsPage extends React.Component<Props> {
                 published: new Date(),
                 subscribedTo: "Basic Plan",
                 subscribed: true,
+                subscriptionId: "1234567890",
             },
         ];
     }
     render() {
         return (
             <Grid container spacing={2}>
-                {this.getAppsList().map((app) => (
+                {this.getSubsList().map((sub) => (
                     <Grid item>
                         <Card sx={{ p: 3, borderRadius: 5 }}>
                             <CardContent>
@@ -50,7 +53,7 @@ class _SubscriptionsPage extends React.Component<Props> {
                                         fontWeight={700}
                                         alignItems="center"
                                     >
-                                        {app.name}
+                                        {sub.name}
                                     </Typography>
                                     <Typography
                                         variant="body1"
@@ -58,7 +61,7 @@ class _SubscriptionsPage extends React.Component<Props> {
                                         fontSize={14}
                                         alignItems="center"
                                     >
-                                        {app.version}
+                                        {sub.version}
                                     </Typography>
                                     <Typography
                                         variant="body1"
@@ -66,19 +69,24 @@ class _SubscriptionsPage extends React.Component<Props> {
                                         display="flex"
                                         alignItems="center"
                                     >
-                                        {app.author}
+                                        {sub.author}
                                     </Typography>
                                 </Stack>
                                 <Typography variant="body1">
                                     Published on{" "}
-                                    {app.published.toLocaleDateString()}
+                                    {sub.published.toLocaleDateString()}
                                 </Typography>
                                 <Typography variant="body1" mt={2}>
-                                    {app.subscribedTo}
+                                    {sub.subscribedTo}
                                 </Typography>
                             </CardContent>
                             <CardActions>
-                                <Button variant="contained" color="secondary">
+                                <Button
+                                    variant="contained"
+                                    color="secondary"
+                                    LinkComponent={Link}
+                                    href={`${sub.subscriptionId}`}
+                                >
                                     View
                                 </Button>
                             </CardActions>

@@ -1,7 +1,7 @@
 import React from "react";
-import { MyAppDetailAppState } from "../states/MyAppDetailAppState";
 import { RootAppState } from "../states/RootAppState";
 import { connect } from "react-redux";
+import { MyAppDetailAppState } from "../states/MyAppDetailAppState";
 import {
     Autocomplete,
     Box,

@@ -18,11 +18,41 @@ import {
     Typography,
 } from "@mui/material";
 import { SiteLayout } from "../SiteLayout";
+import { PricingCard } from "../stateless-components/PricingCard";
 
 type Props = {
     appDetailAppState: AppDetailAppState;
 };
 class _AppDetailPage extends React.Component {
+    getPricingList() {
+        return [
+            {
+                name: "Basic",
+                description: "Basic description",
+                minMonthlyCharge: "0.01",
+                chargePerCall: "0.01",
+                freeQuota: 1000,
+                isActive: false,
+            },
+            {
+                name: "Standard",
+                description: "Standard description",
+                minMonthlyCharge: "0.02",
+                chargePerCall: "0.02",
+                freeQuota: 1000,
+                isActive: true,
+            },
+            {
+                name: "Premium",
+                description: "Premium description",
+                minMonthlyCharge: "0.03",
+                chargePerCall: "0.03",
+                freeQuota: 1000,
+                isActive: false,
+            },
+        ];
+    }
+
     render() {
         return (
             <SiteLayout>
@@ -53,12 +83,28 @@ class _AppDetailPage extends React.Component {
                                     </Typography>
                                 </Box>
                                 <Box>
-                                    <Typography variant="h6" mb={1}>
+                                    <Typography variant="h6" mb={2}>
                                         Pricing
                                     </Typography>
-                                    <Grid container>
-                                        <Grid item xs={3}>
-                                            <Card
+                                    <Grid container spacing={3}>
+                                        {this.getPricingList().map(
+                                            (pricing) => (
+                                                <Grid item>
+                                                    <PricingCard
+                                                        {...pricing}
+                                                        actionButton={
+                                                            <Button
+                                                                variant="contained"
+                                                                color="secondary"
+                                                            >
+                                                                Subscribe
+                                                            </Button>
+                                                        }
+                                                    />
+                                                </Grid>
+                                            )
+                                        )}
+                                        {/* <Card
                                                 variant="outlined"
                                                 elevation={100}
                                                 sx={{
@@ -94,15 +140,9 @@ class _AppDetailPage extends React.Component {
                                                     </Typography>
                                                 </CardContent>
                                                 <CardActions>
-                                                    <Button
-                                                        variant="contained"
-                                                        color="primary"
-                                                    >
-                                                        Subscribe
-                                                    </Button>
+                                                    
                                                 </CardActions>
-                                            </Card>
-                                        </Grid>
+                                            </Card> */}
                                     </Grid>
                                 </Box>
                                 <Box>
