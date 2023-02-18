@@ -74,7 +74,7 @@ def subscribe_list():
 
 @fastcharge_subscribe.command("add")
 @click.argument("app_name", required=True)
-@click.option("-p", "--plan", help="Plan to subscribe to.")
+@click.option("-p", "--plan", help="ID of the plan to subscribe to.")
 def fastcharge_subscription_add(app_name: str, plan: Optional[str] = None):
     """Subscribe to an app."""
     client, email = get_client_info()
@@ -133,7 +133,7 @@ def fastcharge_subscription_add(app_name: str, plan: Optional[str] = None):
         )["app"]
         echo(
             colorama.Fore.YELLOW
-            + "To subcribe to a new plan, specify with --plan [name].\n"
+            + "To subcribe to a new plan, specify with --plan [id].\n"
         )
         pretty_print_app_pricing(app_info)
         exit(1)
@@ -145,7 +145,7 @@ def fastcharge_subscription_add(app_name: str, plan: Optional[str] = None):
         result = client.execute(
             gql(
                 """
-                mutation Subscribe($subscriber: Email!, $app: String!, $pricing: String!) {
+                mutation Subscribe($subscriber: Email!, $app: String!, $pricing: ID!) {
                     createSubscription(subscriber: $subscriber, app: $app, pricing: $pricing) {
                         pricing {
                             name

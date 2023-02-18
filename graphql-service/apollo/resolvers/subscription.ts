@@ -8,6 +8,7 @@ import {
     GQLQuerySubscriptionArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
+import { PricingPK } from "../functions/pricingPK";
 
 export const subscribeResolvers: GQLResolvers = {
     Subscribe: {
@@ -17,11 +18,9 @@ export const subscribeResolvers: GQLResolvers = {
             context: RequestContext,
             info
         ) {
-            let app = await context.batched.App.get(parent.app);
-            return await context.batched.Pricing.get({
-                app: app.name,
-                name: parent.pricing,
-            });
+            return await context.batched.Pricing.get(
+                PricingPK.parse(parent.pricing)
+            );
         },
         async subscriber(parent, args, context: RequestContext, info) {
             return await context.batched.User.get(parent.subscriber);
@@ -67,7 +66,7 @@ export const subscribeResolvers: GQLResolvers = {
                 throw new Denied();
             }
             let { app, pricing, subscriber } = args;
-            await context.batched.Pricing.get({ app, name: pricing }); // Checks if the pricing plan exists
+            await context.batched.Pricing.get(PricingPK.parse(pricing)); // Checks if the pricing plan exists
             await context.batched.User.get({ email: subscriber }); // Checks if the user exists
             let Subscribe = await context.batched.Subscribe.create(args);
             return Subscribe;

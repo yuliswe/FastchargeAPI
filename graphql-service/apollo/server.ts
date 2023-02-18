@@ -56,6 +56,7 @@ const resolvers: GQLResolvers = {
     UsageLog: usageLogResolvers.UsageLog,
     StripePaymentAccept: stripePaymentAcceptResolvers.StripePaymentAccept,
     StripeTransfer: stripeTransferResolvers.StripeTransfer,
+    Pricing: pricingResolvers.Pricing,
     Query: {
         ...appResolvers.Query,
         ...userResolvers.Query,
@@ -65,6 +66,7 @@ const resolvers: GQLResolvers = {
         ...usageLogResolvers.Query,
         ...stripePaymentAcceptResolvers.Query,
         ...stripeTransferResolvers.Query,
+        ...pricingResolvers.Query,
     },
     Mutation: {
         ...appResolvers.Mutation,
@@ -75,6 +77,7 @@ const resolvers: GQLResolvers = {
         ...usageLogResolvers.Mutation,
         ...stripePaymentAcceptResolvers.Mutation,
         ...stripeTransferResolvers.Mutation,
+        ...pricingResolvers.Mutation,
     },
 };
 

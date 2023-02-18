@@ -289,6 +289,18 @@ export class Batched<I extends Item> {
         }
     }
 
+    async getOrNull(key: string | Partial<I>): Promise<I | null> {
+        try {
+            return await this.get(key);
+        } catch (e) {
+            if (e instanceof NotFound) {
+                return null;
+            } else {
+                throw e;
+            }
+        }
+    }
+
     async assertExists(key: string | Partial<I>): Promise<void> {
         await this.get(key);
     }

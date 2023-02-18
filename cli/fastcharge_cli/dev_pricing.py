@@ -16,6 +16,7 @@ terminal = Terminal()
 
 @dataclass
 class PricingInfo:
+    pk: str
     name: str
     callToAction: str
     minMonthlyCharge: str
@@ -46,6 +47,7 @@ def pricing_list(app_name: str):
                             name
                             description
                             pricingPlans {
+                                pk
                                 name
                                 callToAction
                                 minMonthlyCharge
@@ -71,6 +73,7 @@ def pricing_list(app_name: str):
                             name
                             description
                             pricingPlans {
+                                pk
                                 name
                                 callToAction
                                 minMonthlyCharge
@@ -106,6 +109,7 @@ def pretty_print_app_pricing(app_info: dict):
     for plan in plans:
         echo(colorama.Style.RESET_ALL, nl=False)
         echo(terminal.green + terminal.bold + f"  name: {plan.name}" + terminal.normal)
+        echo(terminal.bold + f"  id: {plan.pk}" + terminal.normal)
         if plan.callToAction:
             echo("  " + plan.callToAction)
         echo(f"  ${float(plan.minMonthlyCharge):.2f} monthly subscription", nl=False)

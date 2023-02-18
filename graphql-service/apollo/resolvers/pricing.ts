@@ -5,18 +5,22 @@ import {
     GQLMutationCreatePricingArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
+import "../functions/pricingPK";
+import { PricingPK } from "../functions/pricingPK";
 
 export const pricingResolvers: GQLResolvers = {
     Pricing: {
+        pk: (parent) => PricingPK.stringify(parent),
         async app(parent, args, context, info) {
             let app = await context.batched.App.get(parent.app);
             return app;
         },
         name: (parent) => parent.name,
-        monthlyCharge: (parent) => parent.monthlyCharge,
+        minMonthlyCharge: (parent) => parent.minMonthlyCharge,
         chargePerRequest: (parent) => parent.chargePerRequest,
         callToAction: (parent) => parent.callToAction,
         freeQuota: (parent) => parent.freeQuota,
+        // activeSubscriberCount: (parent) => parent.activeSubscriberCount,
         async deletePricing(parent: Pricing, args: never, context, info) {
             if (!(await Can.deletePricing(parent, args, context))) {
                 throw new Denied();

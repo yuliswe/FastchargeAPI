@@ -122,7 +122,7 @@ export type GQLMutationCreateStripeTransferArgs = {
 
 export type GQLMutationCreateSubscriptionArgs = {
   app: Scalars['String'];
-  pricing: Scalars['String'];
+  pricing: Scalars['ID'];
   subscriber: Scalars['Email'];
 };
 
@@ -148,6 +148,7 @@ export type GQLPricing = {
   freeQuota: Scalars['Int'];
   minMonthlyCharge: Scalars['String'];
   name: Scalars['String'];
+  pk: Scalars['ID'];
 };
 
 export type GQLQuery = {
@@ -437,6 +438,7 @@ export type GQLPricingResolvers<ContextType = RequestContext, ParentType extends
   freeQuota?: Resolver<GQLResolversTypes['Int'], ParentType, ContextType>;
   minMonthlyCharge?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
   name?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
+  pk?: Resolver<GQLResolversTypes['ID'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 

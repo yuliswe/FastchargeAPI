@@ -175,7 +175,8 @@ const EndpointTableSchema = new dynamoose.Schema(
 const PricingTableSchema = new dynamoose.Schema(
     {
         app: { hashKey: true, ...String_Required_NotEmpty("app") },
-        name: { rangeKey: true, ...String_Required_NotEmpty("name") },
+        createdAt: { rangeKey: true, type: Number, default: () => Date.now() },
+        name: { ...String_Required_NotEmpty("name") },
         callToAction: { type: String, default: "" },
         minMonthlyCharge: { type: String, default: "0" },
         chargePerRequest: { type: String, default: "0" },
@@ -183,7 +184,11 @@ const PricingTableSchema = new dynamoose.Schema(
         minMonthlyChargeApprox: Number,
         chargePerRequestApprox: Number,
     },
-    { timestamps: true }
+    {
+        timestamps: {
+            updatedAt: "updatedAt",
+        },
+    }
 );
 
 const SubscribeTableSchema = new dynamoose.Schema(
@@ -308,6 +313,7 @@ export class User extends Item {
 /// config.
 export class Pricing extends Item {
     app: string;
+    createdAt: number;
     name: string;
     callToAction: string;
     minMonthlyCharge: string;

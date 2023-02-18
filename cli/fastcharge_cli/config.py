@@ -11,6 +11,7 @@ if os.environ.get("TEST") == "1":
 
 if os.environ.get("LOCAL_GRAPHQL") == "1":
     graphql_host = "http://localhost:4000"
+    print("Using local graphql")
 if os.environ.get("LOCAL_PAYMENT") == "1":
     payment_api_host = "http://localhost:3000"
 if os.environ.get("LOCAL_REACT") == "1":
