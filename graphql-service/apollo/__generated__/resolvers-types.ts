@@ -1,7 +1,7 @@
 import type { GatewayMode } from '../dynamoose/models';
 import type { GraphQLResolveInfo, GraphQLScalarType, GraphQLScalarTypeConfig } from 'graphql';
 import type { App as AppData, User as UserData, Endpoint as EndpointData, Pricing as PricingData, Subscribe as SubscribeData, UsageLog as UsageLogData, StripePaymentAccept as StripePaymentAcceptData, StripeTransfer as StripeTransferData } from '../dynamoose/models';
-import type { RequestContext } from '../server';
+import type { RequestContext } from '../RequestContext';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };

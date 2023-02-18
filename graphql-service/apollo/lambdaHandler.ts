@@ -1,10 +1,11 @@
 import { startServerAndCreateLambdaHandler } from "@as-integrations/aws-lambda";
-import { createDefaultContextBatched, RequestService, server } from "./server";
+import { createDefaultContextBatched, server } from "./server";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { createRequestHandler } from "@as-integrations/aws-lambda/dist/request-handlers/_create";
 import { HeaderMap } from "@apollo/server";
 import { Chalk } from "chalk";
 import { BadInput, Unauthorized } from "./errors";
+import { RequestService } from "./RequestContext";
 
 const chalk = new Chalk({ level: 3 });
 

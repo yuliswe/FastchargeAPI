@@ -2,7 +2,7 @@ import { GraphQLResolveInfo } from "graphql";
 import { Endpoint } from "../dynamoose/models";
 import { Denied } from "../errors";
 import { Can } from "../permissions";
-import { RequestContext } from "../server";
+import { RequestContext } from "../RequestContext";
 import {
     GQLEndpointUpdateEndpointArgs,
     GQLMutationCreateEndpointArgs,

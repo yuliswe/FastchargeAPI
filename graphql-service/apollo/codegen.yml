@@ -10,7 +10,7 @@ generates:
     config:
       useIndexSignature: true
       # More on this below!
-      contextType: "../server#RequestContext"
+      contextType: "../RequestContext#RequestContext"
       mapperTypeSuffix: "Data"
       # makeResolverTypeCallable: true
       # wrapFieldDefinitions: true

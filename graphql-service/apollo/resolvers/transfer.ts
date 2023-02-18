@@ -5,7 +5,7 @@ import {
     GQLStripeTransferResolvers,
 } from "../__generated__/resolvers-types";
 import { StripeTransferModel } from "../dynamoose/models";
-import { RequestContext } from "../server";
+import { RequestContext } from "../RequestContext";
 import Decimal from "decimal.js-light";
 
 /**

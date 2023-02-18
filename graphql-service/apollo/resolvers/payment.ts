@@ -4,7 +4,7 @@ import {
     StripePaymentAcceptModel,
     User,
 } from "../dynamoose/models";
-import { RequestContext } from "../server";
+import { RequestContext } from "../RequestContext";
 import {
     GQLMutationCreateStripePaymentAcceptArgs,
     GQLQueryStripePaymentAcceptArgs,

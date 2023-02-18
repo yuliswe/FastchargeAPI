@@ -8,7 +8,7 @@ import {
 } from "../dynamoose/models";
 import { Denied, NotFound } from "../errors";
 import { Can } from "../permissions";
-import { RequestContext } from "../server";
+import { RequestContext } from "../RequestContext";
 import {
     GQLApp,
     GQLAppResolvers,

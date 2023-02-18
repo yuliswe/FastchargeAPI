@@ -2,7 +2,7 @@ import { GraphQLResolveInfo } from "graphql";
 import { Subscribe } from "../dynamoose/models";
 import { AlreadyExists, Denied } from "../errors";
 import { Can } from "../permissions";
-import { RequestContext } from "../server";
+import { RequestContext } from "../RequestContext";
 import {
     GQLMutationCreateSubscriptionArgs,
     GQLQuerySubscriptionArgs,

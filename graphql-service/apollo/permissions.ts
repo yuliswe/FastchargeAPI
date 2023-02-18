@@ -1,6 +1,6 @@
 import { Endpoint, Pricing, Subscribe, User } from "./dynamoose/models";
 import { Denied } from "./errors";
-import { RequestContext } from "./server";
+import { RequestContext } from "./RequestContext";
 import {
     GQLEndpointUpdateEndpointArgs,
     GQLMutationCreateAppArgs,

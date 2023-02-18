@@ -1,6 +1,7 @@
 import { startStandaloneServer } from "@apollo/server/standalone";
 import { NotFound } from "./errors";
-import { createDefaultContextBatched, RequestContext, server } from "./server";
+import { createDefaultContextBatched, server } from "./server";
+import { RequestContext } from "./RequestContext";
 
 let { url } = await startStandaloneServer<RequestContext>(server, {
     listen: { port: Number.parseInt(process.env.PORT) || 4000 },
@@ -27,6 +28,7 @@ let { url } = await startStandaloneServer<RequestContext>(server, {
         return Promise.resolve({
             currentUser: email,
             batched,
+            isServiceRequest: false,
         });
     },
 });

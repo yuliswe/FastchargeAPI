@@ -1,4 +1,4 @@
-import { ApolloServer, BaseContext } from "@apollo/server";
+import { ApolloServer } from "@apollo/server";
 import { readFileSync } from "fs";
 import {
     App,
@@ -28,6 +28,7 @@ import customScalars from "./scalars";
 import { usageLogResolvers } from "./resolvers/usage";
 import { stripePaymentAcceptResolvers } from "./resolvers/payment";
 import { stripeTransferResolvers } from "./resolvers/transfer";
+import { RequestContext } from "./RequestContext";
 
 initializeDB();
 
@@ -42,15 +43,6 @@ export function createDefaultContextBatched() {
         UsageLog: new Batched(UsageLogModel),
         StripePaymentAccept: new Batched(StripePaymentAcceptModel),
     };
-}
-
-export type RequestService = "payment" | "gateway" | "internal";
-
-export interface RequestContext extends BaseContext {
-    currentUser?: string;
-    service?: RequestService;
-    isServiceRequest: boolean;
-    batched: ReturnType<typeof createDefaultContextBatched>;
 }
 
 // Add more resolvers here when new resolvers are created
