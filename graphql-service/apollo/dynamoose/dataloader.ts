@@ -8,7 +8,24 @@ import {
     ConditionalCheckFailedException,
     ResourceNotFoundException,
 } from "@aws-sdk/client-dynamodb";
+import { Condition } from "dynamoose";
 
+type ConditionQuery<V> = {
+    where?: V;
+    filter?: V;
+    attribute?: V;
+    eq?: V;
+    lt?: V;
+    le?: V;
+    gt?: V;
+    ge?: V;
+    beginsWith?: V;
+    contains?: V;
+    // exists?: () => Condition;
+    in?: V[];
+    between?: [V, V];
+};
+type Query<T> = { [K in keyof T]?: T[K] | ConditionQuery<T[K]> };
 /**
  * This file is a collection of functions that are used to bridge Dynamoose with
  * DataLoader.
@@ -55,9 +72,11 @@ async function assignDefaults<I extends Item>(item: I): Promise<I> {
 type PrimaryKey = string | number;
 type BatchOptions = {
     limit?: number;
+    sort?: "ascending" | "descending";
+    using?: string;
 };
 type BatchKey<I extends Item> = {
-    query: PrimaryKey | Partial<I>;
+    query: PrimaryKey | Query<I>;
     options?: BatchOptions;
 };
 
@@ -86,7 +105,7 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
         let batch1: PrimaryKey[] = [];
         // Type 2 is when the query contains a hashKey and a rangeKey, and the
         // table has both a hashKey and a rangeKey.
-        let batch2: Partial<I>[] = [];
+        let batch2: Query<I>[] = [];
         // Other types are unbatchable
         let unbatchable: number[] = [];
         let bkType: number[] = [];
@@ -143,6 +162,12 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
             if (bk.options) {
                 if (bk.options.limit) {
                     query = query.limit(bk.options.limit);
+                }
+                if (bk.options.sort) {
+                    query = query.sort(bk.options.sort);
+                }
+                if (bk.options.using) {
+                    query = query.using(bk.options.using);
                 }
             }
             return query.exec();
@@ -274,8 +299,8 @@ export class Batched<I extends Item> {
      * dynamoose.Model.query().
      * @returns An object of the model type.
      */
-    async get(key: string | Partial<I>): Promise<I> {
-        let result = await this.many(key);
+    async get(key: string | Query<I>, options?: BatchOptions): Promise<I> {
+        let result = await this.many(key, options);
         if (result.length === 0) {
             throw new NotFound(this.model.name, JSON.stringify(key));
         } else if (result.length > 1) {
@@ -289,9 +314,12 @@ export class Batched<I extends Item> {
         }
     }
 
-    async getOrNull(key: string | Partial<I>): Promise<I | null> {
+    async getOrNull(
+        key: string | Query<I>,
+        options?: BatchOptions
+    ): Promise<I | null> {
         try {
-            return await this.get(key);
+            return await this.get(key, options);
         } catch (e) {
             if (e instanceof NotFound) {
                 return null;
@@ -301,7 +329,7 @@ export class Batched<I extends Item> {
         }
     }
 
-    async assertExists(key: string | Partial<I>): Promise<void> {
+    async assertExists(key: string | Query<I>): Promise<void> {
         await this.get(key);
     }
 
@@ -320,9 +348,12 @@ export class Batched<I extends Item> {
      * dynamoose.Model.query().
      * @returns An array of objects of the model type.
      */
-    async many(key: string | Partial<I>, options?: BatchOptions): Promise<I[]> {
+    async many(key: string | Query<I>, options?: BatchOptions): Promise<I[]> {
         if (!key) {
             return [];
+        }
+        if (typeof key === "object") {
+            key = stripUndefinedKeys(key);
         }
         let result = await this.loader.load({
             query: key,

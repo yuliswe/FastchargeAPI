@@ -5,7 +5,6 @@ import { Can } from "../permissions";
 import { RequestContext } from "../RequestContext";
 import {
     GQLMutationCreateUsageLogArgs,
-    GQLMutationResolvers,
     GQLResolvers,
     GQLUsageLogResolvers,
 } from "../__generated__/resolvers-types";
@@ -35,6 +34,8 @@ export const usageLogResolvers: GQLResolvers & {
             });
             return endpoint;
         },
+        status: (parent: UsageLog) => parent.status,
+        collectedAt: (parent: UsageLog) => parent.collectedAt,
         volume: (parent: UsageLog) => parent.volume,
         createdAt: (parent: UsageLog) => parent.createdAt,
         __isTypeOf: (parent: UsageLog, context) =>

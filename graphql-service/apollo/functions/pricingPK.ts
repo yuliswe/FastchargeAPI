@@ -1,7 +1,10 @@
-import { Pricing } from "../dynamoose/models";
+export type PricingPKContent = {
+    app: string;
+    createdAt: number;
+};
 
 export class PricingPK {
-    static parse(pk: string): { app: string; createdAt: number } {
+    static parse(pk: string): PricingPKContent {
         let [app, createdAt] = JSON.parse(
             Buffer.from(pk.replace(/^pri_/, ""), "base64url").toString("utf8")
         );
@@ -11,7 +14,7 @@ export class PricingPK {
         };
     }
 
-    static stringify(pricing: Pricing): string {
+    static stringify(pricing: PricingPKContent): string {
         return (
             "pri_" +
             Buffer.from(

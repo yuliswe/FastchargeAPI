@@ -76,13 +76,20 @@ export const userResolvers: GQLResolvers & {
             let usage = await context.batched.UsageLog.many(
                 {
                     subscriber: parent.email,
-                    app,
+                    app: app || undefined,
                 },
                 {
                     limit,
                 }
             );
             return usage;
+        },
+
+        async usageSummaries(parent: User, args, context, info) {
+            let usageSummaries = await context.batched.UsageSummary.many({
+                subscriber: parent.email,
+            });
+            return usageSummaries;
         },
     },
     Query: {

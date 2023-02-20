@@ -18,6 +18,7 @@ generates:
       useTypeImports: true
       typesPrefix: GQL
       # avoidOptionals: true
+      makeResolverTypeCallable: true
       # defaultMapper: "{[k in keyof {T}]: {T}[k] | (() => {T})}"
       mappers:
         App: ../dynamoose/models#App
@@ -28,6 +29,9 @@ generates:
         UsageLog: ../dynamoose/models#UsageLog
         StripePaymentAccept: ../dynamoose/models#StripePaymentAccept
         StripeTransfer: ../dynamoose/models#StripeTransfer
+        AccountActivity: ../dynamoose/models#AccountActivity
+        AccountHistory: ../dynamoose/models#AccountHistory
+        UsageSummary: ../dynamoose/models#UsageSummary
       enumValues:
         GatewayMode: ../dynamoose/models#GatewayMode
       scalars:

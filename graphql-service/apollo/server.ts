@@ -1,17 +1,5 @@
 import { ApolloServer } from "@apollo/server";
 import { readFileSync } from "fs";
-import {
-    App,
-    AppModel,
-    Endpoint,
-    EndpointModel,
-    PricingModel,
-    StripePaymentAcceptModel,
-    SubscribeModel,
-    UsageLogModel,
-    User,
-    UserModel,
-} from "./dynamoose/models";
 import { GraphQLFormattedError } from "graphql";
 import { formatDynamooseError } from "./dynamoose/error";
 import { resolvers as scalarResolvers } from "graphql-scalars";
@@ -20,7 +8,6 @@ import { appResolvers } from "./resolvers/app";
 import { userResolvers } from "./resolvers/user";
 import { initializeDB } from "./dynamoose";
 import { GQLResolvers } from "./__generated__/resolvers-types";
-import { Batched } from "./dynamoose/dataloader";
 import { endpointResolvers } from "./resolvers/endpoint";
 import { pricingResolvers } from "./resolvers/pricing";
 import { subscribeResolvers } from "./resolvers/subscription";
@@ -29,21 +16,9 @@ import { usageLogResolvers } from "./resolvers/usage";
 import { stripePaymentAcceptResolvers } from "./resolvers/payment";
 import { stripeTransferResolvers } from "./resolvers/transfer";
 import { RequestContext } from "./RequestContext";
+import { usageSummaryResolvers } from "./resolvers/usage-sum";
 
 initializeDB();
-
-// Add more models here when new models are created
-export function createDefaultContextBatched() {
-    return {
-        User: new Batched(UserModel),
-        App: new Batched(AppModel),
-        Endpoint: new Batched(EndpointModel),
-        Pricing: new Batched(PricingModel),
-        Subscribe: new Batched(SubscribeModel),
-        UsageLog: new Batched(UsageLogModel),
-        StripePaymentAccept: new Batched(StripePaymentAcceptModel),
-    };
-}
 
 // Add more resolvers here when new resolvers are created
 const resolvers: GQLResolvers = {
@@ -57,6 +32,7 @@ const resolvers: GQLResolvers = {
     StripePaymentAccept: stripePaymentAcceptResolvers.StripePaymentAccept,
     StripeTransfer: stripeTransferResolvers.StripeTransfer,
     Pricing: pricingResolvers.Pricing,
+    UsageSummary: usageSummaryResolvers.UsageSummary,
     Query: {
         ...appResolvers.Query,
         ...userResolvers.Query,
@@ -67,6 +43,7 @@ const resolvers: GQLResolvers = {
         ...stripePaymentAcceptResolvers.Query,
         ...stripeTransferResolvers.Query,
         ...pricingResolvers.Query,
+        ...usageSummaryResolvers.Query,
     },
     Mutation: {
         ...appResolvers.Mutation,
@@ -78,6 +55,7 @@ const resolvers: GQLResolvers = {
         ...stripePaymentAcceptResolvers.Mutation,
         ...stripeTransferResolvers.Mutation,
         ...pricingResolvers.Mutation,
+        ...usageSummaryResolvers.Mutation,
     },
 };
 

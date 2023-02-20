@@ -152,6 +152,39 @@ Resources:
         EntryPoints:
           - lambdaHandler.ts
 
+  SQSApolloServer:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./apollo
+      Handler: sqsHandler.handler
+      Runtime: nodejs18.x
+      Architectures:
+        - arm64
+      Policies:
+        - AmazonDynamoDBFullAccess # Give the Lambda service access to poll your DynamoDB Stream
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt ApolloServerQueue.Arn
+            BatchSize: 10
+            FunctionResponseTypes: 
+              - ReportBatchItemFailures
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2022"
+        Sourcemap: true
+        EntryPoints:
+          - sqsHandler.ts
+
+  ApolloServerQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      FifoQueue: true
+      
+
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
@@ -162,6 +195,12 @@ Outputs:
   ApolloServer:
     Description: "ApolloServer ARN"
     Value: !GetAtt ApolloServer.Arn
+  ApolloServerQueueURL:
+    Description: "ApolloServerQueue URL"
+    Value: !Ref ApolloServerQueue
+  ApolloServerQueueARN:
+    Description: "ApolloServerQueue ARN"
+    Value: !GetAtt  ApolloServerQueue.Arn
   ApolloServerIamRole:
     Description: "Implicit IAM Role created (ApolloServerRole)"
     Value: !GetAtt ApolloServerRole.Arn

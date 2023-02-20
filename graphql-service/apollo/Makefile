@@ -8,7 +8,9 @@ build-CopyDependencies:
 
 	mkdir -p "$(BUILD_DIR)/ApolloServer"
 	mkdir -p "$(BUILD_DIR)/ApolloServerIAM"
+	mkdir -p "$(BUILD_DIR)/SQSApolloServer"
 
 	cp -r ./schema "$(BUILD_DIR)/ApolloServer/schema"
 	cp -r ./schema "$(BUILD_DIR)/ApolloServerIAM/schema"
+	cp -r ./schema "$(BUILD_DIR)/SQSApolloServer/schema"
 

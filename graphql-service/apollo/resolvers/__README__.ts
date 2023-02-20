@@ -6,11 +6,14 @@ import { GQLResolvers } from "../__generated__/resolvers-types";
  * Note that to make the typing work, you must also add your Models to the
  * codegen.yml file, under the mappers section.
  */
-export const XXXXXXXXXResolvers: GQLResolvers = {
-    XXXXXXXXX: {
-    },
-    Query: {
-    },
-    Mutation: {
-    },
-};
+
+// export const XXXXXXXXXXXXXXXResolvers: GQLResolvers & {
+//     XXXXXXXXXXXXXXX: Required<GQLXXXXXXXXXXXXXXXResolvers>;
+// } = {
+//     XXXXXXXXX: {
+//     },
+//     Query: {
+//     },
+//     Mutation: {
+//     },
+// };
