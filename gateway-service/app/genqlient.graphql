@@ -15,6 +15,12 @@ mutation BillUsage($userEmail: Email!, $app_name: String!, $path: String!) {
     }
 }
 
+mutation TriggerBilling($user: ID!) {
+    triggerBilling(user: $user) {
+        createdAt
+    }
+}
+
 query GetUserSubscriptionPlan($userEmail: Email!, $app: String!) {
     subscription(subscriber: $userEmail, app: $app) {
         pricing {

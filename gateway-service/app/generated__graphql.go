@@ -142,6 +142,24 @@ func (v *GetUserSubscriptionPlanSubscriptionSubscribePricing) GetChargePerReques
 	return v.ChargePerRequest
 }
 
+// TriggerBillingResponse is returned by TriggerBilling on success.
+type TriggerBillingResponse struct {
+	TriggerBilling TriggerBillingTriggerBillingUsageSummary `json:"triggerBilling"`
+}
+
+// GetTriggerBilling returns TriggerBillingResponse.TriggerBilling, and is useful for accessing the field via an interface.
+func (v *TriggerBillingResponse) GetTriggerBilling() TriggerBillingTriggerBillingUsageSummary {
+	return v.TriggerBilling
+}
+
+// TriggerBillingTriggerBillingUsageSummary includes the requested fields of the GraphQL type UsageSummary.
+type TriggerBillingTriggerBillingUsageSummary struct {
+	CreatedAt int64 `json:"createdAt"`
+}
+
+// GetCreatedAt returns TriggerBillingTriggerBillingUsageSummary.CreatedAt, and is useful for accessing the field via an interface.
+func (v *TriggerBillingTriggerBillingUsageSummary) GetCreatedAt() int64 { return v.CreatedAt }
+
 // __BillUsageInput is used internally by genqlient
 type __BillUsageInput struct {
 	UserEmail string `json:"userEmail"`
@@ -197,6 +215,14 @@ func (v *__GetUserSubscriptionPlanInput) GetUserEmail() string { return v.UserEm
 
 // GetApp returns __GetUserSubscriptionPlanInput.App, and is useful for accessing the field via an interface.
 func (v *__GetUserSubscriptionPlanInput) GetApp() string { return v.App }
+
+// __TriggerBillingInput is used internally by genqlient
+type __TriggerBillingInput struct {
+	User string `json:"user"`
+}
+
+// GetUser returns __TriggerBillingInput.User, and is useful for accessing the field via an interface.
+func (v *__TriggerBillingInput) GetUser() string { return v.User }
 
 func BillUsage(
 	ctx context.Context,
@@ -366,6 +392,38 @@ query GetUserSubscriptionPlan ($userEmail: Email!, $app: String!) {
 	var err error
 
 	var data GetUserSubscriptionPlanResponse
+	resp := &graphql.Response{Data: &data}
+
+	err = client.MakeRequest(
+		ctx,
+		req,
+		resp,
+	)
+
+	return &data, err
+}
+
+func TriggerBilling(
+	ctx context.Context,
+	client graphql.Client,
+	user string,
+) (*TriggerBillingResponse, error) {
+	req := &graphql.Request{
+		OpName: "TriggerBilling",
+		Query: `
+mutation TriggerBilling ($user: ID!) {
+	triggerBilling(user: $user) {
+		createdAt
+	}
+}
+`,
+		Variables: &__TriggerBillingInput{
+			User: user,
+		},
+	}
+	var err error
+
+	var data TriggerBillingResponse
 	resp := &graphql.Response{Data: &data}
 
 	err = client.MakeRequest(

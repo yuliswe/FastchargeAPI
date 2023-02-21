@@ -25,6 +25,7 @@ import (
 
 func main() {
 	initGraphQLClient()
+	initSQSGraphQLClient()
 	lambda.Start(lambdaHandler)
 }
 
@@ -82,7 +83,7 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 				fmt.Println(color.Red, "Error making a redirect response", err, color.Reset)
 				return &response, err
 			} else {
-				// billUsage(user, app, path)
+				go billUsage(user, app, path)
 				return &response, nil
 			}
 		default:
@@ -90,7 +91,7 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 				fmt.Println(color.Red, "Error making a forward response", err, color.Reset)
 				return response, err
 			} else {
-				// billUsage(user, app, path)
+				go billUsage(user, app, path)
 				return response, nil
 			}
 		}
@@ -323,10 +324,19 @@ func createUserUsageToken(app string, user string) (string, error) {
 
 func billUsage(user string, app string, path string) {
 	//fmt.Println(color.Yellow, "Billing usage for", user, app, path, color.Reset)
-	if _, err := BillUsage(context.Background(), getGraphQLClient(), user, app, path); err != nil {
-		fmt.Println(color.Yellow, "Error billing usage: ", err, color.Reset)
-	} else {
-		// fmt.Println(color.Yellow, "Billing usage: ", result, color.Reset)
+
+	// Note: DelaySeconds of BillUsage + DedupID period must be less than the DelaySeconds of TriggerBilling
+	// Delay helps batch processing of usage logs
+	if _, err := BillUsage(context.Background(), SQSGraphQLClient{DelaySeconds: 20}.New(), user, app, path); err != nil {
+		fmt.Println(color.Yellow, "Error creating UsageLog: ", err, color.Reset)
+	}
+	// DedupID with the same suffix helps reduces the number of calls to the billing lambda.
+	// This will make the trigger billing deduped for 30 seconds
+	dedupId := fmt.Sprintf("trigger-billing-%s-%d", user, time.Now().Unix()/30)
+	if _, err := TriggerBilling(context.Background(), SQSGraphQLClient{DedupID: dedupId,
+		DelaySeconds: 60, // The first triggered billing will run after 60 seconds. This will make sure all the usage logs created in 30s are processed.
+	}.New(), user); err != nil {
+		fmt.Println(color.Yellow, "Error triggering billing: ", err, color.Reset)
 	}
 }
 
@@ -341,7 +351,21 @@ func apiGatewayErrorResponse(code int, reason string, message string) events.API
 	}
 }
 
+type userIsAllowedToAccessCacheKey struct {
+	User string
+	App  string
+	Path string
+}
+
+var userIsAllowedToAccessCache, _ = lru.New[userIsAllowedToAccessCacheKey, bool](1000)
+
+// Checks if the user is allowed to access the endpoint. Caches the result if
+// the user is allowed to access. Otherwise, send queries to the graphql backend
+// to find out if the user is allowed to access.
 func userIsAllowedToAccess(user string, app string, path string) (bool, *events.APIGatewayProxyResponse) {
+	if allowed, found := userIsAllowedToAccessCache.Get(userIsAllowedToAccessCacheKey{User: user, App: app, Path: path}); found {
+		return allowed, nil
+	}
 	// In order to access an endpoint, the user must be subscribed to the app,
 	// and have enough balance.
 	var subscription GetUserSubscriptionPlanSubscriptionSubscribe
@@ -354,9 +378,10 @@ func userIsAllowedToAccess(user string, app string, path string) (bool, *events.
 	}
 	cost := getEndpointCost(subscription, user, app, path)
 	if getUserBalance(user).LessThan(cost) {
-		response := apiGatewayErrorResponse(402, "INSUFFICIENT_BALANCE", "You need to have at least $"+cost.String()+"in your balance to access this endpoint.")
+		response := apiGatewayErrorResponse(402, "INSUFFICIENT_BALANCE", "You need to have at least $"+cost.String()+" in your balance to access this endpoint.")
 		return false, &response
 	}
+	userIsAllowedToAccessCache.Add(userIsAllowedToAccessCacheKey{User: user, App: app, Path: path}, true)
 	return true, nil
 }
 

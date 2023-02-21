@@ -4,6 +4,8 @@ go 1.19
 
 replace fastcharge.com/gateway-service => ./
 
+require github.com/aws/aws-sdk-go v1.44.204
+
 require (
 	github.com/Khan/genqlient v0.5.0 // indirect
 	github.com/TwiN/go-color v1.4.0 // indirect
@@ -11,7 +13,6 @@ require (
 	github.com/alexflint/go-arg v1.4.2 // indirect
 	github.com/alexflint/go-scalar v1.0.0 // indirect
 	github.com/aws/aws-lambda-go v1.37.0 // indirect
-	github.com/aws/aws-sdk-go v1.44.199
 	github.com/aws/smithy-go v1.13.5 // indirect
 	github.com/golang-jwt/jwt/v4 v4.4.3 // indirect
 	github.com/google/uuid v1.3.0 // indirect
