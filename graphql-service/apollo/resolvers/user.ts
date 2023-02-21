@@ -12,6 +12,8 @@ import {
     GQLUserUpdateUserArgs,
     GQLUserUsageLogsArgs,
 } from "../__generated__/resolvers-types";
+import { UserPK } from "../functions/UserPK";
+import { getUserBalance } from "../functions/account";
 
 export const userResolvers: GQLResolvers & {
     User: Required<GQLUserResolvers>;
@@ -46,7 +48,9 @@ export const userResolvers: GQLResolvers & {
             });
         },
         author: (parent) => parent.author || "",
-        balance: (parent) => parent.balance || "0",
+        balance: async (parent, args, context) => {
+            return await getUserBalance(context, UserPK.stringify(parent));
+        },
         stripeCustomerId: (parent) => parent.stripeCustomerId,
         stripeConnectAccountId: (parent) => parent.stripeConnectAccountId,
 

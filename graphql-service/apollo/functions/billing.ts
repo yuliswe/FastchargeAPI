@@ -1,7 +1,7 @@
 import { AccountActivity, Pricing, UsageSummary } from "../dynamoose/models";
-import { Decimal } from "decimal.js-light";
 import { UsageSummaryPK } from "./UsageSummaryPK";
 import { RequestContext } from "../RequestContext";
+import Decimal from "decimal.js-light";
 
 /**
  * Create account activities for API usage and the app author, taking into

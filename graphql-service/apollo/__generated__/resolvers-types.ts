@@ -62,7 +62,6 @@ export { GatewayMode };
 
 export type GQLMutation = {
   __typename?: 'Mutation';
-  collectUsageLogs?: Maybe<GQLUsageSummary>;
   createApp?: Maybe<GQLApp>;
   createEndpoint?: Maybe<GQLEndpoint>;
   createPricing?: Maybe<GQLPricing>;
@@ -71,12 +70,7 @@ export type GQLMutation = {
   createSubscription?: Maybe<GQLSubscribe>;
   createUsageLog?: Maybe<GQLUsageLog>;
   createUser?: Maybe<GQLUser>;
-  resetTables?: Maybe<Scalars['Boolean']>;
-};
-
-
-export type GQLMutationCollectUsageLogsArgs = {
-  user: Scalars['ID'];
+  triggerBilling?: Maybe<GQLUsageSummary>;
 };
 
 
@@ -143,6 +137,11 @@ export type GQLMutationCreateUsageLogArgs = {
 
 export type GQLMutationCreateUserArgs = {
   email: Scalars['Email'];
+};
+
+
+export type GQLMutationTriggerBillingArgs = {
+  user: Scalars['ID'];
 };
 
 export type GQLPricing = {
@@ -427,7 +426,6 @@ export type GQLEndpointResolvers<ContextType = RequestContext, ParentType extend
 export type GQLGatewayModeResolvers = EnumResolverSignature<{ proxy?: any, redirect?: any }, GQLResolversTypes['GatewayMode']>;
 
 export type GQLMutationResolvers<ContextType = RequestContext, ParentType extends GQLResolversParentTypes['Mutation'] = GQLResolversParentTypes['Mutation']> = ResolversObject<{
-  collectUsageLogs?: Resolver<Maybe<GQLResolversTypes['UsageSummary']>, ParentType, ContextType, RequireFields<GQLMutationCollectUsageLogsArgs, 'user'>>;
   createApp?: Resolver<Maybe<GQLResolversTypes['App']>, ParentType, ContextType, RequireFields<GQLMutationCreateAppArgs, 'name' | 'owner'>>;
   createEndpoint?: Resolver<Maybe<GQLResolversTypes['Endpoint']>, ParentType, ContextType, RequireFields<GQLMutationCreateEndpointArgs, 'app' | 'destination' | 'path'>>;
   createPricing?: Resolver<Maybe<GQLResolversTypes['Pricing']>, ParentType, ContextType, RequireFields<GQLMutationCreatePricingArgs, 'app' | 'callToAction' | 'chargePerRequest' | 'minMonthlyCharge' | 'name'>>;
@@ -436,7 +434,7 @@ export type GQLMutationResolvers<ContextType = RequestContext, ParentType extend
   createSubscription?: Resolver<Maybe<GQLResolversTypes['Subscribe']>, ParentType, ContextType, RequireFields<GQLMutationCreateSubscriptionArgs, 'app' | 'pricing' | 'subscriber'>>;
   createUsageLog?: Resolver<Maybe<GQLResolversTypes['UsageLog']>, ParentType, ContextType, RequireFields<GQLMutationCreateUsageLogArgs, 'app' | 'path' | 'subscriber' | 'volume'>>;
   createUser?: Resolver<Maybe<GQLResolversTypes['User']>, ParentType, ContextType, RequireFields<GQLMutationCreateUserArgs, 'email'>>;
-  resetTables?: Resolver<Maybe<GQLResolversTypes['Boolean']>, ParentType, ContextType>;
+  triggerBilling?: Resolver<Maybe<GQLResolversTypes['UsageSummary']>, ParentType, ContextType, RequireFields<GQLMutationTriggerBillingArgs, 'user'>>;
 }>;
 
 export interface GQLNonNegativeDecimalScalarConfig extends GraphQLScalarTypeConfig<GQLResolversTypes['NonNegativeDecimal'], any> {

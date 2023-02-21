@@ -7,7 +7,7 @@ import {
     withDBLogging,
 } from "../dynamoose/models";
 import { AccountHistoryPK } from "./AccountHistoryPK";
-import { Decimal } from "decimal.js-light";
+import Decimal from "decimal.js-light";
 
 /**
  * Collect any account activities that are in the pending status, and have the
@@ -91,4 +91,28 @@ export async function collectBillingHistory(
         accountHistory,
         affectedAccountActivities: activities,
     };
+}
+
+/**
+ * The balance is the closing balance of the most recent account history.
+ * @param user
+ */
+export async function getUserBalance(
+    context: RequestContext,
+    user: string
+): Promise<string> {
+    let accountHistory = await context.batched.AccountHistory.getOrNull(
+        {
+            user: user,
+        },
+        {
+            sort: "descending",
+            limit: 1,
+        }
+    );
+    if (accountHistory) {
+        return accountHistory.closingBalance;
+    } else {
+        return "0";
+    }
 }

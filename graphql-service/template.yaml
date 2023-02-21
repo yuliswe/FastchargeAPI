@@ -163,10 +163,24 @@ Resources:
       Policies:
         - AmazonDynamoDBFullAccess # Give the Lambda service access to poll your DynamoDB Stream
       Events:
-        SQSEvent:
+        SQSEventToQueue0:
           Type: SQS
           Properties:
-            Queue: !GetAtt ApolloServerQueue.Arn
+            Queue: !GetAtt ApolloServerQueue0.Arn
+            BatchSize: 10
+            FunctionResponseTypes: 
+              - ReportBatchItemFailures
+        SQSEventToQueue10:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt ApolloServerQueue10.Arn
+            BatchSize: 10
+            FunctionResponseTypes: 
+              - ReportBatchItemFailures
+        SQSEventToQueue60:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt ApolloServerQueue60.Arn
             BatchSize: 10
             FunctionResponseTypes: 
               - ReportBatchItemFailures
@@ -179,9 +193,24 @@ Resources:
         EntryPoints:
           - sqsHandler.ts
 
-  ApolloServerQueue:
+  ApolloServerQueue0:
     Type: AWS::SQS::Queue
     Properties:
+      QueueName: graphql-service-fifo-queue.fifo
+      FifoQueue: true
+      
+  ApolloServerQueue10:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: graphql-service-fifo-queue-delay-10s.fifo
+      DelaySeconds: 10
+      FifoQueue: true
+      
+  ApolloServerQueue60:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: graphql-service-fifo-queue-delay-60s.fifo
+      DelaySeconds: 60
       FifoQueue: true
       
 
@@ -195,12 +224,12 @@ Outputs:
   ApolloServer:
     Description: "ApolloServer ARN"
     Value: !GetAtt ApolloServer.Arn
-  ApolloServerQueueURL:
-    Description: "ApolloServerQueue URL"
-    Value: !Ref ApolloServerQueue
-  ApolloServerQueueARN:
-    Description: "ApolloServerQueue ARN"
-    Value: !GetAtt  ApolloServerQueue.Arn
+  ApolloServerQueue0URL:
+    Description: "ApolloServerQueue0 URL"
+    Value: !Ref ApolloServerQueue0
+  ApolloServerQueue0ARN:
+    Description: "ApolloServerQueue0 ARN"
+    Value: !GetAtt  ApolloServerQueue0.Arn
   ApolloServerIamRole:
     Description: "Implicit IAM Role created (ApolloServerRole)"
     Value: !GetAtt ApolloServerRole.Arn

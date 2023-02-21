@@ -21,7 +21,7 @@ export const usageSummaryResolvers: GQLResolvers & {
     },
     Query: {},
     Mutation: {
-        async collectUsageLogs(parent, { user }, context, info) {
+        async triggerBilling(parent, { user }, context, info) {
             let usageSummary = await collectUsageLogs(context, user);
             return usageSummary;
         },
