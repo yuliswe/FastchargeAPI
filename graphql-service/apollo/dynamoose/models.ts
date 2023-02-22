@@ -228,6 +228,10 @@ const UsageSummaryTableSchema = new dynamoose.Schema(
             rangeKey: true,
             default: DEFAULT_FOR_CREATED_AT_RANGE_KEY,
         },
+        app: {
+            type: String,
+            ...String_Required_NotEmpty("app"),
+        },
         volume: { type: Number, default: 1 },
         status: {
             type: String,
@@ -436,6 +440,7 @@ export class UsageLog extends Item {
  * can be billed to create AccountActivity item.
  */
 export class UsageSummary extends Item {
+    app: string;
     subscriber: string;
     volume: number;
     createdAt: number;

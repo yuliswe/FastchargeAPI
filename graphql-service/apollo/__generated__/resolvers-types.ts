@@ -141,6 +141,7 @@ export type GQLMutationCreateUserArgs = {
 
 
 export type GQLMutationTriggerBillingArgs = {
+  app: Scalars['ID'];
   user: Scalars['ID'];
 };
 
@@ -434,7 +435,7 @@ export type GQLMutationResolvers<ContextType = RequestContext, ParentType extend
   createSubscription?: Resolver<Maybe<GQLResolversTypes['Subscribe']>, ParentType, ContextType, RequireFields<GQLMutationCreateSubscriptionArgs, 'app' | 'pricing' | 'subscriber'>>;
   createUsageLog?: Resolver<Maybe<GQLResolversTypes['UsageLog']>, ParentType, ContextType, RequireFields<GQLMutationCreateUsageLogArgs, 'app' | 'path' | 'subscriber' | 'volume'>>;
   createUser?: Resolver<Maybe<GQLResolversTypes['User']>, ParentType, ContextType, RequireFields<GQLMutationCreateUserArgs, 'email'>>;
-  triggerBilling?: Resolver<Maybe<GQLResolversTypes['UsageSummary']>, ParentType, ContextType, RequireFields<GQLMutationTriggerBillingArgs, 'user'>>;
+  triggerBilling?: Resolver<Maybe<GQLResolversTypes['UsageSummary']>, ParentType, ContextType, RequireFields<GQLMutationTriggerBillingArgs, 'app' | 'user'>>;
 }>;
 
 export interface GQLNonNegativeDecimalScalarConfig extends GraphQLScalarTypeConfig<GQLResolversTypes['NonNegativeDecimal'], any> {

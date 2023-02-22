@@ -14,20 +14,21 @@ import dynamoose from "dynamoose";
  */
 export async function collectUsageLogs(
     context: RequestContext,
-    user: string,
-    maxQueueSize = 1000,
-    maxSecondsInQueue: number = 60 * 60 * 24
+    {
+        user,
+        app,
+        maxQueueSize = 1000,
+        maxSecondsInQueue = 60 * 60 * 24,
+    }: {
+        user: string;
+        app: string;
+        maxQueueSize?: number;
+        maxSecondsInQueue?: number;
+    }
 ): Promise<UsageSummary | null> {
-    // (await dynamoose.logger()).providers.set(console);
-
-    // console.log(
-    //     await UsageLogModel.query({
-    //         subscriber: user,
-    //         status: "pending",
-    //     }).exec()
-    // );
     let usageLogs = await context.batched.UsageLog.many({
         subscriber: user,
+        app,
         status: "pending",
     });
     if (usageLogs.length === 0) {
@@ -35,6 +36,7 @@ export async function collectUsageLogs(
     }
     let summary: Partial<UsageSummary> = {
         subscriber: user,
+        app: app,
         queueSize: usageLogs.length,
         volume: 0,
         maxQueueSize,

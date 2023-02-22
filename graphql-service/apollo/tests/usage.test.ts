@@ -10,7 +10,7 @@ import { RequestContext, createDefaultContextBatched } from "../RequestContext";
 import { usageLogResolvers } from "../resolvers/usage";
 import { collectUsageLogs as collectUsageSummary } from "../functions/usage";
 import { AlreadyExists } from "../errors";
-import { collectAccountActivities } from "../functions/billing";
+import { generateAccountActivities } from "../functions/billing";
 import { beforeEach } from "node:test";
 import {
     PricingModel,
@@ -104,10 +104,10 @@ describe("Usage API", () => {
 
     let usageSummaryPK: string;
     test("Create a UsageSummary", async () => {
-        let usageSummary = await collectUsageSummary(
-            context,
-            "testuser1.fastchargeapi@gmail.com"
-        );
+        let usageSummary = await collectUsageSummary(context, {
+            user: "testuser1.fastchargeapi@gmail.com",
+            app: "myapp",
+        });
         let usageLog = await UsageLogModel.get(UsageLogPK.parse(usageLogPK));
         expect(usageSummary).not.toBeNull();
         expect(usageSummary!.queueSize).toEqual(3);
@@ -124,7 +124,7 @@ describe("Usage API", () => {
         );
         let pricing = await PricingModel.get(PricingPK.parse(pricingPK));
         expect(pricing.chargePerRequest).toEqual("0.001"); // made 3 UsageLogs, so the total amount is 0.003
-        let result = await collectAccountActivities(
+        let result = await generateAccountActivities(
             context,
             usageSummary,
             pricing,

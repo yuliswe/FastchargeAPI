@@ -1,10 +1,17 @@
+import { Chalk } from "chalk";
 import {
     GQLResolvers,
     GQLUsageSummaryResolvers,
 } from "../__generated__/resolvers-types";
 import { UsageSummaryModel } from "../dynamoose/models";
+import {
+    generateAccountActivities,
+    triggerBilling,
+} from "../functions/billing";
+import { findUserSubscriptionPricing } from "../functions/subscription";
 import { collectUsageLogs } from "../functions/usage";
 
+const chalk = new Chalk({ level: 3 });
 /**
  * Remember to add your resolver to the resolvers object in server.ts.
  *
@@ -21,8 +28,8 @@ export const usageSummaryResolvers: GQLResolvers & {
     },
     Query: {},
     Mutation: {
-        async triggerBilling(parent, { user }, context, info) {
-            let usageSummary = await collectUsageLogs(context, user);
+        async triggerBilling(parent, { user, app }, context, info) {
+            let { usageSummary } = await triggerBilling(context, { user, app });
             return usageSummary;
         },
     },

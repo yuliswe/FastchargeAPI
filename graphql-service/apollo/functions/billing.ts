@@ -2,6 +2,10 @@ import { AccountActivity, Pricing, UsageSummary } from "../dynamoose/models";
 import { UsageSummaryPK } from "./UsageSummaryPK";
 import { RequestContext } from "../RequestContext";
 import Decimal from "decimal.js-light";
+import { findUserSubscriptionPricing } from "./subscription";
+import { collectUsageLogs } from "./usage";
+import { Chalk } from "chalk";
+const chalk = new Chalk({ level: 3 });
 
 /**
  * Create account activities for API usage and the app author, taking into
@@ -13,7 +17,7 @@ import Decimal from "decimal.js-light";
  * @param appAuthor API author
  * @returns { subscriber: AccountActivity, appAuthor: AccountActivity }
  */
-export async function collectAccountActivities(
+export async function generateAccountActivities(
     context: RequestContext,
     usageSummary: UsageSummary,
     pricing: Pricing,
@@ -116,4 +120,28 @@ async function shouldCollectMonthlyCharge(
         return true;
     }
     return lastUsageSummary.status === "pending";
+}
+
+export async function triggerBilling(
+    context: RequestContext,
+    { user, app }: { user: string; app: string }
+): Promise<{
+    usageSummary: UsageSummary;
+}> {
+    let usageSummary = await collectUsageLogs(context, { user, app });
+    let pricing = await findUserSubscriptionPricing(context, user, app);
+    if (!pricing) {
+        console.error(
+            chalk.red("No pricing found during triggerBilling"),
+            user,
+            app
+        );
+        throw new Error(
+            `No pricing found during triggerBilling: ${user}, ${app}`
+        );
+    }
+    await generateAccountActivities(context, usageSummary, pricing, user, app);
+    return {
+        usageSummary,
+    };
 }

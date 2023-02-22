@@ -77,7 +77,7 @@ type Mutation {
         stripeTransferObject: String!
     ): StripeTransfer
 
-    triggerBilling(user: ID!): UsageSummary
+    triggerBilling(user: ID!, app: ID!): UsageSummary
 }
 
 type User {
