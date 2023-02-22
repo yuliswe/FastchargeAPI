@@ -83,9 +83,9 @@ let handle = startServerAndCreateLambdaHandler(
     ),
     {
         context({ event }: { event: APIGatewayProxyEvent }) {
-            let userEmail: string;
+            let userEmail: string | undefined = undefined;
             let domain = event.requestContext.domainName || "";
-            let serviceName: RequestService;
+            let serviceName: RequestService | undefined = undefined;
             let isServiceRequest = false;
             // This domain is authenticated with AWS IAM. Only internal services
             // can access it. Therefore we can trust the X-Service-Name header. For
@@ -125,7 +125,7 @@ let handle = startServerAndCreateLambdaHandler(
                 }
                 isServiceRequest = false;
             } else {
-                userEmail = event.requestContext.authorizer["userEmail"];
+                userEmail = event.requestContext.authorizer?.["userEmail"];
                 if (!userEmail) {
                     console.error(chalk.red("Cannot determine userEmail."));
                     throw new Unauthorized();

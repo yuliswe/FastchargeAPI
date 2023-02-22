@@ -53,8 +53,8 @@ export async function generateAccountActivities(
             usageSummary: UsageSummaryPK.stringify(usageSummary),
         }),
         newUsageSummary: usageSummary.save(),
-        subscriberMinMonthly: null,
-        appAuthorMinMonthly: null,
+        subscriberMinMonthly: null as Promise<AccountActivity> | null,
+        appAuthorMinMonthly: null as Promise<AccountActivity> | null,
     };
     if (
         !disableMonthlyCharge &&
@@ -79,7 +79,7 @@ export async function generateAccountActivities(
             usageSummary: UsageSummaryPK.stringify(usageSummary),
         });
     }
-    let errors = [];
+    let errors: string[] = [];
     for (let result of await Promise.allSettled(Object.values(results))) {
         if (result.status === "rejected") {
             console.error(
@@ -125,10 +125,11 @@ async function shouldCollectMonthlyCharge(
 export async function triggerBilling(
     context: RequestContext,
     { user, app }: { user: string; app: string }
-): Promise<{
-    usageSummary: UsageSummary;
-}> {
+): Promise<{ usageSummary: UsageSummary } | null> {
     let usageSummary = await collectUsageLogs(context, { user, app });
+    if (usageSummary == null) {
+        return null;
+    }
     let pricing = await findUserSubscriptionPricing(context, user, app);
     if (!pricing) {
         console.error(

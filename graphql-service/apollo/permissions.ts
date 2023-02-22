@@ -146,7 +146,7 @@ export const Can = {
         arr: App[],
         context: RequestContext
     ): Promise<App[]> {
-        let results = [];
+        let results: any[] = [];
         for await (let [canView, item] of Can.viewAppIter(arr, context)) {
             if (canView) {
                 results.push(item);

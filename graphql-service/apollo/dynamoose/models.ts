@@ -50,7 +50,7 @@ const tableConfigs = {
             frequency: 1000,
         },
     },
-    expires: null,
+    expires: undefined,
     tags: {},
     tableClass: TableClass.standard,
 };
@@ -66,17 +66,6 @@ class ValidationError {
         return `Validation faild on field "${this.field}": "${this.message}".`;
     }
 }
-
-const String_REQUIRED_NON_EMPTY = {
-    type: String,
-    required: true,
-    validate: (str: string) => {
-        if (!/.+/.test(str)) {
-            throw new ValidationError(null, "String cannot be empty");
-        }
-        return true;
-    },
-};
 
 const DEFAULT_FOR_CREATED_AT_RANGE_KEY = (async () => {
     await new Promise((resolve) => setTimeout(resolve, 1));
@@ -208,7 +197,7 @@ const UsageLogTableSchema = new dynamoose.Schema(
         path: String_Required_NotEmpty("path"),
         volume: { type: Number, default: 1 },
         queuePosition: { type: Number, default: 0 },
-        usageSummary: { type: String, required: false, default: null },
+        usageSummary: { type: String, required: false, default: undefined },
     },
     {
         timestamps: {
@@ -229,7 +218,6 @@ const UsageSummaryTableSchema = new dynamoose.Schema(
             default: DEFAULT_FOR_CREATED_AT_RANGE_KEY,
         },
         app: {
-            type: String,
             ...String_Required_NotEmpty("app"),
         },
         volume: { type: Number, default: 1 },
@@ -238,10 +226,10 @@ const UsageSummaryTableSchema = new dynamoose.Schema(
             enum: ["pending", "billed"],
             default: "pending",
         },
-        billedAt: { type: Number, default: null },
+        billedAt: { type: Number, default: undefined },
         queueSize: { type: Number, required: true },
-        maxQueueSize: { type: Number, default: null },
-        maxSecondsInQueue: { type: Number, default: null },
+        maxQueueSize: { type: Number, default: undefined },
+        maxSecondsInQueue: { type: Number, default: undefined },
     },
     {
         timestamps: {
@@ -281,7 +269,7 @@ const AccountActivityTableSchema = new dynamoose.Schema(
         },
         settleAt: { type: Number, required: true },
         amount: { ...String_Decimal("amount"), required: true },
-        usageSummary: { type: String, default: null },
+        usageSummary: { type: String, default: undefined },
     },
     {
         timestamps: {

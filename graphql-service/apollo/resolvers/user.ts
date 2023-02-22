@@ -55,7 +55,7 @@ export const userResolvers: GQLResolvers & {
         stripeConnectAccountId: (parent) => parent.stripeConnectAccountId,
 
         async updateUser(
-            parent: GQLUser,
+            parent: User,
             { stripeCustomerId, stripeConnectAccountId }: GQLUserUpdateUserArgs,
             context: RequestContext,
             info: GraphQLResolveInfo
@@ -111,11 +111,11 @@ export const userResolvers: GQLResolvers & {
         },
         async user(
             parent: never,
-            args: GQLQueryUserArgs,
+            { email }: GQLQueryUserArgs,
             context: RequestContext,
             info: GraphQLResolveInfo
         ) {
-            let user = await context.batched.User.get(args.email);
+            let user = await context.batched.User.get({ email });
             if (!(await Can.viewUser(user, context))) {
                 throw new Denied();
             }

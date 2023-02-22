@@ -1,3 +1,4 @@
+import { Item } from "dynamoose/dist/Item";
 import { RequestContext } from "../RequestContext";
 import {
     AccountActivity,
@@ -21,7 +22,7 @@ export async function collectBillingHistory(
     accountUser: string
 ): Promise<{
     accountHistory: AccountHistory;
-    previousAccountHistory: AccountHistory;
+    previousAccountHistory: AccountHistory | null;
     affectedAccountActivities: AccountActivity[];
 } | null> {
     let closingTime = Date.now();
@@ -57,7 +58,7 @@ export async function collectBillingHistory(
 
     let balance = new Decimal(accountHistory.startingBalance);
 
-    let promises = [];
+    let promises: Promise<Item>[] = [];
     for (let activity of activities) {
         activity.status = "settled";
         activity.accountHistory = AccountHistoryPK.stringify(accountHistory);
@@ -72,8 +73,8 @@ export async function collectBillingHistory(
     accountHistory.closingBalance = balance.toString();
     promises.push(accountHistory.save());
 
-    let results = [];
-    let errors = [];
+    let results: Item[] = [];
+    let errors: string[] = [];
     for (let result of await Promise.allSettled(promises)) {
         if (result.status === "rejected") {
             console.error("Error when creating AccountHistory:", result.reason);

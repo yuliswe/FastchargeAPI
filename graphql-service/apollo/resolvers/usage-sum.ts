@@ -29,8 +29,12 @@ export const usageSummaryResolvers: GQLResolvers & {
     Query: {},
     Mutation: {
         async triggerBilling(parent, { user, app }, context, info) {
-            let { usageSummary } = await triggerBilling(context, { user, app });
-            return usageSummary;
+            let result = await triggerBilling(context, { user, app });
+            if (result) {
+                return result.usageSummary;
+            } else {
+                return null;
+            }
         },
     },
 };

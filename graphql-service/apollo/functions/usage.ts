@@ -1,7 +1,7 @@
+import { Item } from "dynamoose/dist/Item";
 import { RequestContext } from "../RequestContext";
-import { UsageLogModel, UsageSummary } from "../dynamoose/models";
+import { UsageSummary } from "../dynamoose/models";
 import { UsageSummaryPK } from "./UsageSummaryPK";
-import dynamoose from "dynamoose";
 
 /**
  * Create a UsageSummary for the given user's usage logs that are not collected.
@@ -34,7 +34,7 @@ export async function collectUsageLogs(
     if (usageLogs.length === 0) {
         return null;
     }
-    let summary: Partial<UsageSummary> = {
+    let summary = {
         subscriber: user,
         app: app,
         queueSize: usageLogs.length,
@@ -46,7 +46,7 @@ export async function collectUsageLogs(
         summary.volume += usage.volume;
     }
     let usageSummary = await context.batched.UsageSummary.create(summary);
-    let promises = [];
+    let promises: Promise<Item>[] = [];
     for (let usage of usageLogs) {
         usage.usageSummary = UsageSummaryPK.stringify(usageSummary);
         usage.status = "collected";

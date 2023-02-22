@@ -112,7 +112,7 @@ export const appResolvers: GQLResolvers = {
             context: RequestContext,
             info: GraphQLResolveInfo
         ): Promise<App> {
-            let app = await context.batched.App.get(name);
+            let app = await context.batched.App.get({ name });
             if (!(await Can.viewApp(app, context))) {
                 throw new Denied();
             }

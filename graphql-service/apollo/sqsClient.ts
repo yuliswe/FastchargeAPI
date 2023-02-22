@@ -7,7 +7,7 @@ const sqsClient = new SQSClient({ region: "us-east-1" });
 
 const cache = new InMemoryCache();
 
-export function sqsGQLClient({ dedupId = undefined as string } = {}) {
+export function sqsGQLClient({ dedupId }: { dedupId?: string } = {}) {
     return new ApolloClient({
         // Provide required constructor fields
         cache: cache,

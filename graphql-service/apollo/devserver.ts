@@ -4,7 +4,9 @@ import { server } from "./server";
 import { RequestContext, createDefaultContextBatched } from "./RequestContext";
 
 let { url } = await startStandaloneServer<RequestContext>(server, {
-    listen: { port: Number.parseInt(process.env.PORT) || 4000 },
+    listen: {
+        port: process.env.PORT ? Number.parseInt(process.env.PORT) : 4000,
+    },
     context: async ({ req }) => {
         // Note: You must not trust the header in production. This is just for
         // development.

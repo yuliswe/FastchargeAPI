@@ -47,14 +47,14 @@ let handle = startServerAndCreateLambdaHandler<
                 );
             }
         },
-        toErrorResult(error) {
+        toErrorResult(error: object) {
             console.error(chalk.red(error.toString()));
             throw error;
         },
     },
     {
         context({ event }: { event: SQSRecord }) {
-            let userEmail: string;
+            let userEmail: string | undefined = undefined;
             let serviceName: RequestService = "internal";
             let isServiceRequest = true;
             return Promise.resolve({

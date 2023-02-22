@@ -25,7 +25,9 @@ type ConditionQuery<V> = {
     in?: V[];
     between?: [V, V];
 };
-type Query<T> = { [K in keyof T]?: T[K] | ConditionQuery<T[K]> };
+type GQLPartial<T> = { [K in keyof T]?: T[K] | null };
+type Query<T> = { [K in keyof T]?: T[K] | ConditionQuery<T[K]> | null };
+
 /**
  * This file is a collection of functions that are used to bridge Dynamoose with
  * DataLoader.
@@ -39,15 +41,15 @@ type Query<T> = { [K in keyof T]?: T[K] | ConditionQuery<T[K]> };
  */
 function extractKeysFromItems<I extends Item>(
     model: ModelType<I>,
-    item: Partial<I>
+    item: GQLPartial<I>
 ): Partial<I> {
     let hashKeyName = model.table().hashKey;
     let rangeKeyName: keyof I | undefined = model.table().rangeKey as keyof I;
     let query = {
         [hashKeyName]: item[hashKeyName as keyof I],
     } as Partial<I>;
-    if (rangeKeyName != undefined) {
-        query[rangeKeyName] = item[rangeKeyName];
+    if (rangeKeyName != undefined && item[rangeKeyName] != null) {
+        query[rangeKeyName] = item[rangeKeyName]!;
     }
     return query;
 }
@@ -71,9 +73,9 @@ async function assignDefaults<I extends Item>(item: I): Promise<I> {
 
 type PrimaryKey = string | number;
 type BatchOptions = {
-    limit?: number;
-    sort?: "ascending" | "descending";
-    using?: string;
+    limit?: number | null;
+    sort?: "ascending" | "descending" | null;
+    using?: string | null;
 };
 type BatchKey<I extends Item> = {
     query: PrimaryKey | Query<I>;
@@ -160,13 +162,13 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
                 query = model.query(bk.query);
             }
             if (bk.options) {
-                if (bk.options.limit) {
+                if (bk.options.limit != null) {
                     query = query.limit(bk.options.limit);
                 }
-                if (bk.options.sort) {
+                if (bk.options.sort != null) {
                     query = query.sort(bk.options.sort);
                 }
-                if (bk.options.using) {
+                if (bk.options.using != null) {
                     query = query.using(bk.options.using);
                 }
             }
@@ -202,7 +204,7 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
         for (let item of result2) {
             // batch2 only contains hashKey and rangeKey
             item = await assignDefaults(item);
-            let key = [item[hashKeyName], item[rangeKeyName]].toString();
+            let key = [item[hashKeyName], item[rangeKeyName!]].toString();
             if (keyMap2.has(key)) {
                 keyMap2.get(key)?.push(item);
             } else {
@@ -216,7 +218,7 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
             } else if (type === 2) {
                 let key = [
                     batch2[index][hashKeyName],
-                    batch2[index][rangeKeyName],
+                    batch2[index][rangeKeyName!],
                 ].toString();
                 resultArr[index] = keyMap2.get(key) || [];
             }
@@ -226,14 +228,10 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
     };
 }
 
-/**
- * Possible doesn't work, because the GraphQL API doesn't seem to ever give an
- * undefined value. It always gives null instead.
- */
-function stripUndefinedKeys<T>(object: T) {
+function stripNullKeys<T>(object: T): Partial<T> {
     let data: Partial<T> = {};
-    for (let [key, val] of Object.entries(object)) {
-        if (val !== undefined) {
+    for (let [key, val] of Object.entries(object as any)) {
+        if (val !== undefined && val !== null) {
             data[key] = val as keyof T;
         }
     }
@@ -349,11 +347,8 @@ export class Batched<I extends Item> {
      * @returns An array of objects of the model type.
      */
     async many(key: string | Query<I>, options?: BatchOptions): Promise<I[]> {
-        if (!key) {
-            return [];
-        }
         if (typeof key === "object") {
-            key = stripUndefinedKeys(key);
+            key = stripNullKeys(key);
         }
         let result = await this.loader.load({
             query: key,
@@ -394,16 +389,17 @@ export class Batched<I extends Item> {
      * This code is wrong if B/C is implemented, because app might be another
      * app.
      */
-    async create(item: Partial<I>): Promise<I> {
+    async create(item: GQLPartial<I>): Promise<I> {
+        let stripped = stripNullKeys(item) as Partial<I>;
         try {
-            return await this.model.create(item);
+            return await this.model.create(stripped);
         } catch (e) {
             // We want to catch the case where the item already exists. DynamoDB
             // in this case throws a ConditionalCheckFailedException. But it
             // also throws this exception in other cases. So a check using the
             // .many() call is needed to confirm that the item already exists.
             if (e instanceof ConditionalCheckFailedException) {
-                let query = extractKeysFromItems(this.model, item);
+                let query = extractKeysFromItems(this.model, stripped);
                 if ((await this.many(query)).length > 0) {
                     throw new AlreadyExists(
                         this.model.name,
@@ -456,8 +452,8 @@ export class Batched<I extends Item> {
     // mistakes. So we disallow updating the primary key. If updating the
     // primary key is needed, the client should delete the old object and create
     // a new one.
-    async update(keys: Partial<I>, newVals: Partial<I>): Promise<I> {
-        newVals = stripUndefinedKeys(newVals);
+    async update(keys: GQLPartial<I>, newVals: GQLPartial<I>): Promise<I> {
+        newVals = stripNullKeys(newVals);
         // Extract keys to ingore extra properties
         const query = extractKeysFromItems(this.model, keys);
         const original = await this.get(query);
