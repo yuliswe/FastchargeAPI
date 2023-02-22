@@ -4,7 +4,8 @@
   "description": "This is a sample template for gateway-service - Below is a brief explanation of what we have generated for you:",
   "main": "index.js",
   "scripts": {
-    "build": "sam build",
+    "gen": "go run github.com/Khan/genqlient",
+    "build": "npm run gen && sam build",
     "start": "npm run build && sam local start-api -p 6000 --warm-containers eager --env-vars ./devenv.json",
     "watch": "nodemon -e go,graphql,yaml -i generated__graphql.go --signal SIGINT -x 'npm run start || exit 1'"
   },

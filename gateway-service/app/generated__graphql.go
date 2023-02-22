@@ -219,10 +219,14 @@ func (v *__GetUserSubscriptionPlanInput) GetApp() string { return v.App }
 // __TriggerBillingInput is used internally by genqlient
 type __TriggerBillingInput struct {
 	User string `json:"user"`
+	App  string `json:"app"`
 }
 
 // GetUser returns __TriggerBillingInput.User, and is useful for accessing the field via an interface.
 func (v *__TriggerBillingInput) GetUser() string { return v.User }
+
+// GetApp returns __TriggerBillingInput.App, and is useful for accessing the field via an interface.
+func (v *__TriggerBillingInput) GetApp() string { return v.App }
 
 func BillUsage(
 	ctx context.Context,
@@ -407,18 +411,20 @@ func TriggerBilling(
 	ctx context.Context,
 	client graphql.Client,
 	user string,
+	app string,
 ) (*TriggerBillingResponse, error) {
 	req := &graphql.Request{
 		OpName: "TriggerBilling",
 		Query: `
-mutation TriggerBilling ($user: ID!) {
-	triggerBilling(user: $user) {
+mutation TriggerBilling ($user: ID!, $app: ID!) {
+	triggerBilling(user: $user, app: $app) {
 		createdAt
 	}
 }
 `,
 		Variables: &__TriggerBillingInput{
 			User: user,
+			App:  app,
 		},
 	}
 	var err error

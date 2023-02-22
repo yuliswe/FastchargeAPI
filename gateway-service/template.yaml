@@ -79,6 +79,7 @@ Resources:
       Policies:
         - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
         - AWSLambdaRole # This will allow this lambda to send http request to the graphql api
+        - AmazonSQSFullAccess
       Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
         Variables:
           TRUST_X_USER_EMAIL_HEADER: "" # Set to 1 to bypass authentication

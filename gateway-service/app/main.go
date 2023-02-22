@@ -335,7 +335,7 @@ func billUsage(user string, app string, path string) {
 	dedupId := fmt.Sprintf("trigger-billing-%s-%d", user, time.Now().Unix()/30)
 	if _, err := TriggerBilling(context.Background(), SQSGraphQLClient{DedupID: dedupId,
 		DelaySeconds: 60, // The first triggered billing will run after 60 seconds. This will make sure all the usage logs created in 30s are processed.
-	}.New(), user); err != nil {
+	}.New(), user, app); err != nil {
 		fmt.Println(color.Yellow, "Error triggering billing: ", err, color.Reset)
 	}
 }
