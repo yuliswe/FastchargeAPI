@@ -193,8 +193,6 @@ type StripeTransfer {
     stripeTransferId: String!
     stripeTransferObject: String!
     createdAt: Timestamp!
-    oldBalance: String
-    newBalance: String
     currency: String
     settleStripeTransfer: StripeTransfer
 }

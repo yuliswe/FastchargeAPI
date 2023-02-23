@@ -14,6 +14,9 @@ import {
 import Decimal from "decimal.js-light";
 import { Denied } from "../errors";
 import { Can } from "../permissions";
+import { UserPK } from "../functions/UserPK";
+import { AccountActivityPK } from "../functions/AccountActivityPK";
+import { collectAccountActivities } from "../functions/account";
 /**
  * Remember to add your resolver to the resolvers object in server.ts.
  *
@@ -55,16 +58,18 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
             info
         ) {
             let user = await context.batched.User.get({ email: parent.user });
+            let activity = await context.batched.AccountActivity.create({
+                user: UserPK.stringify(user),
+                amount: new Decimal(parent.amountCents).div(100).toString(),
+                type: "debit",
+                reason: "topup",
+                settleAt: Date.now(),
+            });
             parent.stripeSessionObject = JSON.parse(stripeSessionObject);
             parent.status = "paid";
-            parent.oldBalance = user.balance;
-            // Be aware of floating point errors
-            let balance = new Decimal(user.balance);
-            balance = balance.add(new Decimal(parent.amountCents).div(100));
-            user.balance = balance.toString();
-            parent.newBalance = user.balance;
+            parent.accountActivity = AccountActivityPK.stringify(activity);
+            await collectAccountActivities(context, UserPK.stringify(user));
             await parent.save();
-            await user.save();
             return parent;
         },
     },

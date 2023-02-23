@@ -312,14 +312,13 @@ const StripePaymentAcceptTableSchema = new dynamoose.Schema(
             default: DEFAULT_FOR_CREATED_AT_RANGE_KEY,
         },
         amountCents: { type: Number, required: true },
-        previousBalance: { type: String }, // Available when the payment is settled
-        newBalance: { type: String }, // Available when the payment is settled
         currency: { ...String_Required_NotEmpty("currency") },
         status: { ...String_Required_NotEmpty("status") },
         stripePaymentIntent: {
             ...String_Required_NotEmpty("stripePaymentIntent"),
         },
         stripeSessionObject: { type: Object, required: true },
+        accountActivity: { type: String, required: false },
     },
     {
         timestamps: {
@@ -341,13 +340,12 @@ const StripeTransferTableSchema = new dynamoose.Schema(
         },
         receiveCents: { type: Number, required: true },
         withdrawCents: { type: Number, required: true },
-        previousBalance: { type: String }, // Available when the payment is settled
-        newBalance: { type: String }, // Available when the payment is settled
         currency: { ...String_Required_NotEmpty("currency") },
         stripeTransferId: {
             ...String_Required_NotEmpty("stripePaymentIntent"),
         },
         stripeTransferObject: { type: Object, required: true },
+        accountActivity: { type: String, required: false },
     },
     {
         timestamps: {
@@ -444,6 +442,8 @@ export class AccountActivity extends Item {
     user: string; // User who's account is affected
     type: "debit" | "credit";
     reason:
+        | "payout"
+        | "topup"
         | "api_per_request_charge"
         | "api_min_monthly_charge"
         | "refund_api_min_monthly_charge";
@@ -452,6 +452,7 @@ export class AccountActivity extends Item {
     amount: string;
     usageSummary: string | null; // ID of the UsageSummary item or null if not related to usage
     accountHistory: string | null; // ID of the AccountHistory item or null if not related to account history
+    createdAt: number;
 }
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
@@ -474,20 +475,17 @@ export class StripePaymentAccept extends Item {
     stripePaymentIntent: string;
     stripeSessionId: string;
     createdAt: number;
-    oldBalance: string;
-    newBalance: string;
+    accountActivity: string;
 }
 export class StripeTransfer extends Item {
     receiver: string;
     withdrawCents: number;
     receiveCents: number;
     currency: string;
-    status: string;
     stripeTransferObject: object;
     stripeTransferId: string;
     createdAt: number;
-    oldBalance: string;
-    newBalance: string;
+    accountActivity: string;
 }
 
 export const AppModel = dynamoose.model<App>("App", AppTableSchema, {

@@ -5,6 +5,9 @@ import Decimal from "decimal.js-light";
 import { findUserSubscriptionPricing } from "./subscription";
 import { collectUsageLogs } from "./usage";
 import { Chalk } from "chalk";
+import { getAppAuthorUser } from "./app";
+import { UserPK } from "./UserPK";
+import { collectAccountActivities } from "./account";
 const chalk = new Chalk({ level: 3 });
 
 /**
@@ -19,14 +22,21 @@ const chalk = new Chalk({ level: 3 });
  */
 export async function generateAccountActivities(
     context: RequestContext,
-    usageSummary: UsageSummary,
-    pricing: Pricing,
-    subscriber: string,
-    appAuthor: string,
     {
+        usageSummary,
+        pricing,
+        subscriber,
+        appAuthor,
         monthlyChargeOnHoldPeriodInSeconds = 60 * 60 * 24 * 30, // default to 30 days
         disableMonthlyCharge = false,
-    } = {}
+    }: {
+        usageSummary: UsageSummary;
+        pricing: Pricing;
+        subscriber: string;
+        appAuthor: string;
+        monthlyChargeOnHoldPeriodInSeconds?: number;
+        disableMonthlyCharge?: boolean;
+    }
 ) {
     let volume = usageSummary.volume;
     let price = new Decimal(pricing.chargePerRequest);
@@ -141,7 +151,17 @@ export async function triggerBilling(
             `No pricing found during triggerBilling: ${user}, ${app}`
         );
     }
-    await generateAccountActivities(context, usageSummary, pricing, user, app);
+    let appAuthor = await getAppAuthorUser(
+        context,
+        await context.batched.App.get({ name: app })
+    );
+    await generateAccountActivities(context, {
+        usageSummary,
+        pricing,
+        subscriber: user,
+        appAuthor: UserPK.stringify(appAuthor),
+    });
+    await collectAccountActivities(context, user);
     return {
         usageSummary,
     };

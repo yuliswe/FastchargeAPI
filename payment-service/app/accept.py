@@ -15,6 +15,7 @@ endpoint_secret = (
 
 # TODO: Need to make the event handling idempotent
 
+
 # Read:
 def lambda_handler(event, context):
     # print(json.dumps(event))
@@ -69,8 +70,15 @@ def fulfill_order(session):
                 query GetStripePaymentAcceptObjectAndFulfill (
                     $stripeSessionId: String!,
                     $stripeSessionObject: String!,
+                    $stripePaymentStatus: String!,
                 ) {
                     stripePaymentAccept(stripeSessionId: $stripeSessionId) {
+                        updateStripePaymentAccept(
+                            stripePaymentStatus: $stripePaymentStatus,
+                            stripeSessionObject: $stripeSessionObject,
+                        ) {
+                            createdAt
+                        }
                         settlePayment(
                             stripeSessionObject: $stripeSessionObject,
                         ) {
@@ -83,6 +91,7 @@ def fulfill_order(session):
             variable_values={
                 "stripeSessionId": session_id,
                 "stripeSessionObject": json.dumps(session),
+                "stripePaymentStatus": payment_status,
             },
         )["createStripePaymentAccept"]
     except Exception as e:
@@ -116,7 +125,7 @@ def create_and_fulfill_order(session):
                     $user: String!,
                     $amountCents: Int!,
                     $currency: String!,
-                    $status: String!,
+                    $stripePaymentStatus: String!,
                     $stripeSessionId: String!,
                     $stripePaymentIntent: String!,
                     $stripeSessionObject: String!,
@@ -125,7 +134,7 @@ def create_and_fulfill_order(session):
                         user: $user,
                         amountCents: $amountCents,
                         currency: $currency,
-                        status: $status,
+                        stripePaymentStatus: $stripePaymentStatus,
                         stripeSessionId: $stripeSessionId,
                         stripePaymentIntent: $stripePaymentIntent,
                         stripeSessionObject: $stripeSessionObject,
@@ -143,7 +152,7 @@ def create_and_fulfill_order(session):
                 "user": user_email,
                 "amountCents": amount_cents,
                 "currency": currency,
-                "status": payment_status,
+                "stripePaymentStatus": payment_status,
                 "stripeSessionId": session_id,
                 "stripePaymentIntent": payment_intent,
                 "stripeSessionObject": json.dumps(session),
@@ -177,7 +186,7 @@ def create_order(session):
                     $user: String!,
                     $amountCents: Int!,
                     $currency: String!,
-                    $status: String!,
+                    $stripePaymentStatus: String!,
                     $stripeSessionId: String!,
                     $stripePaymentIntent: String!,
                     $stripeSessionObject: String!,
@@ -186,7 +195,7 @@ def create_order(session):
                         user: $user,
                         amountCents: $amountCents,
                         currency: $currency,
-                        status: $status,
+                        stripePaymentStatus: $stripePaymentStatus,
                         stripeSessionId: $stripeSessionId,
                         stripePaymentIntent: $stripePaymentIntent,
                         stripeSessionObject: $stripeSessionObject,
@@ -200,7 +209,7 @@ def create_order(session):
                 "user": user_email,
                 "amountCents": amount_cents,
                 "currency": currency,
-                "status": payment_status,
+                "stripePaymentStatus": payment_status,
                 "stripeSessionId": session_id,
                 "stripePaymentIntent": payment_intent,
                 "stripeSessionObject": json.dumps(session),

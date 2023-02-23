@@ -17,7 +17,7 @@ import Decimal from "decimal.js-light";
  * @param context
  * @param accountUser
  */
-export async function collectBillingHistory(
+export async function collectAccountActivities(
     context: RequestContext,
     accountUser: string
 ): Promise<{

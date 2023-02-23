@@ -81,6 +81,8 @@ def handle_lambda(event, context):
         destination=account_id,
     )
 
+    # Create a StripeTransfer and settle immediately. This will substract the
+    # amount from the user's balance.
     settle_transfer = client.execute(
         gql(
             """
@@ -101,7 +103,7 @@ def handle_lambda(event, context):
                     currency: $currency,
                 ) {
                     settleStripeTransfer {
-                        newBalance
+                        createdAt
                     }
                 }
             }

@@ -7,6 +7,9 @@ import {
 import { StripeTransferModel } from "../dynamoose/models";
 import { RequestContext } from "../RequestContext";
 import Decimal from "decimal.js-light";
+import { UserPK } from "../functions/UserPK";
+import { collectAccountActivities } from "../functions/account";
+import { AccountActivityPK } from "../functions/AccountActivityPK";
 
 /**
  * Remember to add your resolver to the resolvers object in server.ts.
@@ -29,30 +32,32 @@ export const stripeTransferResolvers: GQLResolvers & {
         stripeTransferObject: (parent) =>
             JSON.stringify(parent.stripeTransferObject),
         createdAt: (parent) => parent.createdAt,
-        newBalance: (parent) => parent.newBalance,
-        oldBalance: (parent) => parent.oldBalance,
         currency: (parent) => parent.currency,
 
         /**
-         * Calling this method will substract the amountCents from the
-         * receiver's balance.
+         * A StripeTransfer happens when the user withdraws money from their
+         * account. Calling this method creates an AccountActivity for the user,
+         * substracting the withdrawl amount from their balance.
+         *
+         * This method is tipically called from the payment-service.
          * @param parent
          * @param args
          * @param context
          * @param info
          */
-        async settleStripeTransfer(parent, args, context, info) {
+        async settleStripeTransfer(parent, args: never, context, info) {
             let user = await context.batched.User.get({
                 email: parent.receiver,
             });
-            parent.status = "paid";
-            let balance = new Decimal(user.balance);
             let transferAmount = new Decimal(parent.withdrawCents).div(100);
-            let newBalance = balance.minus(transferAmount);
-            parent.oldBalance = user.balance;
-            parent.newBalance = newBalance.toString();
-            user.balance = newBalance.toString();
-            await user.save();
+            let activity = await context.batched.AccountActivity.create({
+                user: UserPK.stringify(user),
+                amount: transferAmount.toString(),
+                type: "credit",
+                reason: "payout",
+            });
+            await collectAccountActivities(context, UserPK.stringify(user));
+            parent.accountActivity = AccountActivityPK.stringify(activity);
             await parent.save();
             return parent;
         },

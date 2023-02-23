@@ -219,8 +219,6 @@ export type GQLStripeTransfer = {
   __typename?: 'StripeTransfer';
   createdAt: Scalars['Timestamp'];
   currency?: Maybe<Scalars['String']>;
-  newBalance?: Maybe<Scalars['String']>;
-  oldBalance?: Maybe<Scalars['String']>;
   receiveCents: Scalars['Int'];
   receiver: GQLUser;
   settleStripeTransfer?: Maybe<GQLStripeTransfer>;
@@ -481,8 +479,6 @@ export type GQLStripePaymentAcceptResolvers<ContextType = RequestContext, Parent
 export type GQLStripeTransferResolvers<ContextType = RequestContext, ParentType extends GQLResolversParentTypes['StripeTransfer'] = GQLResolversParentTypes['StripeTransfer']> = ResolversObject<{
   createdAt?: Resolver<GQLResolversTypes['Timestamp'], ParentType, ContextType>;
   currency?: Resolver<Maybe<GQLResolversTypes['String']>, ParentType, ContextType>;
-  newBalance?: Resolver<Maybe<GQLResolversTypes['String']>, ParentType, ContextType>;
-  oldBalance?: Resolver<Maybe<GQLResolversTypes['String']>, ParentType, ContextType>;
   receiveCents?: Resolver<GQLResolversTypes['Int'], ParentType, ContextType>;
   receiver?: Resolver<GQLResolversTypes['User'], ParentType, ContextType>;
   settleStripeTransfer?: Resolver<Maybe<GQLResolversTypes['StripeTransfer']>, ParentType, ContextType>;
