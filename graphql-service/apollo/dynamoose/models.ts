@@ -257,6 +257,7 @@ const AccountActivityTableSchema = new dynamoose.Schema(
             validate: (str: string) =>
                 [
                     "payout",
+                    "topup",
                     "api_per_request_charge",
                     "api_min_monthly_charge",
                     "refund_api_min_monthly_charge",
@@ -264,8 +265,8 @@ const AccountActivityTableSchema = new dynamoose.Schema(
         },
         status: {
             type: String,
-            required: true,
             enum: ["settled", "pending"],
+            default: "pending",
         },
         settleAt: { type: Number, required: true },
         amount: { ...String_Decimal("amount"), required: true },
@@ -313,7 +314,10 @@ const StripePaymentAcceptTableSchema = new dynamoose.Schema(
         },
         amountCents: { type: Number, required: true },
         currency: { ...String_Required_NotEmpty("currency") },
-        status: { ...String_Required_NotEmpty("status") },
+        // @stripePaymentStatus: Do not check enum, as the source is stripe and
+        // can change. Read the comment of the stripePaymentStatus field in the
+        // StripePaymentAcceptTableSchema
+        stripePaymentStatus: { ...String_Required_NotEmpty("status") },
         stripePaymentIntent: {
             ...String_Required_NotEmpty("stripePaymentIntent"),
         },
@@ -466,16 +470,25 @@ export class AccountHistory extends Item {
 }
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
+
+/**
+ * StripePaymentAccept represents an event when the user successfully pays over
+ * the Stripe checkout session. StripePaymentAccept corresponds to an
+ * AccountActivity which is created when the StripePaymentAccept object settles.
+ * The The object is created by the payment-servce when it receives the webhook
+ * event from Stripe. The only important fields are user and amountCents. The
+ * rest are for debugging purpose.
+ */
 export class StripePaymentAccept extends Item {
     user: string;
     amountCents: number;
-    currency: string;
-    status: string;
-    stripeSessionObject: object;
-    stripePaymentIntent: string;
-    stripeSessionId: string;
     createdAt: number;
-    accountActivity: string;
+    currency: string;
+    stripePaymentStatus: "unpaid" | "paid" | "no_payment_required"; // This is copied from stripe checkout session's payment_status, for debugging purpose
+    stripeSessionObject: object; // The entire stripe checkout session object, for debugging purpose
+    stripePaymentIntent: string; // The stripe payment intent ID, copied from stripe checkout session's payment_intent
+    stripeSessionId: string; // The stripe checkout session ID, copied from stripe checkout session object for debugging purpose
+    accountActivity: string; // When the stripe payment is accepted, an account activity item is created
 }
 export class StripeTransfer extends Item {
     receiver: string;

@@ -10,9 +10,10 @@ import {
     GQLQueryStripePaymentAcceptArgs,
     GQLResolvers,
     GQLStripePaymentAcceptResolvers,
+    GQLStripePaymentAcceptUpdateStripePaymentAcceptArgs,
 } from "../__generated__/resolvers-types";
 import Decimal from "decimal.js-light";
-import { Denied } from "../errors";
+import { BadInput, Denied } from "../errors";
 import { Can } from "../permissions";
 import { UserPK } from "../functions/UserPK";
 import { AccountActivityPK } from "../functions/AccountActivityPK";
@@ -34,9 +35,9 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
         },
         amountCents: (parent) => parent.amountCents,
         currency: (parent) => parent.currency,
-        status: (parent) => parent.status,
         stripePaymentIntent: (parent) => parent.stripePaymentIntent,
         stripeSessionId: (parent) => parent.stripeSessionId,
+        stripePaymentStatus: (parent) => parent.stripePaymentStatus,
         stripeSessionObject: (parent) =>
             JSON.stringify(parent.stripeSessionObject),
         createdAt: (parent) => parent.createdAt,
@@ -66,11 +67,32 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
                 settleAt: Date.now(),
             });
             parent.stripeSessionObject = JSON.parse(stripeSessionObject);
-            parent.status = "paid";
             parent.accountActivity = AccountActivityPK.stringify(activity);
             await collectAccountActivities(context, UserPK.stringify(user));
             await parent.save();
             return parent;
+        },
+
+        async updateStripePaymentAccept(
+            parent: StripePaymentAccept,
+            {
+                stripePaymentStatus,
+                stripeSessionObject,
+            }: GQLStripePaymentAcceptUpdateStripePaymentAcceptArgs,
+            context: RequestContext
+        ) {
+            let newPayment = await context.batched.StripePaymentAccept.update(
+                parent,
+                {
+                    stripePaymentStatus:
+                        (stripePaymentStatus as typeof parent.stripePaymentStatus) ||
+                        undefined,
+                    stripeSessionObject: stripeSessionObject
+                        ? JSON.parse(stripeSessionObject)
+                        : undefined,
+                }
+            );
+            return newPayment;
         },
     },
     Query: {
@@ -95,7 +117,7 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
                 user,
                 amountCents,
                 currency,
-                status,
+                stripePaymentStatus,
                 stripeSessionId,
                 stripePaymentIntent,
                 stripeSessionObject,
@@ -103,11 +125,14 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
             context: RequestContext,
             info: GraphQLResolveInfo
         ) {
+            if (stripePaymentStatus !== "paid") {
+                throw new BadInput("stripePaymentStatus must be paid");
+            }
             let stripePaymentAccept = await StripePaymentAcceptModel.create({
                 user,
                 amountCents,
                 currency,
-                status,
+                stripePaymentStatus: stripePaymentStatus as any,
                 stripeSessionId,
                 stripePaymentIntent,
                 stripeSessionObject: JSON.parse(stripeSessionObject),

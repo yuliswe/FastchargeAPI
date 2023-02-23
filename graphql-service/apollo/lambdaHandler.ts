@@ -31,6 +31,7 @@ let handle = startServerAndCreateLambdaHandler(
                     const parsedBody = event.isBase64Encoded
                         ? Buffer.from(event.body, "base64").toString("utf8")
                         : event.body;
+                    console.log(chalk.blue("Received: " + parsedBody));
                     if (contentType?.startsWith("application/json")) {
                         return JSON.parse(parsedBody);
                     }

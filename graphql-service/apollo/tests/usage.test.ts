@@ -1,27 +1,18 @@
-import {
-    afterAll,
-    beforeAll,
-    describe,
-    expect,
-    jest,
-    test,
-} from "@jest/globals";
+import { describe, expect, test } from "@jest/globals";
 import { RequestContext, createDefaultContextBatched } from "../RequestContext";
 import { usageLogResolvers } from "../resolvers/usage";
 import { collectUsageLogs as collectUsageSummary } from "../functions/usage";
 import { AlreadyExists } from "../errors";
 import { generateAccountActivities } from "../functions/billing";
-import { beforeEach } from "node:test";
 import {
     PricingModel,
-    UsageLog,
     UsageLogModel,
     UsageSummaryModel,
 } from "../dynamoose/models";
 import { UsageSummaryPK } from "../functions/UsageSummaryPK";
 import { UsageLogPK } from "../functions/UsageLogPK";
 import { PricingPK } from "../functions/PricingPK";
-import { collectBillingHistory } from "../functions/account";
+import { collectAccountActivities } from "../functions/account";
 
 let context: RequestContext = {
     batched: createDefaultContextBatched(),
@@ -124,16 +115,13 @@ describe("Usage API", () => {
         );
         let pricing = await PricingModel.get(PricingPK.parse(pricingPK));
         expect(pricing.chargePerRequest).toEqual("0.001"); // made 3 UsageLogs, so the total amount is 0.003
-        let result = await generateAccountActivities(
-            context,
+        let result = await generateAccountActivities(context, {
             usageSummary,
             pricing,
-            "testuser1.fastchargeapi@gmail.com",
-            "testuser1.fastchargeapi@gmail.com",
-            {
-                disableMonthlyCharge: true,
-            }
-        );
+            subscriber: "testuser1.fastchargeapi@gmail.com",
+            appAuthor: "testuser1.fastchargeapi@gmail.com",
+            disableMonthlyCharge: true,
+        });
         expect((await result.appAuthorPerRequest).amount).toEqual("0.003");
         expect((await result.appAuthorPerRequest).type).toEqual("debit");
         expect((await result.subscriberPerRequest).amount).toEqual("0.003");
@@ -141,7 +129,7 @@ describe("Usage API", () => {
     });
 
     test("Create AccountHistory", async () => {
-        let result = await collectBillingHistory(
+        let result = await collectAccountActivities(
             context,
             "testuser1.fastchargeapi@gmail.com"
         );
@@ -153,10 +141,10 @@ describe("Usage API", () => {
         } = result!;
         expect(accountActivities.length).toEqual(2);
         expect(accountHistory.startingTime).toEqual(
-            previousAccountHistory.closingTime
+            previousAccountHistory!.closingTime
         );
         expect(Number.parseFloat(accountHistory.closingBalance)).toEqual(
-            Number.parseFloat(previousAccountHistory.closingBalance)
+            Number.parseFloat(previousAccountHistory!.closingBalance)
         );
     });
 });

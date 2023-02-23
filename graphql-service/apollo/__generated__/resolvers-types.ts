@@ -102,8 +102,8 @@ export type GQLMutationCreatePricingArgs = {
 export type GQLMutationCreateStripePaymentAcceptArgs = {
   amountCents: Scalars['Int'];
   currency: Scalars['String'];
-  status: Scalars['String'];
   stripePaymentIntent: Scalars['String'];
+  stripePaymentStatus: Scalars['String'];
   stripeSessionId: Scalars['String'];
   stripeSessionObject: Scalars['String'];
   user: Scalars['String'];
@@ -203,16 +203,23 @@ export type GQLStripePaymentAccept = {
   createdAt: Scalars['Timestamp'];
   currency: Scalars['String'];
   settlePayment?: Maybe<GQLStripePaymentAccept>;
-  status: Scalars['String'];
   stripePaymentIntent: Scalars['String'];
+  stripePaymentStatus: Scalars['String'];
   stripeSessionId: Scalars['String'];
   stripeSessionObject: Scalars['String'];
+  updateStripePaymentAccept?: Maybe<GQLStripePaymentAccept>;
   user: GQLUser;
 };
 
 
 export type GQLStripePaymentAcceptSettlePaymentArgs = {
   stripeSessionObject: Scalars['String'];
+};
+
+
+export type GQLStripePaymentAcceptUpdateStripePaymentAcceptArgs = {
+  stripePaymentStatus?: InputMaybe<Scalars['String']>;
+  stripeSessionObject?: InputMaybe<Scalars['String']>;
 };
 
 export type GQLStripeTransfer = {
@@ -428,7 +435,7 @@ export type GQLMutationResolvers<ContextType = RequestContext, ParentType extend
   createApp?: Resolver<Maybe<GQLResolversTypes['App']>, ParentType, ContextType, RequireFields<GQLMutationCreateAppArgs, 'name' | 'owner'>>;
   createEndpoint?: Resolver<Maybe<GQLResolversTypes['Endpoint']>, ParentType, ContextType, RequireFields<GQLMutationCreateEndpointArgs, 'app' | 'destination' | 'path'>>;
   createPricing?: Resolver<Maybe<GQLResolversTypes['Pricing']>, ParentType, ContextType, RequireFields<GQLMutationCreatePricingArgs, 'app' | 'callToAction' | 'chargePerRequest' | 'minMonthlyCharge' | 'name'>>;
-  createStripePaymentAccept?: Resolver<Maybe<GQLResolversTypes['StripePaymentAccept']>, ParentType, ContextType, RequireFields<GQLMutationCreateStripePaymentAcceptArgs, 'amountCents' | 'currency' | 'status' | 'stripePaymentIntent' | 'stripeSessionId' | 'stripeSessionObject' | 'user'>>;
+  createStripePaymentAccept?: Resolver<Maybe<GQLResolversTypes['StripePaymentAccept']>, ParentType, ContextType, RequireFields<GQLMutationCreateStripePaymentAcceptArgs, 'amountCents' | 'currency' | 'stripePaymentIntent' | 'stripePaymentStatus' | 'stripeSessionId' | 'stripeSessionObject' | 'user'>>;
   createStripeTransfer?: Resolver<Maybe<GQLResolversTypes['StripeTransfer']>, ParentType, ContextType, RequireFields<GQLMutationCreateStripeTransferArgs, 'currency' | 'receiveCents' | 'receiver' | 'stripeTransferId' | 'stripeTransferObject' | 'withdrawCents'>>;
   createSubscription?: Resolver<Maybe<GQLResolversTypes['Subscribe']>, ParentType, ContextType, RequireFields<GQLMutationCreateSubscriptionArgs, 'app' | 'pricing' | 'subscriber'>>;
   createUsageLog?: Resolver<Maybe<GQLResolversTypes['UsageLog']>, ParentType, ContextType, RequireFields<GQLMutationCreateUsageLogArgs, 'app' | 'path' | 'subscriber' | 'volume'>>;
@@ -468,10 +475,11 @@ export type GQLStripePaymentAcceptResolvers<ContextType = RequestContext, Parent
   createdAt?: Resolver<GQLResolversTypes['Timestamp'], ParentType, ContextType>;
   currency?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
   settlePayment?: Resolver<Maybe<GQLResolversTypes['StripePaymentAccept']>, ParentType, ContextType, RequireFields<GQLStripePaymentAcceptSettlePaymentArgs, 'stripeSessionObject'>>;
-  status?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
   stripePaymentIntent?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
+  stripePaymentStatus?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
   stripeSessionId?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
   stripeSessionObject?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
+  updateStripePaymentAccept?: Resolver<Maybe<GQLResolversTypes['StripePaymentAccept']>, ParentType, ContextType, Partial<GQLStripePaymentAcceptUpdateStripePaymentAcceptArgs>>;
   user?: Resolver<GQLResolversTypes['User'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;

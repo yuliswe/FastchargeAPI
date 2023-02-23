@@ -391,29 +391,38 @@ export class Batched<I extends Item> {
      */
     async create(item: GQLPartial<I>): Promise<I> {
         let stripped = stripNullKeys(item) as Partial<I>;
-        try {
-            return await this.model.create(stripped);
-        } catch (e) {
-            // We want to catch the case where the item already exists. DynamoDB
-            // in this case throws a ConditionalCheckFailedException. But it
-            // also throws this exception in other cases. So a check using the
-            // .many() call is needed to confirm that the item already exists.
-            if (e instanceof ConditionalCheckFailedException) {
-                let query = extractKeysFromItems(this.model, stripped);
-                if ((await this.many(query)).length > 0) {
-                    throw new AlreadyExists(
-                        this.model.name,
-                        JSON.stringify(item)
-                    );
+        let maxAttempts = 2;
+        for (let retries = 0; retries < maxAttempts; retries++) {
+            try {
+                return await this.model.create(stripped);
+            } catch (e) {
+                // We want to catch the case where the item already exists. DynamoDB
+                // in this case throws a ConditionalCheckFailedException. But it
+                // also throws this exception in other cases. So a check using the
+                // .many() call is needed to confirm that the item already exists.
+                if (e instanceof ConditionalCheckFailedException) {
+                    let query = extractKeysFromItems(this.model, stripped);
+                    if ((await this.many(query)).length > 0) {
+                        throw new AlreadyExists(
+                            this.model.name,
+                            JSON.stringify(item)
+                        );
+                    } else if (retries < maxAttempts - 1) {
+                        // The insert could fail when the item uses createdAt as
+                        // a range key. In this case we just retry the insert.
+                        await sleep(2 ** retries);
+                        continue;
+                    } else {
+                        console.error(e);
+                        throw e;
+                    }
                 } else {
                     console.error(e);
                     throw e;
                 }
-            } else {
-                console.error(e);
-                throw e;
             }
         }
+        throw new Error("unreachable");
     }
 
     async delete(keys: string | Partial<I>): Promise<I> {
@@ -499,4 +508,12 @@ export class Batched<I extends Item> {
             this.loader.prime(key, value);
         }
     }
+
+    clearCache() {
+        this.loader.clearAll();
+    }
+}
+
+async function sleep(miliseconds: number) {
+    return new Promise((resolve) => setTimeout(resolve, miliseconds));
 }

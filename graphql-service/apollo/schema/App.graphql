@@ -62,7 +62,7 @@ type Mutation {
         user: String!
         amountCents: Int!
         currency: String!
-        status: String!
+        stripePaymentStatus: String!
         stripeSessionId: String!
         stripePaymentIntent: String!
         stripeSessionObject: String!
@@ -172,11 +172,16 @@ type StripePaymentAccept {
     user: User!
     amountCents: Int!
     currency: String!
-    status: String!
+    stripePaymentStatus: String!
     stripeSessionObject: String!
     stripePaymentIntent: String!
     stripeSessionId: String!
     createdAt: Timestamp!
+
+    updateStripePaymentAccept(
+        stripePaymentStatus: String
+        stripeSessionObject: String
+    ): StripePaymentAccept
 
     settlePayment(stripeSessionObject: String!): StripePaymentAccept
 }

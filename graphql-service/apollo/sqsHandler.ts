@@ -26,6 +26,7 @@ let handle = startServerAndCreateLambdaHandler<
         fromEvent(record) {
             let headers = new HeaderMap();
             headers.set("Content-Type", "application/json");
+            console.log(chalk.blue("Recieved SQSRecord: " + record.body));
             return {
                 method: "POST",
                 headers,
@@ -36,8 +37,17 @@ let handle = startServerAndCreateLambdaHandler<
         toSuccessResult(response: HTTPGraphQLResponse) {
             if (response.status === 200 || response.status == undefined) {
                 // I'm not sure why when the graphl query success, the status is undefined
-                console.log("Success response: " + JSON.stringify(response));
-                return response;
+                if (response.body && response.body.kind === "complete") {
+                    let body = response.body.string;
+                    if (JSON.parse(body).errors) {
+                        console.error(chalk.red("Error response: " + body));
+                        throw new Error("Error response: " + body);
+                    } else {
+                        return response;
+                    }
+                } else {
+                    return response;
+                }
             } else {
                 console.error(
                     chalk.red("Non-200 response: " + JSON.stringify(response))
