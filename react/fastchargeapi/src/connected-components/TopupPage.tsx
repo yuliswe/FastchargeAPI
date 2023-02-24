@@ -2,7 +2,6 @@ import React from "react";
 import { Helmet } from "react-helmet-async";
 import { connect } from "react-redux";
 import { RootAppState } from "../states/RootAppState";
-import axios from "axios";
 import { TopUpAppState } from "../states/TopupAppState";
 import { CircularProgress, Typography } from "@mui/material";
 import { AppContext, ReactAppContextType } from "../AppContext";
@@ -102,11 +101,25 @@ class _TopUp extends React.Component<_Props, _State> {
      *     status: "success" | "canceled"
      * }
      */
-    postResultToCli() {
+    async postResultToCli() {
         if (this.getPostResultUrl()) {
-            axios.post(this.getPostResultUrl(), {
-                status: this.isSuccess() ? "success" : "canceled",
-            });
+            try {
+                const response = await fetch(this.getPostResultUrl(), {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        status: this.isSuccess() ? "success" : "canceled",
+                    }),
+                });
+            } catch (error) {
+                console.error(
+                    "Error posting to",
+                    this.getPostResultUrl(),
+                    error
+                );
+            }
         }
     }
     /**
@@ -137,12 +150,21 @@ class _TopUp extends React.Component<_Props, _State> {
             this.postResultToCli();
         } else {
             // Otherwise start the topuping process
-            let response = await axios.post(this.getBackendUrl(), {
-                amount_cents: this.getAmountCents(),
-                success_url: this.getSuccessUrl(),
-                cancel_url: this.getCancelUrl(),
-            });
-            document.location.href = response.data["location"];
+            try {
+                const response = await fetch(this.getBackendUrl(), {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        amount_cents: this.getAmountCents(),
+                        success_url: this.getSuccessUrl(),
+                        cancel_url: this.getCancelUrl(),
+                    }),
+                });
+            } catch (error) {
+                console.error("Error posting to", this.getBackendUrl(), error);
+            }
         }
     }
 

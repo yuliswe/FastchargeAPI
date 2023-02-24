@@ -2,7 +2,6 @@ import React from "react";
 import { Helmet } from "react-helmet-async";
 import { connect } from "react-redux";
 import { RootAppState } from "../states/RootAppState";
-import axios from "axios";
 import firebase from "firebase/compat/app";
 import * as firebaseui from "firebaseui";
 import "firebaseui/dist/firebaseui.css";
@@ -137,11 +136,18 @@ class _AuthPage extends React.Component<_Props, _State> {
                     let redirect = this.getRedirectUrl();
                     if (redirect && this.behavior === "postandclose") {
                         try {
-                            await axios.post(redirect, {
-                                idToken,
-                                refreshToken: user.refreshToken,
+                            await fetch(redirect, {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify({
+                                    idToken,
+                                    refreshToken: user.refreshToken,
+                                }),
                             });
                         } catch {
+                            console.error("Failed to post:", redirect);
                         } finally {
                             if (this.behavior === "postandclose") {
                                 window.close();

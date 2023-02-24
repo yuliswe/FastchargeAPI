@@ -2,7 +2,6 @@ import React from "react";
 import { Helmet } from "react-helmet-async";
 import { connect } from "react-redux";
 import { RootAppState } from "../states/RootAppState";
-import axios from "axios";
 import { OnboardAppState } from "../states/OnBoardAppState";
 import { CircularProgress, Typography } from "@mui/material";
 import { AppContext, ReactAppContextType } from "../AppContext";
@@ -90,8 +89,14 @@ class _Onboard extends React.Component<_Props, _State> {
      */
     async postResultToCli() {
         if (this.getPostResultUrl()) {
-            await axios.post(this.getPostResultUrl(), {
-                status: this.isSuccess() ? "success" : "canceled",
+            await fetch(this.getPostResultUrl(), {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    status: this.isSuccess() ? "success" : "canceled",
+                }),
             });
         }
     }
@@ -113,9 +118,11 @@ class _Onboard extends React.Component<_Props, _State> {
             }
         } else {
             // Otherwise start the onboarding process
-            let { location } = await (
-                await axios.post(this.getBackendUrl())
-            ).data;
+            const response = await fetch(this.getBackendUrl(), {
+                method: "POST",
+            });
+
+            const { location } = await response.json();
             document.location.href = location;
         }
     }

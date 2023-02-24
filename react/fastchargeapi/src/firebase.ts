@@ -1,4 +1,3 @@
-import axios from "axios";
 import firebase from "firebase/compat/app";
 
 export function initializeFirebase() {
@@ -24,14 +23,9 @@ export function initializeFirebase() {
         });
     });
 
-    axios.interceptors.request.use(
-        async (config) => {
-            let u = await user;
-            config.headers.Authorization = await u.getIdToken();
-            return config;
-        },
-        (error) => {
-            return Promise.reject(error);
-        }
-    );
+    // export async function fetchWithAuth(url, options) {
+    //     let u = await user;
+    //     options.headers.Authorization = await u.getIdToken();
+    //     return fetch(url, options);
+    // }
 }
