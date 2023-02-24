@@ -106,6 +106,7 @@ class _TopUp extends React.Component<_Props, _State> {
             try {
                 const response = await fetch(this.getPostResultUrl(), {
                     method: "POST",
+                    mode: "cors",
                     headers: {
                         "Content-Type": "application/json",
                     },
@@ -153,6 +154,7 @@ class _TopUp extends React.Component<_Props, _State> {
             try {
                 const response = await fetch(this.getBackendUrl(), {
                     method: "POST",
+                    mode: "cors",
                     headers: {
                         "Content-Type": "application/json",
                     },

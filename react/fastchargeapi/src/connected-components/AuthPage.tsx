@@ -138,6 +138,7 @@ class _AuthPage extends React.Component<_Props, _State> {
                         try {
                             await fetch(redirect, {
                                 method: "POST",
+                                mode: "cors",
                                 headers: {
                                     "Content-Type": "application/json",
                                 },

@@ -91,6 +91,7 @@ class _Onboard extends React.Component<_Props, _State> {
         if (this.getPostResultUrl()) {
             await fetch(this.getPostResultUrl(), {
                 method: "POST",
+                mode: "cors",
                 headers: {
                     "Content-Type": "application/json",
                 },
@@ -120,6 +121,7 @@ class _Onboard extends React.Component<_Props, _State> {
             // Otherwise start the onboarding process
             const response = await fetch(this.getBackendUrl(), {
                 method: "POST",
+                mode: "cors",
             });
 
             const { location } = await response.json();
