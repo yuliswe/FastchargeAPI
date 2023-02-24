@@ -1,4 +1,4 @@
-import { Endpoint, Pricing, Subscribe, User } from "./dynamoose/models";
+import { App, Endpoint, Pricing, Subscribe, User } from "./dynamoose/models";
 import { Denied } from "./errors";
 import { RequestContext } from "./RequestContext";
 import {
@@ -51,6 +51,12 @@ export const Can = {
     },
     async deleteApp(
         { name }: { name: string },
+        context: RequestContext
+    ): Promise<boolean> {
+        return await Promise.resolve(true);
+    },
+    async createAppUserToken(
+        parent: App,
         context: RequestContext
     ): Promise<boolean> {
         return await Promise.resolve(true);
@@ -154,7 +160,6 @@ export const Can = {
         }
         return results;
     },
-    // TODO: createUserToken
 };
 
 // export const Cannot = {

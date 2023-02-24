@@ -22,6 +22,9 @@ import {
 } from "../__generated__/resolvers-types";
 import jwt from "jsonwebtoken";
 import { v5 as uuidv5 } from "uuid";
+import AWS from 'aws-sdk';
+import { PRIVATE_KEY_PARAM_NAME } from "./constants";
+
 // import { toGQLUser } from "./user";
 
 // declare module "../dynamoose/models" {
@@ -47,6 +50,8 @@ import { v5 as uuidv5 } from "uuid";
 //         owner: app.owner,
 //     }
 // }
+
+const ssm = new AWS.SSM({ region: 'us-east-1' });
 
 export const appResolvers: GQLResolvers = {
     App: {
@@ -96,15 +101,19 @@ export const appResolvers: GQLResolvers = {
             await context.batched.App.delete(parent.name);
             return parent;
         },
-        createAppUserToken(parent: App, args: never, context, info): string {
-            // TODO: permission check
+        async createAppUserToken(parent: App, args: never, context, info): Promise<string> {
+            if (!(await Can.deleteApp(parent, context))) {
+                throw new Denied();
+            }
             const appName = parent.name;
             const currentUserEmail = context.currentUser;
-
-            // TODO: get private key from AWS
+            const privateKey = await getParameterFromAWSSystemsManager(PRIVATE_KEY_PARAM_NAME);
+            if (!privateKey) {
+                throw new Denied();
+            }
             const token = jwt.sign(
-                { app: appName, iat: Math.floor(Date.now() / 1000) },
-                getPrivateKey(),
+                { app: appName, iat: Math.floor(Date.now() / 1000), email: currentUserEmail },
+                privateKey,
                 {
                     algorithm: "ES256",
                     expiresIn: "999999d",
@@ -154,17 +163,17 @@ export const appResolvers: GQLResolvers = {
     },
 };
 
-const getPrivateKey = (): string => {
-    return `-----BEGIN EC PRIVATE KEY-----
-MHcCAQEEINEyilA1d68VxuH2QmIiP3+Ye6SH1/Z3/2LQc+kVZNj1oAoGCCqGSM49
-AwEHoUQDQgAE9CR7SW0cTqQBG1vxWnkjk5dO7zfvUeueXgubjSD6i6vcmHdetZ25
-/ItESQDBmX0LL2qYaPzqTJHbWKxqL+6CtA==
------END EC PRIVATE KEY-----`;
-};
-
-const getPublicKey = (): string => {
-    return `-----BEGIN PUBLIC KEY-----
-MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE9CR7SW0cTqQBG1vxWnkjk5dO7zfv
-UeueXgubjSD6i6vcmHdetZ25/ItESQDBmX0LL2qYaPzqTJHbWKxqL+6CtA==
------END PUBLIC KEY-----`;
-};
+async function getParameterFromAWSSystemsManager(parameterName: string): Promise<string | undefined> {
+    try {
+        const params: AWS.SSM.GetParameterRequest = {
+            Name: parameterName,
+            WithDecryption: true,
+          };
+          
+          const data = await ssm.getParameter(params).promise();
+          console.log(`Got parameter from cloud`, data);
+          return data.Parameter?.Value;
+    } catch (err) {
+      console.error(`Failed to get parameter from cloud`, err);
+    }
+}
