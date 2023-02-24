@@ -204,7 +204,7 @@ function WithContext(props: React.PropsWithChildren) {
     }
 
     return (
-        <HelmetProvider>
+        <React.Fragment>
             <Helmet>
                 <link
                     rel="stylesheet"
@@ -272,7 +272,7 @@ function WithContext(props: React.PropsWithChildren) {
                     {props.children}
                 </ThemeProvider>
             </AppContextProvider>
-        </HelmetProvider>
+        </React.Fragment>
     );
 }
 
