@@ -20,6 +20,8 @@ import {
     ResolverFn,
     ResolverTypeWrapper,
 } from "../__generated__/resolvers-types";
+import jwt from "jsonwebtoken";
+import { v5 as uuidv5 } from "uuid";
 // import { toGQLUser } from "./user";
 
 // declare module "../dynamoose/models" {
@@ -94,6 +96,24 @@ export const appResolvers: GQLResolvers = {
             await context.batched.App.delete(parent.name);
             return parent;
         },
+        createAppUserToken(parent: App, args: never, context, info): string {
+            // TODO: permission check
+            const appName = parent.name;
+            const currentUserEmail = context.currentUser;
+
+            // TODO: get private key from AWS
+            const token = jwt.sign(
+                { app: appName, iat: Math.floor(Date.now() / 1000) },
+                getPrivateKey(),
+                {
+                    algorithm: "ES256",
+                    expiresIn: "999999d",
+                    issuer: "fastcharge",
+                    jwtid: uuidv5.toString(),
+                }
+            );
+            return token;
+        },
     },
     Query: {
         async apps(
@@ -132,4 +152,19 @@ export const appResolvers: GQLResolvers = {
             return await context.batched.App.create(args);
         },
     },
+};
+
+const getPrivateKey = (): string => {
+    return `-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEINEyilA1d68VxuH2QmIiP3+Ye6SH1/Z3/2LQc+kVZNj1oAoGCCqGSM49
+AwEHoUQDQgAE9CR7SW0cTqQBG1vxWnkjk5dO7zfvUeueXgubjSD6i6vcmHdetZ25
+/ItESQDBmX0LL2qYaPzqTJHbWKxqL+6CtA==
+-----END EC PRIVATE KEY-----`;
+};
+
+const getPublicKey = (): string => {
+    return `-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE9CR7SW0cTqQBG1vxWnkjk5dO7zfv
+UeueXgubjSD6i6vcmHdetZ25/ItESQDBmX0LL2qYaPzqTJHbWKxqL+6CtA==
+-----END PUBLIC KEY-----`;
 };

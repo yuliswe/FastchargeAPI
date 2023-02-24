@@ -24,6 +24,7 @@ export type Scalars = {
 
 export type GQLApp = {
   __typename?: 'App';
+  createAppUserToken: Scalars['String'];
   deleteApp?: Maybe<GQLApp>;
   description?: Maybe<Scalars['String']>;
   endpoints?: Maybe<Array<Maybe<GQLEndpoint>>>;
@@ -399,6 +400,7 @@ export type GQLResolversParentTypes = ResolversObject<{
 }>;
 
 export type GQLAppResolvers<ContextType = RequestContext, ParentType extends GQLResolversParentTypes['App'] = GQLResolversParentTypes['App']> = ResolversObject<{
+  createAppUserToken?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
   deleteApp?: Resolver<Maybe<GQLResolversTypes['App']>, ParentType, ContextType>;
   description?: Resolver<Maybe<GQLResolversTypes['String']>, ParentType, ContextType>;
   endpoints?: Resolver<Maybe<Array<Maybe<GQLResolversTypes['Endpoint']>>>, ParentType, ContextType>;

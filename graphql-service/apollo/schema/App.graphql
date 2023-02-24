@@ -112,6 +112,7 @@ type App {
 
     updateApp(description: String, gatewayMode: GatewayMode): App
     deleteApp: App
+    createAppUserToken: String!
 }
 
 type Endpoint {

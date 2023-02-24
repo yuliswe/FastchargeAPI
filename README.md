@@ -5,13 +5,13 @@
 Run once:
 
 ```
-./initenv.bash
+$ ./initenv.bash
 ```
 
 Run this at start of terminal:
 
 ```
-source ./devenv.bash
+$ source ./devenv.bash
 ```
 
 ## Ports commonly used for local development
@@ -26,3 +26,10 @@ source ./devenv.bash
 
 * For testing, add 1 to all ports. For example, 4000 becomes 4001.
   
+1. Go to `graphql-service/apollo` and run
+    ```
+    $ npm run watch
+    ```
+    to start the graphql service. You may interact with the DynamoDB through the interface at `http://localhost:4000/`.
+
+TODO: more steps to add.
