@@ -22,8 +22,13 @@ import {
 } from "../__generated__/resolvers-types";
 import jwt from "jsonwebtoken";
 import { v5 as uuidv5 } from "uuid";
-import AWS from 'aws-sdk';
-import { PRIVATE_KEY_PARAM_NAME } from "./constants";
+import AWS from "aws-sdk";
+import {
+    PRIVATE_KEY_PARAM_NAME,
+    USER_APP_TOKEN_EXPIRATION,
+    USER_APP_TOKEN_HASH_ALGORITHM,
+    USER_APP_TOKEN_ISSUER,
+} from "./constants";
 
 // import { toGQLUser } from "./user";
 
@@ -51,7 +56,7 @@ import { PRIVATE_KEY_PARAM_NAME } from "./constants";
 //     }
 // }
 
-const ssm = new AWS.SSM({ region: 'us-east-1' });
+const ssm = new AWS.SSM({ region: "us-east-1" });
 
 export const appResolvers: GQLResolvers = {
     App: {
@@ -101,27 +106,49 @@ export const appResolvers: GQLResolvers = {
             await context.batched.App.delete(parent.name);
             return parent;
         },
-        async createAppUserToken(parent: App, args: never, context, info): Promise<string> {
+        async createAppUserToken(
+            parent: App,
+            args: never,
+            context,
+            info
+        ): Promise<string> {
             if (!(await Can.deleteApp(parent, context))) {
                 throw new Denied();
             }
             const appName = parent.name;
             const currentUserEmail = context.currentUser;
-            const privateKey = await getParameterFromAWSSystemsManager(PRIVATE_KEY_PARAM_NAME);
-            if (!privateKey) {
+            const privateKey = await getParameterFromAWSSystemsManager(
+                PRIVATE_KEY_PARAM_NAME
+            );
+            if (!privateKey || !currentUserEmail) {
                 throw new Denied();
             }
-            const token = jwt.sign(
-                { app: appName, iat: Math.floor(Date.now() / 1000), email: currentUserEmail },
+            const newAppToken = jwt.sign(
+                {
+                    app: appName,
+                    iat: Math.floor(Date.now() / 1000),
+                    email: currentUserEmail,
+                },
                 privateKey,
                 {
-                    algorithm: "ES256",
-                    expiresIn: "999999d",
-                    issuer: "fastcharge",
+                    algorithm: USER_APP_TOKEN_HASH_ALGORITHM,
+                    expiresIn: USER_APP_TOKEN_EXPIRATION,
+                    issuer: USER_APP_TOKEN_ISSUER,
                     jwtid: uuidv5.toString(),
                 }
             );
-            return token;
+            let currentUserAppTokens = (
+                await context.batched.User.getOrNull(currentUserEmail)
+            )?.appTokens;
+            if (!currentUserAppTokens) {
+                currentUserAppTokens = {};
+            }
+            currentUserAppTokens[appName] = newAppToken;
+            await context.batched.User.update(
+                { email: currentUserEmail },
+                { appTokens: currentUserAppTokens }
+            );
+            return newAppToken;
         },
     },
     Query: {
@@ -163,17 +190,18 @@ export const appResolvers: GQLResolvers = {
     },
 };
 
-async function getParameterFromAWSSystemsManager(parameterName: string): Promise<string | undefined> {
+async function getParameterFromAWSSystemsManager(
+    parameterName: string
+): Promise<string | undefined> {
     try {
         const params: AWS.SSM.GetParameterRequest = {
             Name: parameterName,
             WithDecryption: true,
-          };
-          
-          const data = await ssm.getParameter(params).promise();
-          console.log(`Got parameter from cloud`, data);
-          return data.Parameter?.Value;
+        };
+
+        const data = await ssm.getParameter(params).promise();
+        return data.Parameter?.Value;
     } catch (err) {
-      console.error(`Failed to get parameter from cloud`, err);
+        console.error(`Failed to get parameter from cloud`, err);
     }
 }

@@ -106,6 +106,14 @@ const UserTableSchema = new dynamoose.Schema(
         author: { type: String, default: "" },
         stripeCustomerId: { type: String, default: "" }, // Available after the user first tops up their account
         stripeConnectAccountId: { type: String, default: "" }, // Available after the user first onboards their Stripe account
+        appTokens: { 
+            type: Object, 
+            schema: { 
+                appName: String, 
+                token: String, 
+            }, 
+            default: {} 
+        },
     },
     { timestamps: true }
 );
@@ -382,7 +390,10 @@ export class User extends Item {
     balance: string;
     stripeCustomerId: string;
     stripeConnectAccountId: string;
+    appTokens: object;
 }
+
+
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
 export class Pricing extends Item {
@@ -404,6 +415,7 @@ export class Subscribe extends Item {
     pricing: string;
     createdAt: number;
 }
+
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
 /**
