@@ -61,6 +61,12 @@ export const Can = {
     ): Promise<boolean> {
         return await Promise.resolve(true);
     },
+    async revokeAppUserToken(
+        parent: App,
+        context: RequestContext
+    ): Promise<boolean> {
+        return await Promise.resolve(true);
+    },
     async createEndpoint(
         { app }: GQLMutationCreateEndpointArgs,
         context: RequestContext

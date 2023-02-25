@@ -106,16 +106,12 @@ const UserTableSchema = new dynamoose.Schema(
         author: { type: String, default: "" },
         stripeCustomerId: { type: String, default: "" }, // Available after the user first tops up their account
         stripeConnectAccountId: { type: String, default: "" }, // Available after the user first onboards their Stripe account
-        appTokens: { 
-            type: Object, 
-            schema: { 
-                appName: String, 
-                token: String, 
-            }, 
-            default: {} 
-        },
+        appTokens: { type: Object, default: {} },
     },
-    { timestamps: true }
+    {
+        saveUnknown: ["appTokens.*"],
+        timestamps: true,
+    }
 );
 
 const AppTableSchema = new dynamoose.Schema(
@@ -392,7 +388,6 @@ export class User extends Item {
     stripeConnectAccountId: string;
     appTokens: object;
 }
-
 
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.

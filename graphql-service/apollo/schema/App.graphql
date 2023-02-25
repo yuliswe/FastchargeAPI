@@ -113,6 +113,7 @@ type App {
     updateApp(description: String, gatewayMode: GatewayMode): App
     deleteApp: App
     createAppUserToken: String!
+    revokeAppUserToken: Boolean
 }
 
 type Endpoint {

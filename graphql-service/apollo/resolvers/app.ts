@@ -21,7 +21,7 @@ import {
     ResolverTypeWrapper,
 } from "../__generated__/resolvers-types";
 import jwt from "jsonwebtoken";
-import { v5 as uuidv5 } from "uuid";
+import { v4 as uuidv4 } from "uuid";
 import AWS from "aws-sdk";
 import {
     PRIVATE_KEY_PARAM_NAME,
@@ -112,7 +112,7 @@ export const appResolvers: GQLResolvers = {
             context,
             info
         ): Promise<string> {
-            if (!(await Can.deleteApp(parent, context))) {
+            if (!(await Can.createAppUserToken(parent, context))) {
                 throw new Denied();
             }
             const appName = parent.name;
@@ -123,6 +123,7 @@ export const appResolvers: GQLResolvers = {
             if (!privateKey || !currentUserEmail) {
                 throw new Denied();
             }
+            const tokenJTI = uuidv4().toString();
             const newAppToken = jwt.sign(
                 {
                     app: appName,
@@ -134,7 +135,7 @@ export const appResolvers: GQLResolvers = {
                     algorithm: USER_APP_TOKEN_HASH_ALGORITHM,
                     expiresIn: USER_APP_TOKEN_EXPIRATION,
                     issuer: USER_APP_TOKEN_ISSUER,
-                    jwtid: uuidv5.toString(),
+                    jwtid: tokenJTI,
                 }
             );
             let currentUserAppTokens = (
@@ -143,12 +144,39 @@ export const appResolvers: GQLResolvers = {
             if (!currentUserAppTokens) {
                 currentUserAppTokens = {};
             }
-            currentUserAppTokens[appName] = newAppToken;
+            currentUserAppTokens[appName] = tokenJTI;
             await context.batched.User.update(
                 { email: currentUserEmail },
                 { appTokens: currentUserAppTokens }
             );
             return newAppToken;
+        },
+        async revokeAppUserToken(
+            parent: App,
+            args: never,
+            context,
+            info
+        ): Promise<boolean> {
+            if (!(await Can.revokeAppUserToken(parent, context))) {
+                throw new Denied();
+            }
+            const appName = parent.name;
+            const currentUserEmail = context.currentUser;
+            if (!currentUserEmail) {
+                throw new Denied();
+            }
+            let currentUserAppTokens = (
+                await context.batched.User.getOrNull(currentUserEmail)
+            )?.appTokens;
+            if (!currentUserAppTokens || !currentUserAppTokens[appName]) {
+                return false;
+            }
+            delete currentUserAppTokens[appName];
+            await context.batched.User.update(
+                { email: currentUserEmail },
+                { appTokens: currentUserAppTokens }
+            );
+            return true;
         },
     },
     Query: {
