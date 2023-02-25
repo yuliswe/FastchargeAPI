@@ -20,8 +20,10 @@ import diskcache
 from click import echo
 from . import config
 from dataclasses import dataclass
+from flask_cors import CORS
 
 app = flask.Flask(__name__)
+CORS(app)
 
 
 @dataclass

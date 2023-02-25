@@ -1,20 +1,19 @@
+import time
 from typing import Optional
+from uuid import uuid4
 import requests
 from pathlib import Path
 import os
 import webbrowser
-import flask
-from multiprocessing.connection import Listener
 import json
 import jwt
 from cryptography.x509 import load_pem_x509_certificate
+
+from .remote_secret import get_remote_secret
 from .groups import fastcharge_dev, fastcharge_client
-from . import local_server
-from pathos.multiprocessing import ProcessPool
 import diskcache
-from click import echo
 from . import config
-from .local_server import LocalServerResponse, start_local_server
+from click import echo
 
 cache = diskcache.Cache("/tmp")
 
@@ -66,16 +65,25 @@ def do_login():
         echo(token)
         return token
 
-    with start_local_server() as (port, conn):
-        webbrowser.open_new(
-            f"{config.react_host}/auth?relogin=true&behavior=postandclose&redirect=http://localhost:{port}"
-        )
-        echo("Please authenticate in the browser.")
-        req: LocalServerResponse = conn.recv()
-    id_token, refresh_token = req.json["idToken"], req.json["refreshToken"]
+    key = uuid4().hex
+    jwe_secret = os.urandom(64)  # 512 bits
+    jwt_secret = os.urandom(64)  # 512 bits
+    webbrowser.open_new(
+        f"{config.react_host}/auth?relogin=true&behavior=putsecret&jwe={jwe_secret.hex()}&jwt={jwt_secret.hex()}&key={key}"
+    )
+    echo("Please authenticate in the browser.")
+    tries = 0
+    while True:
+        time.sleep(5)
+        tries += 1
+        if value := get_remote_secret(key, jwe_secret, jwt_secret):
+            id_token, refresh_token = value["idToken"], value["refreshToken"]
+            break
+        if tries >= 3:
+            input("Timed out. Press enter to retry.")
+            continue
     write_to_auth_file(id_token, refresh_token)
     token = get_token_or_refresh(id_token, refresh_token)
-
     echo(token)
 
 

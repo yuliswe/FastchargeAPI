@@ -16,6 +16,8 @@ blessings = "^1.7"
 sgqlc = "^16.1"
 emoji = "^2.2.0"
 aws-requests-auth = "^0.4.3"
+flask-cors = "^3.0.10"
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 
 
 [tool.poetry.group.dev.dependencies]
