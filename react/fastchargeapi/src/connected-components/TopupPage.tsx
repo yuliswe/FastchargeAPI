@@ -146,9 +146,9 @@ class _TopUp extends React.Component<_Props, _State> {
     async componentDidMount() {
         // If the user is already topuped, then redirect to the success_url
         if (this.isSuccess()) {
-            this.postResultToCli();
+            await this.postResultToCli();
         } else if (this.isCanceled()) {
-            this.postResultToCli();
+            await this.postResultToCli();
         } else {
             // Otherwise start the topuping process
             try {

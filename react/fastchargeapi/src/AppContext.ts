@@ -5,6 +5,7 @@ import {
     NavigateFunction,
     useSearchParams,
 } from "react-router-dom";
+import firebase from "firebase/compat/app";
 
 export const defaulAppContext = {
     DEV: false,
@@ -14,13 +15,17 @@ export const defaulAppContext = {
         sm: false,
         md: false,
     },
+    firebase: null as unknown as {
+        user: null | firebase.User;
+        userPromise: Promise<firebase.User | null>;
+    },
     route: null as {
         location: Location;
         navigate: NavigateFunction;
         params: Params<string>;
         query: ReturnType<typeof useSearchParams>[0];
         setQuery: ReturnType<typeof useSearchParams>[1];
-        updateQuery: (query: Record<string, string | null>) => void;
+        updateQuery: (query: Record<string, string | null | undefined>) => void;
     } | null,
 };
 

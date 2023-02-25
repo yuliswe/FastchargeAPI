@@ -34,7 +34,7 @@ export class AppBar extends React.Component<{}, State> {
         return this.context as AppContext;
     }
 
-    constructor(props: any) {
+    constructor(props: {}) {
         super(props);
         this.state = {
             searchText: "",

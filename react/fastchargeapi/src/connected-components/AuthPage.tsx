@@ -5,20 +5,21 @@ import { RootAppState } from "../states/RootAppState";
 import firebase from "firebase/compat/app";
 import * as firebaseui from "firebaseui";
 import "firebaseui/dist/firebaseui.css";
+import { AppContext, ReactAppContextType } from "../AppContext";
+import * as jose from "jose";
 
-type _State = {
-    user: firebase.User | null;
-};
+type _State = {};
 
 type _Props = {};
 
-declare global {
-    interface Window {
-        handleCredentialResponse: (response: any) => void;
-    }
-}
-
 class _AuthPage extends React.Component<_Props, _State> {
+    firebaseUIInitialized = false;
+
+    static contextType = ReactAppContextType;
+
+    get _context() {
+        return this.context as AppContext;
+    }
     /**
      * Redirect Url is where the user's id token and refresh token will be
      * sent to. It must be the same host or localhost. If left empty, then
@@ -44,9 +45,35 @@ class _AuthPage extends React.Component<_Props, _State> {
         return url.href;
     }
 
-    get behavior(): "redirect" | "postandclose" {
+    get behavior(): "redirect" | "postandclose" | "putsecret" {
         return (new URLSearchParams(document.location.search).get("behavior") ||
             "redirect") as typeof this.behavior;
+    }
+
+    getJWTSecret(): Uint8Array | undefined {
+        const hexString = this._context.route?.query.get("jwt") || undefined;
+        if (!hexString) {
+            return undefined;
+        }
+        const bytes = new Uint8Array(
+            hexString.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16))
+        );
+        return bytes;
+    }
+
+    getJWESecret(): Uint8Array | undefined {
+        const hexString = this._context.route?.query.get("jwe") || undefined;
+        if (!hexString) {
+            return undefined;
+        }
+        const bytes = new Uint8Array(
+            hexString.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16))
+        );
+        return bytes;
+    }
+
+    getBucketKey(): string | undefined {
+        return this._context.route?.query.get("key") || undefined;
     }
 
     reloginNeeded() {
@@ -56,84 +83,35 @@ class _AuthPage extends React.Component<_Props, _State> {
         );
     }
 
-    constructor(props: _Props) {
-        super(props);
-        this.state = {
-            user: null,
-        };
-    }
-
-    componentDidUpdate(
-        prevProps: Readonly<_Props>,
-        prevState: Readonly<_State>,
-        snapshot?: any
-    ): void {}
-
-    async componentDidMount() {
-        // const firebaseConfig = {
-        //     apiKey: "AIzaSyAtSOzX-i3gzBYULHltD4Xkz-H9_9U6tD8",
-        //     authDomain: "fastchargeapi.firebaseapp.com", // https://cloud.google.com/identity-platform/docs/show-custom-domain
-        //     projectId: "fastchargeapi",
-        //     storageBucket: "fastchargeapi.appspot.com",
-        //     messagingSenderId: "398384724830",
-        //     appId: "1:398384724830:web:b20ccb2c0662b16e0eadcf",
-        //     measurementId: "G-8BJ3Q22YR1",
-        // };
-
-        // let app = firebase.initializeApp(firebaseConfig);
-
+    getSignInSuccessUrl(): string {
         let signInSuccessUrl = new URL(window.location.href);
         signInSuccessUrl.searchParams.set("success", "true");
+        return signInSuccessUrl.href;
+    }
 
-        var uiConfig = {
-            signInFlow: "popup",
-            signInSuccessUrl: signInSuccessUrl.href,
-            signInOptions: [
-                // Leave the lines as is for the providers you want to offer your users.
-                firebase.auth.GoogleAuthProvider.PROVIDER_ID,
-                firebase.auth.FacebookAuthProvider.PROVIDER_ID,
-                firebase.auth.TwitterAuthProvider.PROVIDER_ID,
-                firebase.auth.GithubAuthProvider.PROVIDER_ID,
-                firebase.auth.EmailAuthProvider.PROVIDER_ID,
-                firebase.auth.PhoneAuthProvider.PROVIDER_ID,
-                firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID,
-            ],
-            // tosUrl and privacyPolicyUrl accept either url string or a callback
-            // function.
-            // Terms of service url/callback.
-            // Privacy policy url/callback.
-            // tosUrl: '<your-tos-url>',
-            // privacyPolicyUrl: function () {
-            //     window.location.assign('<your-privacy-policy-url>');
-            // }
-        };
-
-        // if (!firebase.auth().currentUser) {
-        //     // Initialize the FirebaseUI Widget using Firebase.
-        //     var ui = firebaseui.auth.AuthUI.getInstance() || new firebaseui.auth.AuthUI(firebase.auth());;
-
-        //     // The start method will wait until the DOM is loaded.
-        //     ui.start('#firebaseui-auth-container', uiConfig);
-        // }
-
+    async componentDidMount() {
         if (this.reloginNeeded()) {
             // go to a url with only the relogin query param deleted
             await firebase.auth().signOut();
-            let url = new URL(window.location.href);
-            url.searchParams.delete("relogin");
-            window.location.href = url.href;
+            this._context.route!.updateQuery({
+                relogin: undefined,
+                success: undefined,
+            });
+            window.location.reload();
         }
 
-        firebase.auth().onAuthStateChanged(
-            async (user) => {
-                if (user) {
-                    // user is signed in
-                    this.setState({ user });
-                    let idToken = await user.getIdToken(
-                        /* forceRefresh */ true
-                    );
-                    console.log(idToken);
-                    let redirect = this.getRedirectUrl();
+        let user = await this._context.firebase.userPromise;
+        console.log(user);
+        // firebase.auth().onAuthStateChanged(
+        //     async (user) => {
+        if (user) {
+            //             // user is signed in
+            //             this.setState({ user });
+            let idToken = await user.getIdToken(/* forceRefresh */ true);
+            console.log(idToken);
+            let redirect = this.getRedirectUrl();
+            switch (this.behavior) {
+                case "postandclose": {
                     if (redirect && this.behavior === "postandclose") {
                         try {
                             await fetch(redirect, {
@@ -155,51 +133,114 @@ class _AuthPage extends React.Component<_Props, _State> {
                             }
                         }
                     }
-
-                    var displayName = user.displayName;
-                    var email = user.email;
-                    var emailVerified = user.emailVerified;
-                    var photoURL = user.photoURL;
-                    var uid = user.uid;
-                    var phoneNumber = user.phoneNumber;
-                    var providerData = user.providerData;
-                    //   user.getIdToken().then(function(accessToken) {
-                    //     document.getElementById('sign-in-status').textContent = 'Signed in';
-                    //     document.getElementById('sign-in').textContent = 'Sign out';
-                    //     document.getElementById('account-details').textContent = JSON.stringify({
-                    //       displayName: displayName,
-                    //       email: email,
-                    //       emailVerified: emailVerified,
-                    //       phoneNumber: phoneNumber,
-                    //       photoURL: photoURL,
-                    //       uid: uid,
-                    //       accessToken: accessToken,
-                    //       providerData: providerData
-                    //     }, null, '  ');
-                    //   });
-                } else {
-                    // User is signed out.
-                    // Initialize the FirebaseUI Widget using Firebase.
-                    var ui =
-                        firebaseui.auth.AuthUI.getInstance() ||
-                        new firebaseui.auth.AuthUI(firebase.auth());
-
-                    // The start method will wait until the DOM is loaded.
-                    ui.start("#firebaseui-auth-container", uiConfig);
+                    break;
                 }
-            },
-            function (error) {
-                console.log(error);
-            }
-        );
-    }
+                case "putsecret": {
+                    console.log(this._context);
+                    let jwtSecret = this.getJWTSecret();
+                    if (!jwtSecret) {
+                        throw new Error("No secret provided");
+                    }
+                    let jweSecret = this.getJWESecret();
+                    if (!jweSecret) {
+                        throw new Error("No secret provided");
+                    }
+                    let key = this.getBucketKey();
+                    if (!key) {
+                        throw new Error("No bucket key provided");
+                    }
+                    let encrypted = await new jose.EncryptJWT({
+                        idToken,
+                        refreshToken: user.refreshToken,
+                    })
+                        .setIssuedAt()
+                        .setIssuer("fastchargeapi.com")
+                        .setAudience("fastchargeapi.com")
+                        .setProtectedHeader({
+                            alg: "dir",
+                            enc: "A256CBC-HS512",
+                        })
+                        .encrypt(jweSecret);
 
-    async logout() {
-        await firebase.auth().signOut();
-        let url = new URL(document.location.href);
-        url.searchParams.delete("success");
-        url.searchParams.delete("relogin");
-        window.location.href = url.href;
+                    let signed = await new jose.SignJWT({
+                        encrypted,
+                    })
+                        .setProtectedHeader({
+                            alg: "HS512",
+                        })
+                        .sign(jwtSecret);
+
+                    let bucket = "cli-auth-bucket";
+                    let endpoint = `https://${bucket}.s3.amazonaws.com/${key}`;
+                    let response = await fetch(endpoint, {
+                        mode: "cors",
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "text/plain",
+                            "x-amz-acl": "public-read-write",
+                            "x-amz-storage-class": "STANDARD",
+                        },
+                        body: signed,
+                    });
+                    console.log("encrypted & signed:", signed);
+                    console.log(response);
+                    break;
+                }
+            }
+
+            let displayName = user.displayName;
+            let email = user.email;
+            let emailVerified = user.emailVerified;
+            let photoURL = user.photoURL;
+            let uid = user.uid;
+            let phoneNumber = user.phoneNumber;
+            let providerData = user.providerData;
+            //   user.getIdToken().then(function(accessToken) {
+            //     document.getElementById('sign-in-status').textContent = 'Signed in';
+            //     document.getElementById('sign-in').textContent = 'Sign out';
+            //     document.getElementById('account-details').textContent = JSON.stringify({
+            //       displayName: displayName,
+            //       email: email,
+            //       emailVerified: emailVerified,
+            //       phoneNumber: phoneNumber,
+            //       photoURL: photoURL,
+            //       uid: uid,
+            //       accessToken: accessToken,
+            //       providerData: providerData
+            //     }, null, '  ');
+            //   });
+        } else if (!this.firebaseUIInitialized) {
+            this.firebaseUIInitialized = true;
+            let ui =
+                firebaseui.auth.AuthUI.getInstance() ||
+                new firebaseui.auth.AuthUI(firebase.auth());
+            // The start method will wait until the DOM is loaded.
+
+            let uiConfig = {
+                signInFlow: "popup",
+                signInSuccessUrl: this.getSignInSuccessUrl(),
+                signInOptions: [
+                    // Leave the lines as is for the providers you want to offer your users.
+                    firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+                    // firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+                    // firebase.auth.TwitterAuthProvider.PROVIDER_ID,
+                    // firebase.auth.GithubAuthProvider.PROVIDER_ID,
+                    // firebase.auth.EmailAuthProvider.PROVIDER_ID,
+                    // firebase.auth.PhoneAuthProvider.PROVIDER_ID,
+                    // firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID,
+                ],
+                // tosUrl and privacyPolicyUrl accept either url string or a callback
+                // function.
+                // Terms of service url/callback.
+                // Privacy policy url/callback.
+                // tosUrl: '<your-tos-url>',
+                // privacyPolicyUrl: function () {
+                //     window.location.assign('<your-privacy-policy-url>');
+                // }
+            };
+
+            ui.start("#firebaseui-auth-container", uiConfig);
+        }
     }
 
     render() {
@@ -213,14 +254,11 @@ class _AuthPage extends React.Component<_Props, _State> {
                     ></script>
                 </Helmet>
 
-                {/* <div id="g_id_onload" data-client_id="398384724830-d2vp9p2o4lfk88g3nac35eie19fge14s.apps.googleusercontent.com"
-                    data-callback="callback" data-auto_prompt="true" data-ux_mode="redirect">
-                </div>
-                <div className="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-text="sign_in_with"
-                    data-shape="rectangular" data-logo_alignment="left">
-                </div> */}
-                <div id="firebaseui-auth-container"></div>
-                {this.state.user && "Success. You can close this window."}
+                {this._context.firebase.user ? (
+                    "Success. You can close this window."
+                ) : (
+                    <div id="firebaseui-auth-container"></div>
+                )}
             </React.Fragment>
         );
     }

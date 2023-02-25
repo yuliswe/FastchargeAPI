@@ -1,6 +1,10 @@
 import firebase from "firebase/compat/app";
 
-export function initializeFirebase() {
+type FirebaseInitializationResult = {
+    user: Promise<firebase.User | null>;
+};
+
+export function initializeFirebase(): FirebaseInitializationResult {
     const firebaseConfig = {
         apiKey: "AIzaSyAtSOzX-i3gzBYULHltD4Xkz-H9_9U6tD8",
         authDomain: "fastchargeapi.firebaseapp.com", // https://cloud.google.com/identity-platform/docs/show-custom-domain
@@ -13,15 +17,17 @@ export function initializeFirebase() {
 
     firebase.initializeApp(firebaseConfig);
 
-    let user = new Promise<firebase.User>((resolve, reject) => {
-        firebase.auth().onAuthStateChanged(async (user) => {
+    let user = new Promise<firebase.User | null>((resolve, reject) => {
+        firebase.auth().onAuthStateChanged((user) => {
             if (user) {
                 resolve(user);
             } else {
-                reject();
+                resolve(null);
             }
         });
     });
+
+    return { user };
 
     // export async function fetchWithAuth(url, options) {
     //     let u = await user;

@@ -14,7 +14,7 @@ import { AppContextProvider, defaulAppContext } from "./AppContext";
 import { AuthPage } from "./connected-components/AuthPage";
 import { OnboardPage } from "./connected-components/OnboardPage";
 import { TopUpPage } from "./connected-components/TopupPage";
-import React from "react";
+import React, { useState } from "react";
 import { LinkProps as RouterLinkProps } from "react-router-dom";
 import { LinkProps } from "@mui/material/Link";
 import { SearchResultPage } from "./connected-components/SearchResultPage";
@@ -26,19 +26,21 @@ import { MyAppsPage } from "./connected-components/MyAppsPage";
 import { SubscriptionsPage } from "./connected-components/SubscriptionsPage";
 import { MyAppDetailPage } from "./connected-components/MyAppDetailPage";
 import { SubscriptionDetailPage } from "./connected-components/SubscriptionDetailPage";
+import { initializeFirebase } from "./firebase";
+import firebase from "firebase/compat/app";
 
 const router = createBrowserRouter([
     {
         path: "/auth",
-        element: <AuthPage />,
+        element: <WithContext children={<AuthPage />} />,
     },
     {
         path: "/onboard",
-        element: <OnboardPage />,
+        element: <WithContext children={<OnboardPage />} />,
     },
     {
         path: "/topup",
-        element: <TopUpPage />,
+        element: <WithContext children={<TopUpPage />} />,
     },
     {
         path: "/",
@@ -80,7 +82,21 @@ const router = createBrowserRouter([
     },
 ]);
 
+let firebaseInitialzation = initializeFirebase();
+
 function WithContext(props: React.PropsWithChildren) {
+    const [firebaseUser, setFirebaseUser] = useState<null | firebase.User>(
+        null
+    );
+
+    firebaseInitialzation.user
+        .then((user) => {
+            setFirebaseUser(user);
+        })
+        .catch((e) => {
+            // do nothing
+        });
+
     const defaultTheme = createTheme();
     const mediaQueryXs = useMediaQuery(defaultTheme.breakpoints.down("sm"));
     const mediaQuerySm = useMediaQuery(defaultTheme.breakpoints.down("md"));
@@ -237,6 +253,10 @@ function WithContext(props: React.PropsWithChildren) {
                         sm: mediaQuerySm,
                         md: mediaQueryMd,
                         xs: mediaQueryXs,
+                    },
+                    firebase: {
+                        user: firebaseUser,
+                        userPromise: firebaseInitialzation.user,
                     },
                     route: {
                         location,

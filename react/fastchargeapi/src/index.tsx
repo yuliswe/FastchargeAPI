@@ -15,8 +15,6 @@ import { initializeFirebase } from "./firebase";
 import "./App.css";
 import App from "./App";
 
-initializeFirebase();
-
 const root = createRoot(document.getElementById("root")!);
 root.render(
     <React.StrictMode>
