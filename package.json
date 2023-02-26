@@ -22,5 +22,9 @@
     "nodeman": "^1.1.2",
     "prettier": "^2.7.1",
     "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "json-bigint-patch": "^0.0.8",
+    "jsonwebtoken": "^9.0.0"
   }
 }

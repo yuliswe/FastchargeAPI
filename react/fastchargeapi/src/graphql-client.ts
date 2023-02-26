@@ -22,16 +22,22 @@ const cache = new InMemoryCache();
  * @param param0
  * @returns
  */
-export function gqlClient({ firebaseUser }: { firebaseUser: firebase.User }) {
+export async function getGQLClient(context: AppContext) {
     const httpLink = createHttpLink({
         uri: "https://api.graphql.fastchargeapi.com",
     });
+
+    let user = await context.firebase.userPromise;
+    if (!user) {
+        throw new Error("getGQLClient: User Not logged in");
+    }
+    let idToken = await user.getIdToken();
 
     const authLink = setContext((_, { headers }) => {
         return {
             headers: {
                 ...headers,
-                authorization: firebaseUser.getIdToken(),
+                authorization: idToken,
             },
         };
     });
@@ -153,9 +159,8 @@ export async function setRemoteSecret(
     });
 
     console.log("encrypted & signed:", value);
-    const response = await gqlClient({
-        firebaseUser: (await context.firebase.userPromise)!,
-    }).mutate({
+    const client = await getGQLClient(context);
+    const response = client.mutate({
         mutation: gql`
             mutation PutSecret(
                 $key: String!

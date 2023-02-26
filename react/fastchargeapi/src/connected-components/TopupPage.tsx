@@ -5,9 +5,7 @@ import { RootAppState } from "../states/RootAppState";
 import { TopUpAppState } from "../states/TopupAppState";
 import { CircularProgress, Typography } from "@mui/material";
 import { AppContext, ReactAppContextType } from "../AppContext";
-import { ApolloClient, gql, InMemoryCache } from "@apollo/client";
-import { gqlClient, setRemoteSecret } from "../graphql-client";
-import { v4 as uuid4 } from "uuid";
+import { setRemoteSecret } from "../graphql-client";
 
 type _State = {};
 
