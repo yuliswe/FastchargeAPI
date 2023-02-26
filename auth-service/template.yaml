@@ -24,11 +24,54 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: app/
+      FunctionName: FirebaseTokenAuthorizer
       Handler: authorizer.lambda_handler
       Runtime: python3.9
       Architectures:
         # - x86_64
         - arm64 # if you are using Apple M1
+
+  CliAuthBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: cli-auth-bucket
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - '*'
+            AllowedMethods:
+              - 'GET'
+              - 'PUT'
+              - 'POST'
+              - 'DELETE'
+              - 'HEAD'
+            AllowedOrigins:
+              - 'https://fastchargeapi.com'
+              - 'http://localhost:8000'
+            MaxAge: 3000
+
+  CliAuthBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref CliAuthBucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - 's3:PutObject'
+            Resource: !Join ['', ['arn:aws:s3:::', !Ref CliAuthBucket, '/*']]
+            Condition:
+              StringEquals:
+                's3:x-amz-acl': 'public-read-write'
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - 's3:GetObject'
+              - 's3:DeleteObject'
+            Resource: !Join ['', ['arn:aws:s3:::', !Ref CliAuthBucket, '/*']]
+        
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
