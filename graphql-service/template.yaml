@@ -68,10 +68,7 @@ Resources:
         DefaultAuthorizer: FirebaseTokenAuthorizer
         Authorizers:
           FirebaseTokenAuthorizer:
-            FunctionArn: arn:aws:lambda:us-east-1:887279901853:function:auth-service-FirebaseTokenAuthorizer-P6dNbG2HV6tE
-      Cors:
-        AllowMethods: "'*'"
-        AllowOrigin: "'*'"
+            FunctionArn: arn:aws:lambda:us-east-1:887279901853:function:FirebaseTokenAuthorizer
         
   # Create another gateway with IAM based authentication
   APIGatewayIAM:
@@ -100,7 +97,9 @@ Resources:
       Architectures:
         - arm64
       Policies:
+        - AWSLambdaRole
         - AmazonDynamoDBFullAccess # Give the Lambda service access to poll your DynamoDB Stream
+        - AmazonSSMFullAccess # Allows getting private key from System Manager
       Events:
         Get:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -132,7 +131,9 @@ Resources:
       Architectures:
         - arm64
       Policies:
+        - AWSLambdaRole
         - AmazonDynamoDBFullAccess # Give the Lambda service access to poll your DynamoDB Stream
+        - AmazonSSMFullAccess # Allows getting private key from System Manager
       Environment:
         Variables:
           TRUST_X_USER_EMAIL_HEADER: "0" # WARNING: X-User-Email must not be trusted in production.
@@ -161,7 +162,9 @@ Resources:
       Architectures:
         - arm64
       Policies:
+        - AWSLambdaRole
         - AmazonDynamoDBFullAccess # Give the Lambda service access to poll your DynamoDB Stream
+        - AmazonSSMFullAccess # Allows getting private key from System Manager
       Events:
         SQSEventToQueue0:
           Type: SQS

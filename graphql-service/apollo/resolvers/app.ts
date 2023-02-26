@@ -10,15 +10,10 @@ import { Denied, NotFound } from "../errors";
 import { Can } from "../permissions";
 import { RequestContext } from "../RequestContext";
 import {
-    GQLApp,
-    GQLAppResolvers,
     GQLAppUpdateAppArgs,
     GQLMutationCreateAppArgs,
     GQLQueryAppArgs,
     GQLResolvers,
-    GQLUser,
-    ResolverFn,
-    ResolverTypeWrapper,
 } from "../__generated__/resolvers-types";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
@@ -29,32 +24,6 @@ import {
     USER_APP_TOKEN_HASH_ALGORITHM,
     USER_APP_TOKEN_ISSUER,
 } from "./constants";
-
-// import { toGQLUser } from "./user";
-
-// declare module "../dynamoose/models" {
-//     interface App {
-//         toGQLApp<T>(context: RequestContext, info: GraphQLResolveInfo): GQLApp
-//     }
-// }
-
-// AppModel.prototype["toGQLApp"] = function (context: RequestContext): App {
-//     return {
-//         name: this.name,
-//         endpoints: this.endpoints,
-//         async owner() {
-//             return (await UserModel.get(this.owner)).toGQL<GQLUser>()
-//         }
-//     }
-// }
-
-// export function toGQLApp(app: App): GQLApp {
-//     return {
-//         name: app.name,
-//         endpoints: app.endpoints,
-//         owner: app.owner,
-//     }
-// }
 
 const ssm = new AWS.SSM({ region: "us-east-1" });
 

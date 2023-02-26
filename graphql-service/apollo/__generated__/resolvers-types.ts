@@ -32,6 +32,7 @@ export type GQLApp = {
   ownedByYou?: Maybe<Scalars['Boolean']>;
   owner?: Maybe<GQLUser>;
   pricingPlans?: Maybe<Array<Maybe<GQLPricing>>>;
+  revokeAppUserToken?: Maybe<Scalars['Boolean']>;
   updateApp?: Maybe<GQLApp>;
 };
 
@@ -432,6 +433,7 @@ export type GQLAppResolvers<ContextType = RequestContext, ParentType extends GQL
   ownedByYou?: Resolver<Maybe<GQLResolversTypes['Boolean']>, ParentType, ContextType>;
   owner?: Resolver<Maybe<GQLResolversTypes['User']>, ParentType, ContextType>;
   pricingPlans?: Resolver<Maybe<Array<Maybe<GQLResolversTypes['Pricing']>>>, ParentType, ContextType>;
+  revokeAppUserToken?: Resolver<Maybe<GQLResolversTypes['Boolean']>, ParentType, ContextType>;
   updateApp?: Resolver<Maybe<GQLResolversTypes['App']>, ParentType, ContextType, Partial<GQLAppUpdateAppArgs>>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
