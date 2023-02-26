@@ -51,7 +51,7 @@ Resources:
         DefaultAuthorizer: FirebaseTokenAuthorizer
         Authorizers:
           FirebaseTokenAuthorizer:
-            FunctionArn: arn:aws:lambda:us-east-1:887279901853:function:auth-service-FirebaseTokenAuthorizer-P6dNbG2HV6tE
+            FunctionArn: arn:aws:lambda:us-east-1:887279901853:function:FirebaseTokenAuthorizer
       GatewayResponses: 
         UNAUTHORIZED: # This block allows customizing the message shown to user that are not logged in.
           StatusCode: 401
