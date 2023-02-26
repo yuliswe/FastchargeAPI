@@ -3,6 +3,8 @@ import webbrowser
 
 from blessings import Terminal
 
+from .remote_secret import interact_with_react
+
 from .dev_stripe import get_dashboard_login_link
 
 from .local_server import LocalServerResponse, start_local_server
@@ -170,22 +172,18 @@ def fastcharge_account_topup(amount: float):
     """
     amount_cents = int(amount * 100)
     client, user_email = get_client_info()
-    with start_local_server() as (port, conn):
-        response = HttpClient().post(
-            "/checkout",
-            json={
-                "amount_cents": amount_cents,
-                "success_url": f"{config.react_host}/topup?success=true&post_result=http://localhost:{port}",
-                "cancel_url": f"{config.react_host}/topup?cancel=true&post_result=http://localhost:{port}",
-            },
-        )
-        data = response.json()
-        location = data["location"]
-        echo("Please complete payment in browser:")
-        echo(terminal.blue + " " + location + terminal.normal)
-        webbrowser.open_new(location)
-        res: LocalServerResponse = conn.recv()  # blocks until payment is complete
-        if res.json["status"] == "success":
-            echo(terminal.green + "Payment successful." + terminal.normal)
-        elif res.json["status"] == "canceled":
-            echo(terminal.red + "Payment canceled." + terminal.normal)
+
+    query, result = interact_with_react()
+    location = (
+        f"{config.react_host}/topup?amount_cents={amount_cents}&"
+        + query.url_query_secrets
+    )
+    webbrowser.open_new(location)
+    echo("Please complete payment in browser:")
+    echo(terminal.blue + " " + location + terminal.normal)
+    result = result.read()  # block
+
+    if result["status"] == "success":
+        echo(terminal.green + "Payment successful." + terminal.normal)
+    elif result["status"] == "canceled":
+        echo(terminal.red + "Payment canceled." + terminal.normal)

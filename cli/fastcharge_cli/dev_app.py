@@ -3,11 +3,9 @@ from typing import Optional
 from blessings import Terminal
 from .groups import fastcharge_dev
 import click
-from .exceptions import AlreadyExists, NotFound
+from .exceptions import NotFound
 from .graphql import get_client_info
 from gql import gql
-from gql.transport.exceptions import TransportQueryError
-from .login import read_valid_user_from_auth_file, read_auth_file
 from dataclasses import dataclass
 import colorama
 from click_aliases import ClickAliasedGroup

@@ -1,7 +1,7 @@
 from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
 from gql.transport.exceptions import TransportQueryError
-from .login import read_auth_file, read_valid_user_from_auth_file
+from .auth_file import read_auth_file, read_valid_user_from_auth_file
 from .exceptions import AlreadyExists, NotFound
 from click import echo
 from .config import graphql_host
