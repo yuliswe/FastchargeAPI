@@ -48,7 +48,7 @@ Resources:
         DefaultAuthorizer: FirebaseTokenAuthorizer
         Authorizers:
           FirebaseTokenAuthorizer:
-            FunctionArn: arn:aws:lambda:us-east-1:887279901853:function:auth-service-FirebaseTokenAuthorizer-P6dNbG2HV6tE
+            FunctionArn: arn:aws:lambda:us-east-1:887279901853:function:FirebaseTokenAuthorizer
       GatewayResponses: 
         UNAUTHORIZED: # This block allows customizing the message shown to user that are not logged in.
           StatusCode: 401
@@ -79,7 +79,7 @@ Resources:
       Policies:
         - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
         - AWSLambdaRole # This will allow this lambda to send http request to the graphql api
-        - AmazonSQSFullAccess
+        - AmazonSQSFullAccess # Allows sending billing to the graphql service
       Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
         Variables:
           TRUST_X_USER_EMAIL_HEADER: "" # Set to 1 to bypass authentication
