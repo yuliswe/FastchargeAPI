@@ -19,14 +19,14 @@ export const defaulAppContext = {
         user: null | firebase.User;
         userPromise: Promise<firebase.User | null>;
     },
-    route: null as {
+    route: null as unknown as {
         location: Location;
         navigate: NavigateFunction;
         params: Params<string>;
         query: ReturnType<typeof useSearchParams>[0];
         setQuery: ReturnType<typeof useSearchParams>[1];
         updateQuery: (query: Record<string, string | null | undefined>) => void;
-    } | null,
+    },
 };
 
 export const ReactAppContextType = React.createContext(defaulAppContext);

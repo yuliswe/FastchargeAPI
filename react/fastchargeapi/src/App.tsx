@@ -14,7 +14,7 @@ import { AppContextProvider, defaulAppContext } from "./AppContext";
 import { AuthPage } from "./connected-components/AuthPage";
 import { OnboardPage } from "./connected-components/OnboardPage";
 import { TopUpPage } from "./connected-components/TopupPage";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { LinkProps as RouterLinkProps } from "react-router-dom";
 import { LinkProps } from "@mui/material/Link";
 import { SearchResultPage } from "./connected-components/SearchResultPage";
@@ -89,13 +89,18 @@ function WithContext(props: React.PropsWithChildren) {
         null
     );
 
-    firebaseInitialzation.user
-        .then((user) => {
-            setFirebaseUser(user);
-        })
-        .catch((e) => {
+    useEffect(() => {
+        firebaseInitialzation.user
+            .then((user) => {
+                setFirebaseUser(user);
+            })
+            .catch((e) => {
+                // do nothing
+            });
+        return () => {
             // do nothing
-        });
+        };
+    }, [firebaseUser]);
 
     const defaultTheme = createTheme();
     const mediaQueryXs = useMediaQuery(defaultTheme.breakpoints.down("sm"));

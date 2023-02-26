@@ -5,6 +5,10 @@ import { RootAppState } from "../states/RootAppState";
 import { TopUpAppState } from "../states/TopupAppState";
 import { CircularProgress, Typography } from "@mui/material";
 import { AppContext, ReactAppContextType } from "../AppContext";
+import { ApolloClient, gql, InMemoryCache } from "@apollo/client";
+import { gqlClient, setRemoteSecret } from "../graphql-client";
+import { v4 as uuid4 } from "uuid";
+
 type _State = {};
 
 type _Props = {
@@ -28,39 +32,28 @@ class _TopUp extends React.Component<_Props, _State> {
      * with ?success=true query param.
      */
     getSuccessUrl(): string {
-        let url = new URLSearchParams(document.location.search).get(
-            "success_url"
+        return (
+            document.location.origin +
+            this._context.route.location.pathname +
+            this._context.route.location.search +
+            "&success=true"
         );
-        if (url && !this.urlIsAllowed(url)) {
-            throw new Error("success_url must be the same domain.");
-        }
-        if (url) {
-            return url;
-        }
-        let defaultUrl = new URL(document.location.href);
-        for (let key of defaultUrl.searchParams.keys()) {
-            defaultUrl.searchParams.delete(key);
-        }
-        defaultUrl.searchParams.set("success", "true");
-        return defaultUrl.href;
     }
+
+    /**
+     * Redirect to this url when the user cancels the Stripe checkout session.
+     * Similar to getSuccessUrl().
+     * @returns
+     */
     getCancelUrl(): string {
-        let url = new URLSearchParams(document.location.search).get(
-            "cancel_url"
+        return (
+            document.location.origin +
+            this._context.route.location.pathname +
+            this._context.route.location.search +
+            "&cancel=true"
         );
-        if (url && !this.urlIsAllowed(url)) {
-            throw new Error("cancel_url must be the same domain.");
-        }
-        if (url) {
-            return url;
-        }
-        let defaultUrl = new URL(document.location.href);
-        for (let key of defaultUrl.searchParams.keys()) {
-            defaultUrl.searchParams.delete(key);
-        }
-        defaultUrl.searchParams.set("cancel", "true");
-        return defaultUrl.href;
     }
+
     urlIsAllowed(url: string): boolean {
         let parsedUrl = new URL(url);
         return (
@@ -68,61 +61,75 @@ class _TopUp extends React.Component<_Props, _State> {
             parsedUrl.host === "localhost"
         );
     }
+
     isSuccess(): boolean {
-        return (
-            new URLSearchParams(document.location.search).get("success") != null
-        );
+        return this._context.route.query.get("success") != null;
     }
+
     isCanceled(): boolean {
-        return (
-            new URLSearchParams(document.location.search).get("cancel") != null
-        );
+        return this._context.route.query.get("cancel") != null;
     }
+
     getAmountCents(): number {
-        return parseInt(
-            new URLSearchParams(document.location.search).get("amount_cents") ||
-                "0"
+        return parseInt(this._context.route.query.get("amount_cents") || "0");
+    }
+
+    getJWTSecret(): Uint8Array {
+        const hexString = this._context.route?.query.get("jwt");
+        if (!hexString) {
+            throw new Error("jwt is missing from the url");
+        }
+        const bytes = new Uint8Array(
+            hexString.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16))
         );
+        return bytes;
+    }
+
+    getJWESecret(): Uint8Array {
+        const hexString = this._context.route?.query.get("jwe");
+        if (!hexString) {
+            throw new Error("jwe is missing from the url");
+        }
+        const bytes = new Uint8Array(
+            hexString.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16))
+        );
+        return bytes;
     }
 
     /**
-     * Used for interaction with the cli. Post the payment result to this url.
-     */
-    getPostResultUrl(): string {
-        return (
-            new URLSearchParams(document.location.search).get("post_result") ||
-            ""
-        );
-    }
-
-    /**
-     * Used for interaction with the cli. Post the payment result to this url.
+     * Used for interaction with the cli. Post the payment result to this url,
+     * by putting secret containing the status of the reuqest.
+     *
      * {
      *     status: "success" | "canceled"
      * }
      */
     async postResultToCli() {
-        if (this.getPostResultUrl()) {
-            try {
-                const response = await fetch(this.getPostResultUrl(), {
-                    method: "POST",
-                    mode: "cors",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        status: this.isSuccess() ? "success" : "canceled",
-                    }),
-                });
-            } catch (error) {
-                console.error(
-                    "Error posting to",
-                    this.getPostResultUrl(),
-                    error
-                );
-            }
+        let key = this._context.route.query.get("key") || "";
+        if (!key) {
+            throw new Error("key is missing from the url");
         }
+        const response = await setRemoteSecret(
+            this._context,
+            {
+                key: key,
+                value: {
+                    status: this.isSuccess() ? "success" : "canceled",
+                },
+                expireAt: Date.now() + 1000 * 60 * 60 * 24, // 1 day,
+            },
+            {
+                jweSecret: this.getJWESecret(),
+                jwtSecret: this.getJWTSecret(),
+            }
+        );
     }
+
+    async isLoggedIn() {
+        console.log((await this._context.firebase.userPromise) != null);
+        return (await this._context.firebase.userPromise) != null;
+    }
+
     /**
      * Specify what happens after the user returns from the Stripe topuping webpage.
      * stay: stays on this page. Shows a success message depending on the value of success.
@@ -149,6 +156,12 @@ class _TopUp extends React.Component<_Props, _State> {
             await this.postResultToCli();
         } else if (this.isCanceled()) {
             await this.postResultToCli();
+        } else if (!(await this.isLoggedIn())) {
+            // redirect to the login path, and when successful, redirect back to this page
+            this._context.route?.navigate({
+                pathname: "/auth",
+                search: `redirect=${this._context.route.location.pathname}${this._context.route.location.search}`,
+            });
         } else {
             // Otherwise start the topuping process
             try {
@@ -164,6 +177,8 @@ class _TopUp extends React.Component<_Props, _State> {
                         cancel_url: this.getCancelUrl(),
                     }),
                 });
+                let { location } = await response.json();
+                document.location.href = location;
             } catch (error) {
                 console.error("Error posting to", this.getBackendUrl(), error);
             }

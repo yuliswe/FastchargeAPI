@@ -7,6 +7,7 @@ import * as firebaseui from "firebaseui";
 import "firebaseui/dist/firebaseui.css";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import * as jose from "jose";
+import { encryptAndSign } from "../graphql-client";
 
 type _State = {};
 
@@ -20,40 +21,26 @@ class _AuthPage extends React.Component<_Props, _State> {
     get _context() {
         return this.context as AppContext;
     }
-    /**
-     * Redirect Url is where the user's id token and refresh token will be
-     * sent to. It must be the same host or localhost. If left empty, then
-     * upon succesful authentication, the page will be redirected to itself
-     * with ?success=true query param.
-     */
-    getRedirectUrl(): string {
-        let redirectUrl =
-            new URLSearchParams(document.location.search).get("redirect") || "";
-        if (!redirectUrl) {
-            return document.location.href + "?success=true";
-        }
-        let url = new URL(redirectUrl);
-        if (
-            url.hostname !== window.location.hostname &&
-            url.hostname !== "localhost"
-        ) {
-            throw Error(
-                "Redirect URL must be the same host or localhost: " +
-                    redirectUrl
-            );
-        }
-        return url.href;
+
+    getRedirectUrl(): string | null {
+        let redirectUrl = this._context.route?.query.get("redirect");
+        return redirectUrl;
     }
 
-    get behavior(): "redirect" | "postandclose" | "putsecret" {
-        return (new URLSearchParams(document.location.search).get("behavior") ||
-            "redirect") as typeof this.behavior;
+    get behavior(): "redirect" | "putsecret" | undefined {
+        if (this.getRedirectUrl()) {
+            return "redirect";
+        }
+        if (this.getJWTSecret()) {
+            return "putsecret";
+        }
+        return undefined;
     }
 
-    getJWTSecret(): Uint8Array | undefined {
-        const hexString = this._context.route?.query.get("jwt") || undefined;
+    getJWTSecret(): Uint8Array {
+        const hexString = this._context.route?.query.get("jwt");
         if (!hexString) {
-            return undefined;
+            throw new Error("jwt is missing from the url");
         }
         const bytes = new Uint8Array(
             hexString.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16))
@@ -61,10 +48,10 @@ class _AuthPage extends React.Component<_Props, _State> {
         return bytes;
     }
 
-    getJWESecret(): Uint8Array | undefined {
-        const hexString = this._context.route?.query.get("jwe") || undefined;
+    getJWESecret(): Uint8Array {
+        const hexString = this._context.route?.query.get("jwe");
         if (!hexString) {
-            return undefined;
+            throw new Error("jwe is missing from the url");
         }
         const bytes = new Uint8Array(
             hexString.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16))
@@ -93,7 +80,7 @@ class _AuthPage extends React.Component<_Props, _State> {
         if (this.reloginNeeded()) {
             // go to a url with only the relogin query param deleted
             await firebase.auth().signOut();
-            this._context.route!.updateQuery({
+            this._context.route.updateQuery({
                 relogin: undefined,
                 success: undefined,
             });
@@ -101,74 +88,36 @@ class _AuthPage extends React.Component<_Props, _State> {
         }
 
         let user = await this._context.firebase.userPromise;
-        console.log(user);
-        // firebase.auth().onAuthStateChanged(
-        //     async (user) => {
         if (user) {
-            //             // user is signed in
-            //             this.setState({ user });
             let idToken = await user.getIdToken(/* forceRefresh */ true);
             console.log(idToken);
-            let redirect = this.getRedirectUrl();
             switch (this.behavior) {
-                case "postandclose": {
-                    if (redirect && this.behavior === "postandclose") {
-                        try {
-                            await fetch(redirect, {
-                                method: "POST",
-                                mode: "cors",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                },
-                                body: JSON.stringify({
-                                    idToken,
-                                    refreshToken: user.refreshToken,
-                                }),
-                            });
-                        } catch {
-                            console.error("Failed to post:", redirect);
-                        } finally {
-                            if (this.behavior === "postandclose") {
-                                window.close();
-                            }
-                        }
+                // Redirect to the redirect url after authentication
+                case "redirect": {
+                    let redirect = this.getRedirectUrl();
+                    if (!redirect) {
+                        throw new Error("No redirect url provided");
                     }
+                    this._context.route.navigate(redirect, { state: {} });
                     break;
                 }
                 case "putsecret": {
-                    console.log(this._context);
                     let jwtSecret = this.getJWTSecret();
-                    if (!jwtSecret) {
-                        throw new Error("No secret provided");
-                    }
                     let jweSecret = this.getJWESecret();
-                    if (!jweSecret) {
-                        throw new Error("No secret provided");
-                    }
                     let key = this.getBucketKey();
                     if (!key) {
                         throw new Error("No bucket key provided");
                     }
-                    let encrypted = await new jose.EncryptJWT({
-                        idToken,
-                        refreshToken: user.refreshToken,
-                    })
-                        .setIssuedAt()
-                        .setIssuer("fastchargeapi.com")
-                        .setAudience("fastchargeapi.com")
-                        .setProtectedHeader({
-                            alg: "dir",
-                            enc: "A256CBC-HS512",
-                        })
-                        .encrypt(jweSecret);
-
-                    let signed = await new jose.SignJWT({
-                        encrypted,
-                    })
-                        .setProtectedHeader({
-                            alg: "HS512",
-                        })
-                        .sign(jwtSecret);
+                    let signed = await encryptAndSign(
+                        {
+                            idToken,
+                            refreshToken: user.refreshToken,
+                        },
+                        {
+                            jwtSecret,
+                            jweSecret,
+                        }
+                    );
 
                     let bucket = "cli-auth-bucket";
                     let endpoint = `https://${bucket}.s3.amazonaws.com/${key}`;
@@ -182,8 +131,6 @@ class _AuthPage extends React.Component<_Props, _State> {
                         },
                         body: signed,
                     });
-                    console.log("encrypted & signed:", signed);
-                    console.log(response);
                     break;
                 }
             }
