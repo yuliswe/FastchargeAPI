@@ -362,6 +362,21 @@ const StripeTransferTableSchema = new dynamoose.Schema(
     }
 );
 
+const SecretTableSchema = new dynamoose.Schema(
+    {
+        key: {
+            hashKey: true,
+            ...String_Required_NotEmpty("key"),
+        },
+        value: { type: String, required: true },
+        expireAt: { type: Number, required: false },
+        description: { type: String, required: false }, // for debugging
+    },
+    {
+        timestamps: true,
+    }
+);
+
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
 export class App extends Item {
@@ -508,6 +523,14 @@ export class StripeTransfer extends Item {
     accountActivity: string;
 }
 
+export class Secret extends Item {
+    key: string;
+    value: string;
+    description: string;
+    expireAt: number;
+    createdAt: number;
+}
+
 export const AppModel = dynamoose.model<App>("App", AppTableSchema, {
     ...tableConfigs,
 });
@@ -557,5 +580,10 @@ export const AccountHistoryModel = dynamoose.model<AccountHistory>(
 export const AccountActivityModel = dynamoose.model<AccountActivity>(
     "AccountActivity",
     AccountActivityTableSchema,
+    { ...tableConfigs }
+);
+export const SecretModel = dynamoose.model<Secret>(
+    "Secret",
+    SecretTableSchema,
     { ...tableConfigs }
 );

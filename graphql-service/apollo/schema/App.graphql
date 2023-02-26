@@ -1,5 +1,4 @@
 scalar Email
-scalar Date
 scalar NonNegativeDecimal
 scalar Timestamp
 
@@ -17,6 +16,8 @@ type Query {
     subscription(subscriber: Email, app: String): Subscribe
 
     stripePaymentAccept(stripeSessionId: String!): StripePaymentAccept
+
+    secret(key: String!): Secret
 }
 
 type Mutation {
@@ -78,6 +79,22 @@ type Mutation {
     ): StripeTransfer
 
     triggerBilling(user: ID!, app: ID!): UsageSummary
+
+    createSecret(
+        key: String!
+        value: String!
+        description: String
+        expireAt: Timestamp
+    ): Secret!
+}
+
+type Secret {
+    key: String!
+    value: String!
+    expireAt: Timestamp
+    createdAt: Timestamp!
+
+    deleteSecret: Secret
 }
 
 type User {

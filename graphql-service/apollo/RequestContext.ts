@@ -11,6 +11,7 @@ import {
     StripePaymentAcceptModel,
     AccountActivityModel,
     AccountHistoryModel,
+    SecretModel,
 } from "./dynamoose/models";
 
 export type RequestService = "payment" | "gateway" | "internal";
@@ -34,5 +35,6 @@ export function createDefaultContextBatched() {
         StripePaymentAccept: new Batched(StripePaymentAcceptModel),
         AccountActivity: new Batched(AccountActivityModel),
         AccountHistory: new Batched(AccountHistoryModel),
+        Secret: new Batched(SecretModel),
     };
 }

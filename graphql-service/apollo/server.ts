@@ -17,6 +17,7 @@ import { stripePaymentAcceptResolvers } from "./resolvers/payment";
 import { stripeTransferResolvers } from "./resolvers/transfer";
 import { RequestContext } from "./RequestContext";
 import { usageSummaryResolvers } from "./resolvers/usage-sum";
+import { secretResolvers } from "./resolvers/secret";
 
 initializeDB();
 
@@ -33,6 +34,7 @@ const resolvers: GQLResolvers = {
     StripeTransfer: stripeTransferResolvers.StripeTransfer,
     Pricing: pricingResolvers.Pricing,
     UsageSummary: usageSummaryResolvers.UsageSummary,
+    Secret: secretResolvers.Secret,
     Query: {
         ...appResolvers.Query,
         ...userResolvers.Query,
@@ -44,6 +46,7 @@ const resolvers: GQLResolvers = {
         ...stripeTransferResolvers.Query,
         ...pricingResolvers.Query,
         ...usageSummaryResolvers.Query,
+        ...secretResolvers.Query,
     },
     Mutation: {
         ...appResolvers.Mutation,
@@ -56,6 +59,7 @@ const resolvers: GQLResolvers = {
         ...stripeTransferResolvers.Mutation,
         ...pricingResolvers.Mutation,
         ...usageSummaryResolvers.Mutation,
+        ...secretResolvers.Mutation,
     },
 };
 

@@ -1,4 +1,11 @@
-import { GraphQLError, GraphQLScalarType, Kind } from "graphql";
+import {
+    GraphQLError,
+    GraphQLFloat,
+    GraphQLInt,
+    GraphQLScalarType,
+    Kind,
+} from "graphql";
+import { GraphQLBigInt, GraphQLSafeInt } from "graphql-scalars";
 
 function checkNonNegativeDecimal(value: string) {
     let n = Number.parseFloat(value);
@@ -45,4 +52,8 @@ const NonNegativeDecimal = new GraphQLScalarType({
 
 export default {
     NonNegativeDecimal,
+    Timestamp: new GraphQLScalarType({
+        ...GraphQLSafeInt.toConfig(),
+        name: "Timestamp",
+    }),
 };
