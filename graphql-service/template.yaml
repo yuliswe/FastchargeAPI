@@ -68,8 +68,24 @@ Resources:
         DefaultAuthorizer: FirebaseTokenAuthorizer
         Authorizers:
           FirebaseTokenAuthorizer:
+            FunctionPayloadType: REQUEST
             FunctionArn: arn:aws:lambda:us-east-1:887279901853:function:FirebaseTokenAuthorizer
-        
+            Identity:
+              ReauthorizeEvery: 300
+              Headers: [ "Authorization" ]
+      Cors:
+        AllowMethods: "'*'"
+        AllowHeaders: "'*'"
+        AllowOrigin: "'*'"
+      GatewayResponses:
+        UNAUTHORIZED: # This is hacky but right now the only way to handle an OPTION request without failing 
+          StatusCode: 200
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Methods: "'*'"
+              Access-Control-Allow-Headers: "'*'"
+              Access-Control-Allow-Origin: "'*'"
+
   # Create another gateway with IAM based authentication
   APIGatewayIAM:
     Type: AWS::Serverless::Api
@@ -85,7 +101,7 @@ Resources:
           MetricsEnabled: True
           ResourcePath: "/*" # allows for logging on any resource
           HttpMethod: "*" # allows for logging on any method
-      Auth: # Uses the FirebaseTokenAuthorizer to identify the session user. 
+      Auth: 
         DefaultAuthorizer: AWS_IAM
 
   ApolloServer:

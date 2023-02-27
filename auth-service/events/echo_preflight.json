@@ -1,0 +1,63 @@
+{
+  "body": "{\"message\": \"hello world\"}",
+  "resource": "/echo",
+  "path": "/echo",
+  "httpMethod": "OPTIONS",
+  "isBase64Encoded": false,
+  "queryStringParameters": {
+    "foo": "bar"
+  },
+  "pathParameters": {
+    "proxy": "/path/to/resource"
+  },
+  "stageVariables": {
+    "baz": "qux"
+  },
+  "headers": {
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept-Encoding": "gzip, deflate, sdch",
+    "Accept-Language": "en-US,en;q=0.8",
+    "Cache-Control": "max-age=0",
+    "CloudFront-Forwarded-Proto": "https",
+    "CloudFront-Is-Desktop-Viewer": "true",
+    "CloudFront-Is-Mobile-Viewer": "false",
+    "CloudFront-Is-SmartTV-Viewer": "false",
+    "CloudFront-Is-Tablet-Viewer": "false",
+    "CloudFront-Viewer-Country": "US",
+    "Host": "1234567890.execute-api.us-east-1.amazonaws.com",
+    "Upgrade-Insecure-Requests": "1",
+    "User-Agent": "Custom User Agent String",
+    "Via": "1.1 08f323deadbeefa7af34d5feb414ce27.cloudfront.net (CloudFront)",
+    "X-Amz-Cf-Id": "cDehVQoZnx43VYQb9j2-nvCh-9z396Uhbp027Y2JvkCPNLmGJHqlaA==",
+    "X-Forwarded-For": "127.0.0.1, 127.0.0.2",
+    "X-Forwarded-Port": "443",
+    "X-Forwarded-Proto": "https",
+    "Authorization": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjE1YzJiNDBhYTJmMzIyNzk4NjY2YTZiMzMyYWFhMDNhNjc3MzAxOWIiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoiVGVzdFVzZXIgRmFzdGNoYXJnZUFQSSIsInBpY3R1cmUiOiJodHRwczovL2xoMy5nb29nbGV1c2VyY29udGVudC5jb20vYS9BRWRGVHA1bW9UMVd6d2htejNkVGlDUDFOUnVhdmZtNUhRTnEwZ2pzS2N0TD1zOTYtYyIsImlzcyI6Imh0dHBzOi8vc2VjdXJldG9rZW4uZ29vZ2xlLmNvbS9mYXN0Y2hhcmdlYXBpIiwiYXVkIjoiZmFzdGNoYXJnZWFwaSIsImF1dGhfdGltZSI6MTY3NzM4NjQxMiwidXNlcl9pZCI6InlQT2l1N3lSa2NVMGd5T2NHU3R6UXJ2dlNRSjMiLCJzdWIiOiJ5UE9pdTd5UmtjVTBneU9jR1N0elFydnZTUUozIiwiaWF0IjoxNjc3NDcyODQwLCJleHAiOjE2Nzc0NzY0NDAsImVtYWlsIjoidGVzdHVzZXIxLmZhc3RjaGFyZ2VhcGlAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsImZpcmViYXNlIjp7ImlkZW50aXRpZXMiOnsiZ29vZ2xlLmNvbSI6WyIxMTcxODM1Mjc2MDgwMjg1OTg1NjkiXSwiZW1haWwiOlsidGVzdHVzZXIxLmZhc3RjaGFyZ2VhcGlAZ21haWwuY29tIl19LCJzaWduX2luX3Byb3ZpZGVyIjoiZ29vZ2xlLmNvbSJ9fQ.1CbQVipgWQRM8HpaZfM1twgP-pI83REgS8N85lTIC9h6t7_l9EEJpZOwPJz0saviqsc3Fe77wEMP63ZKkf5vxpc7-aw7hO92TPi58LpR3EvruwSIg2uJmSWZDTowu0J7wLta2Jp4vpJ8UjRSSCqe3AsNTIfOIDS5RSvue4W_n5zqSNBXBfIJSukd983SlTmq3yHx_YOH6LOS90QzLbbM0E1XTfZmiXYUj73NAAyOFxBn2Ao2owA28eQlFzZiqxzcpIyrQxbRHda-7w--hFP6fmZ-CpGEzLsN-g3zZCiN7gF_QEXf9bT2C8lmhqbVntSMOXFWg3V9MTr46DHxKxhNAg"
+  },
+  "requestContext": {
+    "accountId": "123456789012",
+    "resourceId": "123456",
+    "stage": "prod",
+    "requestId": "c6af9ac6-7b61-11e6-9a41-93e8deadbeef",
+    "requestTime": "09/Apr/2015:12:34:56 +0000",
+    "requestTimeEpoch": 1428582896000,
+    "identity": {
+      "cognitoIdentityPoolId": null,
+      "accountId": null,
+      "cognitoIdentityId": null,
+      "caller": null,
+      "accessKey": null,
+      "sourceIp": "127.0.0.1",
+      "cognitoAuthenticationType": null,
+      "cognitoAuthenticationProvider": null,
+      "userArn": null,
+      "userAgent": "Custom User Agent String",
+      "user": null
+    },
+    "path": "/prod/hello",
+    "resourcePath": "/hello",
+    "httpMethod": "POST",
+    "apiId": "1234567890",
+    "protocol": "HTTP/1.1"
+  }
+}

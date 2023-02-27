@@ -13,23 +13,24 @@ Parameters:
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 3
-    MemorySize: 128
+    Timeout: 10
+    MemorySize: 1024
     Tracing: Active
   Api:
     TracingEnabled: true
 
 Resources:
   FirebaseTokenAuthorizer:
-    Type: AWS::Serverless::Function
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Metadata:
+      BuildMethod: go1.x
     Properties:
-      CodeUri: app/
-      FunctionName: FirebaseTokenAuthorizer
-      Handler: authorizer.lambda_handler
-      Runtime: python3.9
+      CodeUri: ./app
+      Handler: bootstrap
+      Runtime: provided.al2
       Architectures:
-        # - x86_64
-        - arm64 # if you are using Apple M1
+        - arm64
+      FunctionName: FirebaseTokenAuthorizer
 
   CliAuthBucket:
     Type: AWS::S3::Bucket
