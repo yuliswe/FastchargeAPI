@@ -25,8 +25,6 @@ import {
     USER_APP_TOKEN_ISSUER,
 } from "./constants";
 
-const ssm = new AWS.SSM({ region: "us-east-1" });
-
 export const appResolvers: GQLResolvers = {
     App: {
         async name(parent, args, context, info) {
@@ -196,6 +194,7 @@ async function getParameterFromAWSSystemsManager(
             WithDecryption: true,
         };
 
+        const ssm = new AWS.SSM({ region: "us-east-1" });
         const data = await ssm.getParameter(params).promise();
         return data.Parameter?.Value;
     } catch (err) {

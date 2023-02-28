@@ -129,12 +129,14 @@ Resources:
             Path: /
             Method: post
             RestApiId: !Ref APIGateway
+      # Environment:
+      #   Variables:
+      #     TRUST_X_USER_EMAIL_HEADER: "" # WARNING: X-User-Email must not be trusted in production.
+      #     AWS_LAMBDA_EXEC_WRAPPER: ""
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
-        Minify: true
         Target: "es2022"
-        Sourcemap: true
         EntryPoints:
           - lambdaHandler.ts
 
@@ -150,9 +152,6 @@ Resources:
         - AWSLambdaRole
         - AmazonDynamoDBFullAccess # Give the Lambda service access to poll your DynamoDB Stream
         - AmazonSSMFullAccess # Allows getting private key from System Manager
-      Environment:
-        Variables:
-          TRUST_X_USER_EMAIL_HEADER: "0" # WARNING: X-User-Email must not be trusted in production.
       Events:
         PostIAM:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -163,9 +162,7 @@ Resources:
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
-        Minify: true
         Target: "es2022"
-        Sourcemap: true
         EntryPoints:
           - lambdaHandler.ts
 
@@ -206,9 +203,7 @@ Resources:
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
-        Minify: true
         Target: "es2022"
-        Sourcemap: true
         EntryPoints:
           - sqsHandler.ts
 
