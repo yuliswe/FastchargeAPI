@@ -5,11 +5,29 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "type": "aws-sam",
+            "request": "direct-invoke",
+            "name": "apollo:lambdaHandler.lambdaHandler (nodejs18.x)",
+            "cwd": "${workspaceFolder}/graphql-service/apollo",
+            // "preLaunchTask": "tsc: build - tsconfig.json",
+            "invokeTarget": {
+                "target": "code",
+                "projectRoot": "${workspaceFolder}/graphql-service/apollo",
+                "lambdaHandler": "lambdaHandler.lambdaHandler",
+                "architecture": "arm64"
+            },
+            "lambda": {
+                "runtime": "nodejs18.x",
+                "payload": {},
+                "environmentVariables": {}
+            }
+        },
+        {
             "type": "node",
             "request": "attach",
             "name": "Attach Program",
             "processId": "${command:PickProcess}",
-            "port": 9229,
+            "port": 5858
         }
     ]
 }

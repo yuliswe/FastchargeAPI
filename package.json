@@ -11,6 +11,8 @@
   "bugs": {},
   "homepage": "",
   "devDependencies": {
+    "@graphql-codegen/cli": "^3.2.1",
+    "@graphql-codegen/typescript-operations": "^3.0.1",
     "@typescript-eslint/eslint-plugin": "^5.49.0",
     "@typescript-eslint/parser": "^5.49.0",
     "eslint": "^8.32.0",
@@ -22,9 +24,5 @@
     "nodeman": "^1.1.2",
     "prettier": "^2.7.1",
     "typescript": "^4.9.4"
-  },
-  "dependencies": {
-    "json-bigint-patch": "^0.0.8",
-    "jsonwebtoken": "^9.0.0"
   }
 }
