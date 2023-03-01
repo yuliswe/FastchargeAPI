@@ -6,7 +6,7 @@ import {
     GQLSecret,
     GQLSecretResolvers,
 } from "../__generated__/resolvers-types";
-import { SecretModel } from "../dynamoose/models";
+import { Secret, SecretModel } from "../dynamoose/models";
 
 /**
  * Remember to add your resolver to the resolvers object in server.ts.
@@ -26,7 +26,7 @@ export const secretResolvers: GQLResolvers & {
         createdAt: (parent) => parent.createdAt,
 
         async deleteSecret(
-            parent: GQLSecret,
+            parent: Secret,
             args: never,
             context: RequestContext
         ) {
@@ -36,17 +36,17 @@ export const secretResolvers: GQLResolvers & {
     },
     Query: {
         async secret(
-            parent: never,
+            parent: {},
             { key }: GQLQuerySecretArgs,
             context: RequestContext
         ) {
-            let secret = await context.batched.Secret.getOrNull({ key });
+            let secret = await context.batched.Secret.get({ key });
             return secret;
         },
     },
     Mutation: {
         async createSecret(
-            parent: never,
+            parent: {},
             { key, value, expireAt }: GQLMutationCreateSecretArgs,
             context: RequestContext
         ) {

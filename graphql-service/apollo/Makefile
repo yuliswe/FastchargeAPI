@@ -14,3 +14,4 @@ build-CopyDependencies:
 	cp -r ./schema "$(BUILD_DIR)/ApolloServerIAM/schema"
 	cp -r ./schema "$(BUILD_DIR)/SQSApolloServer/schema"
 
+	cp rtwrapper "$(BUILD_DIR)/ApolloServer/rtwrapper"

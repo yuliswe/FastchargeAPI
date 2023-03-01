@@ -10,7 +10,7 @@ import { GQLResolvers } from "../__generated__/resolvers-types";
 // export const XXXXXXXXXXXXXXXResolvers: GQLResolvers & {
 //     XXXXXXXXXXXXXXX: Required<GQLXXXXXXXXXXXXXXXResolvers>;
 // } = {
-//     XXXXXXXXX: {
+//     XXXXXXXXXXXXXXX: {
 //     },
 //     Query: {
 //     },

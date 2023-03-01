@@ -1,5 +1,6 @@
 {
-    "ApolloServerIAM": {
-        "TRUST_X_USER_EMAIL_HEADER": "1"
+    "ApolloServer": {
+        "TRUST_X_USER_EMAIL_HEADER": "1",
+        "AWS_LAMBDA_EXEC_WRAPPER": "/var/task/rtwrapper"
     }
 }

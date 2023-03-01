@@ -18,6 +18,7 @@ import { stripeTransferResolvers } from "./resolvers/transfer";
 import { RequestContext } from "./RequestContext";
 import { usageSummaryResolvers } from "./resolvers/usage-sum";
 import { secretResolvers } from "./resolvers/secret";
+import { accountHistoryResolvers } from "./resolvers/account-history";
 
 initializeDB();
 
@@ -35,6 +36,7 @@ const resolvers: GQLResolvers = {
     Pricing: pricingResolvers.Pricing,
     UsageSummary: usageSummaryResolvers.UsageSummary,
     Secret: secretResolvers.Secret,
+    AccountHistory: accountHistoryResolvers.AccountHistory,
     Query: {
         ...appResolvers.Query,
         ...userResolvers.Query,
@@ -47,6 +49,7 @@ const resolvers: GQLResolvers = {
         ...pricingResolvers.Query,
         ...usageSummaryResolvers.Query,
         ...secretResolvers.Query,
+        ...accountHistoryResolvers.Query,
     },
     Mutation: {
         ...appResolvers.Mutation,
@@ -60,6 +63,7 @@ const resolvers: GQLResolvers = {
         ...pricingResolvers.Mutation,
         ...usageSummaryResolvers.Mutation,
         ...secretResolvers.Mutation,
+        ...accountHistoryResolvers.Mutation,
     },
 };
 

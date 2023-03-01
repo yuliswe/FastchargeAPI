@@ -5,23 +5,23 @@ scalar Timestamp
 type Query {
     ### App API
     apps: [App]
-    app(name: String): App
+    app(name: String): App!
     ### User API
     users: [User] # Get all users in the system
-    user(email: Email): User
+    user(email: Email): User!
     ### Endpoint API
-    endpoint(ref: ID, app: String, path: String): Endpoint
+    endpoint(ref: ID, app: String, path: String): Endpoint!
     endpoints: [Endpoint] # Get all endpoints in the system
     ### Subscriptions API
-    subscription(subscriber: Email, app: String): Subscribe
+    subscription(subscriber: Email, app: String): Subscribe!
 
-    stripePaymentAccept(stripeSessionId: String!): StripePaymentAccept
+    stripePaymentAccept(stripeSessionId: String!): StripePaymentAccept!
 
-    secret(key: String!): Secret
+    secret(key: String!): Secret!
 }
 
 type Mutation {
-    createUser(email: Email!): User
+    createUser(email: Email!): User!
 
     createApp(
         name: String!
@@ -29,14 +29,14 @@ type Mutation {
         gatewayMode: GatewayMode = Proxy
         # endpoints: [EndpointInput]
         description: String
-    ): App
+    ): App!
 
     createEndpoint(
         app: String!
         path: String!
         destination: String!
         description: String
-    ): Endpoint
+    ): Endpoint!
 
     createPricing(
         app: String!
@@ -44,20 +44,20 @@ type Mutation {
         callToAction: String!
         minMonthlyCharge: String!
         chargePerRequest: String!
-    ): Pricing
+    ): Pricing!
 
     createSubscription(
         app: String!
         pricing: ID!
         subscriber: Email!
-    ): Subscribe
+    ): Subscribe!
 
     createUsageLog(
         app: String!
         path: String!
         subscriber: Email!
         volume: Int! = 1
-    ): UsageLog
+    ): UsageLog!
 
     createStripePaymentAccept(
         user: String!
@@ -67,7 +67,7 @@ type Mutation {
         stripeSessionId: String!
         stripePaymentIntent: String!
         stripeSessionObject: String!
-    ): StripePaymentAccept
+    ): StripePaymentAccept!
 
     createStripeTransfer(
         receiver: Email!
@@ -76,7 +76,7 @@ type Mutation {
         currency: String!
         stripeTransferId: String!
         stripeTransferObject: String!
-    ): StripeTransfer
+    ): StripeTransfer!
 
     triggerBilling(user: ID!, app: ID!): UsageSummary
 
@@ -100,8 +100,8 @@ type Secret {
 type User {
     email: Email!
     author: String!
-    apps: [App]
-    subscriptions: [Subscribe]
+    apps: [App!]!
+    subscriptions: [Subscribe!]!
     balance: String
     stripeCustomerId: String
     stripeConnectAccountId: String
@@ -111,11 +111,31 @@ type User {
         path: String
         limit: Int = 5
         start: Int = 0
-    ): [UsageLog]
+    ): [UsageLog!]!
 
     updateUser(stripeCustomerId: String, stripeConnectAccountId: String): User
 
-    usageSummaries: [UsageSummary]
+    usageSummaries: [UsageSummary!]!
+
+    accountActivities(
+        limit: Int = 1000 # Support maximum of 1000
+        dateRange: DateRangeInput
+    ): [AccountActivity!]!
+
+    accountHistories(
+        limit: Int = 1000 # Support maximum of 1000
+        dateRange: DateRangeInput
+    ): [AccountHistory!]!
+}
+
+input DateRangeInput {
+    start: Timestamp
+    end: Timestamp
+}
+
+enum SortDirection {
+    ascending
+    descending
 }
 
 type App {
@@ -219,4 +239,27 @@ type StripeTransfer {
     createdAt: Timestamp!
     currency: String
     settleStripeTransfer: StripeTransfer
+}
+
+enum AccountActivityType {
+    credit
+    debit
+}
+enum AccountActivityReason {
+    payout
+    topup
+    api_per_request_charge
+    api_min_monthly_charge
+}
+type AccountActivity {
+    createdAt: Timestamp!
+    type: AccountActivityType!
+    amount: String!
+    reason: AccountActivityReason!
+    description: String!
+}
+
+type AccountHistory {
+    closingBalance: String!
+    closingTime: Timestamp!
 }

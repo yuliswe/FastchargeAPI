@@ -8,8 +8,7 @@
     "gen": "graphql-codegen --config codegen.yml",
     "build": "npm run gen && tsc",
     "start": "node --experimental-specifier-resolution=node ./dist/devserver.js",
-    "watch": "npx nodemon -e yml,ts,graphql -i ./__generated__ --signal SIGINT -x \"npm run build && npm run start || exit 1\"",
-    "watch-gen": "npx nodemon -e yml,ts,graphql -i ./__generated__ --signal SIGINT -x \"npm run gen\"",
+    "watch": "npx nodemon -e yml,ts,graphql,json -i ./__generated__ --signal SIGINT -x \"npm run build && npm run start || exit 1\"",
     "test": "jest",
     "sam": "cd ../ && make watch",
     "fix": "eslint --fix ./"
@@ -25,6 +24,7 @@
     "@aws/dynamodb-data-mapper": "^0.7.3",
     "@aws/dynamodb-data-mapper-annotations": "^0.7.3",
     "@graphql-codegen/typescript-operations": "^3.0.0",
+    "@types/uuid": "^9.0.1",
     "chalk": "^5.2.0",
     "dataloader": "^2.1.0",
     "decimal.js-light": "^2.5.1",

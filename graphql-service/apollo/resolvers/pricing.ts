@@ -32,7 +32,7 @@ export const pricingResolvers: GQLResolvers = {
     Query: {},
     Mutation: {
         async createPricing(
-            parent: never,
+            parent: {},
             args: GQLMutationCreatePricingArgs,
             context,
             info

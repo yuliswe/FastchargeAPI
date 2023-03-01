@@ -52,6 +52,7 @@ export async function generateAccountActivities(
             settleAt: Date.now(),
             amount: amount.toString(),
             usageSummary: UsageSummaryPK.stringify(usageSummary),
+            description: `Per-request spending to ${usageSummary.app}.`,
         }),
         appAuthorPerRequest: context.batched.AccountActivity.create({
             user: appAuthor,
@@ -61,6 +62,7 @@ export async function generateAccountActivities(
             settleAt: Date.now(),
             amount: amount.toString(),
             usageSummary: UsageSummaryPK.stringify(usageSummary),
+            description: `Per-request income from ${usageSummary.app}.`,
         }),
         newUsageSummary: usageSummary.save(),
         subscriberMinMonthly: null as Promise<AccountActivity> | null,
@@ -78,6 +80,7 @@ export async function generateAccountActivities(
             settleAt: Date.now(), // We want to charge the subscriber immediately
             amount: amount.toString(),
             usageSummary: UsageSummaryPK.stringify(usageSummary),
+            description: `Monthly fee of ${usageSummary.app}.`,
         });
         results.subscriberMinMonthly = context.batched.AccountActivity.create({
             user: appAuthor,
@@ -87,6 +90,7 @@ export async function generateAccountActivities(
             settleAt: Date.now() + 1000 * monthlyChargeOnHoldPeriodInSeconds,
             amount: amount.toString(),
             usageSummary: UsageSummaryPK.stringify(usageSummary),
+            description: `Monthly fee income for ${usageSummary.app}.`,
         });
     }
     let errors: string[] = [];
@@ -140,7 +144,7 @@ export async function triggerBilling(
     if (usageSummary == null) {
         return null;
     }
-    let pricing = await findUserSubscriptionPricing(context, user, app);
+    let pricing = await findUserSubscriptionPricing(context, { user, app });
     if (!pricing) {
         console.error(
             chalk.red("No pricing found during triggerBilling"),

@@ -2,31 +2,29 @@ import DataLoader from "dataloader";
 import { InputKey, ModelType } from "dynamoose/dist/General";
 import { Item } from "dynamoose/dist/Item";
 import { AlreadyExists, NotFound, UpdateContainsPrimaryKey } from "../errors";
-import { AppModel, User, UserModel } from "./models";
 import hash from "object-hash";
-import {
-    ConditionalCheckFailedException,
-    ResourceNotFoundException,
-} from "@aws-sdk/client-dynamodb";
-import { Condition } from "dynamoose";
-
+import { ConditionalCheckFailedException } from "@aws-sdk/client-dynamodb";
+import { Query as DynamogooseQuery } from "dynamoose/dist/ItemRetriever";
+type Optional<T> = T | undefined | null;
 type ConditionQuery<V> = {
-    where?: V;
-    filter?: V;
-    attribute?: V;
-    eq?: V;
-    lt?: V;
-    le?: V;
-    gt?: V;
-    ge?: V;
-    beginsWith?: V;
-    contains?: V;
+    where?: Optional<V>;
+    filter?: Optional<V>;
+    attribute?: Optional<V>;
+    eq?: Optional<V>;
+    lt?: Optional<V>;
+    le?: Optional<V>;
+    gt?: Optional<V>;
+    ge?: Optional<V>;
+    beginsWith?: Optional<V>;
+    contains?: Optional<V>;
     // exists?: () => Condition;
     in?: V[];
     between?: [V, V];
 };
-type GQLPartial<T> = { [K in keyof T]?: T[K] | null };
-type Query<T> = { [K in keyof T]?: T[K] | ConditionQuery<T[K]> | null };
+type GQLPartial<T> = { [K in keyof T]?: Optional<T[K]> };
+type Query<T> = {
+    [K in keyof T]?: Optional<T[K] | ConditionQuery<T[K]>>;
+};
 
 /**
  * This file is a collection of functions that are used to bridge Dynamoose with
@@ -59,12 +57,12 @@ async function assignDefaults<I extends Item>(item: I): Promise<I> {
     // type to a string. This may cause issues when the item is saved back to
     // the DB, failing the validation because the DB expects a Date type.
     let defaults = (await item.withDefaults()) as I;
-    for (let key of Object.keys(item) as (keyof I)[]) {
+    for (let key of Object.keys(defaults) as (keyof I)[]) {
         // This is a temporary fix, but if the item's date field is undefined
         // (maybe an old object before a schema added a new date field), then
         // the problem still exists. The workaround is to not ever use the Date
         // type on the DB schema, and instead use a Number type.
-        if (item[key] === undefined) {
+        if (item[key] == undefined) {
             item[key] = defaults[key];
         }
     }
@@ -133,7 +131,7 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
                 Object.keys(bk.query)[0] === hashKeyName &&
                 (!bk.options || Object.keys(bk.options).length == 0)
             ) {
-                batch1.push(bk.query[hashKeyName as PrimaryKey]);
+                batch1.push((bk.query as any)[hashKeyName as PrimaryKey]);
                 bkType.push(1);
             } else if (
                 hashKeyName &&
@@ -155,11 +153,18 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
 
         function queryUnbatchable(index: number): Promise<I[]> {
             let bk = bkArray[index];
-            let query;
+            let query: DynamogooseQuery<I>;
             if (typeof bk.query === "string") {
                 query = model.query(hashKeyName).eq(bk.query);
             } else if (typeof bk.query === "object") {
                 query = model.query(bk.query);
+            } else {
+                throw new Error(
+                    "Invalid query type: " +
+                        typeof bk.query +
+                        " " +
+                        bk.query.toString()
+                );
             }
             if (bk.options) {
                 if (bk.options.limit != null) {
@@ -228,12 +233,21 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
     };
 }
 
-function stripNullKeys<T>(object: T): Partial<T> {
+function stripNullKeys<T extends object>(
+    object: T,
+    options?: { returnUndefine?: boolean; deep?: boolean }
+): Partial<T> | undefined {
     let data: Partial<T> = {};
-    for (let [key, val] of Object.entries(object as any)) {
-        if (val !== undefined && val !== null) {
-            data[key] = val as keyof T;
+    for (let [key, val] of Object.entries(object)) {
+        if (typeof val === "object" && options?.deep) {
+            val = stripNullKeys(val, options);
         }
+        if (val !== undefined && val !== null) {
+            data[key as keyof T] = val;
+        }
+    }
+    if (options?.returnUndefine && Object.keys(object).length == 0) {
+        return undefined;
     }
     return data;
 }
@@ -348,7 +362,13 @@ export class Batched<I extends Item> {
      */
     async many(key: string | Query<I>, options?: BatchOptions): Promise<I[]> {
         if (typeof key === "object") {
-            key = stripNullKeys(key);
+            key = stripNullKeys(key)!;
+        }
+        if (options != undefined) {
+            options = stripNullKeys(options, {
+                deep: true,
+                returnUndefine: true,
+            });
         }
         let result = await this.loader.load({
             query: key,
@@ -357,6 +377,13 @@ export class Batched<I extends Item> {
         return await Promise.all(result);
     }
 
+    async count(key: string | Query<I>): Promise<number> {
+        if (typeof key === "object") {
+            key = stripNullKeys(key)!;
+        }
+        let result = await this.model.query(key).count().exec();
+        return result.count;
+    }
     async exists(key: string | Partial<I>): Promise<boolean> {
         let result = await this.many(key);
         return result.length > 0;
@@ -426,9 +453,9 @@ export class Batched<I extends Item> {
     }
 
     async delete(keys: string | Partial<I>): Promise<I> {
-        let query;
+        let query: Partial<I>;
         if (typeof keys === "string") {
-            query = { [this.model.table().hashKey]: keys };
+            query = { [this.model.table().hashKey]: keys } as Partial<I>;
         } else {
             query = extractKeysFromItems(this.model, keys);
         }
@@ -444,9 +471,8 @@ export class Batched<I extends Item> {
      * @param keys A primary + range key (optional) to lookup the item. If extra
      * keys are provided, they are ignored.
      * @param newVals New values for the item. If the new values contain the
-     * range key, the range key is updated. If the new values contain null, the
-     * value is set to null. So it is important that the client do not proivde
-     * the property if it doesn't want to update it.
+     * range key, the range key is updated. Any value that is undefined or null
+     * is ignored.
      * @returns The updated object.
      */
     // Why a separate keys object is needed: this is to differentiate between
@@ -462,10 +488,9 @@ export class Batched<I extends Item> {
     // primary key is needed, the client should delete the old object and create
     // a new one.
     async update(keys: GQLPartial<I>, newVals: GQLPartial<I>): Promise<I> {
-        newVals = stripNullKeys(newVals);
+        newVals = stripNullKeys(newVals)!;
         // Extract keys to ingore extra properties
         const query = extractKeysFromItems(this.model, keys);
-        const original = await this.get(query);
 
         let hashKeyName = this.model.table().hashKey;
         if (hashKeyName in newVals) {
@@ -493,21 +518,21 @@ export class Batched<I extends Item> {
         return await this.model.scan().exec();
     }
 
-    prime(values: Iterable<I>) {
-        let keyName = this.model.table().hashKey;
-        let keyMap = new Map();
-        for (let v of values) {
-            let hashKey = v[keyName];
-            if (!keyMap.has(hashKey)) {
-                keyMap.set(hashKey, []);
-            }
-            let arr = keyMap.get(hashKey);
-            arr.push(v);
-        }
-        for (let [key, value] of keyMap) {
-            this.loader.prime(key, value);
-        }
-    }
+    // prime(values: Iterable<I>) {
+    //     let keyName = this.model.table().hashKey;
+    //     let keyMap = new Map();
+    //     for (let v of values) {
+    //         let hashKey = v[keyName];
+    //         if (!keyMap.has(hashKey)) {
+    //             keyMap.set(hashKey, []);
+    //         }
+    //         let arr = keyMap.get(hashKey);
+    //         arr.push(v);
+    //     }
+    //     for (let [key, value] of keyMap) {
+    //         this.loader.prime(key, value);
+    //     }
+    // }
 
     clearCache() {
         this.loader.clearAll();

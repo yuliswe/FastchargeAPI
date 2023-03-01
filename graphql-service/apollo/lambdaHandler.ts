@@ -6,8 +6,43 @@ import { HeaderMap } from "@apollo/server";
 import { BadInput, Unauthorized } from "./errors";
 import { RequestService, createDefaultContextBatched } from "./RequestContext";
 import { Chalk } from "chalk";
+import {
+    LambdaRequest,
+    LambdaResponse,
+    MiddlewareFn,
+} from "@as-integrations/aws-lambda/dist/middleware";
 
 const chalk = new Chalk({ level: 3 });
+
+const corsMiddleware: LambdaRequest<
+    APIGatewayProxyEvent,
+    APIGatewayProxyResult
+> = async (
+    event: APIGatewayProxyEvent
+    // eslint-disable-next-line @typescript-eslint/require-await
+): Promise<LambdaResponse<APIGatewayProxyResult>> => {
+    let origin = event.headers.origin || "";
+    let cors: { [key: string]: string } = {};
+    if (
+        [/^http:\/\/localhost:?\d*/, /^https:\/\/fastchargeapi.com/i].some(
+            (x) => x.test(origin)
+        )
+    ) {
+        cors = {
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers": "*",
+            Vary: "Origin",
+        };
+    }
+    // eslint-disable-next-line @typescript-eslint/require-await
+    return async (result: APIGatewayProxyResult): Promise<void> => {
+        result.headers = {
+            ...result.headers,
+            ...cors,
+        };
+    };
+};
 
 let handle = startServerAndCreateLambdaHandler(
     server,
@@ -140,22 +175,23 @@ let handle = startServerAndCreateLambdaHandler(
                 batched: createDefaultContextBatched(),
             });
         },
-        middleware: [
-            ((event) => {
-                return (result) => {
-                    // result.headers["Access-Control-Allow-Origin"] = "*";
-                    return result;
-                };
-            }) as any,
-        ],
+        middleware: [corsMiddleware],
     }
 );
 
-export const lambdaHandler = async (event, context, callback) => {
+export const lambdaHandler = async (
+    event: APIGatewayProxyEvent,
+    context: never,
+    callback: never
+) => {
     try {
         return await handle(event, context, callback);
     } catch (error) {
-        console.error(chalk.red(error.toString()));
+        try {
+            console.error(chalk.red(JSON.stringify(error)));
+        } catch (jsonError) {
+            // ignore
+        }
         return {
             statusCode: 500,
             body: "Internal Server Error",

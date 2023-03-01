@@ -35,7 +35,9 @@ generates:
         AccountActivity: ../dynamoose/models#AccountActivity
         AccountHistory: ../dynamoose/models#AccountHistory
         UsageSummary: ../dynamoose/models#UsageSummary
+        Secret: ../dynamoose/models#Secret
       enumValues:
         GatewayMode: ../dynamoose/models#GatewayMode
       scalars:
         Email: string
+        Timestamp: number

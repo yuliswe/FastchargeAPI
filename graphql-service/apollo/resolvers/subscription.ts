@@ -43,7 +43,7 @@ export const subscribeResolvers: GQLResolvers = {
     },
     Query: {
         async subscription(
-            parent: never,
+            parent: {},
             args: GQLQuerySubscriptionArgs,
             context: RequestContext,
             info: GraphQLResolveInfo
@@ -57,7 +57,7 @@ export const subscribeResolvers: GQLResolvers = {
     },
     Mutation: {
         async createSubscription(
-            parent: never,
+            parent: {},
             args: GQLMutationCreateSubscriptionArgs,
             context,
             info

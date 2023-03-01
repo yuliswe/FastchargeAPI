@@ -275,6 +275,7 @@ const AccountActivityTableSchema = new dynamoose.Schema(
         settleAt: { type: Number, required: true },
         amount: { ...String_Decimal("amount"), required: true },
         usageSummary: { type: String, default: undefined },
+        description: { type: String, default: "" },
     },
     {
         timestamps: {
@@ -401,7 +402,7 @@ export class User extends Item {
     balance: string;
     stripeCustomerId: string;
     stripeConnectAccountId: string;
-    appTokens: object;
+    appTokens: { [appName: string]: string };
 }
 
 /// When creating a new Item class, remember to add it to codegen.yml mappers
@@ -479,6 +480,7 @@ export class AccountActivity extends Item {
     usageSummary: string | null; // ID of the UsageSummary item or null if not related to usage
     accountHistory: string | null; // ID of the AccountHistory item or null if not related to account history
     createdAt: number;
+    description: string;
 }
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.

@@ -79,15 +79,19 @@ let handle = startServerAndCreateLambdaHandler<
 
 export const handler = async (
     event: SQSEvent,
-    context,
-    callback
+    context: never,
+    callback: never
 ): Promise<SQSBatchResponse> => {
     let batchItemFailures: SQSBatchItemFailure[] = [];
     for (let record of event.Records) {
         try {
             await handle(record, context, callback);
         } catch (error) {
-            console.error(chalk.red(error.toString()));
+            try {
+                console.error(chalk.red(JSON.stringify(error)));
+            } catch (jsonError) {
+                // ignore
+            }
             batchItemFailures.push({ itemIdentifier: record.messageId });
         }
     }

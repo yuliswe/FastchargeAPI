@@ -23,7 +23,7 @@ export const Can = {
         return await Promise.resolve(true);
     },
     async viewApp(
-        { owner: string },
+        { owner }: { owner: string },
         context: RequestContext
     ): Promise<boolean> {
         return await Promise.resolve(true);
@@ -101,7 +101,7 @@ export const Can = {
         return await Promise.resolve(true);
     },
     async viewSubscribe(
-        parent: never,
+        parent: {},
         args: GQLQuerySubscriptionArgs,
         context: RequestContext
     ): Promise<boolean> {

@@ -148,7 +148,7 @@ export const appResolvers: GQLResolvers = {
     },
     Query: {
         async apps(
-            parent: never,
+            parent: {},
             args: GQLQueryAppArgs,
             context: RequestContext,
             info: GraphQLResolveInfo
@@ -158,7 +158,7 @@ export const appResolvers: GQLResolvers = {
             return visableApps;
         },
         async app(
-            parent: never,
+            parent: {},
             { name }: GQLQueryAppArgs,
             context: RequestContext,
             info: GraphQLResolveInfo
@@ -172,7 +172,7 @@ export const appResolvers: GQLResolvers = {
     },
     Mutation: {
         async createApp(
-            parent: never,
+            parent: {},
             args: GQLMutationCreateAppArgs,
             context: RequestContext,
             info: GraphQLResolveInfo

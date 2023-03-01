@@ -17,7 +17,14 @@
       "node",
       "mocha",
     ],
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "strictBindCallApply": true,
     "strictNullChecks": true,
+    "useUnknownInCatchVariables": true,
+    "strictFunctionTypes": false,
+    "strictPropertyInitialization": false // doesn't work with our Item type declarations in models.ts
   },
   "exclude": [
     "node_modules",

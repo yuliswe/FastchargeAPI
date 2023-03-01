@@ -4,19 +4,19 @@ import { PricingPK } from "./PricingPK";
 
 export async function findUserSubscription(
     context: RequestContext,
-    user: string
+    { user, app }: { user: string; app: string }
 ): Promise<Subscribe | null> {
     return await context.batched.Subscribe.getOrNull({
         subscriber: user,
+        app,
     });
 }
 
 export async function findUserSubscriptionPricing(
     context: RequestContext,
-    user: string,
-    app
+    { user, app }: { user: string; app: string }
 ): Promise<Pricing | null> {
-    let subscription = await findUserSubscription(context, user);
+    let subscription = await findUserSubscription(context, { user, app });
     if (subscription == null) {
         return null;
     }

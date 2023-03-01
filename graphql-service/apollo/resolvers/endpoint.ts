@@ -54,7 +54,7 @@ export const endpointResolvers: GQLResolvers = {
     },
     Query: {
         async endpoint(
-            parent: never,
+            parent: {},
             { ref, app, path, ...newVals }: GQLQueryEndpointArgs,
             context,
             info
@@ -75,7 +75,7 @@ export const endpointResolvers: GQLResolvers = {
     },
     Mutation: {
         async createEndpoint(
-            parent: never,
+            parent: {},
             args: GQLMutationCreateEndpointArgs,
             context,
             info

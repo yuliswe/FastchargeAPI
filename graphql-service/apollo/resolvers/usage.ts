@@ -44,7 +44,7 @@ export const usageLogResolvers: GQLResolvers & {
     Query: {},
     Mutation: {
         async createUsageLog(
-            parent: never,
+            parent: {},
             args: GQLMutationCreateUsageLogArgs,
             context: RequestContext,
             info: GraphQLResolveInfo

@@ -8,6 +8,7 @@ import {
     GQLQueryUserArgs,
     GQLResolvers,
     GQLUser,
+    GQLUserAccountActivitiesArgs,
     GQLUserResolvers,
     GQLUserUpdateUserArgs,
     GQLUserUsageLogsArgs,
@@ -53,7 +54,50 @@ export const userResolvers: GQLResolvers & {
         },
         stripeCustomerId: (parent) => parent.stripeCustomerId,
         stripeConnectAccountId: (parent) => parent.stripeConnectAccountId,
-
+        accountActivities: async (
+            parent: User,
+            { limit, dateRange }: GQLUserAccountActivitiesArgs,
+            context
+        ) => {
+            let result = await context.batched.AccountActivity.many(
+                {
+                    user: UserPK.stringify(parent),
+                    createdAt: dateRange
+                        ? {
+                              le: dateRange.end,
+                              ge: dateRange.start,
+                          }
+                        : undefined,
+                },
+                {
+                    limit,
+                    sort: "descending",
+                }
+            );
+            return result;
+        },
+        accountHistories: async (
+            parent: User,
+            { limit, dateRange }: GQLUserAccountActivitiesArgs,
+            context
+        ) => {
+            let result = await context.batched.AccountHistory.many(
+                {
+                    user: UserPK.stringify(parent),
+                    closingTime: dateRange
+                        ? {
+                              le: dateRange.end,
+                              ge: dateRange.start,
+                          }
+                        : undefined,
+                },
+                {
+                    limit,
+                    sort: "descending",
+                }
+            );
+            return result;
+        },
         async updateUser(
             parent: User,
             { stripeCustomerId, stripeConnectAccountId }: GQLUserUpdateUserArgs,
@@ -83,7 +127,7 @@ export const userResolvers: GQLResolvers & {
                     app: app || undefined,
                 },
                 {
-                    limit,
+                    limit: Math.min(limit || 1000, 1000),
                 }
             );
             return usage;
@@ -98,7 +142,7 @@ export const userResolvers: GQLResolvers & {
     },
     Query: {
         async users(
-            parent: never,
+            parent: {},
             args: never,
             context: RequestContext,
             info: GraphQLResolveInfo
@@ -110,7 +154,7 @@ export const userResolvers: GQLResolvers & {
             return users;
         },
         async user(
-            parent: never,
+            parent: {},
             { email }: GQLQueryUserArgs,
             context: RequestContext,
             info: GraphQLResolveInfo
@@ -124,7 +168,7 @@ export const userResolvers: GQLResolvers & {
     },
     Mutation: {
         async createUser(
-            parent: never,
+            parent: {},
             { email }: GQLMutationCreateUserArgs,
             context: RequestContext,
             info: GraphQLResolveInfo

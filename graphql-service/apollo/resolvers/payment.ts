@@ -112,7 +112,7 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
     },
     Mutation: {
         async createStripePaymentAccept(
-            parent: never,
+            parent: {},
             {
                 user,
                 amountCents,
