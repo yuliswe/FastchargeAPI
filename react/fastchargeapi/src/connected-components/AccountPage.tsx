@@ -15,7 +15,7 @@ import {
 import { Outlet } from "react-router-dom";
 import { AppContext, ReactAppContextType } from "../AppContext";
 type Props = {
-    appDetailAppState: AccountAppState;
+    appState: AccountAppState;
 };
 class _AccountPage extends React.Component<Props> {
     static contextType = ReactAppContextType;
@@ -94,6 +94,6 @@ class _AccountPage extends React.Component<Props> {
 
 export const AccountPage = connect<Props, {}, {}, RootAppState>(
     (rootAppState: RootAppState) => ({
-        appDetailAppState: rootAppState.appDetail,
+        appState: rootAppState.account,
     })
 )(_AccountPage);

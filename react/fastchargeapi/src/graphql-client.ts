@@ -8,30 +8,38 @@ import {
     gql,
 } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
-import firebase from "firebase/compat/app";
-import { v4 as uuid4 } from "uuid";
 import { AppContext } from "./AppContext";
 import * as jose from "jose";
 
-const sqsClient = new SQSClient({ region: "us-east-1" });
+// debug
+const DEBUG_USE_LOCAL_GRAPHQL = true;
 
+const sqsClient = new SQSClient({ region: "us-east-1" });
 const cache = new InMemoryCache();
+
+let graphql_url = "https://api.graphql.fastchargeapi.com";
+
+if (DEBUG_USE_LOCAL_GRAPHQL) {
+    graphql_url = "http://localhost:4000";
+}
 
 /**
  * Connects to the graphql server specified by uri.
  * @param param0
  * @returns
  */
-export async function getGQLClient(context: AppContext) {
+export async function getGQLClient(
+    context: AppContext
+): Promise<{ client: ApolloClient<any>; currentUser: string }> {
     const httpLink = createHttpLink({
-        uri: "https://api.graphql.fastchargeapi.com",
+        uri: graphql_url,
     });
 
     let user = await context.firebase.userPromise;
     if (!user) {
         throw new Error("getGQLClient: User Not logged in");
     }
-    let idToken = await user.getIdToken();
+    let idToken = await user.getIdToken(true);
 
     const authLink = setContext((_, { headers }) => {
         return {
@@ -42,10 +50,13 @@ export async function getGQLClient(context: AppContext) {
         };
     });
 
-    return new ApolloClient({
+    let client = new ApolloClient({
         link: authLink.concat(httpLink),
         cache: new InMemoryCache(),
     });
+
+    let currentUser = user.email!;
+    return { client, currentUser };
 }
 
 /**
@@ -159,7 +170,7 @@ export async function setRemoteSecret(
     });
 
     console.log("encrypted & signed:", value);
-    const client = await getGQLClient(context);
+    const { client } = await getGQLClient(context);
     const response = client.mutate({
         mutation: gql`
             mutation PutSecret(

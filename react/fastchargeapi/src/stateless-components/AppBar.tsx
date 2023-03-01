@@ -16,12 +16,13 @@ import {
     Typography,
     Menu,
     MenuItem,
+    Avatar,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { createSearchParams } from "react-router-dom";
 import { AccountCircle } from "@mui/icons-material";
-// import { } from "react-router-dom";
+import firebase from "firebase/compat/app";
 
 type State = {
     searchText: string;
@@ -56,6 +57,17 @@ export class AppBar extends React.Component<{}, State> {
         this.setState({
             anchorEl: null,
         });
+    };
+
+    handleLogout = (event: React.MouseEvent<HTMLElement>) => {
+        void (async () => {
+            await firebase.auth().signOut();
+            this._context.route?.navigate({
+                pathname: "/",
+            });
+            this.handleClose();
+            window.location.reload();
+        })();
     };
 
     componentDidMount(): void {
@@ -99,7 +111,7 @@ export class AppBar extends React.Component<{}, State> {
                 >
                     <Container maxWidth="xl">
                         <Toolbar>
-                            <Link href="/">
+                            <Button href="/" sx={{ p: 2 }}>
                                 <Stack
                                     direction="row"
                                     spacing={1}
@@ -117,12 +129,13 @@ export class AppBar extends React.Component<{}, State> {
                                         FastchargeAPI
                                     </Typography>
                                 </Stack>
-                            </Link>
+                            </Button>
                             <Stack
                                 direction="row"
                                 display="flex"
                                 my={1}
-                                mx={5}
+                                ml={4}
+                                mr={4}
                                 flexGrow={1}
                                 height={50}
                             >
@@ -188,27 +201,46 @@ export class AppBar extends React.Component<{}, State> {
                                         <Typography>Search</Typography>
                                     </ButtonBase>
                                 </Paper>
-                                <Paper
-                                    sx={{
-                                        bgcolor: "white",
-                                        display: "flex",
-                                        ml: 3,
-                                    }}
-                                >
-                                    <ButtonBase sx={{ color: "black", px: 3 }}>
+                            </Stack>
+                            <Stack>
+                                {!this._context.isLoggedIn && (
+                                    <Button
+                                        sx={{
+                                            color: "black",
+                                            p: 2,
+                                            borderRadius: 5,
+                                        }}
+                                        href={`/auth?redirect=${this._context.route.locationHref}`}
+                                    >
                                         <Typography>Sign In</Typography>
-                                    </ButtonBase>
-                                    <Box>
-                                        <IconButton
-                                            size="large"
+                                    </Button>
+                                )}
+                                {this._context.isLoggedIn && (
+                                    <React.Fragment>
+                                        <Button
+                                            size="small"
                                             aria-label="account of current user"
                                             aria-controls="menu-appbar"
                                             aria-haspopup="true"
                                             onClick={this.handleMenu}
                                             color="inherit"
+                                            sx={{
+                                                p: 1.25,
+                                                borderRadius: "50%",
+                                                minWidth: "inherit",
+                                            }}
                                         >
-                                            <AccountCircle />
-                                        </IconButton>
+                                            <Avatar
+                                                sizes="large"
+                                                sx={{
+                                                    boxShadow: 1,
+                                                }}
+                                                src={
+                                                    this._context.firebase.user
+                                                        ?.photoURL || ""
+                                                }
+                                            />
+                                        </Button>
                                         <Menu
                                             id="menu-appbar"
                                             anchorEl={this.state.anchorEl}
@@ -234,11 +266,6 @@ export class AppBar extends React.Component<{}, State> {
                                             <MenuItem
                                                 onClick={this.handleClose}
                                             >
-                                                Profile
-                                            </MenuItem>
-                                            <MenuItem
-                                                onClick={this.handleClose}
-                                            >
                                                 <Link
                                                     href="/account"
                                                     underline="none"
@@ -247,13 +274,13 @@ export class AppBar extends React.Component<{}, State> {
                                                 </Link>
                                             </MenuItem>
                                             <MenuItem
-                                                onClick={this.handleClose}
+                                                onClick={this.handleLogout}
                                             >
                                                 Sign out
                                             </MenuItem>
                                         </Menu>
-                                    </Box>
-                                </Paper>
+                                    </React.Fragment>
+                                )}
                             </Stack>
                         </Toolbar>
                     </Container>

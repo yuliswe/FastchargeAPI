@@ -148,6 +148,9 @@ function WithContext(props: React.PropsWithChildren) {
                 secondary: {
                     main: black,
                 },
+                info: {
+                    main: blue,
+                },
             },
             shape: {
                 borderRadius: 2,
@@ -176,7 +179,8 @@ function WithContext(props: React.PropsWithChildren) {
                         },
                     },
                     defaultProps: {
-                        disableElevation: true,
+                        LinkComponent: LinkBehavior,
+                        // disableElevation: true,
                     },
                 },
                 MuiOutlinedInput: {
@@ -224,6 +228,8 @@ function WithContext(props: React.PropsWithChildren) {
         });
     }
 
+    const theme = getTheme();
+
     return (
         <React.Fragment>
             <Helmet>
@@ -263,8 +269,11 @@ function WithContext(props: React.PropsWithChildren) {
                         user: firebaseUser,
                         userPromise: firebaseInitialzation.user,
                     },
+                    isLoggedIn: firebaseUser != null,
                     route: {
                         location,
+                        locationHref:
+                            location.pathname + location.search + location.hash,
                         navigate,
                         params,
                         query: query[0],
@@ -284,9 +293,10 @@ function WithContext(props: React.PropsWithChildren) {
                             query[1](search.toString());
                         },
                     },
+                    theme,
                 }}
             >
-                <ThemeProvider theme={getTheme()}>
+                <ThemeProvider theme={theme}>
                     <CssBaseline />
                     <Helmet>
                         <link

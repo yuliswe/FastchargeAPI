@@ -23,6 +23,7 @@ module.exports = {
         "@typescript-eslint/no-unsafe-member-access": "off",
         "@typescript-eslint/no-non-null-assertion": "off",
         "@typescript-eslint/ban-types": "off",
+        "require-yield": "off",
         "prefer-const": "off",
     },
 };

@@ -1,0 +1,18 @@
+# This configuration file tells GraphQL Code Generator how
+# to generate types based on our schema.
+documents:
+  - "./src/**/*.ts"
+schema: "../../graphql-service/apollo/schema/App.graphql"
+generates:
+  # Specify where our generated types should live.
+  ./src/__generated__/gql-operations.ts:
+    plugins:
+      - "typescript"
+      - "typescript-operations"
+    config:
+      typesPrefix: GQL
+      scalars:
+        Timestamp: number
+        
+
+      

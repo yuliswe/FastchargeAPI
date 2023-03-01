@@ -7,7 +7,8 @@ type FirebaseInitializationResult = {
 export function initializeFirebase(): FirebaseInitializationResult {
     const firebaseConfig = {
         apiKey: "AIzaSyAtSOzX-i3gzBYULHltD4Xkz-H9_9U6tD8",
-        authDomain: "fastchargeapi.firebaseapp.com", // https://cloud.google.com/identity-platform/docs/show-custom-domain
+        // https://stackoverflow.com/questions/44815580/how-to-replace-the-myapp-123-firebaseapp-com-with-my-custom-domain-myapp-com
+        authDomain: "login.fastchargeapi.com", // https://cloud.google.com/identity-platform/docs/show-custom-domain
         projectId: "fastchargeapi",
         storageBucket: "fastchargeapi.appspot.com",
         messagingSenderId: "398384724830",

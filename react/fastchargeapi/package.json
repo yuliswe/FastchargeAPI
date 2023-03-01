@@ -2,6 +2,15 @@
   "name": "fastchargeapi",
   "version": "0.1.0",
   "private": true,
+  "scripts": {
+    "eject": "react-scripts eject",
+    "gen": "graphql-codegen --config codegen.yml",
+    "build": "npm run gen && react-scripts build",
+    "test": "npm run gen && react-scripts test",
+    "start": "npm run gen && PORT=8000 react-scripts start",
+    "watch": "npm run start & nodemon -e ts,tsx,yml,yaml -i build/,__generated__ --exec 'npm run gen'",
+    "fix": "eslint --fix ./"
+  },
   "dependencies": {
     "@apollo/client": "^3.7.9",
     "@aws-sdk/client-s3": "^3.279.0",
@@ -10,14 +19,18 @@
     "@emotion/styled": "^11.10.5",
     "@mui/icons-material": "^5.11.9",
     "@mui/material": "^5.11.9",
+    "@mui/x-date-pickers": "^5.0.20",
+    "chart.js": "^4.2.1",
     "commander": "^10.0.0",
+    "date-fns": "^2.29.3",
     "firebase": "^9.16.0",
     "firebaseui": "^6.0.2",
     "jose": "^4.12.0",
     "localforage": "^1.10.0",
     "match-sorter": "^6.3.1",
     "react": "^18.2.0",
-    "react-appevent-redux": "^1.0.3",
+    "react-appevent-redux": "github:ylilarry/react-appevent-redux#dist",
+    "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.2.0",
     "react-helmet-async": "^1.3.0",
     "react-router-dom": "^6.8.1",
@@ -29,7 +42,6 @@
     "web-vitals": "^2.1.4"
   },
   "devDependencies": {
-    "react-scripts": "^5.0.1",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -38,15 +50,8 @@
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
     "@types/react-router-hash-link": "^2.4.5",
-    "@types/uuid": "^9.0.1"
-  },
-  "scripts": {
-    "start": "PORT=8000 react-scripts start",
-    "build": "PORT=8000 react-scripts build",
-    "test": "PORT=8000 react-scripts test",
-    "eject": "react-scripts eject",
-    "deploy": "aws s3 sync build/ s3://fastchargeapi-react-dev --delete --profile fastchargeapi && echo https://d3dt8rnvve5enb.cloudfront.net/",
-    "fix": "eslint --fix ./"
+    "@types/uuid": "^9.0.1",
+    "react-scripts": "^5.0.1"
   },
   "eslintConfig": {
     "extends": [
