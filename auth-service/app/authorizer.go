@@ -24,11 +24,16 @@ func lambdaHandler(request events.APIGatewayCustomAuthorizerRequestTypeRequest) 
 		return allow_preflight(), nil
 	}
 
-	if request.Headers["Authorization"] == "" {
+	auth := request.Headers["Authorization"]
+	if auth == "" {
+		auth = request.Headers["authorization"]
+	}
+
+	if auth == "" {
 		return denied(), nil
 	}
 
-	if user, err := verifyIdToken(request.Headers["Authorization"]); err == nil {
+	if user, err := verifyIdToken(auth); err == nil {
 		return allowed(user), nil
 	}
 
@@ -163,8 +168,10 @@ func verifyIdToken(idToken string) (*FirebaseUserClaims, error) {
 		fmt.Println(color.Red + "Error parsing id token: " + err.Error() + color.Reset)
 		return nil, err
 	}
-	googleCert, err := getGoogleCert(tokenUnchecked.Header["kid"].(string))
+	kid := tokenUnchecked.Header["kid"].(string)
+	googleCert, err := getGoogleCert(kid)
 	if googleCert == nil {
+		fmt.Println(color.Red + "Error getting google cert (not found kid): " + kid + " " + err.Error() + color.Reset)
 		return nil, err
 	}
 
