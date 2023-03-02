@@ -75,7 +75,7 @@ const router = createBrowserRouter([
                 element: <WithContext children={<SubscriptionsPage />} />,
             },
             {
-                path: "subscriptions/:subscriptionId",
+                path: "subscriptions/:app",
                 element: <WithContext children={<SubscriptionDetailPage />} />,
             },
         ],

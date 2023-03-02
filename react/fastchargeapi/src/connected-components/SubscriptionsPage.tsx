@@ -13,36 +13,47 @@ import {
     Link,
 } from "@mui/material";
 import { SubscriptionsAppState } from "../states/SubscriptionsAppState";
+import { AppContext, ReactAppContextType } from "../AppContext";
+import {
+    SubscriptionEvent,
+    UserSubscription,
+} from "../events/SubscriptionEvent";
+import { appStore } from "../store-config";
 type Props = {
-    subscriptionsAppState: SubscriptionsAppState;
+    appState: SubscriptionsAppState;
 };
 class _SubscriptionsPage extends React.Component<Props> {
-    getSubsList() {
-        return [
-            {
-                name: "My App",
-                version: "1.0.1",
-                author: "John Doe",
-                published: new Date(),
-                subscribedTo: "Basic Plan",
-                subscribed: false,
-                subscriptionId: "1234567890",
-            },
-            {
-                name: "My App",
-                version: "1.0.1",
-                author: "John Doe",
-                published: new Date(),
-                subscribedTo: "Basic Plan",
-                subscribed: true,
-                subscriptionId: "1234567890",
-            },
-        ];
+    static contextType = ReactAppContextType;
+    get _context(): AppContext {
+        return this.context as AppContext;
     }
+
+    get appState(): SubscriptionsAppState {
+        return this.props.appState;
+    }
+
+    subscriptions(): UserSubscription[] {
+        return this.appState.subscriptions;
+    }
+
+    publishedOn(sub: UserSubscription): string {
+        return new Date().toLocaleDateString();
+    }
+
+    plan(sub: UserSubscription): string {
+        return sub.pricing.name;
+    }
+
+    componentDidMount(): void {
+        appStore.dispatch(
+            new SubscriptionEvent.LoadSubscriptions(this._context)
+        );
+    }
+
     render() {
         return (
             <Grid container spacing={2}>
-                {this.getSubsList().map((sub) => (
+                {this.subscriptions().map((sub) => (
                     <Grid item>
                         <Card sx={{ p: 3, borderRadius: 5 }}>
                             <CardContent>
@@ -53,7 +64,7 @@ class _SubscriptionsPage extends React.Component<Props> {
                                         fontWeight={700}
                                         alignItems="center"
                                     >
-                                        {sub.name}
+                                        {sub.app.name}
                                     </Typography>
                                     <Typography
                                         variant="body1"
@@ -61,7 +72,7 @@ class _SubscriptionsPage extends React.Component<Props> {
                                         fontSize={14}
                                         alignItems="center"
                                     >
-                                        {sub.version}
+                                        {"v1.0.0"}
                                     </Typography>
                                     <Typography
                                         variant="body1"
@@ -69,15 +80,14 @@ class _SubscriptionsPage extends React.Component<Props> {
                                         display="flex"
                                         alignItems="center"
                                     >
-                                        {sub.author}
+                                        {sub.app.owner.author}
                                     </Typography>
                                 </Stack>
                                 <Typography variant="body1">
-                                    Published on{" "}
-                                    {sub.published.toLocaleDateString()}
+                                    Published on {this.publishedOn(sub)}
                                 </Typography>
                                 <Typography variant="body1" mt={2}>
-                                    {sub.subscribedTo}
+                                    Plan: {this.plan(sub)}
                                 </Typography>
                             </CardContent>
                             <CardActions>
@@ -85,7 +95,7 @@ class _SubscriptionsPage extends React.Component<Props> {
                                     variant="contained"
                                     color="secondary"
                                     LinkComponent={Link}
-                                    href={`${sub.subscriptionId}`}
+                                    href={sub.app.name}
                                 >
                                     View
                                 </Button>
@@ -100,6 +110,6 @@ class _SubscriptionsPage extends React.Component<Props> {
 
 export const SubscriptionsPage = connect<Props, {}, {}, RootAppState>(
     (rootAppState: RootAppState) => ({
-        subscriptionsAppState: rootAppState.appDetail,
+        appState: rootAppState.subscriptions,
     })
 )(_SubscriptionsPage);

@@ -4,14 +4,15 @@ import {
     Typography,
     CardActions,
     Button,
+    Stack,
 } from "@mui/material";
 import React from "react";
 
 export type PricingCardProps = {
     name: string;
-    description: string;
+    callToAction: string;
     minMonthlyCharge: string;
-    chargePerCall: string;
+    chargePerRequest: string;
     freeQuota: number;
     actionButton: React.ReactNode;
 };
@@ -25,16 +26,22 @@ export class PricingCard extends React.PureComponent<PricingCardProps> {
                         {this.props.name}
                     </Typography>
                     <Typography variant="body1" mb={1}>
-                        {this.props.description}
+                        {this.props.callToAction}
                     </Typography>
                     <Typography variant="body1">
-                        ${this.props.chargePerCall} per request
+                        ${this.props.chargePerRequest} per request
                     </Typography>
                     <Typography>
                         + ${this.props.minMonthlyCharge} per active month
                     </Typography>
                     <Typography variant="body1">
-                        First {this.props.freeQuota} requests are free.
+                        {this.props.freeQuota > 0
+                            ? `First ${this.props.freeQuota} requests are free.`
+                            : "No free quota."}
+                    </Typography>
+
+                    <Typography variant="caption">
+                        {this.props.callToAction}
                     </Typography>
                 </CardContent>
                 <CardActions>{this.props.actionButton}</CardActions>

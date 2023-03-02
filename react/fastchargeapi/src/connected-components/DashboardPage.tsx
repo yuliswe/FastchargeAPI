@@ -32,6 +32,10 @@ import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { Line } from "react-chartjs-2";
 import "chart.js/auto";
+import {
+    LogTable,
+    LogTableOnChangeHandler,
+} from "../stateless-components/LogTable";
 
 type Props = {
     dashboard: DashboardAppState;
@@ -203,90 +207,58 @@ class _DashboardPage extends React.Component<Props, State> {
         return data;
     }
 
+    handleActivitiesPageChange: LogTableOnChangeHandler = ({
+        page,
+        dateRange,
+    }) => {
+        appStore.dispatch(
+            new DashboardEvent.LoadActivities(this._context, {
+                beforeDate: dateRange.end,
+            })
+        );
+    };
+
     renderActivities() {
         return (
-            <Box>
-                <Stack
-                    direction="row"
-                    display="flex"
-                    alignItems="center"
-                    mb={2}
-                >
-                    <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                        Activities
-                    </Typography>
-                    {/* <Pagination
-                        count={this.numPages()}
-                        page={this.activityPageNum()}
-                        onChange={(e, page) => this.handlePageChange(page)}
-                        sx={{ flexGrow: 1 }}
-                    /> */}
-                    <LocalizationProvider dateAdapter={AdapterDateFns}>
-                        <DatePicker
-                            label="Display up to"
-                            value={this.activityRange()}
-                            onChange={this.handleActivityDateChange}
-                            renderInput={(params) => <TextField {...params} />}
-                        />
-                    </LocalizationProvider>
-                </Stack>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell sx={{ whiteSpace: "nowrap" }}>
-                                Date
-                            </TableCell>
-                            <TableCell sx={{ whiteSpace: "nowrap" }}>
-                                Reason
-                            </TableCell>
-                            <TableCell sx={{ width: "100%" }}>
-                                Description
-                            </TableCell>
-                            <TableCell sx={{ whiteSpace: "nowrap" }}>
-                                Earned
-                            </TableCell>
-                            <TableCell sx={{ whiteSpace: "nowrap" }}>
-                                Spent
-                            </TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {this.currentPageActivities().map((activity, index) => (
-                            <TableRow key={index}>
-                                <TableCell sx={{ whiteSpace: "nowrap" }}>
-                                    {this.date(activity)}
-                                </TableCell>
-                                <TableCell sx={{ whiteSpace: "nowrap" }}>
-                                    {this.reason(activity)}
-                                </TableCell>
-                                <TableCell sx={{ width: "100%" }}>
-                                    {activity.description}
-                                </TableCell>
-                                <TableCell sx={{ whiteSpace: "nowrap" }}>
-                                    {this.earned(activity)}
-                                </TableCell>
-                                <TableCell sx={{ whiteSpace: "nowrap" }}>
-                                    {this.spent(activity)}
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-                {this.allActivities().length === 0 && (
-                    <Typography variant="body1" m={2} sx={{ opacity: 0.8 }}>
-                        No Content
-                    </Typography>
-                )}
-
-                {this.currentPageActivities().length > 0 && (
-                    <Pagination
-                        count={this.numPages()}
-                        page={this.activityPageNum()}
-                        onChange={(e, page) => this.handlePageChange(page)}
-                        sx={{ flexGrow: 1, mt: 2 }}
-                    />
-                )}
-            </Box>
+            <LogTable<AccountActivity>
+                tableName="Activities"
+                urlNamespace="s"
+                activities={this.allActivities()}
+                activitiesPerPage={20}
+                onChange={this.handleActivitiesPageChange}
+                renderCell={(head: string, activity: AccountActivity) => {
+                    switch (head) {
+                        case "Date":
+                            return this.date(activity);
+                        case "Reason":
+                            return this.reason(activity);
+                        case "Description":
+                            return activity.description;
+                        case "Earned":
+                            return this.earned(activity);
+                        case "Spent":
+                            return this.spent(activity);
+                    }
+                }}
+                headers={[
+                    {
+                        title: "Date",
+                    },
+                    {
+                        title: "Reason",
+                    },
+                    {
+                        title: "Description",
+                        flexGrow: true,
+                    },
+                    {
+                        title: "Earned",
+                    },
+                    {
+                        title: "Spent",
+                    },
+                ]}
+            />
         );
     }
 

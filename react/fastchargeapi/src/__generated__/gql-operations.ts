@@ -45,16 +45,16 @@ export type GQLAccountHistory = {
 export type GQLApp = {
   __typename?: 'App';
   createAppUserToken: Scalars['String'];
-  deleteApp?: Maybe<GQLApp>;
-  description?: Maybe<Scalars['String']>;
-  endpoints?: Maybe<Array<Maybe<GQLEndpoint>>>;
-  gatewayMode?: Maybe<GQLGatewayMode>;
+  deleteApp: GQLApp;
+  description: Scalars['String'];
+  endpoints: Array<GQLEndpoint>;
+  gatewayMode: GQLGatewayMode;
   name: Scalars['String'];
-  ownedByYou?: Maybe<Scalars['Boolean']>;
-  owner?: Maybe<GQLUser>;
-  pricingPlans?: Maybe<Array<Maybe<GQLPricing>>>;
-  revokeAppUserToken?: Maybe<Scalars['Boolean']>;
-  updateApp?: Maybe<GQLApp>;
+  ownedByYou: Scalars['Boolean'];
+  owner: GQLUser;
+  pricingPlans: Array<GQLPricing>;
+  revokeAppUserToken: Scalars['Boolean'];
+  updateApp: GQLApp;
 };
 
 
@@ -234,6 +234,7 @@ export type GQLQueryStripePaymentAcceptArgs = {
 
 export type GQLQuerySubscriptionArgs = {
   app?: InputMaybe<Scalars['String']>;
+  pk?: InputMaybe<Scalars['ID']>;
   subscriber?: InputMaybe<Scalars['Email']>;
 };
 
@@ -296,10 +297,18 @@ export type GQLStripeTransfer = {
 export type GQLSubscribe = {
   __typename?: 'Subscribe';
   app: GQLApp;
-  createdAt: Scalars['Int'];
+  createdAt: Scalars['Timestamp'];
   deleteSubscription?: Maybe<GQLSubscribe>;
+  pk: Scalars['String'];
   pricing: GQLPricing;
   subscriber: GQLUser;
+  updateSubscription?: Maybe<GQLSubscribe>;
+  updatedAt: Scalars['Timestamp'];
+};
+
+
+export type GQLSubscribeUpdateSubscriptionArgs = {
+  pricing?: InputMaybe<Scalars['ID']>;
 };
 
 export type GQLUsageLog = {
@@ -315,7 +324,13 @@ export type GQLUsageLog = {
 
 export type GQLUsageSummary = {
   __typename?: 'UsageSummary';
+  app: GQLApp;
+  billed: Scalars['Boolean'];
+  billedAt?: Maybe<Scalars['Timestamp']>;
+  billingAccountActivity?: Maybe<GQLAccountActivity>;
   createdAt: Scalars['Timestamp'];
+  subscriber: GQLUser;
+  volume: Scalars['Int'];
 };
 
 export type GQLUser = {
@@ -355,9 +370,16 @@ export type GQLUserUpdateUserArgs = {
 
 export type GQLUserUsageLogsArgs = {
   app?: InputMaybe<Scalars['String']>;
+  dateRange?: InputMaybe<GQLDateRangeInput>;
   limit?: InputMaybe<Scalars['Int']>;
   path?: InputMaybe<Scalars['String']>;
-  start?: InputMaybe<Scalars['Int']>;
+};
+
+
+export type GQLUserUsageSummariesArgs = {
+  app: Scalars['ID'];
+  dateRange?: InputMaybe<GQLDateRangeInput>;
+  limit?: InputMaybe<Scalars['Int']>;
 };
 
 export type GQLGetAccountBalanceQueryVariables = Exact<{
@@ -382,6 +404,51 @@ export type GQLGetAccountHistoriesQueryVariables = Exact<{
 
 
 export type GQLGetAccountHistoriesQuery = { __typename?: 'Query', user: { __typename?: 'User', accountHistories: Array<{ __typename?: 'AccountHistory', closingBalance: string, closingTime: number }> } };
+
+export type GQLGetUserAppsQueryVariables = Exact<{
+  email: Scalars['Email'];
+}>;
+
+
+export type GQLGetUserAppsQuery = { __typename?: 'Query', user: { __typename?: 'User', apps: Array<{ __typename?: 'App', name: string, description: string }> } };
+
+export type GQLGetAvailablePlansQueryVariables = Exact<{
+  appName: Scalars['String'];
+}>;
+
+
+export type GQLGetAvailablePlansQuery = { __typename?: 'Query', app: { __typename?: 'App', pricingPlans: Array<{ __typename?: 'Pricing', name: string, pk: string, minMonthlyCharge: string, chargePerRequest: string, freeQuota: number, callToAction: string }> } };
+
+export type GQLGetUserSubscriptionDetailQueryVariables = Exact<{
+  user: Scalars['Email'];
+  appName: Scalars['String'];
+}>;
+
+
+export type GQLGetUserSubscriptionDetailQuery = { __typename?: 'Query', subscription: { __typename?: 'Subscribe', pricing: { __typename?: 'Pricing', pk: string, name: string } } };
+
+export type GQLGetSubscriptionDetailAppInfoQueryVariables = Exact<{
+  appName: Scalars['String'];
+}>;
+
+
+export type GQLGetSubscriptionDetailAppInfoQuery = { __typename?: 'Query', app: { __typename?: 'App', name: string, description: string } };
+
+export type GQLGetUsageSummaryQueryVariables = Exact<{
+  userEmail: Scalars['Email'];
+  appName: Scalars['ID'];
+  dateRange?: InputMaybe<GQLDateRangeInput>;
+}>;
+
+
+export type GQLGetUsageSummaryQuery = { __typename?: 'Query', user: { __typename?: 'User', usageSummaries: Array<{ __typename?: 'UsageSummary', createdAt: number, volume: number, billingAccountActivity?: { __typename?: 'AccountActivity', amount: string } | null }> } };
+
+export type GQLGetUserSubscriptionsQueryVariables = Exact<{
+  email: Scalars['Email'];
+}>;
+
+
+export type GQLGetUserSubscriptionsQuery = { __typename?: 'Query', user: { __typename?: 'User', subscriptions: Array<{ __typename?: 'Subscribe', pk: string, pricing: { __typename?: 'Pricing', name: string }, app: { __typename?: 'App', name: string, owner: { __typename?: 'User', author: string } } }> } };
 
 export type GQLPutSecretMutationVariables = Exact<{
   key: Scalars['String'];
