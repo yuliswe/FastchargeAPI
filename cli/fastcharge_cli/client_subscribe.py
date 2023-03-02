@@ -2,6 +2,8 @@ from typing import Optional
 
 from blessings import Terminal
 
+from .validate import validate_app_exists
+
 from .dev_pricing import PricingInfo, pretty_print_app_pricing
 from .dev_app import AppInfo, get_app
 from .graphql import get_client_info
@@ -74,107 +76,138 @@ def subscribe_list():
 
 @fastcharge_subscribe.command("add")
 @click.argument("app_name", required=True)
-@click.option("-p", "--plan", help="ID of the plan to subscribe to.")
+@click.option("-p", "--plan", help="Name of the plan to subscribe to.")
 def fastcharge_subscription_add(app_name: str, plan: Optional[str] = None):
     """Subscribe to an app."""
     client, email = get_client_info()
-    app = get_app(app_name)
-    if app is None:
-        echo(colorama.Fore.RED + f'An app with the name "{app_name}" does not exist.')
-        exit(1)
-    # Get the pricing plan the user is currently subscribed to.
+    validate_app_exists(app_name)
+    # Get the pricing plan the user is currently subscribed to, to provide a better output.
     try:
         current_sub = client.execute(
             gql(
                 """
                     query GetCurrentSubscription($user_email: Email, $app_name: String) {
                         subscription(subscriber: $user_email, app: $app_name) {
+                            pk
                             pricing {
                                 name
-                                callToAction
-                                minMonthlyCharge
-                                chargePerRequest
                             }
                         }
                     }
                     """
             ),
             variable_values={"app_name": app_name, "user_email": email},
-        )["subscription"]["pricing"]
+        )["subscription"]
     except NotFound:
         current_sub = None
-    # If no plan is specified, print out the available plans.
+    # If no plan is specified, print out the available plans and exit.
     if not plan:
-        if current_sub:
-            echo(
-                terminal.green
-                + terminal.bold
-                + f'\nYou are currently subscribed to "{app_name}" with the plan "{current_sub["name"]}".\n'
-                + terminal.normal
-            )
-        app_info = client.execute(
-            gql(
-                """
-                query GetPricingPlans($app: String!){
-                    app(name: $app) {
-                        name
-                        description
-                        pricingPlans {
-                            name
-                            callToAction
-                            minMonthlyCharge
-                            chargePerRequest
-                        }
-                    }
-                }
-                """
-            ),
-            variable_values={"app": app_name},
-        )["app"]
         echo(
             colorama.Fore.YELLOW
-            + "To subcribe to a new plan, specify with --plan [id].\n"
+            + "To subcribe to a new plan, specify with --plan [NAME]."
+            + colorama.Fore.RESET
         )
-        pretty_print_app_pricing(app_info)
-        exit(1)
-    # Delete old plan the user is currently subscribed to.
-    if current_sub:
-        unsubscribe(app_name)
-    # Subscribe to new plan
-    try:
-        result = client.execute(
+        # List all the pricing plans for the app, and get the one the user wants to
+        # subscribe to, saved as `subscribing_pricing`.
+        available_plans = client.execute(
             gql(
                 """
-                mutation Subscribe($subscriber: Email!, $app: String!, $pricing: ID!) {
-                    createSubscription(subscriber: $subscriber, app: $app, pricing: $pricing) {
-                        pricing {
-                            name
-                        }
-                        app {
+                query ListAppPricing($app_name: String) {
+                    app(name: $app_name) {
+                        pricingPlans {
                             name
                         }
                     }
                 }
                 """
             ),
-            {"subscriber": email, "app": app_name, "pricing": plan},
-        )["createSubscription"]
-    except NotFound:
+            variable_values={"app_name": app_name},
+        )["app"]["pricingPlans"]
+        available_plans = [p["name"] for p in available_plans]
+        echo(f"Available plans: {available_plans}")
+        exit(1)
+    # List all the pricing plans for the app, and get the one the user wants to
+    # subscribe to, saved as `subscribing_pricing`.
+    result = client.execute(
+        gql(
+            """
+            query ListAppPricing($app_name: String) {
+                app(name: $app_name) {
+                    pricingPlans {
+                        name
+                        pk
+                    }
+                }
+            }
+            """
+        ),
+        variable_values={"app_name": app_name},
+    )
+    pricing_plans = result["app"]["pricingPlans"]
+    subscribing_pricing: str = None
+    for p in pricing_plans:
+        if p["name"] == plan:
+            subscribing_pricing = p
+            break
+    if subscribing_pricing is None:
         echo(
-            terminal.red
-            + terminal.bold
-            + f"Pricing plan does not exist: {plan}"
-            + terminal.noemal
+            colorama.Fore.RED
+            + f'Pricing plan with the name "{plan}" does not exist.'
+            + colorama.Fore.RESET
+        )
+        available_plans = [p["name"] for p in pricing_plans]
+        echo(f"Available plans: {available_plans}")
+        exit(1)
+    if current_sub is None:
+        # Subscribe to new plan
+        client.execute(
+            gql(
+                """
+                mutation CreateSubscribe($subscriber: Email!, $app: String!, $pricing: ID!) {
+                    createSubscription(subscriber: $subscriber, app: $app, pricing: $pricing) {
+                        createdAt
+                    }
+                }
+                """
+            ),
+            {
+                "subscriber": email,
+                "app": app_name,
+                "pricing": subscribing_pricing["pk"],
+            },
+        )
+    elif current_sub["pricing"]["name"] == plan:
+        echo(
+            colorama.Fore.YELLOW
+            + f'You are already subscribed to the plan "{plan}".'
+            + colorama.Fore.RESET
         )
         exit(1)
-    pricing = result["pricing"]
+    else:
+        client.execute(
+            gql(
+                """
+                query UpdateSubscribe($subPK: ID!, $newPricing: ID!) {
+                    subscription(pk: $subPK) {
+                        updateSubscription(pricing: $newPricing) {
+                            updatedAt
+                        }
+                    }
+                }
+                """
+            ),
+            {
+                "subPK": current_sub["pk"],
+                "newPricing": subscribing_pricing["pk"],
+            },
+        )
     echo(
         terminal.green
         + terminal.bold
         + (
-            f"Switching to a new plan: \"{pricing['name']}\""
+            f"Switching to a new plan: \"{subscribing_pricing['name']}\"."
             if current_sub
-            else f"Subscribed to: \"{pricing['name']}\""
+            else f"Subscribed to: \"{subscribing_pricing['name']}\"."
         )
         + terminal.normal
     )
