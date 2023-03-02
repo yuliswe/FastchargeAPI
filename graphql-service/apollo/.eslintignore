@@ -4,4 +4,3 @@ dist
 build
 *.js
 __generated__
-tests

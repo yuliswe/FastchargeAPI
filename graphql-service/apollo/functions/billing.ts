@@ -8,6 +8,7 @@ import { Chalk } from "chalk";
 import { getAppAuthorUser } from "./app";
 import { UserPK } from "./UserPK";
 import { collectAccountActivities } from "./account";
+import { AccountActivityPK } from "./AccountActivityPK";
 const chalk = new Chalk({ level: 3 });
 
 /**
@@ -53,6 +54,11 @@ export async function generateAccountActivities(
             amount: amount.toString(),
             usageSummary: UsageSummaryPK.stringify(usageSummary),
             description: `Per-request spending to ${usageSummary.app}.`,
+        }).then(async (activity) => {
+            usageSummary.billingAccountActivity =
+                AccountActivityPK.stringify(activity);
+            await usageSummary.save();
+            return activity;
         }),
         appAuthorPerRequest: context.batched.AccountActivity.create({
             user: appAuthor,

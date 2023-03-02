@@ -9,6 +9,7 @@ import {
 } from "../dynamoose/models";
 import { AccountHistoryPK } from "./AccountHistoryPK";
 import Decimal from "decimal.js-light";
+import { AccountActivityPK } from "./AccountActivityPK";
 
 /**
  * Collect any account activities that are in the pending status, and have the
@@ -116,4 +117,11 @@ export async function getUserBalance(
     } else {
         return "0";
     }
+}
+
+export function getAccountActivityByPK(
+    context: RequestContext,
+    pk: string
+): Promise<AccountActivity> {
+    return context.batched.AccountActivity.get(AccountActivityPK.parse(pk));
 }

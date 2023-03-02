@@ -12,6 +12,7 @@ import {
     GQLUserResolvers,
     GQLUserUpdateUserArgs,
     GQLUserUsageLogsArgs,
+    GQLUserUsageSummariesArgs,
 } from "../__generated__/resolvers-types";
 import { UserPK } from "../functions/UserPK";
 import { getUserBalance } from "../functions/account";
@@ -30,7 +31,7 @@ export const userResolvers: GQLResolvers & {
         },
         async apps(
             parent: User,
-            args: never,
+            args: {},
             context: RequestContext,
             info: GraphQLResolveInfo
         ) {
@@ -40,7 +41,7 @@ export const userResolvers: GQLResolvers & {
         },
         async subscriptions(
             parent: User,
-            args: never,
+            args: {},
             context: RequestContext,
             info: GraphQLResolveInfo
         ) {
@@ -120,11 +121,18 @@ export const userResolvers: GQLResolvers & {
             context,
             info
         ) {
-            let { app, path, limit, start } = args;
+            let { app, path, limit, dateRange } = args;
             let usage = await context.batched.UsageLog.many(
                 {
                     subscriber: parent.email,
-                    app: app || undefined,
+                    app: app,
+                    path,
+                    createdAt: dateRange
+                        ? {
+                              le: dateRange.end,
+                              ge: dateRange.start,
+                          }
+                        : undefined,
                 },
                 {
                     limit: Math.min(limit || 1000, 1000),
@@ -133,17 +141,35 @@ export const userResolvers: GQLResolvers & {
             return usage;
         },
 
-        async usageSummaries(parent: User, args, context, info) {
-            let usageSummaries = await context.batched.UsageSummary.many({
-                subscriber: parent.email,
-            });
+        async usageSummaries(
+            parent: User,
+            { limit, app, dateRange }: GQLUserUsageSummariesArgs,
+            context,
+            info
+        ) {
+            let usageSummaries = await context.batched.UsageSummary.many(
+                {
+                    subscriber: parent.email,
+                    app,
+                    createdAt: dateRange
+                        ? {
+                              le: dateRange.end,
+                              ge: dateRange.start,
+                          }
+                        : undefined,
+                },
+                {
+                    limit: Math.min(limit || 1000, 1000),
+                    sort: "descending",
+                }
+            );
             return usageSummaries;
         },
     },
     Query: {
         async users(
             parent: {},
-            args: never,
+            args: {},
             context: RequestContext,
             info: GraphQLResolveInfo
         ): Promise<User[]> {

@@ -24,11 +24,11 @@
     "strictNullChecks": true,
     "useUnknownInCatchVariables": true,
     "strictFunctionTypes": false,
-    "strictPropertyInitialization": false // doesn't work with our Item type declarations in models.ts
+    "strictPropertyInitialization": false, // doesn't work with our Item type declarations in models.ts
+    "allowJs": true
   },
   "exclude": [
     "node_modules",
     "dist",
-    "tests"
   ]
 }

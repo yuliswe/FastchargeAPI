@@ -168,7 +168,7 @@ const PricingTableSchema = new dynamoose.Schema(
     }
 );
 
-const SubscribeTableSchema = new dynamoose.Schema(
+const SubscriptionTableSchema = new dynamoose.Schema(
     {
         subscriber: {
             hashKey: true,
@@ -234,6 +234,7 @@ const UsageSummaryTableSchema = new dynamoose.Schema(
         queueSize: { type: Number, required: true },
         maxQueueSize: { type: Number, default: undefined },
         maxSecondsInQueue: { type: Number, default: undefined },
+        billingAccountActivity: { type: String, default: undefined },
     },
     {
         timestamps: {
@@ -420,11 +421,12 @@ export class Pricing extends Item {
 }
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
-export class Subscribe extends Item {
+export class Subscription extends Item {
     subscriber: string;
     app: string;
     pricing: string;
     createdAt: number;
+    updatedAt: number;
 }
 
 /// When creating a new Item class, remember to add it to codegen.yml mappers
@@ -462,6 +464,7 @@ export class UsageSummary extends Item {
     queueSize: number; // Number of usage logs in the queue when collected
     maxQueueSize: number | null; // Max queue size setting when collected, for debug purpose
     maxSecondsInQueue: number | null; // Max seconds in queue setting when collected, for debug purpose
+    billingAccountActivity: string | null; // ID of the AccountActivity item or null if not yet billed
 }
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
@@ -544,9 +547,9 @@ export const EndpointModel = dynamoose.model<Endpoint>(
 export const UserModel = dynamoose.model<User>("User", UserTableSchema, {
     ...tableConfigs,
 });
-export const SubscribeModel = dynamoose.model<Subscribe>(
-    "Subscribe",
-    SubscribeTableSchema,
+export const SubscriptionModel = dynamoose.model<Subscription>(
+    "Subscription",
+    SubscriptionTableSchema,
     { ...tableConfigs }
 );
 export const PricingModel = dynamoose.model<Pricing>(

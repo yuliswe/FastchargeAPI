@@ -33,23 +33,42 @@ export const pricingResolvers: GQLResolvers = {
     Mutation: {
         async createPricing(
             parent: {},
-            args: GQLMutationCreatePricingArgs,
+            {
+                app,
+                callToAction,
+                chargePerRequest,
+                minMonthlyCharge,
+                name,
+            }: GQLMutationCreatePricingArgs,
             context,
             info
         ) {
-            await context.batched.App.get(args.app); // checks if app exists
-            if (!(await Can.createPricing(args, context))) {
+            await context.batched.App.get(app); // checks if app exists
+            let existingCount = await context.batched.Pricing.count({
+                app,
+            });
+            if (existingCount > 3) {
+                throw new Error("Too many pricings for this app");
+            }
+            if (
+                !(await Can.createPricing(
+                    {
+                        app,
+                    },
+                    context
+                ))
+            ) {
                 throw new Denied();
             }
             // Update these because the client does not provide them.
-            let minMonthlyChargeApprox = Number.parseFloat(
-                args.minMonthlyCharge
-            );
-            let chargePerRequestApprox = Number.parseFloat(
-                args.chargePerRequest
-            );
+            let minMonthlyChargeApprox = Number.parseFloat(minMonthlyCharge);
+            let chargePerRequestApprox = Number.parseFloat(chargePerRequest);
             let pricing = await context.batched.Pricing.create({
-                ...args,
+                app,
+                callToAction,
+                chargePerRequest,
+                minMonthlyCharge,
+                name,
                 minMonthlyChargeApprox,
                 chargePerRequestApprox,
             });

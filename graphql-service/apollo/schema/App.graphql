@@ -13,7 +13,7 @@ type Query {
     endpoint(ref: ID, app: String, path: String): Endpoint!
     endpoints: [Endpoint] # Get all endpoints in the system
     ### Subscriptions API
-    subscription(subscriber: Email, app: String): Subscribe!
+    subscription(pk: ID, subscriber: Email, app: String): Subscribe!
 
     stripePaymentAccept(stripeSessionId: String!): StripePaymentAccept!
 
@@ -110,12 +110,16 @@ type User {
         app: String
         path: String
         limit: Int = 5
-        start: Int = 0
+        dateRange: DateRangeInput
     ): [UsageLog!]!
 
     updateUser(stripeCustomerId: String, stripeConnectAccountId: String): User
 
-    usageSummaries: [UsageSummary!]!
+    usageSummaries(
+        app: ID!
+        limit: Int = 1000 # Support maximum of 1000
+        dateRange: DateRangeInput
+    ): [UsageSummary!]!
 
     accountActivities(
         limit: Int = 1000 # Support maximum of 1000
@@ -140,17 +144,17 @@ enum SortDirection {
 
 type App {
     name: String!
-    description: String
-    owner: User
-    endpoints: [Endpoint]
-    ownedByYou: Boolean
-    pricingPlans: [Pricing]
-    gatewayMode: GatewayMode
+    description: String!
+    owner: User!
+    endpoints: [Endpoint!]!
+    ownedByYou: Boolean!
+    pricingPlans: [Pricing!]!
+    gatewayMode: GatewayMode!
 
-    updateApp(description: String, gatewayMode: GatewayMode): App
-    deleteApp: App
+    updateApp(description: String, gatewayMode: GatewayMode): App!
+    deleteApp: App!
     createAppUserToken: String!
-    revokeAppUserToken: Boolean
+    revokeAppUserToken: Boolean!
 }
 
 type Endpoint {
@@ -181,12 +185,15 @@ type Pricing {
 }
 
 type Subscribe {
+    pk: String!
     pricing: Pricing!
     subscriber: User!
     app: App!
-    createdAt: Int!
+    createdAt: Timestamp!
+    updatedAt: Timestamp!
 
     deleteSubscription: Subscribe
+    updateSubscription(pricing: ID): Subscribe
 }
 
 type UsageLog {
@@ -200,11 +207,13 @@ type UsageLog {
 }
 
 type UsageSummary {
-    # subscriber: User!
-    # volume: Int!
-    # billed: Boolean!
-    # billedAt: Timestamp
+    app: App!
+    subscriber: User!
+    volume: Int!
+    billed: Boolean!
+    billedAt: Timestamp
     createdAt: Timestamp!
+    billingAccountActivity: AccountActivity
 }
 
 type StripePaymentAccept {

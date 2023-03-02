@@ -45,8 +45,10 @@ export const appResolvers: GQLResolvers = {
             }
             return user;
         },
-        async pricingPlans(parent, args, context, info) {
-            return await context.batched.Pricing.many({ app: parent.name });
+        async pricingPlans(parent: App, args: {}, context: RequestContext) {
+            return await context.batched.Pricing.many({
+                app: parent.name,
+            });
         },
         async description(parent, args, context, info) {
             let app = await context.batched.App.get(parent.name);

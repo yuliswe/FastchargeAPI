@@ -8,3 +8,10 @@ export async function getAppAuthorUser(
     let appAuthor = await context.batched.User.get({ email: app.owner });
     return appAuthor;
 }
+
+export async function getAppByPK(
+    context: RequestContext,
+    pk: string
+): Promise<App> {
+    return context.batched.App.get(pk);
+}

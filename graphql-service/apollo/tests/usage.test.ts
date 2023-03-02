@@ -5,6 +5,7 @@ import { collectUsageLogs as collectUsageSummary } from "../functions/usage";
 import { AlreadyExists } from "../errors";
 import { generateAccountActivities } from "../functions/billing";
 import {
+    Pricing,
     PricingModel,
     UsageLogModel,
     UsageSummaryModel,
@@ -50,26 +51,24 @@ describe("Usage API", () => {
 
     let pricingPK: string;
     test("create a Pricing or use existing", async () => {
-        try {
-            let pricing = await context.batched.Pricing.create({
+        let pricingls = await context.batched.Pricing.many({
+            name: "default",
+            app: "myapp",
+            minMonthlyCharge: "0.001",
+            chargePerRequest: "0.001",
+        });
+        let pricing: Pricing;
+        if (pricingls.length > 0) {
+            pricing = pricingls[0];
+        } else {
+            pricing = await context.batched.Pricing.create({
                 name: "default",
                 app: "myapp",
                 minMonthlyCharge: "0.001",
                 chargePerRequest: "0.001",
             });
-            pricingPK = PricingPK.stringify(pricing);
-        } catch (e) {
-            if (e instanceof AlreadyExists) {
-                console.log("App already exists");
-                let pricing = await context.batched.Pricing.many({
-                    app: "myapp",
-                    name: "default",
-                })[0];
-                pricingPK = PricingPK.stringify(pricing);
-            } else {
-                throw e;
-            }
         }
+        pricingPK = PricingPK.stringify(pricing);
     });
 
     let usageLogPK: string;

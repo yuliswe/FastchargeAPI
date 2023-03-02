@@ -1,4 +1,4 @@
-import { App, Endpoint, Pricing, Subscribe, User } from "./dynamoose/models";
+import { App, Endpoint, Pricing, Subscription, User } from "./dynamoose/models";
 import { Denied } from "./errors";
 import { RequestContext } from "./RequestContext";
 import {
@@ -94,8 +94,8 @@ export const Can = {
         return await Promise.resolve(true);
     },
     async deleteSubscribe(
-        parent: Subscribe,
-        args: never,
+        parent: Subscription,
+        args: {},
         context: RequestContext
     ): Promise<boolean> {
         return await Promise.resolve(true);

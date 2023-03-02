@@ -2,7 +2,8 @@ import type { JestConfigWithTsJest } from "ts-jest";
 
 const jestConfig: JestConfigWithTsJest = {
     // [...]
-    preset: "ts-jest/presets/default-esm", // or other ESM presets
+    preset: "ts-jest/presets/js-with-ts", // or other ESM presets
+    testEnvironment: "node",
     moduleNameMapper: {
         "^(\\.{1,2}/.*)\\.js$": "$1",
     },
@@ -16,6 +17,8 @@ const jestConfig: JestConfigWithTsJest = {
             },
         ],
     },
+    transformIgnorePatterns: ["/node_modules/(?!(chalk)/)"],
+    modulePathIgnorePatterns: ["dist"],
 };
 
 export default jestConfig;

@@ -28,7 +28,7 @@ generates:
         User: ../dynamoose/models#User
         Endpoint: ../dynamoose/models#Endpoint
         Pricing: ../dynamoose/models#Pricing
-        Subscribe: ../dynamoose/models#Subscribe
+        Subscribe: ../dynamoose/models#Subscription
         UsageLog: ../dynamoose/models#UsageLog
         StripePaymentAccept: ../dynamoose/models#StripePaymentAccept
         StripeTransfer: ../dynamoose/models#StripeTransfer
