@@ -79,6 +79,7 @@ export type GQLEndpoint = {
   deleteEndpoint?: Maybe<GQLEndpoint>;
   description?: Maybe<Scalars['String']>;
   destination?: Maybe<Scalars['String']>;
+  method: GQLHttpMethod;
   path: Scalars['String'];
   ref: Scalars['String'];
   updateEndpoint?: Maybe<GQLEndpoint>;
@@ -92,6 +93,17 @@ export type GQLEndpointUpdateEndpointArgs = {
 };
 
 export { GatewayMode };
+
+export enum GQLHttpMethod {
+  Any = 'ANY',
+  Delete = 'DELETE',
+  Get = 'GET',
+  Head = 'HEAD',
+  Options = 'OPTIONS',
+  Patch = 'PATCH',
+  Post = 'POST',
+  Put = 'PUT'
+}
 
 export type GQLMutation = {
   __typename?: 'Mutation';
@@ -461,6 +473,7 @@ export type GQLResolversTypes = ResolversObject<{
   Email: ResolverTypeWrapper<Scalars['Email']>;
   Endpoint: ResolverTypeWrapper<EndpointData>;
   GatewayMode: GatewayMode;
+  HTTPMethod: GQLHttpMethod;
   ID: ResolverTypeWrapper<Scalars['ID']>;
   Int: ResolverTypeWrapper<Scalars['Int']>;
   Mutation: ResolverTypeWrapper<{}>;
@@ -543,6 +556,7 @@ export type GQLEndpointResolvers<ContextType = RequestContext, ParentType extend
   deleteEndpoint?: Resolver<Maybe<GQLResolversTypes['Endpoint']>, ParentType, ContextType>;
   description?: Resolver<Maybe<GQLResolversTypes['String']>, ParentType, ContextType>;
   destination?: Resolver<Maybe<GQLResolversTypes['String']>, ParentType, ContextType>;
+  method?: Resolver<GQLResolversTypes['HTTPMethod'], ParentType, ContextType>;
   path?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
   ref?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
   updateEndpoint?: Resolver<Maybe<GQLResolversTypes['Endpoint']>, ParentType, ContextType, Partial<GQLEndpointUpdateEndpointArgs>>;

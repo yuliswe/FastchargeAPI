@@ -1,7 +1,7 @@
 import { Item } from "dynamoose/dist/Item";
 import { RequestContext } from "../RequestContext";
 import { UsageSummary } from "../dynamoose/models";
-import { UsageSummaryPK } from "./UsageSummaryPK";
+import { UsageSummaryPK } from "../pks/UsageSummaryPK";
 
 /**
  * Create a UsageSummary for the given user's usage logs that are not collected.

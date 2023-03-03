@@ -7,9 +7,9 @@ import {
     enableDBLogging,
     withDBLogging,
 } from "../dynamoose/models";
-import { AccountHistoryPK } from "./AccountHistoryPK";
+import { AccountHistoryPK } from "../pks/AccountHistoryPK";
 import Decimal from "decimal.js-light";
-import { AccountActivityPK } from "./AccountActivityPK";
+import { AccountActivityPK } from "../pks/AccountActivityPK";
 
 /**
  * Collect any account activities that are in the pending status, and have the

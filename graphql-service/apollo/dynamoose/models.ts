@@ -142,17 +142,31 @@ const AppTableSchema = new dynamoose.Schema(
 const EndpointTableSchema = new dynamoose.Schema(
     {
         app: { hashKey: true, ...String_Required_NotEmpty("app") },
-        path: { rangeKey: true, ...String_Required_NotEmpty("path") },
+        createdAt: {
+            type: Number,
+            rangeKey: true,
+            default: DEFAULT_FOR_CREATED_AT_RANGE_KEY,
+        },
+        method: { type: String, default: "ANY" },
+        path: { ...String_Required_NotEmpty("path") },
         destination: { ...String_Required_NotEmpty("destination") },
         description: { default: "", type: String },
     },
-    { timestamps: true }
+    {
+        timestamps: {
+            updatedAt: "updatedAt",
+        },
+    }
 );
 
 const PricingTableSchema = new dynamoose.Schema(
     {
         app: { hashKey: true, ...String_Required_NotEmpty("app") },
-        createdAt: { rangeKey: true, type: Number, default: () => Date.now() },
+        createdAt: {
+            rangeKey: true,
+            type: Number,
+            ...DEFAULT_FOR_CREATED_AT_RANGE_KEY,
+        },
         name: { ...String_Required_NotEmpty("name") },
         callToAction: { type: String, default: "" },
         minMonthlyCharge: { type: String, default: "0" },
@@ -197,7 +211,7 @@ const UsageLogTableSchema = new dynamoose.Schema(
             enum: ["pending", "collected"],
             default: "pending",
         },
-        collectedAt: { type: Number, default: () => Date.now() },
+        collectedAt: { type: Number, ...DEFAULT_FOR_CREATED_AT_RANGE_KEY },
         path: String_Required_NotEmpty("path"),
         volume: { type: Number, default: 1 },
         queuePosition: { type: Number, default: 0 },
@@ -392,6 +406,15 @@ export class App extends Item {
 export class Endpoint extends Item {
     app: string;
     path: string;
+    method:
+        | "GET"
+        | "POST"
+        | "PUT"
+        | "DELETE"
+        | "PATCH"
+        | "HEAD"
+        | "OPTIONS"
+        | "ANY";
     destination: string;
     description: string;
 }

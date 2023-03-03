@@ -5,8 +5,8 @@ import {
     GQLMutationCreatePricingArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
-import "../functions/PricingPK";
-import { PricingPK } from "../functions/PricingPK";
+import "../pks/PricingPK";
+import { PricingPK } from "../pks/PricingPK";
 
 export const pricingResolvers: GQLResolvers = {
     Pricing: {

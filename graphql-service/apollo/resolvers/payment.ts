@@ -15,8 +15,8 @@ import {
 import Decimal from "decimal.js-light";
 import { BadInput, Denied } from "../errors";
 import { Can } from "../permissions";
-import { UserPK } from "../functions/UserPK";
-import { AccountActivityPK } from "../functions/AccountActivityPK";
+import { UserPK } from "../pks/UserPK";
+import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { collectAccountActivities } from "../functions/account";
 /**
  * Remember to add your resolver to the resolvers object in server.ts.

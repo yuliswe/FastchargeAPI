@@ -157,10 +157,22 @@ type App {
     revokeAppUserToken: Boolean!
 }
 
+enum HTTPMethod {
+    ANY
+    GET
+    POST
+    PUT
+    DELETE
+    PATCH
+    OPTIONS
+    HEAD
+}
+
 type Endpoint {
     path: String!
     description: String
     destination: String
+    method: HTTPMethod!
     ref: String!
 
     updateEndpoint(

@@ -14,7 +14,7 @@ import {
     GQLUserUsageLogsArgs,
     GQLUserUsageSummariesArgs,
 } from "../__generated__/resolvers-types";
-import { UserPK } from "../functions/UserPK";
+import { UserPK } from "../pks/UserPK";
 import { getUserBalance } from "../functions/account";
 
 export const userResolvers: GQLResolvers & {

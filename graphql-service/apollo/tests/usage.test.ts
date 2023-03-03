@@ -10,9 +10,9 @@ import {
     UsageLogModel,
     UsageSummaryModel,
 } from "../dynamoose/models";
-import { UsageSummaryPK } from "../functions/UsageSummaryPK";
-import { UsageLogPK } from "../functions/UsageLogPK";
-import { PricingPK } from "../functions/PricingPK";
+import { UsageSummaryPK } from "../pks/UsageSummaryPK";
+import { UsageLogPK } from "../pks/UsageLogPK";
+import { PricingPK } from "../pks/PricingPK";
 import { collectAccountActivities } from "../functions/account";
 
 let context: RequestContext = {

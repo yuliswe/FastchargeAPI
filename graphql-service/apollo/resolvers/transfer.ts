@@ -7,9 +7,9 @@ import {
 import { StripeTransferModel } from "../dynamoose/models";
 import { RequestContext } from "../RequestContext";
 import Decimal from "decimal.js-light";
-import { UserPK } from "../functions/UserPK";
+import { UserPK } from "../pks/UserPK";
 import { collectAccountActivities } from "../functions/account";
-import { AccountActivityPK } from "../functions/AccountActivityPK";
+import { AccountActivityPK } from "../pks/AccountActivityPK";
 
 /**
  * Remember to add your resolver to the resolvers object in server.ts.

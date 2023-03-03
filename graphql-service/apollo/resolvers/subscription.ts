@@ -9,8 +9,8 @@ import {
     GQLResolvers,
     GQLSubscribeUpdateSubscriptionArgs,
 } from "../__generated__/resolvers-types";
-import { PricingPK } from "../functions/PricingPK";
-import { SubscriptionPK } from "../functions/SubscriptionPK";
+import { PricingPK } from "../pks/PricingPK";
+import { SubscriptionPK } from "../pks/SubscriptionPK";
 
 export const subscribeResolvers: GQLResolvers = {
     Subscribe: {
