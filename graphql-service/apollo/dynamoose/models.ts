@@ -135,6 +135,8 @@ const AppTableSchema = new dynamoose.Schema(
             },
         },
         description: { default: "", type: String },
+        repository: { default: "", type: String },
+        homepage: { default: "", type: String },
     },
     { timestamps: true }
 );
@@ -147,10 +149,23 @@ const EndpointTableSchema = new dynamoose.Schema(
             rangeKey: true,
             default: DEFAULT_FOR_CREATED_AT_RANGE_KEY,
         },
-        method: { type: String, default: "ANY" },
+        method: {
+            type: String,
+            default: "ANY",
+            enum: [
+                "ANY",
+                "GET",
+                "HEAD",
+                "POST",
+                "PUT",
+                "DELETE",
+                "OPTIONS",
+                "PATCH",
+            ],
+        },
         path: { ...String_Required_NotEmpty("path") },
         destination: { ...String_Required_NotEmpty("destination") },
-        description: { default: "", type: String },
+        description: { type: String, default: "" },
     },
     {
         timestamps: {
@@ -400,6 +415,8 @@ export class App extends Item {
     owner: string;
     description: string;
     gatewayMode: GatewayMode;
+    repository: string;
+    homepage: string;
 }
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
@@ -417,6 +434,8 @@ export class Endpoint extends Item {
         | "ANY";
     destination: string;
     description: string;
+    createdAt: number;
+    updatedAt: number;
 }
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.

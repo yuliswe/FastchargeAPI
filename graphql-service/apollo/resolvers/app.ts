@@ -175,14 +175,27 @@ export const appResolvers: GQLResolvers = {
     Mutation: {
         async createApp(
             parent: {},
-            args: GQLMutationCreateAppArgs,
-            context: RequestContext,
-            info: GraphQLResolveInfo
+            {
+                description,
+                gatewayMode,
+                homepage,
+                name,
+                owner,
+                repository,
+            }: GQLMutationCreateAppArgs,
+            context: RequestContext
         ): Promise<App> {
-            if (!(await Can.createApp(args, context))) {
+            if (!(await Can.createApp({ owner }, context))) {
                 throw new Denied();
             }
-            return await context.batched.App.create(args);
+            return await context.batched.App.create({
+                description,
+                gatewayMode,
+                homepage,
+                name,
+                owner,
+                repository,
+            });
         },
     },
 };

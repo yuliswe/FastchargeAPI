@@ -36,7 +36,7 @@ export const Can = {
         return await Promise.resolve(true);
     },
     async createApp(
-        args: GQLMutationCreateAppArgs,
+        { owner }: { owner: string },
         context: RequestContext
     ): Promise<boolean> {
         // Is the current user the claimed owner of the app?
@@ -108,7 +108,7 @@ export const Can = {
         return await Promise.resolve(true);
     },
     async updateEndpoint(
-        args: GQLEndpointUpdateEndpointArgs,
+        parent: Endpoint,
         context: RequestContext
     ): Promise<boolean> {
         return await Promise.resolve(true);

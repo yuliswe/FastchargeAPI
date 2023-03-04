@@ -55,10 +55,12 @@ export type GQLApp = {
   description: Scalars['String'];
   endpoints: Array<GQLEndpoint>;
   gatewayMode: GatewayMode;
+  homepage?: Maybe<Scalars['String']>;
   name: Scalars['String'];
   ownedByYou: Scalars['Boolean'];
   owner: GQLUser;
   pricingPlans: Array<GQLPricing>;
+  repository?: Maybe<Scalars['String']>;
   revokeAppUserToken: Scalars['Boolean'];
   updateApp: GQLApp;
 };
@@ -76,19 +78,22 @@ export type GQLDateRangeInput = {
 
 export type GQLEndpoint = {
   __typename?: 'Endpoint';
+  createdAt: Scalars['Timestamp'];
   deleteEndpoint?: Maybe<GQLEndpoint>;
   description?: Maybe<Scalars['String']>;
   destination?: Maybe<Scalars['String']>;
   method: GQLHttpMethod;
   path: Scalars['String'];
-  ref: Scalars['String'];
+  pk: Scalars['String'];
   updateEndpoint?: Maybe<GQLEndpoint>;
+  updatedAt: Scalars['Timestamp'];
 };
 
 
 export type GQLEndpointUpdateEndpointArgs = {
   description?: InputMaybe<Scalars['String']>;
   destination?: InputMaybe<Scalars['String']>;
+  method?: InputMaybe<GQLHttpMethod>;
   path?: InputMaybe<Scalars['String']>;
 };
 
@@ -123,8 +128,10 @@ export type GQLMutation = {
 export type GQLMutationCreateAppArgs = {
   description?: InputMaybe<Scalars['String']>;
   gatewayMode?: InputMaybe<GatewayMode>;
+  homepage?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
   owner: Scalars['String'];
+  repository?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -132,6 +139,7 @@ export type GQLMutationCreateEndpointArgs = {
   app: Scalars['String'];
   description?: InputMaybe<Scalars['String']>;
   destination: Scalars['String'];
+  method: GQLHttpMethod;
   path: Scalars['String'];
 };
 
@@ -233,7 +241,7 @@ export type GQLQueryAppArgs = {
 export type GQLQueryEndpointArgs = {
   app?: InputMaybe<Scalars['String']>;
   path?: InputMaybe<Scalars['String']>;
-  ref?: InputMaybe<Scalars['ID']>;
+  pk?: InputMaybe<Scalars['ID']>;
 };
 
 
@@ -539,10 +547,12 @@ export type GQLAppResolvers<ContextType = RequestContext, ParentType extends GQL
   description?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
   endpoints?: Resolver<Array<GQLResolversTypes['Endpoint']>, ParentType, ContextType>;
   gatewayMode?: Resolver<GQLResolversTypes['GatewayMode'], ParentType, ContextType>;
+  homepage?: Resolver<Maybe<GQLResolversTypes['String']>, ParentType, ContextType>;
   name?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
   ownedByYou?: Resolver<GQLResolversTypes['Boolean'], ParentType, ContextType>;
   owner?: Resolver<GQLResolversTypes['User'], ParentType, ContextType>;
   pricingPlans?: Resolver<Array<GQLResolversTypes['Pricing']>, ParentType, ContextType>;
+  repository?: Resolver<Maybe<GQLResolversTypes['String']>, ParentType, ContextType>;
   revokeAppUserToken?: Resolver<GQLResolversTypes['Boolean'], ParentType, ContextType>;
   updateApp?: Resolver<GQLResolversTypes['App'], ParentType, ContextType, Partial<GQLAppUpdateAppArgs>>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -553,21 +563,23 @@ export interface GQLEmailScalarConfig extends GraphQLScalarTypeConfig<GQLResolve
 }
 
 export type GQLEndpointResolvers<ContextType = RequestContext, ParentType extends GQLResolversParentTypes['Endpoint'] = GQLResolversParentTypes['Endpoint']> = ResolversObject<{
+  createdAt?: Resolver<GQLResolversTypes['Timestamp'], ParentType, ContextType>;
   deleteEndpoint?: Resolver<Maybe<GQLResolversTypes['Endpoint']>, ParentType, ContextType>;
   description?: Resolver<Maybe<GQLResolversTypes['String']>, ParentType, ContextType>;
   destination?: Resolver<Maybe<GQLResolversTypes['String']>, ParentType, ContextType>;
   method?: Resolver<GQLResolversTypes['HTTPMethod'], ParentType, ContextType>;
   path?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
-  ref?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
+  pk?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
   updateEndpoint?: Resolver<Maybe<GQLResolversTypes['Endpoint']>, ParentType, ContextType, Partial<GQLEndpointUpdateEndpointArgs>>;
+  updatedAt?: Resolver<GQLResolversTypes['Timestamp'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
 export type GQLGatewayModeResolvers = EnumResolverSignature<{ proxy?: any, redirect?: any }, GQLResolversTypes['GatewayMode']>;
 
 export type GQLMutationResolvers<ContextType = RequestContext, ParentType extends GQLResolversParentTypes['Mutation'] = GQLResolversParentTypes['Mutation']> = ResolversObject<{
-  createApp?: Resolver<GQLResolversTypes['App'], ParentType, ContextType, RequireFields<GQLMutationCreateAppArgs, 'name' | 'owner'>>;
-  createEndpoint?: Resolver<GQLResolversTypes['Endpoint'], ParentType, ContextType, RequireFields<GQLMutationCreateEndpointArgs, 'app' | 'destination' | 'path'>>;
+  createApp?: Resolver<GQLResolversTypes['App'], ParentType, ContextType, RequireFields<GQLMutationCreateAppArgs, 'gatewayMode' | 'name' | 'owner'>>;
+  createEndpoint?: Resolver<GQLResolversTypes['Endpoint'], ParentType, ContextType, RequireFields<GQLMutationCreateEndpointArgs, 'app' | 'destination' | 'method' | 'path'>>;
   createPricing?: Resolver<GQLResolversTypes['Pricing'], ParentType, ContextType, RequireFields<GQLMutationCreatePricingArgs, 'app' | 'callToAction' | 'chargePerRequest' | 'minMonthlyCharge' | 'name'>>;
   createSecret?: Resolver<GQLResolversTypes['Secret'], ParentType, ContextType, RequireFields<GQLMutationCreateSecretArgs, 'key' | 'value'>>;
   createStripePaymentAccept?: Resolver<GQLResolversTypes['StripePaymentAccept'], ParentType, ContextType, RequireFields<GQLMutationCreateStripePaymentAcceptArgs, 'amountCents' | 'currency' | 'stripePaymentIntent' | 'stripePaymentStatus' | 'stripeSessionId' | 'stripeSessionObject' | 'user'>>;

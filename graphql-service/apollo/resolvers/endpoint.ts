@@ -1,48 +1,50 @@
 import { GraphQLResolveInfo } from "graphql";
-import { Endpoint } from "../dynamoose/models";
+import { Endpoint, EndpointModel } from "../dynamoose/models";
 import { Denied } from "../errors";
 import { Can } from "../permissions";
 import { RequestContext } from "../RequestContext";
 import {
+    GQLEndpointResolvers,
     GQLEndpointUpdateEndpointArgs,
+    GQLHttpMethod,
     GQLMutationCreateEndpointArgs,
     GQLQueryEndpointArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
+import { EndpointPK } from "../pks/EndpointPK";
 
-export const endpointResolvers: GQLResolvers = {
+export const endpointResolvers: GQLResolvers & {
+    Endpoint: Required<GQLEndpointResolvers>;
+} = {
     Endpoint: {
-        async description({ app, path }, args, context, info) {
-            let endpoint = await context.batched.Endpoint.get({ app, path });
-            return endpoint.description || "";
-        },
-        async destination({ app, path }, args, context, info) {
-            let endpoint = await context.batched.Endpoint.get({ app, path });
-            return endpoint.destination || "";
-        },
+        __isTypeOf: (parent) => parent instanceof EndpointModel,
+        pk: (parent) => EndpointPK.stringify(parent),
+        method: (parent) => parent.method as GQLHttpMethod,
+        description: (parent) => parent.description,
+        destination: (parent) => parent.destination,
+        createdAt: (parent) => parent.createdAt,
+        updatedAt: (parent) => parent.updatedAt,
         path: ({ path }) => path,
-        ref: ({ app, path }) =>
-            Buffer.from(JSON.stringify({ app, path })).toString("base64url"),
+
         async updateEndpoint(
             parent: Endpoint,
-            args: GQLEndpointUpdateEndpointArgs,
-            context: RequestContext,
-            info: GraphQLResolveInfo
+            {
+                method,
+                path,
+                description,
+                destination,
+            }: GQLEndpointUpdateEndpointArgs,
+            context: RequestContext
         ) {
-            if (!(await Can.updateEndpoint(args, context))) {
+            if (!(await Can.updateEndpoint(parent, context))) {
                 throw new Denied();
             }
-            // Primary key cannot be updated. So we need to delete the old one
-            // and create a new one if we want to change the path.
-            if (args.path && args.path !== parent.path) {
-                let old = await context.batched.Endpoint.delete(parent);
-                return await context.batched.Endpoint.create({
-                    ...old,
-                    ...args,
-                });
-            } else {
-                return await context.batched.Endpoint.update(parent, args);
-            }
+            return await context.batched.Endpoint.update(parent, {
+                method,
+                path,
+                description,
+                destination,
+            });
         },
         async deleteEndpoint(parent, args: never, context, info) {
             if (!(await Can.deleteEndpoint(parent, args, context))) {
@@ -55,18 +57,18 @@ export const endpointResolvers: GQLResolvers = {
     Query: {
         async endpoint(
             parent: {},
-            { ref, app, path, ...newVals }: GQLQueryEndpointArgs,
+            { pk, app, path, ...newVals }: GQLQueryEndpointArgs,
             context,
             info
         ) {
-            if (ref) {
-                let parsed = JSON.parse(
-                    Buffer.from(ref, "base64url").toString("utf8")
+            let endpoint: Endpoint;
+            if (pk) {
+                endpoint = await context.batched.Endpoint.get(
+                    EndpointPK.parse(pk)
                 );
-                app = parsed.app;
-                path = parsed.path;
+            } else {
+                endpoint = await context.batched.Endpoint.get({ app, path });
             }
-            let endpoint = await context.batched.Endpoint.get({ app, path });
             if (!(await Can.viewEndpoint(endpoint, context))) {
                 throw new Denied();
             }
@@ -76,15 +78,32 @@ export const endpointResolvers: GQLResolvers = {
     Mutation: {
         async createEndpoint(
             parent: {},
-            args: GQLMutationCreateEndpointArgs,
+            {
+                app,
+                path,
+                method,
+                description,
+                destination,
+            }: GQLMutationCreateEndpointArgs,
             context,
             info
         ) {
-            await context.batched.App.get(args.app); // checks if app exists
-            if (!(await Can.createEndpoint(args, context))) {
+            await context.batched.App.get(app); // checks if app exists
+            if (
+                !(await Can.createEndpoint(
+                    { app, path, method, description, destination },
+                    context
+                ))
+            ) {
                 throw new Denied();
             }
-            let endpoint = await context.batched.Endpoint.create(args);
+            let endpoint = await context.batched.Endpoint.create({
+                app,
+                path,
+                method,
+                description,
+                destination,
+            });
             return endpoint;
         },
     },

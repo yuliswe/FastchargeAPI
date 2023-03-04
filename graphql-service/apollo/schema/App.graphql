@@ -10,7 +10,7 @@ type Query {
     users: [User] # Get all users in the system
     user(email: Email): User!
     ### Endpoint API
-    endpoint(ref: ID, app: String, path: String): Endpoint!
+    endpoint(pk: ID, app: String, path: String): Endpoint!
     endpoints: [Endpoint] # Get all endpoints in the system
     ### Subscriptions API
     subscription(pk: ID, subscriber: Email, app: String): Subscribe!
@@ -26,14 +26,16 @@ type Mutation {
     createApp(
         name: String!
         owner: String!
-        gatewayMode: GatewayMode = Proxy
-        # endpoints: [EndpointInput]
+        gatewayMode: GatewayMode = proxy
         description: String
+        repository: String
+        homepage: String
     ): App!
 
     createEndpoint(
         app: String!
         path: String!
+        method: HTTPMethod!
         destination: String!
         description: String
     ): Endpoint!
@@ -146,10 +148,13 @@ type App {
     name: String!
     description: String!
     owner: User!
+    gatewayMode: GatewayMode!
+    repository: String
+    homepage: String
+
     endpoints: [Endpoint!]!
     ownedByYou: Boolean!
     pricingPlans: [Pricing!]!
-    gatewayMode: GatewayMode!
 
     updateApp(description: String, gatewayMode: GatewayMode): App!
     deleteApp: App!
@@ -162,20 +167,23 @@ enum HTTPMethod {
     GET
     POST
     PUT
-    DELETE
     PATCH
+    DELETE
     OPTIONS
     HEAD
 }
 
 type Endpoint {
+    pk: String!
     path: String!
     description: String
     destination: String
     method: HTTPMethod!
-    ref: String!
+    createdAt: Timestamp!
+    updatedAt: Timestamp!
 
     updateEndpoint(
+        method: HTTPMethod
         path: String
         destination: String
         description: String
