@@ -56,18 +56,18 @@ Resources:
             Identity:
               ReauthorizeEvery: 300
               Headers: [ "Authorization" ]
-      GatewayResponses: 
-        UNAUTHORIZED: # This block allows customizing the message shown to user that are not logged in.
-          StatusCode: 401
-          ResponseTemplates:
-            "application/json": '{ "message": "Please login." }'
-        ACCESS_DENIED: # This block allows customizing the message shown to user denied.
-          StatusCode: 403
-          ResponseTemplates:
-            "application/json": '{ "message": "Denied" }'
       Cors:
         AllowMethods: "'*'"
+        AllowHeaders: "'*'"
         AllowOrigin: "'*'"
+      GatewayResponses:
+        UNAUTHORIZED: # This is hacky but right now the only way to handle an OPTION request without failing 
+          StatusCode: 200
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Methods: "'*'"
+              Access-Control-Allow-Headers: "'*'"
+              Access-Control-Allow-Origin: "'*'"
 
   StripeCheckoutSession:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -90,14 +90,6 @@ Resources:
             Method: post
             Auth: 
               Authorizer: NONE
-        OPTIONS:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            RestApiId: !Ref APIGateway
-            Path: /checkout
-            Method: options
-            Auth: 
-              Authorizer: NONE
 
   StripeConnectOnboard:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -118,14 +110,6 @@ Resources:
             RestApiId: !Ref APIGateway
             Path: /onboard
             Method: post
-        OPTIONS:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            RestApiId: !Ref APIGateway
-            Path: /onboard
-            Method: options
-            Auth: 
-              Authorizer: NONE
 
   StripeConnectOnboardAcceptWebhook:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
