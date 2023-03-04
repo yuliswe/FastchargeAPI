@@ -49,10 +49,12 @@ export type GQLApp = {
   description: Scalars['String'];
   endpoints: Array<GQLEndpoint>;
   gatewayMode: GQLGatewayMode;
+  homepage?: Maybe<Scalars['String']>;
   name: Scalars['String'];
   ownedByYou: Scalars['Boolean'];
   owner: GQLUser;
   pricingPlans: Array<GQLPricing>;
+  repository?: Maybe<Scalars['String']>;
   revokeAppUserToken: Scalars['Boolean'];
   updateApp: GQLApp;
 };
@@ -70,24 +72,39 @@ export type GQLDateRangeInput = {
 
 export type GQLEndpoint = {
   __typename?: 'Endpoint';
+  createdAt: Scalars['Timestamp'];
   deleteEndpoint?: Maybe<GQLEndpoint>;
   description?: Maybe<Scalars['String']>;
   destination?: Maybe<Scalars['String']>;
+  method: GQLHttpMethod;
   path: Scalars['String'];
-  ref: Scalars['String'];
+  pk: Scalars['String'];
   updateEndpoint?: Maybe<GQLEndpoint>;
+  updatedAt: Scalars['Timestamp'];
 };
 
 
 export type GQLEndpointUpdateEndpointArgs = {
   description?: InputMaybe<Scalars['String']>;
   destination?: InputMaybe<Scalars['String']>;
+  method?: InputMaybe<GQLHttpMethod>;
   path?: InputMaybe<Scalars['String']>;
 };
 
 export enum GQLGatewayMode {
   Proxy = 'proxy',
   Redirect = 'redirect'
+}
+
+export enum GQLHttpMethod {
+  Any = 'ANY',
+  Delete = 'DELETE',
+  Get = 'GET',
+  Head = 'HEAD',
+  Options = 'OPTIONS',
+  Patch = 'PATCH',
+  Post = 'POST',
+  Put = 'PUT'
 }
 
 export type GQLMutation = {
@@ -108,8 +125,10 @@ export type GQLMutation = {
 export type GQLMutationCreateAppArgs = {
   description?: InputMaybe<Scalars['String']>;
   gatewayMode?: InputMaybe<GQLGatewayMode>;
+  homepage?: InputMaybe<Scalars['String']>;
   name: Scalars['String'];
   owner: Scalars['String'];
+  repository?: InputMaybe<Scalars['String']>;
 };
 
 
@@ -117,6 +136,7 @@ export type GQLMutationCreateEndpointArgs = {
   app: Scalars['String'];
   description?: InputMaybe<Scalars['String']>;
   destination: Scalars['String'];
+  method: GQLHttpMethod;
   path: Scalars['String'];
 };
 
@@ -218,7 +238,7 @@ export type GQLQueryAppArgs = {
 export type GQLQueryEndpointArgs = {
   app?: InputMaybe<Scalars['String']>;
   path?: InputMaybe<Scalars['String']>;
-  ref?: InputMaybe<Scalars['ID']>;
+  pk?: InputMaybe<Scalars['ID']>;
 };
 
 
@@ -404,6 +424,13 @@ export type GQLGetAccountHistoriesQueryVariables = Exact<{
 
 
 export type GQLGetAccountHistoriesQuery = { __typename?: 'Query', user: { __typename?: 'User', accountHistories: Array<{ __typename?: 'AccountHistory', closingBalance: string, closingTime: number }> } };
+
+export type GQLMyAppGetDetailQueryVariables = Exact<{
+  appName: Scalars['String'];
+}>;
+
+
+export type GQLMyAppGetDetailQuery = { __typename?: 'Query', app: { __typename?: 'App', name: string, description: string, repository?: string | null, homepage?: string | null, pricingPlans: Array<{ __typename?: 'Pricing', pk: string, name: string, minMonthlyCharge: string, chargePerRequest: string, freeQuota: number, callToAction: string }>, endpoints: Array<{ __typename?: 'Endpoint', pk: string, path: string, description?: string | null, destination?: string | null, method: GQLHttpMethod }> } };
 
 export type GQLGetUserAppsQueryVariables = Exact<{
   email: Scalars['Email'];

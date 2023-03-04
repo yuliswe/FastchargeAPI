@@ -18,6 +18,7 @@ export class DocumentationDialog extends React.Component<DocumentationDialogProp
     render(): React.ReactNode {
         return (
             <Dialog
+                maxWidth="xl"
                 open={this.props.parent.state.openDocumentationDialog}
                 onClose={() => {
                     this.props.parent.setState({
