@@ -9,6 +9,7 @@
     "test": "npm run gen && react-scripts test",
     "start": "npm run gen && PORT=8000 react-scripts start",
     "watch": "npm run start & nodemon -e ts,tsx,yml,yaml -i build/,__generated__ --exec 'npm run gen'",
+    "new-page": "node ../react-appevent-redux-tools/dist/index.js",
     "fix": "eslint --fix ./"
   },
   "dependencies": {

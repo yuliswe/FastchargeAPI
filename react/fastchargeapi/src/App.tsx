@@ -1,84 +1,19 @@
-import { Helmet, HelmetProvider } from "react-helmet-async";
-import { HomePage } from "./connected-components/HomePage";
+import { Helmet } from "react-helmet-async";
 import { useMediaQuery, CssBaseline } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import {
     RouterProvider,
-    createBrowserRouter,
     useLocation,
     useNavigate,
     useParams,
     useSearchParams,
 } from "react-router-dom";
 import { AppContextProvider, defaulAppContext } from "./AppContext";
-import { AuthPage } from "./connected-components/AuthPage";
-import { OnboardPage } from "./connected-components/OnboardPage";
-import { TopUpPage } from "./connected-components/TopupPage";
 import React, { useEffect, useState } from "react";
-import { SearchResultPage } from "./connected-components/SearchResultPage";
-import { AppDetailPage } from "./connected-components/AppDetailPage";
-import { AccountPage } from "./connected-components/AccountPage";
-import { DashboardPage } from "./connected-components/DashboardPage";
-import { MyAppsPage } from "./connected-components/MyAppsPage";
-import { SubscriptionsPage } from "./connected-components/SubscriptionsPage";
-import { MyAppDetailPage } from "./connected-components/MyAppDetailPage";
-import { SubscriptionDetailPage } from "./connected-components/SubscriptionDetailPage";
 import { initializeFirebase } from "./firebase";
 import firebase from "firebase/compat/app";
 import { getTheme } from "./theme";
-
-const router = createBrowserRouter([
-    {
-        path: "/auth",
-        element: <WithContext children={<AuthPage />} />,
-    },
-    {
-        path: "/onboard",
-        element: <WithContext children={<OnboardPage />} />,
-    },
-    {
-        path: "/topup",
-        element: <WithContext children={<TopUpPage />} />,
-    },
-    {
-        path: "/",
-        element: <WithContext children={<HomePage />} />,
-    },
-    {
-        path: "/search",
-        element: <WithContext children={<SearchResultPage />} />,
-    },
-    {
-        path: "/apis/:appId",
-        element: <WithContext children={<AppDetailPage />} />,
-    },
-    {
-        path: "/account",
-        element: <WithContext children={<AccountPage />} />,
-        children: [
-            {
-                path: "",
-                element: <WithContext children={<DashboardPage />} />,
-            },
-            {
-                path: "my-apps",
-                element: <WithContext children={<MyAppsPage />} />,
-            },
-            {
-                path: "my-apps/:app",
-                element: <WithContext children={<MyAppDetailPage />} />,
-            },
-            {
-                path: "subscriptions",
-                element: <WithContext children={<SubscriptionsPage />} />,
-            },
-            {
-                path: "subscriptions/:app",
-                element: <WithContext children={<SubscriptionDetailPage />} />,
-            },
-        ],
-    },
-]);
+import { createRouter } from "./routes";
 
 let firebaseInitialzation = initializeFirebase();
 
@@ -192,6 +127,8 @@ function WithContext(props: React.PropsWithChildren) {
         </React.Fragment>
     );
 }
+
+const router = createRouter(WithContext);
 
 function App() {
     return <RouterProvider router={router} />;

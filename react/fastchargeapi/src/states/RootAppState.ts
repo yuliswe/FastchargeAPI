@@ -19,6 +19,7 @@ export class RootAppState extends AppState {
     myApps = new MyAppsAppState({});
     myAppDetail = new MyAppDetailAppState({});
     subscriptionDetail = new SubscriptionDetailAppState({});
+    terms = new HomeAppState({});
 
     constructor(props: PartialProps<RootAppState>) {
         super();

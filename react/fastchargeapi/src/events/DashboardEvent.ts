@@ -11,6 +11,7 @@ import {
     GQLGetAccountHistoriesQuery,
     GQLGetAccountHistoriesQueryVariables,
 } from "../__generated__/gql-operations";
+import { fetchWithAuth } from "../fetch";
 
 class LoadAccontBalance extends AppEvent<RootAppState> {
     constructor(public context: AppContext) {
@@ -176,8 +177,60 @@ class LoadAccountHistory extends AppEvent<RootAppState> {
         });
     }
 }
+
+class LoadStripeLoginLink extends AppEvent<RootAppState> {
+    constructor(public context: AppContext) {
+        super();
+    }
+    reducer(state: RootAppState): RootAppState {
+        let res!: (value: string) => void;
+        let linkPromise = new Promise<string>((resolve, reject) => {
+            res = resolve;
+        });
+        return state.mapState({
+            dashboard: mapState({
+                loadingStripeLoginLink: to(true),
+            }),
+        });
+    }
+
+    location = "";
+    async *run(state: RootAppState): AppEventStream<RootAppState> {
+        let result = await fetchWithAuth(
+            this.context,
+            "https://api.payment.fastchargeapi.com/dashboard-login",
+            {}
+        );
+        let json = await result.json();
+        this.location = json.location;
+        yield new StripeLinkReady(this.context, { location: this.location });
+    }
+}
+
+class StripeLinkReady extends AppEvent<RootAppState> {
+    constructor(
+        public context: AppContext,
+        public options: { location: string }
+    ) {
+        super();
+    }
+    reducer(state: RootAppState): RootAppState {
+        return state.mapState({
+            dashboard: mapState({
+                loadingStripeLoginLink: to(false),
+                stripeLoginLink: to(this.options.location),
+            }),
+        });
+    }
+    async *run(state: RootAppState): AppEventStream<RootAppState> {
+        // nothing
+    }
+}
+
 export const DashboardEvent = {
     LoadAccontBalance,
     LoadActivities,
     LoadAccountHistory,
+    LoadStripeLoginLink,
+    StripeLinkReady,
 };

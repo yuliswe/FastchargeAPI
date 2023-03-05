@@ -12,7 +12,12 @@ program
     .action((ComponentName: string) => {
         ComponentName = ComponentName[0].toUpperCase() + ComponentName.slice(1);
 
-        let outDirs = ["./src", "./src/connected-components", "./src/states"];
+        let outDirs = [
+            "./src",
+            "./src/connected-components",
+            "./src/states",
+            "./src/events",
+        ];
 
         for (let d of outDirs) {
             if (!fs.existsSync(d)) {
@@ -24,6 +29,7 @@ program
         let outfileList = [
             `${outDirs[1]}/${ComponentName}Page.tsx`,
             `${outDirs[2]}/${ComponentName}AppState.ts`,
+            `${outDirs[3]}/${ComponentName}Event.ts`,
         ];
 
         for (let f of outfileList) {
@@ -50,6 +56,7 @@ program
         );
 
         fs.writeFileSync(outfileList[1], createAppState(ComponentName));
+        fs.writeFileSync(outfileList[2], createAppEvent(ComponentName));
     });
 
 program.parse();
@@ -72,6 +79,10 @@ class _${ComponentName}Page extends React.Component<_Props, _State> {
         super(props);
         this.state = {};
     }
+
+    render(): React.ReactNode {
+        return "TODO: render()"
+    }
 }
 
 export const ${ComponentName}Page = connect<_Props, {}, {}, RootAppState>(
@@ -91,6 +102,31 @@ export class ${ComponentName}AppState extends AppState {
         super();
         this.assignProps(props);
     }
+}
+`;
+}
+
+function createAppEvent(ComponentName: string) {
+    return `
+import { AppState, PartialProps } from "react-appevent-redux";
+
+class Example${ComponentName}Event extends AppEvent<RootAppState> {
+    constructor(public context: AppContext, public options: {}) {
+        super();
+    }
+    reducer(state: RootAppState): RootAppState {
+        throw new Error("Method not implemented.");
+    }
+    async *run(state: RootAppState): AppEventStream<RootAppState> {
+        // TODO: Implement reducer
+    }
+    reducerAfter(state: RootAppState): RootAppState {
+        return state;
+    }
+}
+
+export const ${ComponentName}Event = {
+    Example${ComponentName}Event,
 }
 `;
 }

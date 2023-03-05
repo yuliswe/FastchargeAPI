@@ -359,12 +359,14 @@ export type GQLUser = {
   accountHistories: Array<GQLAccountHistory>;
   apps: Array<GQLApp>;
   author: Scalars['String'];
-  balance?: Maybe<Scalars['String']>;
+  balance: Scalars['String'];
+  createdAt: Scalars['Timestamp'];
   email: Scalars['Email'];
   stripeConnectAccountId?: Maybe<Scalars['String']>;
   stripeCustomerId?: Maybe<Scalars['String']>;
   subscriptions: Array<GQLSubscribe>;
   updateUser?: Maybe<GQLUser>;
+  updatedAt: Scalars['Timestamp'];
   usageLogs: Array<GQLUsageLog>;
   usageSummaries: Array<GQLUsageSummary>;
 };
@@ -383,6 +385,7 @@ export type GQLUserAccountHistoriesArgs = {
 
 
 export type GQLUserUpdateUserArgs = {
+  author?: InputMaybe<Scalars['String']>;
   stripeConnectAccountId?: InputMaybe<Scalars['String']>;
   stripeCustomerId?: InputMaybe<Scalars['String']>;
 };
@@ -402,12 +405,33 @@ export type GQLUserUsageSummariesArgs = {
   limit?: InputMaybe<Scalars['Int']>;
 };
 
+export type GQLAppDetailLoadAppInfoQueryVariables = Exact<{
+  appName: Scalars['String'];
+}>;
+
+
+export type GQLAppDetailLoadAppInfoQuery = { __typename?: 'Query', app: { __typename?: 'App', name: string, description: string, repository?: string | null, homepage?: string | null, owner: { __typename?: 'User', author: string } } };
+
+export type GQLAppDetailLoadPricingsQueryVariables = Exact<{
+  appName: Scalars['String'];
+}>;
+
+
+export type GQLAppDetailLoadPricingsQuery = { __typename?: 'Query', app: { __typename?: 'App', pricingPlans: Array<{ __typename?: 'Pricing', name: string, callToAction: string, minMonthlyCharge: string, chargePerRequest: string, freeQuota: number }> } };
+
+export type GQLAppDetailLoadEndpointsQueryVariables = Exact<{
+  appName: Scalars['String'];
+}>;
+
+
+export type GQLAppDetailLoadEndpointsQuery = { __typename?: 'Query', app: { __typename?: 'App', endpoints: Array<{ __typename?: 'Endpoint', method: GQLHttpMethod, path: string, description?: string | null, destination?: string | null }> } };
+
 export type GQLGetAccountBalanceQueryVariables = Exact<{
   email: Scalars['Email'];
 }>;
 
 
-export type GQLGetAccountBalanceQuery = { __typename?: 'Query', user: { __typename?: 'User', balance?: string | null } };
+export type GQLGetAccountBalanceQuery = { __typename?: 'Query', user: { __typename?: 'User', balance: string } };
 
 export type GQLGetAccountActivitiesQueryVariables = Exact<{
   email: Scalars['Email'];

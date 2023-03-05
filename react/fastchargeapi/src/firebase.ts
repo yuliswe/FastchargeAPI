@@ -29,10 +29,4 @@ export function initializeFirebase(): FirebaseInitializationResult {
     });
 
     return { user };
-
-    // export async function fetchWithAuth(url, options) {
-    //     let u = await user;
-    //     options.headers.Authorization = await u.getIdToken();
-    //     return fetch(url, options);
-    // }
 }

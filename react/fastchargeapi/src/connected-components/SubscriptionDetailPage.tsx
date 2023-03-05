@@ -4,11 +4,14 @@ import { connect } from "react-redux";
 import { SubscriptionDetailAppState } from "../states/SubscriptionDetailAppState";
 import {
     Box,
+    Breadcrumbs,
     Button,
     Card,
     CardActions,
     CardContent,
+    Divider,
     Grid,
+    Link,
     Paper,
     Stack,
     Table,
@@ -167,18 +170,31 @@ class _SubscriptionDetailPage extends React.Component<_Props, _State> {
         app: string;
     }) {
         return (
-            <Terminal height="10em" colorMode={ColorMode.Light}>
+            <Terminal height="13em" colorMode={ColorMode.Light}>
                 <Typography variant="body1">
                     We recommend changing the subscription plan with the cli
                     tool.
                 </Typography>
                 <Typography variant="body1" sx={{ mb: 2, fontWeight: 700 }}>
-                    To subscribe to the "{plan}" plan, run the following
-                    command:
+                    To subscribe or change to the "{plan}" plan, run the
+                    following command:
                 </Typography>
                 <TerminalInput>
                     {`fastapi subscription add "${app}" \\\n    --plan "${plan}"`}
                 </TerminalInput>
+                <Typography variant="caption" mt={2} gutterBottom>
+                    If you are currently subscribed to a plan, and you need to
+                    switch to a new plan that has a higher monthly fee from, you
+                    will only be charged the difference between your current
+                    plan and the new plan.
+                </Typography>
+                <Typography variant="caption">
+                    If you are switching to a cheaper plan, you will not be
+                    charged for the remaining period of the month, but the
+                    difference is not refunded. If you ever switch back to the
+                    premium plan again, you will not be charged again for the
+                    same month.
+                </Typography>
             </Terminal>
         );
     }
@@ -195,6 +211,12 @@ class _SubscriptionDetailPage extends React.Component<_Props, _State> {
                 <TerminalInput>
                     {`fastapi subscription remove "${app}"`}
                 </TerminalInput>
+
+                <Typography variant="caption" mt={2}>
+                    After unsubscribing, if you ever subscribe to this app again
+                    in the remaining period of your billing month, you will not
+                    be charged again.
+                </Typography>
             </Terminal>
         );
     }
@@ -202,45 +224,65 @@ class _SubscriptionDetailPage extends React.Component<_Props, _State> {
         return (
             <React.Fragment>
                 <Stack spacing={10}>
-                    <Stack mb={5} spacing={3}>
-                        <Stack
-                            direction="row"
-                            spacing={1}
-                            mt={5}
-                            alignItems="center"
+                    <Stack>
+                        <Breadcrumbs
+                            aria-label="breadcrumb"
+                            sx={{ display: "flex", alignItems: "center" }}
                         >
-                            <Typography variant="h6">
-                                {this.appState.appInfo?.name}
-                            </Typography>
-                            <Typography variant="body1">1.3.7</Typography>
-                            <Typography variant="body1">
-                                Published 10 months ago
-                            </Typography>
-                            <Box width={4}></Box>
-                            <Button
-                                variant="outlined"
-                                color="secondary"
-                                size="small"
-                                onClick={() =>
-                                    openDocumentationDialog(this, () =>
-                                        this.renderUnsubscribeDocumentation({
-                                            app: this.getAppNameFromUrl(),
-                                        })
-                                    )
-                                }
+                            <Link
+                                underline="hover"
+                                color="inherit"
+                                href="/account/subscriptions"
                             >
-                                Unsubscribe
-                            </Button>
-                        </Stack>
+                                Subscriptions
+                            </Link>
+                            {/* <Typography color="text.primary">
+                        {this.getAppNameFromUrl()}
+                    </Typography> */}
+                            <Stack
+                                direction="row"
+                                spacing={1}
+                                alignItems="center"
+                            >
+                                <Typography
+                                    variant="h6"
+                                    display="flex"
+                                    alignItems="center"
+                                >
+                                    {this.appState.appInfo?.name}
+                                </Typography>
+                                <Typography variant="body1">1.3.7</Typography>
+                                <Typography variant="body1">
+                                    Published 10 months ago
+                                </Typography>
+                                <Box width={4}></Box>
+                                <Button
+                                    variant="outlined"
+                                    color="secondary"
+                                    size="small"
+                                    onClick={() =>
+                                        openDocumentationDialog(this, () =>
+                                            this.renderUnsubscribeDocumentation(
+                                                {
+                                                    app: this.getAppNameFromUrl(),
+                                                }
+                                            )
+                                        )
+                                    }
+                                >
+                                    Unsubscribe
+                                </Button>
+                            </Stack>
+                        </Breadcrumbs>
+                        <Divider sx={{ mb: 3, mt: 1 }} />
                         <Typography variant="body1">
                             {this.appState.appInfo?.description ||
                                 "The author did not provide a description for this app."}
                         </Typography>
                     </Stack>
                     <Stack>
-                        <Typography variant="h6" mb={2}>
-                            Subscription
-                        </Typography>
+                        <Typography variant="h6">Subscription</Typography>
+                        <Divider sx={{ mb: 5 }} />
                         <Grid container spacing={2}>
                             {this.availablePlans().map((pricing, index) => (
                                 <Grid

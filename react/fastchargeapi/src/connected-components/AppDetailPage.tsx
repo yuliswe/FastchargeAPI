@@ -10,6 +10,7 @@ import {
     CardActions,
     CardContent,
     Container,
+    Divider,
     Grid,
     Link,
     List,
@@ -19,38 +20,53 @@ import {
 } from "@mui/material";
 import { SiteLayout } from "../SiteLayout";
 import { PricingCard } from "../stateless-components/PricingCard";
+import {
+    AppDetailEndpoint,
+    AppDetailEvent,
+    AppDetailPricing,
+} from "../events/AppDetailEvent";
+import { appStore } from "../store-config";
+import { AppContext, ReactAppContextType } from "../AppContext";
 
-type Props = {
-    appDetailAppState: AppDetailAppState;
+type _Props = {
+    appState: AppDetailAppState;
 };
-class _AppDetailPage extends React.Component {
-    getPricingList() {
-        return [
-            {
-                name: "Basic",
-                callToAction: "Basic description",
-                minMonthlyCharge: "0.01",
-                chargePerRequest: "0.01",
-                freeQuota: 1000,
-                isActive: false,
-            },
-            {
-                name: "Standard",
-                callToAction: "Standard description",
-                minMonthlyCharge: "0.02",
-                chargePerRequest: "0.02",
-                freeQuota: 1000,
-                isActive: true,
-            },
-            {
-                name: "Premium",
-                callToAction: "Premium description",
-                minMonthlyCharge: "0.03",
-                chargePerRequest: "0.03",
-                freeQuota: 1000,
-                isActive: false,
-            },
-        ];
+type _State = {};
+class _AppDetailPage extends React.Component<_Props, _State> {
+    static contextType = ReactAppContextType;
+    get _context() {
+        return this.context as AppContext;
+    }
+
+    getPricingList(): AppDetailPricing[] {
+        return this.appState.pricings;
+    }
+
+    get appState(): AppDetailAppState {
+        return this.props.appState;
+    }
+
+    getAppName(): string {
+        return this._context.route.params["app"]!;
+    }
+
+    componentDidMount(): void {
+        appStore.dispatch(
+            new AppDetailEvent.LoadAppInfo(this._context, {
+                appName: this.getAppName(),
+            })
+        );
+        appStore.dispatch(
+            new AppDetailEvent.LoadEndpoints(this._context, {
+                appName: this.getAppName(),
+            })
+        );
+
+        appStore.dispatch(
+            new AppDetailEvent.LoadPricings(this._context, {
+                appName: this.getAppName(),
+            })
+        );
     }
 
     render() {
@@ -69,7 +85,7 @@ class _AppDetailPage extends React.Component {
                                         alignItems="center"
                                     >
                                         <Typography variant="h6">
-                                            My App
+                                            {this.appState?.appInfo?.name}
                                         </Typography>
                                         <Typography variant="body1">
                                             1.3.7
@@ -78,23 +94,26 @@ class _AppDetailPage extends React.Component {
                                             Published 10 months ago
                                         </Typography>
                                     </Stack>
+                                    <Divider sx={{ mb: 3 }} />
                                     <Typography variant="body1">
-                                        App description
+                                        {this.appState?.appInfo?.description ||
+                                            "The author did not provide a description for this app."}
                                     </Typography>
                                 </Box>
                                 <Box>
-                                    <Typography variant="h6" mb={2}>
+                                    <Typography variant="h6">
                                         Pricing
                                     </Typography>
+                                    <Divider sx={{ mb: 3 }} />
                                     <Grid container spacing={3}>
                                         {this.getPricingList().map(
-                                            (pricing) => (
+                                            (pricing: AppDetailPricing) => (
                                                 <Grid item>
                                                     <PricingCard
                                                         {...pricing}
                                                         actionButton={
                                                             <Button
-                                                                variant="contained"
+                                                                variant="outlined"
                                                                 color="secondary"
                                                             >
                                                                 Subscribe
@@ -146,25 +165,36 @@ class _AppDetailPage extends React.Component {
                                     </Grid>
                                 </Box>
                                 <Box>
-                                    <Typography variant="h6" mb={1}>
+                                    <Typography variant="h6">
                                         Endpoints
                                     </Typography>
+                                    <Divider sx={{ mb: 3 }} />
                                     <Stack spacing={2}>
-                                        <Box>
-                                            <Stack direction="row" spacing={1}>
-                                                <Typography
-                                                    variant="body1"
-                                                    color="secondary.main"
-                                                    fontWeight={700}
-                                                >
-                                                    GET
-                                                </Typography>
-                                                <code>/google</code>
-                                            </Stack>
-                                            <Typography variant="body1">
-                                                Description
-                                            </Typography>
-                                        </Box>
+                                        {this.appState?.endpoints?.map(
+                                            (endpoint: AppDetailEndpoint) => (
+                                                <Box>
+                                                    <Stack
+                                                        direction="row"
+                                                        spacing={1}
+                                                    >
+                                                        <Typography
+                                                            variant="body1"
+                                                            color="secondary.main"
+                                                            fontWeight={700}
+                                                        >
+                                                            {endpoint.method}
+                                                        </Typography>
+                                                        <code>
+                                                            {endpoint.path}
+                                                        </code>
+                                                    </Stack>
+                                                    <Typography variant="body1">
+                                                        {endpoint.description ||
+                                                            "No description provided."}
+                                                    </Typography>
+                                                </Box>
+                                            )
+                                        )}
                                     </Stack>
                                 </Box>
                             </Stack>
@@ -177,9 +207,15 @@ class _AppDetailPage extends React.Component {
                             >
                                 Repository
                             </Typography>
-                            <Typography variant="body1" component={Link}>
-                                https://github.com/someuser/myapp
-                            </Typography>
+                            {this.appState.appInfo?.repository ? (
+                                <Typography variant="body1" component={Link}>
+                                    {this.appState.appInfo?.repository}
+                                </Typography>
+                            ) : (
+                                <Typography variant="caption">
+                                    Not provided
+                                </Typography>
+                            )}
                             <Typography
                                 variant="h6"
                                 fontWeight={700}
@@ -193,9 +229,15 @@ class _AppDetailPage extends React.Component {
                             >
                                 Homepage
                             </Typography>
-                            <Typography variant="body1" component={Link}>
-                                https://github.com/someuser/myapp
-                            </Typography>
+                            {this.appState.appInfo?.repository ? (
+                                <Typography variant="body1" component={Link}>
+                                    {this.appState.appInfo?.homepage}
+                                </Typography>
+                            ) : (
+                                <Typography variant="caption" color="">
+                                    Not provided
+                                </Typography>
+                            )}
                             <Typography
                                 variant="h6"
                                 fontWeight={700}
@@ -216,7 +258,7 @@ class _AppDetailPage extends React.Component {
                             >
                                 <Avatar src="./logo192.png" />
                                 <Typography variant="body1" component={Link}>
-                                    Aome person
+                                    {this.appState.appInfo?.owner.author}
                                 </Typography>
                             </Stack>
                         </Grid>
@@ -227,8 +269,8 @@ class _AppDetailPage extends React.Component {
     }
 }
 
-export const AppDetailPage = connect<Props, {}, {}, RootAppState>(
+export const AppDetailPage = connect<_Props, {}, {}, RootAppState>(
     (rootAppState: RootAppState) => ({
-        appDetailAppState: rootAppState.appDetail,
+        appState: rootAppState.appDetail,
     })
 )(_AppDetailPage);

@@ -5,6 +5,7 @@ import { RootAppState } from "../states/RootAppState";
 import { OnboardAppState } from "../states/OnBoardAppState";
 import { CircularProgress, Typography } from "@mui/material";
 import { AppContext, ReactAppContextType } from "../AppContext";
+import { fetchWithAuth } from "../fetch";
 type _State = {};
 
 type _Props = {
@@ -27,14 +28,15 @@ class _Onboard extends React.Component<_Props, _State> {
      * succesful authentication, the page will be redirected to itself with
      * ?success=true query param.
      */
-    getRedirectUrl(): string {
-        let url = new URLSearchParams(document.location.search).get(
-            "redirect_url"
-        );
-        if (url && !this.urlIsAllowed(url)) {
-            throw new Error("redirect_url must be the same domain.");
-        }
-        return url || "";
+    getRedirectUrl(): string | null {
+        return this._context.route.query.get("redirect_url");
+        // let url = new URLSearchParams(document.location.search).get(
+        //     "redirect_url"
+        // );
+        // if (url && !this.urlIsAllowed(url)) {
+        //     throw new Error("redirect_url must be the same domain.");
+        // }
+        // return url || "";
     }
 
     urlIsAllowed(url: string): boolean {
@@ -119,10 +121,13 @@ class _Onboard extends React.Component<_Props, _State> {
             }
         } else {
             // Otherwise start the onboarding process
-            const response = await fetch(this.getBackendUrl(), {
-                method: "POST",
-                mode: "cors",
-            });
+            const response = await fetchWithAuth(
+                this._context,
+                this.getBackendUrl(),
+                {
+                    method: "POST",
+                }
+            );
 
             const { location } = await response.json();
             document.location.href = location;

@@ -5,6 +5,7 @@ import {
     CardActions,
     Button,
     Stack,
+    Box,
 } from "@mui/material";
 import React from "react";
 
@@ -22,10 +23,10 @@ export class PricingCard extends React.PureComponent<PricingCardProps> {
         return (
             <Card sx={{ p: 2, borderRadius: 5 }}>
                 <CardContent>
-                    <Typography variant="h6" mb={2}>
+                    <Typography variant="h6" mb={0}>
                         {this.props.name}
                     </Typography>
-                    <Typography variant="body1" mb={1}>
+                    <Typography variant="caption" mb={2} component="div">
                         {this.props.callToAction}
                     </Typography>
                     <Typography variant="body1">
@@ -38,10 +39,6 @@ export class PricingCard extends React.PureComponent<PricingCardProps> {
                         {this.props.freeQuota > 0
                             ? `First ${this.props.freeQuota} requests are free.`
                             : "No free quota."}
-                    </Typography>
-
-                    <Typography variant="caption">
-                        {this.props.callToAction}
                     </Typography>
                 </CardContent>
                 <CardActions>{this.props.actionButton}</CardActions>

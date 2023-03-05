@@ -9,6 +9,8 @@ import {
     TableCell,
     TableBody,
     Pagination,
+    Divider,
+    Grid,
 } from "@mui/material";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -90,22 +92,34 @@ export class LogTable<Activity> extends React.Component<
 
     render() {
         return (
-            <Box>
-                <Stack
-                    direction="row"
-                    display="flex"
-                    alignItems="center"
-                    mb={2}
+            <Grid container rowGap={5}>
+                <Grid
+                    item
+                    xs={8}
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "end",
+                    }}
                 >
-                    <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                    <Typography
+                        variant="h6"
+                        sx={{ display: "flex", alignItems: "end" }}
+                    >
                         {this.props.tableName}
                     </Typography>
-                    {/* <Pagination
-        count={this.numPages()}
-        page={this.activityPageNum()}
-        onChange={(e, page) => this.handlePageChange(page)}
-        sx={{ flexGrow: 1 }}
-    /> */}
+                    <Divider />
+                </Grid>
+                <Grid
+                    item
+                    xs={4}
+                    sx={{
+                        display: "flex",
+                        justifyContent: "end",
+                        alignItems: "start",
+                        mb: 1,
+                    }}
+                >
                     <LocalizationProvider dateAdapter={AdapterDateFns}>
                         <DatePicker
                             label="Display up to"
@@ -114,27 +128,11 @@ export class LogTable<Activity> extends React.Component<
                             renderInput={(params) => <TextField {...params} />}
                         />
                     </LocalizationProvider>
-                </Stack>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            {this.props.headers.map((header, index) => (
-                                <TableCell
-                                    key={index}
-                                    sx={{
-                                        whiteSpace: header.flexGrow
-                                            ? "100%"
-                                            : "nowrap",
-                                    }}
-                                >
-                                    {header.title}
-                                </TableCell>
-                            ))}
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {this.currentPageActivities().map((activity, index) => (
-                            <TableRow key={index}>
+                </Grid>
+                <Grid xs={12}>
+                    <Table>
+                        <TableHead>
+                            <TableRow>
                                 {this.props.headers.map((header, index) => (
                                     <TableCell
                                         key={index}
@@ -144,31 +142,54 @@ export class LogTable<Activity> extends React.Component<
                                                 : "nowrap",
                                         }}
                                     >
-                                        {this.props.renderCell(
-                                            header.title,
-                                            activity
-                                        )}
+                                        {header.title}
                                     </TableCell>
                                 ))}
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-                {this.props.activities.length === 0 && (
-                    <Typography variant="body1" m={2} sx={{ opacity: 0.8 }}>
-                        No Content
-                    </Typography>
-                )}
+                        </TableHead>
+                        <TableBody>
+                            {this.currentPageActivities().map(
+                                (activity, index) => (
+                                    <TableRow key={index}>
+                                        {this.props.headers.map(
+                                            (header, index) => (
+                                                <TableCell
+                                                    key={index}
+                                                    sx={{
+                                                        whiteSpace:
+                                                            header.flexGrow
+                                                                ? "100%"
+                                                                : "nowrap",
+                                                    }}
+                                                >
+                                                    {this.props.renderCell(
+                                                        header.title,
+                                                        activity
+                                                    )}
+                                                </TableCell>
+                                            )
+                                        )}
+                                    </TableRow>
+                                )
+                            )}
+                        </TableBody>
+                    </Table>
+                    {this.props.activities.length === 0 && (
+                        <Typography variant="body1" m={2} sx={{ opacity: 0.8 }}>
+                            No Content
+                        </Typography>
+                    )}
 
-                {this.currentPageActivities().length > 0 && (
-                    <Pagination
-                        count={this.numPages()}
-                        page={this.activityPageNum()}
-                        onChange={(e, page) => this.handlePageChange(page)}
-                        sx={{ flexGrow: 1, mt: 2 }}
-                    />
-                )}
-            </Box>
+                    {this.currentPageActivities().length > 0 && (
+                        <Pagination
+                            count={this.numPages()}
+                            page={this.activityPageNum()}
+                            onChange={(e, page) => this.handlePageChange(page)}
+                            sx={{ flexGrow: 1, mt: 2 }}
+                        />
+                    )}
+                </Grid>
+            </Grid>
         );
     }
 }

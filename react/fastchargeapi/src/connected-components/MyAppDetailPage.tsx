@@ -237,32 +237,25 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                     >
                         My Apps
                     </Link>
-                    <Typography color="text.primary">
-                        {this.getAppName()}
-                    </Typography>
+                    <Stack direction="row" spacing={2} alignItems="center">
+                        <Typography color="text.primary" variant="h6">
+                            {this.getAppName()}
+                        </Typography>
+                        <Button variant="contained" color="secondary">
+                            Publish
+                        </Button>
+                    </Stack>
                 </Breadcrumbs>
-                <Divider sx={{ mb: 5, mt: 2 }} />
+                <Divider sx={{ mt: 1, mb: 5 }} />
                 <Stack spacing={10}>
                     <Stack>
-                        <Stack
-                            direction="row"
-                            mb={5}
-                            spacing={3}
-                            alignItems="center"
-                        >
-                            <Typography variant="h6">
-                                {this.getAppName()}
-                            </Typography>
-                            <Button variant="contained" color="secondary">
-                                Publish
-                            </Button>
-                        </Stack>
                         <Grid container spacing={2}>
                             <Grid item xs={12}>
                                 <Typography mb={1} fontSize={14} variant="h6">
                                     App name
                                 </Typography>
                                 <TextField
+                                    variant="standard"
                                     value={this.appState.appDetail?.name || ""}
                                     disabled
                                 />
@@ -376,12 +369,11 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                     </Stack>
                     {/* Start Pricing Section */}
                     <Stack>
-                        <Typography variant="h6" mb={5}>
-                            Pricing
-                        </Typography>
-                        <Stack direction="row" spacing={2}>
+                        <Typography variant="h6">Pricing</Typography>
+                        <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
                             <Button
                                 variant="contained"
+                                size="small"
                                 endIcon={<AddIcon />}
                                 onClick={() => {
                                     openDocumentationDialog(this, () =>
@@ -396,6 +388,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                             <Button
                                 variant="contained"
                                 color="secondary"
+                                size="small"
                                 disabled={
                                     this.state.pricingCheckboxes.size == 0
                                 }
@@ -412,6 +405,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                 Delete
                             </Button>
                         </Stack>
+                        <Divider sx={{ mt: 2, mb: 5 }} />
                         <Table sx={{ mt: 2 }}>
                             <TableHead>
                                 <TableRow>
@@ -574,12 +568,13 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                     </Stack>
                     {/* Start API Section */}
                     <Stack>
-                        <Typography variant="h6" mb={5}>
+                        <Typography variant="h6" sx={{ mb: 1 }}>
                             Endpoints
                         </Typography>
                         <Stack direction="row" spacing={2}>
                             <Button
                                 variant="contained"
+                                size="small"
                                 endIcon={<AddIcon />}
                                 onClick={() => {
                                     openDocumentationDialog(this, () =>
@@ -593,6 +588,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                             </Button>
                             <Button
                                 variant="contained"
+                                size="small"
                                 color="secondary"
                                 disabled={
                                     this.state.endpointCheckboxes.size == 0
@@ -611,6 +607,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                 Delete
                             </Button>
                         </Stack>
+                        <Divider sx={{ mt: 2, mb: 5 }} />
                         <Table sx={{ mt: 2 }}>
                             <TableHead>
                                 <TableRow>
