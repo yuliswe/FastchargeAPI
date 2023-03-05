@@ -446,6 +446,8 @@ export class User extends Item {
     stripeCustomerId: string;
     stripeConnectAccountId: string;
     appTokens: { [appName: string]: string };
+    createdAt: number;
+    updatedAt: number;
 }
 
 /// When creating a new Item class, remember to add it to codegen.yml mappers

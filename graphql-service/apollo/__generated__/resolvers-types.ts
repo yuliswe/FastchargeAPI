@@ -362,12 +362,14 @@ export type GQLUser = {
   accountHistories: Array<GQLAccountHistory>;
   apps: Array<GQLApp>;
   author: Scalars['String'];
-  balance?: Maybe<Scalars['String']>;
+  balance: Scalars['String'];
+  createdAt: Scalars['Timestamp'];
   email: Scalars['Email'];
   stripeConnectAccountId?: Maybe<Scalars['String']>;
   stripeCustomerId?: Maybe<Scalars['String']>;
   subscriptions: Array<GQLSubscribe>;
   updateUser?: Maybe<GQLUser>;
+  updatedAt: Scalars['Timestamp'];
   usageLogs: Array<GQLUsageLog>;
   usageSummaries: Array<GQLUsageSummary>;
 };
@@ -386,6 +388,7 @@ export type GQLUserAccountHistoriesArgs = {
 
 
 export type GQLUserUpdateUserArgs = {
+  author?: InputMaybe<Scalars['String']>;
   stripeConnectAccountId?: InputMaybe<Scalars['String']>;
   stripeCustomerId?: InputMaybe<Scalars['String']>;
 };
@@ -696,12 +699,14 @@ export type GQLUserResolvers<ContextType = RequestContext, ParentType extends GQ
   accountHistories?: Resolver<Array<GQLResolversTypes['AccountHistory']>, ParentType, ContextType, RequireFields<GQLUserAccountHistoriesArgs, 'limit'>>;
   apps?: Resolver<Array<GQLResolversTypes['App']>, ParentType, ContextType>;
   author?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
-  balance?: Resolver<Maybe<GQLResolversTypes['String']>, ParentType, ContextType>;
+  balance?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
+  createdAt?: Resolver<GQLResolversTypes['Timestamp'], ParentType, ContextType>;
   email?: Resolver<GQLResolversTypes['Email'], ParentType, ContextType>;
   stripeConnectAccountId?: Resolver<Maybe<GQLResolversTypes['String']>, ParentType, ContextType>;
   stripeCustomerId?: Resolver<Maybe<GQLResolversTypes['String']>, ParentType, ContextType>;
   subscriptions?: Resolver<Array<GQLResolversTypes['Subscribe']>, ParentType, ContextType>;
   updateUser?: Resolver<Maybe<GQLResolversTypes['User']>, ParentType, ContextType, Partial<GQLUserUpdateUserArgs>>;
+  updatedAt?: Resolver<GQLResolversTypes['Timestamp'], ParentType, ContextType>;
   usageLogs?: Resolver<Array<GQLResolversTypes['UsageLog']>, ParentType, ContextType, RequireFields<GQLUserUsageLogsArgs, 'limit'>>;
   usageSummaries?: Resolver<Array<GQLResolversTypes['UsageSummary']>, ParentType, ContextType, RequireFields<GQLUserUsageSummariesArgs, 'app' | 'limit'>>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;

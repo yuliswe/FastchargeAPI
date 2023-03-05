@@ -102,11 +102,13 @@ type Secret {
 type User {
     email: Email!
     author: String!
-    apps: [App!]!
     subscriptions: [Subscribe!]!
-    balance: String
+    createdAt: Timestamp!
+    updatedAt: Timestamp!
+    balance: String!
     stripeCustomerId: String
     stripeConnectAccountId: String
+    apps: [App!]!
 
     usageLogs(
         app: String
@@ -115,7 +117,11 @@ type User {
         dateRange: DateRangeInput
     ): [UsageLog!]!
 
-    updateUser(stripeCustomerId: String, stripeConnectAccountId: String): User
+    updateUser(
+        author: String
+        stripeCustomerId: String
+        stripeConnectAccountId: String
+    ): User
 
     usageSummaries(
         app: ID!

@@ -53,6 +53,8 @@ export const userResolvers: GQLResolvers & {
         balance: async (parent, args, context) => {
             return await getUserBalance(context, UserPK.stringify(parent));
         },
+        createdAt: (parent) => parent.createdAt,
+        updatedAt: (parent) => parent.updatedAt,
         stripeCustomerId: (parent) => parent.stripeCustomerId,
         stripeConnectAccountId: (parent) => parent.stripeConnectAccountId,
         accountActivities: async (
@@ -101,7 +103,11 @@ export const userResolvers: GQLResolvers & {
         },
         async updateUser(
             parent: User,
-            { stripeCustomerId, stripeConnectAccountId }: GQLUserUpdateUserArgs,
+            {
+                author,
+                stripeCustomerId,
+                stripeConnectAccountId,
+            }: GQLUserUpdateUserArgs,
             context: RequestContext,
             info: GraphQLResolveInfo
         ): Promise<User> {
@@ -109,6 +115,7 @@ export const userResolvers: GQLResolvers & {
                 throw new Denied();
             }
             let user = await context.batched.User.update(parent, {
+                author,
                 stripeCustomerId,
                 stripeConnectAccountId,
             });
