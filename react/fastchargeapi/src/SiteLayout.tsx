@@ -58,7 +58,7 @@ export class SiteLayout extends React.PureComponent<Props> {
                                     </Link>
                                     <Link
                                         underline="hover"
-                                        href="/terms-of-service"
+                                        href="/terms-of-service#tos"
                                     >
                                         Terms & Services
                                     </Link>

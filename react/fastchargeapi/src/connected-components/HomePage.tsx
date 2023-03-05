@@ -10,6 +10,7 @@ import {
     Button,
     Container,
     Grid,
+    Link,
     Paper,
     Stack,
     Table,
@@ -356,6 +357,18 @@ class _Home extends React.Component<_Props, _State> {
                                     charging only a flat fee based on the number
                                     of requests, so that you can keep the income
                                     that's rightfully yours.
+                                </Typography>
+                                <Typography variant="body1" sx={{ mt: 2 }}>
+                                    To learn more about pricing, please visit
+                                    our{" "}
+                                    <Link
+                                        href="/terms-of-service#pricing"
+                                        underline="hover"
+                                        color="info.main"
+                                    >
+                                        Terms & Services
+                                    </Link>
+                                    .
                                 </Typography>
                             </Grid>
                         </Grid>
