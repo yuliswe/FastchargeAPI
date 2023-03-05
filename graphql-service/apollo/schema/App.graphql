@@ -6,6 +6,7 @@ type Query {
     ### App API
     apps: [App]
     app(name: String): App!
+    appFullTextSearch(query: String!): [App]!
     ### User API
     users: [User] # Get all users in the system
     user(email: Email): User!
