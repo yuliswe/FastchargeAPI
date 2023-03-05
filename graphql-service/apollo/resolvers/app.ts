@@ -13,6 +13,7 @@ import {
     GQLAppUpdateAppArgs,
     GQLMutationCreateAppArgs,
     GQLQueryAppArgs,
+    GQLQueryAppFullTextSearchArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
 import jwt from "jsonwebtoken";
@@ -170,6 +171,19 @@ export const appResolvers: GQLResolvers = {
                 throw new Denied();
             }
             return app;
+        },
+        async appFullTextSearch(
+            parent: {},
+            { query }: GQLQueryAppFullTextSearchArgs,
+            context: RequestContext,
+            info: GraphQLResolveInfo
+        ): Promise<Array<App>> {
+            let apps = await context.batched.App.substringSearch(query, [
+                "name",
+                "description",
+            ]);
+            let visableApps = await Can.viewAppFilter(apps, context);
+            return visableApps;
         },
     },
     Mutation: {

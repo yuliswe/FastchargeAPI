@@ -366,10 +366,6 @@ export class Batched<I extends Item> {
      * key, or an index. If anything else is passed in, it will be passed to
      * DynamoDB and DynamoDB will raise an error.
      *
-     * If key is an object, all properties must be either a hash key, a range
-     * key, or an index. If anything else is passed in, it will be passed to
-     * DynamoDB and DynamoDB will raise an error.
-     *
      * @param key Support the hash key, or an object that will be passed to
      * dynamoose.Model.query().
      * @returns An array of objects of the model type.
@@ -556,6 +552,32 @@ export class Batched<I extends Item> {
         return await this.model.scan().exec();
     }
 
+    async substringSearch(key: string, propertyNames: string[]): Promise<I[]> {
+        const lowerCaseKey = key.toLowerCase();
+        const upperCaseKey = key.toUpperCase();
+        const keyWithFirstLetterCapitalized = capitalizeFirstLetter(key);
+        let query = this.model.scan();
+        for (let propertyName of propertyNames) {
+            if (query !== this.model.scan()) {
+                query.or();
+            }
+            query
+                .where(propertyName)
+                .contains(key)
+                .or()
+                .where(propertyName)
+                .contains(lowerCaseKey)
+                .or()
+                .where(propertyName)
+                .contains(upperCaseKey)
+                .or()
+                .where(propertyName)
+                .contains(keyWithFirstLetterCapitalized)
+                .or();
+        }
+        return await query.exec();
+    }
+
     // prime(values: Iterable<I>) {
     //     let keyName = this.model.table().hashKey;
     //     let keyMap = new Map();
@@ -579,4 +601,8 @@ export class Batched<I extends Item> {
 
 async function sleep(miliseconds: number) {
     return new Promise((resolve) => setTimeout(resolve, miliseconds));
+}
+
+function capitalizeFirstLetter(word: string) {
+    return word.charAt(0).toUpperCase() + word.slice(1);
 }
