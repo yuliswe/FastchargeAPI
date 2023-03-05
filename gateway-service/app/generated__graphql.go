@@ -8,21 +8,23 @@ import (
 	"github.com/Khan/genqlient/graphql"
 )
 
-// BillUsageCreateUsageLog includes the requested fields of the GraphQL type UsageLog.
-type BillUsageCreateUsageLog struct {
+// CreateUsageLogCreateUsageLog includes the requested fields of the GraphQL type UsageLog.
+type CreateUsageLogCreateUsageLog struct {
 	CreatedAt int64 `json:"createdAt"`
 }
 
-// GetCreatedAt returns BillUsageCreateUsageLog.CreatedAt, and is useful for accessing the field via an interface.
-func (v *BillUsageCreateUsageLog) GetCreatedAt() int64 { return v.CreatedAt }
+// GetCreatedAt returns CreateUsageLogCreateUsageLog.CreatedAt, and is useful for accessing the field via an interface.
+func (v *CreateUsageLogCreateUsageLog) GetCreatedAt() int64 { return v.CreatedAt }
 
-// BillUsageResponse is returned by BillUsage on success.
-type BillUsageResponse struct {
-	CreateUsageLog BillUsageCreateUsageLog `json:"createUsageLog"`
+// CreateUsageLogResponse is returned by CreateUsageLog on success.
+type CreateUsageLogResponse struct {
+	CreateUsageLog CreateUsageLogCreateUsageLog `json:"createUsageLog"`
 }
 
-// GetCreateUsageLog returns BillUsageResponse.CreateUsageLog, and is useful for accessing the field via an interface.
-func (v *BillUsageResponse) GetCreateUsageLog() BillUsageCreateUsageLog { return v.CreateUsageLog }
+// GetCreateUsageLog returns CreateUsageLogResponse.CreateUsageLog, and is useful for accessing the field via an interface.
+func (v *CreateUsageLogResponse) GetCreateUsageLog() CreateUsageLogCreateUsageLog {
+	return v.CreateUsageLog
+}
 
 // GetAppRoutesApp includes the requested fields of the GraphQL type App.
 type GetAppRoutesApp struct {
@@ -160,21 +162,21 @@ type TriggerBillingTriggerBillingUsageSummary struct {
 // GetCreatedAt returns TriggerBillingTriggerBillingUsageSummary.CreatedAt, and is useful for accessing the field via an interface.
 func (v *TriggerBillingTriggerBillingUsageSummary) GetCreatedAt() int64 { return v.CreatedAt }
 
-// __BillUsageInput is used internally by genqlient
-type __BillUsageInput struct {
+// __CreateUsageLogInput is used internally by genqlient
+type __CreateUsageLogInput struct {
 	UserEmail string `json:"userEmail"`
 	App_name  string `json:"app_name"`
 	Path      string `json:"path"`
 }
 
-// GetUserEmail returns __BillUsageInput.UserEmail, and is useful for accessing the field via an interface.
-func (v *__BillUsageInput) GetUserEmail() string { return v.UserEmail }
+// GetUserEmail returns __CreateUsageLogInput.UserEmail, and is useful for accessing the field via an interface.
+func (v *__CreateUsageLogInput) GetUserEmail() string { return v.UserEmail }
 
-// GetApp_name returns __BillUsageInput.App_name, and is useful for accessing the field via an interface.
-func (v *__BillUsageInput) GetApp_name() string { return v.App_name }
+// GetApp_name returns __CreateUsageLogInput.App_name, and is useful for accessing the field via an interface.
+func (v *__CreateUsageLogInput) GetApp_name() string { return v.App_name }
 
-// GetPath returns __BillUsageInput.Path, and is useful for accessing the field via an interface.
-func (v *__BillUsageInput) GetPath() string { return v.Path }
+// GetPath returns __CreateUsageLogInput.Path, and is useful for accessing the field via an interface.
+func (v *__CreateUsageLogInput) GetPath() string { return v.Path }
 
 // __GetAppRoutesInput is used internally by genqlient
 type __GetAppRoutesInput struct {
@@ -228,23 +230,23 @@ func (v *__TriggerBillingInput) GetUser() string { return v.User }
 // GetApp returns __TriggerBillingInput.App, and is useful for accessing the field via an interface.
 func (v *__TriggerBillingInput) GetApp() string { return v.App }
 
-func BillUsage(
+func CreateUsageLog(
 	ctx context.Context,
 	client graphql.Client,
 	userEmail string,
 	app_name string,
 	path string,
-) (*BillUsageResponse, error) {
+) (*CreateUsageLogResponse, error) {
 	req := &graphql.Request{
-		OpName: "BillUsage",
+		OpName: "CreateUsageLog",
 		Query: `
-mutation BillUsage ($userEmail: Email!, $app_name: String!, $path: String!) {
+mutation CreateUsageLog ($userEmail: Email!, $app_name: String!, $path: String!) {
 	createUsageLog(subscriber: $userEmail, app: $app_name, path: $path) {
 		createdAt
 	}
 }
 `,
-		Variables: &__BillUsageInput{
+		Variables: &__CreateUsageLogInput{
 			UserEmail: userEmail,
 			App_name:  app_name,
 			Path:      path,
@@ -252,7 +254,7 @@ mutation BillUsage ($userEmail: Email!, $app_name: String!, $path: String!) {
 	}
 	var err error
 
-	var data BillUsageResponse
+	var data CreateUsageLogResponse
 	resp := &graphql.Response{Data: &data}
 
 	err = client.MakeRequest(

@@ -9,7 +9,11 @@ query GetAppRoutes($app: String) {
     }
 }
 
-mutation BillUsage($userEmail: Email!, $app_name: String!, $path: String!) {
+mutation CreateUsageLog(
+    $userEmail: Email!
+    $app_name: String!
+    $path: String!
+) {
     createUsageLog(subscriber: $userEmail, app: $app_name, path: $path) {
         createdAt
     }

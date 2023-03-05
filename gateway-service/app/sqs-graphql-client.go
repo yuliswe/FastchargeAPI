@@ -12,15 +12,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/google/uuid"
 )
 
 type SQSTransport struct {
 	Headers                map[string]string
 	SQSService             *sqs.SQS
 	MessageDeduplicationId string
-	DelaySeconds           int
+	MessageGroupId         string
+	QueueUrl               string
 }
+
+const (
+	BillingFifoQueueUrl = "https://sqs.us-east-1.amazonaws.com/887279901853/graphql-service-billing-queue.fifo"
+	UsageLogQueueUrl    = "https://sqs.us-east-1.amazonaws.com/887279901853/graphql-service-usage-log-queue"
+)
 
 func (self *SQSTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	for k, v := range self.Headers {
@@ -32,31 +37,19 @@ func (self *SQSTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	// fmt.Println(color.Green, "Sending request url", req.URL, req.Host, color.Reset)
 	// fmt.Println(color.Green, "Sending request body", string(body), color.Reset)
 	// fmt.Println(color.Green, "Sending request header", req.Header, color.Reset)
-	var queue string
-	if self.DelaySeconds >= 60 {
-		queue = "https://sqs.us-east-1.amazonaws.com/887279901853/graphql-service-fifo-queue-delay-60s.fifo"
-	} else if self.DelaySeconds >= 10 {
-		queue = "https://sqs.us-east-1.amazonaws.com/887279901853/graphql-service-fifo-queue-delay-10s.fifo"
-	} else {
-		queue = "https://sqs.us-east-1.amazonaws.com/887279901853/graphql-service-fifo-queue.fifo"
+	var messageGroupIdPtr *string
+	if self.MessageGroupId != "" {
+		messageGroupIdPtr = &self.MessageGroupId
 	}
-	messageGroupId := "gateway-service"
-	messageDeduplicationId := ""
-	if self.MessageDeduplicationId == "" {
-		messageDeduplicationId = uuid.New().String()
-	} else {
-		messageDeduplicationId = self.MessageDeduplicationId
+	var messageDeduplicationIdPtr *string
+	if self.MessageDeduplicationId != "" {
+		messageDeduplicationIdPtr = &self.MessageDeduplicationId
 	}
-	// var delaySeconds *int64
-	// if self.DelaySeconds > 0 {
-	// 	delaySeconds = &self.DelaySeconds
-	// }
 	_, err := self.SQSService.SendMessage(&sqs.SendMessageInput{
 		MessageBody:            &body,
-		MessageGroupId:         &messageGroupId,
-		MessageDeduplicationId: &messageDeduplicationId,
-		// DelaySeconds:           delaySeconds,
-		QueueUrl: &queue,
+		MessageGroupId:         messageGroupIdPtr,
+		MessageDeduplicationId: messageDeduplicationIdPtr,
+		QueueUrl:               &self.QueueUrl,
 	})
 	if err != nil {
 		fmt.Println(color.Red, "Error sending SQS message", err, color.Reset)
@@ -71,16 +64,28 @@ func (self *SQSTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 type SQSGraphQLClient struct {
-	DedupID      string
-	DelaySeconds int
+	MessageDeduplicationId string
+	MessageGroupId         string
+	QueueUrl               string
 }
 
 func (self SQSGraphQLClient) New() graphql.Client {
 	return getSQSGraphQLClient(self)
 }
 
+// Returns a GraphQL client that uses SQS as a transport layer.
+//
+// MessageDeduplicationId: Only for fifo queues. Sets the MessageDeduplicationId
+// for the SQS message.
+//
+// MessageGroupId: Only for fifo queues. Sets the MessageGroupId for the SQS
+// message delay_seconds: selects the SQS queue to use based on the
+// delay_seconds
+//
+// Effectively, MessageDeduplicationId deduplicates messages with the same ID.
+// Messages with the same MessageGroupId are processed in FIFO order.
 func getSQSGraphQLClient(config SQSGraphQLClient) graphql.Client {
-	// doc https://github.com/sha1sum/aws_signing_client
+	// Doc: https://github.com/sha1sum/aws_signing_client
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region: aws.String("us-east-1"),
 	}))
@@ -90,8 +95,9 @@ func getSQSGraphQLClient(config SQSGraphQLClient) graphql.Client {
 				"X-Service-Name": "gateway",
 			},
 			SQSService:             sqs.New(sess),
-			MessageDeduplicationId: config.DedupID,
-			DelaySeconds:           config.DelaySeconds,
+			MessageDeduplicationId: config.MessageDeduplicationId,
+			MessageGroupId:         config.MessageGroupId,
+			QueueUrl:               config.QueueUrl,
 		},
 	}
 	return graphql.NewClient("", &baseClient)

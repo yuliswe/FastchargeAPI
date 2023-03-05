@@ -324,19 +324,26 @@ func createUserUsageToken(app string, user string) (string, error) {
 
 func billUsage(user string, app string, path string) {
 	//fmt.Println(color.Yellow, "Billing usage for", user, app, path, color.Reset)
-
-	// Note: DelaySeconds of BillUsage + DedupID period must be less than the DelaySeconds of TriggerBilling
-	// Delay helps batch processing of usage logs
-	if _, err := BillUsage(context.Background(), SQSGraphQLClient{DelaySeconds: 20}.New(), user, app, path); err != nil {
-		fmt.Println(color.Yellow, "Error creating UsageLog: ", err, color.Reset)
+	if _, err := CreateUsageLog(
+		context.Background(),
+		SQSGraphQLClient{QueueUrl: UsageLogQueueUrl}.New(),
+		user,
+		app,
+		path,
+	); err != nil {
+		fmt.Println(color.Red, "Error creating UsageLog: ", err, color.Reset)
 	}
-	// DedupID with the same suffix helps reduces the number of calls to the billing lambda.
-	// This will make the trigger billing deduped for 30 seconds
-	dedupId := fmt.Sprintf("trigger-billing-%s-%d", user, time.Now().Unix()/30)
-	if _, err := TriggerBilling(context.Background(), SQSGraphQLClient{DedupID: dedupId,
-		DelaySeconds: 60, // The first triggered billing will run after 60 seconds. This will make sure all the usage logs created in 30s are processed.
-	}.New(), user, app); err != nil {
-		fmt.Println(color.Yellow, "Error triggering billing: ", err, color.Reset)
+	if _, err := TriggerBilling(
+		context.Background(),
+		SQSGraphQLClient{
+			MessageDeduplicationId: fmt.Sprintf("trigger-billing-%s-%d", user, time.Now().Unix()),
+			MessageGroupId:         user,
+			QueueUrl:               BillingFifoQueueUrl,
+		}.New(),
+		user,
+		app,
+	); err != nil {
+		fmt.Println(color.Red, "Error triggering billing: ", err, color.Reset)
 	}
 }
 

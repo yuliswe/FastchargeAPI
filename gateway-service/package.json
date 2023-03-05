@@ -5,9 +5,10 @@
   "main": "index.js",
   "scripts": {
     "gen": "go run github.com/Khan/genqlient",
-    "build": "npm run gen && sam build",
+    "build": "npm run gen && cd app && go build && rm app && cd ../ && sam build",
     "start": "npm run build && sam local start-api -p 6000 --warm-containers eager --env-vars ./devenv.json",
     "watch": "nodemon -e go,graphql,yaml -i generated__graphql.go --signal SIGINT -x 'npm run start || exit 1'",
+    "logs": "sam logs --stack-name gateway-service --tail",
     "deploy": "npm run build && sam deploy"
   },
   "author": "",
