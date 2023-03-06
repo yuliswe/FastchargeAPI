@@ -9,6 +9,7 @@ import {
     Box,
     Button,
     Container,
+    Divider,
     Grid,
     Link,
     Paper,
@@ -249,13 +250,13 @@ class _Home extends React.Component<_Props, _State> {
                     <Container maxWidth="lg">
                         <Grid container spacing={5}>
                             <Grid item xs={6}>
-                                <TableContainer sx={{ pr: 10 }}>
+                                <TableContainer>
                                     <Table>
                                         <TableHead>
                                             <TableRow>
                                                 <TableCell>
                                                     <Typography
-                                                        variant="body1"
+                                                        variant="h6"
                                                         fontWeight="bolder"
                                                     >
                                                         FastchargeAPI fees
@@ -269,21 +270,27 @@ class _Home extends React.Component<_Props, _State> {
                                         <TableBody>
                                             <TableRow>
                                                 <TableCell>
-                                                    <Typography variant="body1">
-                                                        Service fees
+                                                    <Typography
+                                                        variant="body1"
+                                                        fontWeight={700}
+                                                    >
+                                                        Service fee
                                                     </Typography>
                                                 </TableCell>
                                                 <TableCell>
                                                     <Typography variant="body1">
-                                                        $0.0001/request of your
-                                                        customer
+                                                        $0.0001 per request by
+                                                        your customer
                                                     </Typography>
                                                 </TableCell>
                                             </TableRow>
                                             <TableRow>
                                                 <TableCell>
-                                                    <Typography variant="body1">
-                                                        Commission fees
+                                                    <Typography
+                                                        variant="body1"
+                                                        fontWeight={700}
+                                                    >
+                                                        Commission fee
                                                     </Typography>
                                                 </TableCell>
                                                 <TableCell>
@@ -294,7 +301,10 @@ class _Home extends React.Component<_Props, _State> {
                                             </TableRow>
                                             <TableRow>
                                                 <TableCell>
-                                                    <Typography variant="body1">
+                                                    <Typography
+                                                        variant="body1"
+                                                        fontWeight={700}
+                                                    >
                                                         Maximum monthly requests
                                                     </Typography>
                                                 </TableCell>
@@ -309,7 +319,7 @@ class _Home extends React.Component<_Props, _State> {
                                             <TableRow>
                                                 <TableCell>
                                                     <Typography
-                                                        variant="body1"
+                                                        variant="h6"
                                                         fontWeight="bolder"
                                                         sx={{ mt: 5 }}
                                                     >
@@ -324,15 +334,18 @@ class _Home extends React.Component<_Props, _State> {
                                         <TableBody>
                                             <TableRow>
                                                 <TableCell>
-                                                    <Typography variant="body1">
+                                                    <Typography
+                                                        variant="body1"
+                                                        fontWeight={700}
+                                                    >
                                                         Stripe service fees
                                                     </Typography>
                                                 </TableCell>
                                                 <TableCell>
                                                     <Typography variant="body1">
-                                                        $3.00 each withdrawal +
-                                                        3% of the transaction
-                                                        amount
+                                                        $2.55 + 3.65% of each
+                                                        payment to your bank
+                                                        account
                                                     </Typography>
                                                 </TableCell>
                                             </TableRow>

@@ -29,9 +29,24 @@ export class SiteLayout extends React.PureComponent<Props> {
                 <AppBar></AppBar>
                 {this.props.children}
                 <Paper sx={{ mt: 15, bgcolor: "primary.main", p: 5 }}>
-                    <Container maxWidth="xl">
+                    <Container maxWidth="lg">
                         <Grid container>
-                            <Grid item xs={2}>
+                            <Grid item xs={3}>
+                                <Stack>
+                                    <Link
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                        }}
+                                    >
+                                        <CopyrightIcon
+                                            sx={{ fontSize: 16, mr: 0.5 }}
+                                        />
+                                        FastchargeAPI
+                                    </Link>
+                                </Stack>
+                            </Grid>
+                            <Grid item xs={3}>
                                 <Stack>
                                     <Link
                                         underline="hover"
@@ -42,13 +57,13 @@ export class SiteLayout extends React.PureComponent<Props> {
                                     <Link>Documentation</Link>
                                 </Stack>
                             </Grid>
-                            <Grid item xs={2}>
+                            <Grid item xs={3}>
                                 <Stack>
                                     <Link>Report an Issue</Link>
                                     <Link>Get help on Discord</Link>
                                 </Stack>
                             </Grid>
-                            <Grid item xs={2}>
+                            <Grid item xs={3}>
                                 <Stack>
                                     <Link
                                         underline="hover"
@@ -61,21 +76,6 @@ export class SiteLayout extends React.PureComponent<Props> {
                                         href="/terms-of-service#tos"
                                     >
                                         Terms & Services
-                                    </Link>
-                                </Stack>
-                            </Grid>
-                            <Grid item xs={2}>
-                                <Stack>
-                                    <Link
-                                        sx={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                        }}
-                                    >
-                                        <CopyrightIcon
-                                            sx={{ fontSize: 16, mr: 0.5 }}
-                                        />
-                                        FastchargeAPI
                                     </Link>
                                 </Stack>
                             </Grid>

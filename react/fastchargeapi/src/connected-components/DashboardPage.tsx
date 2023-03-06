@@ -28,7 +28,9 @@ import { appStore } from "../store-config";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import {
     GQLAccountActivityReason,
+    GQLAccountActivityStatus,
     GQLAccountActivityType,
+    GQLStripeTransferStatus,
 } from "../__generated__/gql-operations";
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -117,9 +119,11 @@ class _DashboardPage extends React.Component<Props, State> {
     reason(activity: AccountActivity): string {
         switch (activity.reason) {
             case GQLAccountActivityReason.Topup:
-                return "Account Top-up";
+                return "Top-up";
             case GQLAccountActivityReason.Payout:
-                return "User Withdrawal";
+                return "Payout";
+            case GQLAccountActivityReason.PayoutFee:
+                return "Fee";
             case GQLAccountActivityReason.ApiPerRequestCharge:
                 return "API Request";
             case GQLAccountActivityReason.ApiMinMonthlyCharge:
@@ -175,6 +179,40 @@ class _DashboardPage extends React.Component<Props, State> {
         return this.appState.accountHistories;
     }
 
+    eta(activity: AccountActivity): string {
+        if (activity.reason === GQLAccountActivityReason.Payout) {
+            if (activity.stripeTransfer?.transferAt) {
+                let date = new Date(activity.stripeTransfer?.transferAt);
+                return date.toDateString();
+            }
+        } else if (
+            activity.status === GQLAccountActivityStatus.Pending &&
+            activity.settleAt
+        ) {
+            let date = new Date(activity.settleAt);
+            return date.toDateString();
+        }
+        return "";
+    }
+
+    status(activity: AccountActivity): string {
+        if (activity.reason === GQLAccountActivityReason.Payout) {
+            switch (activity.stripeTransfer?.status) {
+                case GQLStripeTransferStatus.Pending:
+                    return "On the way";
+                case GQLStripeTransferStatus.Transferred:
+                    return "";
+            }
+        }
+        switch (activity.status) {
+            case GQLAccountActivityStatus.Pending:
+                return "Pending";
+            case GQLAccountActivityStatus.Settled:
+                return "";
+        }
+        return "";
+    }
+
     chartData() {
         if (this.accountHistory().length === 0) {
             return {
@@ -183,11 +221,9 @@ class _DashboardPage extends React.Component<Props, State> {
             };
         }
         let sample: { label: string; value: number }[] = [];
-        let curDate = this.accountHistory()[0].closingTime;
-        let day = 1000 * 60 * 60 * 24;
         for (let [index, v] of this.accountHistory().entries()) {
             if (index % 10 === 0) {
-                sample.push({
+                sample.unshift({
                     label: "",
                     value: Number.parseFloat(v.closingBalance),
                 });
@@ -392,10 +428,14 @@ class _DashboardPage extends React.Component<Props, State> {
                                 return this.reason(activity);
                             case "Description":
                                 return activity.description;
-                            case "Earned":
+                            case "Income":
                                 return this.earned(activity);
-                            case "Spent":
+                            case "Spending":
                                 return this.spent(activity);
+                            case "Estimated Completion":
+                                return this.eta(activity);
+                            case "Status":
+                                return this.status(activity);
                         }
                     }}
                     headers={[
@@ -407,13 +447,18 @@ class _DashboardPage extends React.Component<Props, State> {
                         },
                         {
                             title: "Description",
-                            flexGrow: true,
                         },
                         {
-                            title: "Earned",
+                            title: "Status",
                         },
                         {
-                            title: "Spent",
+                            title: "Estimated Completion",
+                        },
+                        {
+                            title: "Income",
+                        },
+                        {
+                            title: "Spending",
                         },
                     ]}
                 />

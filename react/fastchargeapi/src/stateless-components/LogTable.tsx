@@ -129,7 +129,7 @@ export class LogTable<Activity> extends React.Component<
                         />
                     </LocalizationProvider>
                 </Grid>
-                <Grid xs={12}>
+                <Grid item xs={12}>
                     <Table>
                         <TableHead>
                             <TableRow>
@@ -137,9 +137,11 @@ export class LogTable<Activity> extends React.Component<
                                     <TableCell
                                         key={index}
                                         sx={{
-                                            whiteSpace: header.flexGrow
+                                            whiteSpace: "nowrap",
+                                            width: header.flexGrow
                                                 ? "100%"
-                                                : "nowrap",
+                                                : "initial",
+                                            // px: 4,
                                         }}
                                     >
                                         {header.title}
@@ -156,10 +158,11 @@ export class LogTable<Activity> extends React.Component<
                                                 <TableCell
                                                     key={index}
                                                     sx={{
-                                                        whiteSpace:
-                                                            header.flexGrow
-                                                                ? "100%"
-                                                                : "nowrap",
+                                                        whiteSpace: "nowrap",
+                                                        width: header.flexGrow
+                                                            ? "100%"
+                                                            : "initial",
+                                                        // px: 4,
                                                     }}
                                                 >
                                                     {this.props.renderCell(

@@ -322,7 +322,7 @@ class _TermsPage extends React.Component<_Props, _State> {
                                         means that the minimum amount you can
                                         withdraw is $2.65. For example, if you
                                         withdraw $100.00, you will be charged
-                                        $2.55 + 3.65% of $100.00 = $3.30, and
+                                        $2.55 + 3.65% of $100.00 = $6.20, and
                                         you will receive $93.80.
                                     </Typography>
                                     <Typography variant="body1" gutterBottom>

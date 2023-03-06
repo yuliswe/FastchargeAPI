@@ -21,6 +21,9 @@ export type GQLAccountActivity = {
   createdAt: Scalars['Timestamp'];
   description: Scalars['String'];
   reason: GQLAccountActivityReason;
+  settleAt: Scalars['Timestamp'];
+  status?: Maybe<GQLAccountActivityStatus>;
+  stripeTransfer?: Maybe<GQLStripeTransfer>;
   type: GQLAccountActivityType;
 };
 
@@ -28,7 +31,13 @@ export enum GQLAccountActivityReason {
   ApiMinMonthlyCharge = 'api_min_monthly_charge',
   ApiPerRequestCharge = 'api_per_request_charge',
   Payout = 'payout',
+  PayoutFee = 'payout_fee',
   Topup = 'topup'
+}
+
+export enum GQLAccountActivityStatus {
+  Pending = 'pending',
+  Settled = 'settled'
 }
 
 export enum GQLAccountActivityType {
@@ -159,7 +168,7 @@ export type GQLMutationCreateSecretArgs = {
 
 
 export type GQLMutationCreateStripePaymentAcceptArgs = {
-  amountCents: Scalars['Int'];
+  amount: Scalars['NonNegativeDecimal'];
   currency: Scalars['String'];
   stripePaymentIntent: Scalars['String'];
   stripePaymentStatus: Scalars['String'];
@@ -171,11 +180,11 @@ export type GQLMutationCreateStripePaymentAcceptArgs = {
 
 export type GQLMutationCreateStripeTransferArgs = {
   currency: Scalars['String'];
-  receiveCents: Scalars['Int'];
+  receiveAmount: Scalars['NonNegativeDecimal'];
   receiver: Scalars['Email'];
-  stripeTransferId: Scalars['String'];
-  stripeTransferObject: Scalars['String'];
-  withdrawCents: Scalars['Int'];
+  stripeTransferId?: InputMaybe<Scalars['String']>;
+  stripeTransferObject?: InputMaybe<Scalars['String']>;
+  withdrawAmount: Scalars['NonNegativeDecimal'];
 };
 
 
@@ -279,7 +288,7 @@ export enum GQLSortDirection {
 
 export type GQLStripePaymentAccept = {
   __typename?: 'StripePaymentAccept';
-  amountCents: Scalars['Int'];
+  amount: Scalars['NonNegativeDecimal'];
   createdAt: Scalars['Timestamp'];
   currency: Scalars['String'];
   settlePayment?: Maybe<GQLStripePaymentAccept>;
@@ -306,13 +315,20 @@ export type GQLStripeTransfer = {
   __typename?: 'StripeTransfer';
   createdAt: Scalars['Timestamp'];
   currency?: Maybe<Scalars['String']>;
-  receiveCents: Scalars['Int'];
+  receiveAmount: Scalars['NonNegativeDecimal'];
   receiver: GQLUser;
-  settleStripeTransfer?: Maybe<GQLStripeTransfer>;
-  stripeTransferId: Scalars['String'];
-  stripeTransferObject: Scalars['String'];
-  withdrawCents: Scalars['Int'];
+  settleStripeTransfer: GQLStripeTransfer;
+  status?: Maybe<GQLStripeTransferStatus>;
+  stripeTransferId?: Maybe<Scalars['String']>;
+  stripeTransferObject?: Maybe<Scalars['String']>;
+  transferAt: Scalars['Timestamp'];
+  withdrawAmount: Scalars['NonNegativeDecimal'];
 };
+
+export enum GQLStripeTransferStatus {
+  Pending = 'pending',
+  Transferred = 'transferred'
+}
 
 export type GQLSubscribe = {
   __typename?: 'Subscribe';
@@ -439,7 +455,7 @@ export type GQLGetAccountActivitiesQueryVariables = Exact<{
 }>;
 
 
-export type GQLGetAccountActivitiesQuery = { __typename?: 'Query', user: { __typename?: 'User', accountActivities: Array<{ __typename?: 'AccountActivity', createdAt: number, type: GQLAccountActivityType, amount: string, reason: GQLAccountActivityReason, description: string }> } };
+export type GQLGetAccountActivitiesQuery = { __typename?: 'Query', user: { __typename?: 'User', accountActivities: Array<{ __typename?: 'AccountActivity', createdAt: number, type: GQLAccountActivityType, amount: string, reason: GQLAccountActivityReason, description: string, status?: GQLAccountActivityStatus | null, settleAt: number, stripeTransfer?: { __typename?: 'StripeTransfer', transferAt: number, status?: GQLStripeTransferStatus | null } | null }> } };
 
 export type GQLGetAccountHistoriesQueryVariables = Exact<{
   email: Scalars['Email'];
