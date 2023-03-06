@@ -16,6 +16,8 @@ Globals:
     Timeout: 1
     MemorySize: 3008
     Tracing: Active
+    Tags:
+      service-name: graphql-service
   Api:
     TracingEnabled: true
 
@@ -85,6 +87,9 @@ Resources:
               Access-Control-Allow-Methods: "'*'"
               Access-Control-Allow-Headers: "'*'"
               Access-Control-Allow-Origin: "'*'"
+      Tags:
+        service-name: graphql-service
+
 
   # Create another gateway with IAM based authentication
   APIGatewayIAM:
@@ -179,24 +184,17 @@ Resources:
         - AmazonDynamoDBFullAccess # Give the Lambda service access to poll your DynamoDB Stream
         - AmazonSSMFullAccess # Allows getting private key from System Manager
       Events:
-        SQSEventToQueue0:
+        UsageLogQueueEvent:
           Type: SQS
           Properties:
-            Queue: !GetAtt ApolloServerQueue0.Arn
+            Queue: !GetAtt UsageLogQueue.Arn
             BatchSize: 10
             FunctionResponseTypes: 
               - ReportBatchItemFailures
-        SQSEventToQueue10:
+        BillingQueueEvent:
           Type: SQS
           Properties:
-            Queue: !GetAtt ApolloServerQueue10.Arn
-            BatchSize: 10
-            FunctionResponseTypes: 
-              - ReportBatchItemFailures
-        SQSEventToQueue60:
-          Type: SQS
-          Properties:
-            Queue: !GetAtt ApolloServerQueue60.Arn
+            Queue: !GetAtt BillingQueue.Arn
             BatchSize: 10
             FunctionResponseTypes: 
               - ReportBatchItemFailures
@@ -207,26 +205,24 @@ Resources:
         EntryPoints:
           - sqsHandler.ts
 
-  ApolloServerQueue0:
+  UsageLogQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: graphql-service-fifo-queue.fifo
+      QueueName: graphql-service-usage-log-queue
+      Tags:
+        - Key: service-name
+          Value: graphql-service
+
+  BillingQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: graphql-service-billing-queue.fifo
       FifoQueue: true
-      
-  ApolloServerQueue10:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: graphql-service-fifo-queue-delay-10s.fifo
       DelaySeconds: 10
-      FifoQueue: true
-      
-  ApolloServerQueue60:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: graphql-service-fifo-queue-delay-60s.fifo
-      DelaySeconds: 60
-      FifoQueue: true
-      
+      Tags:
+        - Key: service-name
+          Value: graphql-service
+
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
@@ -238,12 +234,6 @@ Outputs:
   ApolloServer:
     Description: "ApolloServer ARN"
     Value: !GetAtt ApolloServer.Arn
-  ApolloServerQueue0URL:
-    Description: "ApolloServerQueue0 URL"
-    Value: !Ref ApolloServerQueue0
-  ApolloServerQueue0ARN:
-    Description: "ApolloServerQueue0 ARN"
-    Value: !GetAtt  ApolloServerQueue0.Arn
   ApolloServerIamRole:
     Description: "Implicit IAM Role created (ApolloServerRole)"
     Value: !GetAtt ApolloServerRole.Arn

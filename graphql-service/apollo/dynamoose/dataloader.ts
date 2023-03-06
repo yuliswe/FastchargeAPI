@@ -73,7 +73,8 @@ type PrimaryKey = string | number;
 type BatchOptions = {
     limit?: number | null;
     sort?: "ascending" | "descending" | null;
-    using?: string | null;
+    using?: string | null; // Index name
+    consistent?: boolean; // Use consistent read
 };
 type BatchKey<I extends Item> = {
     query: PrimaryKey | Query<I>;
@@ -175,6 +176,9 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
                 }
                 if (bk.options.using != null) {
                     query = query.using(bk.options.using);
+                }
+                if (bk.options.consistent) {
+                    query = query.consistent();
                 }
             }
             return query.exec();
@@ -421,6 +425,7 @@ export class Batched<I extends Item> {
         let maxAttempts = 2;
         for (let retries = 0; retries < maxAttempts; retries++) {
             try {
+                this.clearCache();
                 return await this.model.create(stripped);
             } catch (e) {
                 // We want to catch the case where the item already exists. DynamoDB
@@ -460,6 +465,7 @@ export class Batched<I extends Item> {
             query = extractKeysFromItems(this.model, keys);
         }
         let item = await this.get(query);
+        this.clearCache();
         await item.delete();
         return item;
     }
@@ -511,6 +517,7 @@ export class Batched<I extends Item> {
         let updated = await this.get(query);
         Object.assign(updated, newVals);
 
+        this.clearCache();
         return (await updated.save()) as I;
     }
 

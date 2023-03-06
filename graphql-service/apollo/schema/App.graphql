@@ -73,11 +73,11 @@ type Mutation {
 
     createStripeTransfer(
         receiver: Email!
-        withdrawCents: Int!
-        receiveCents: Int!
+        withdrawAmount: NonNegativeDecimal!
+        receiveAmount: NonNegativeDecimal!
         currency: String!
-        stripeTransferId: String!
-        stripeTransferObject: String!
+        stripeTransferId: String
+        stripeTransferObject: String
     ): StripeTransfer!
 
     triggerBilling(user: ID!, app: ID!): UsageSummary
@@ -265,15 +265,22 @@ enum GatewayMode {
     redirect
 }
 
+enum StripeTransferStatus {
+    pending
+    transferred
+}
+
 type StripeTransfer {
     receiver: User!
-    withdrawCents: Int!
-    receiveCents: Int!
-    stripeTransferId: String!
-    stripeTransferObject: String!
+    withdrawAmount: NonNegativeDecimal!
+    receiveAmount: NonNegativeDecimal!
+    stripeTransferId: String
+    stripeTransferObject: String
     createdAt: Timestamp!
     currency: String
-    settleStripeTransfer: StripeTransfer
+    settleStripeTransfer: StripeTransfer!
+    transferAt: Timestamp!
+    status: StripeTransferStatus
 }
 
 enum AccountActivityType {
@@ -282,9 +289,14 @@ enum AccountActivityType {
 }
 enum AccountActivityReason {
     payout
+    payout_fee
     topup
     api_per_request_charge
     api_min_monthly_charge
+}
+enum AccountActivityStatus {
+    pending
+    settled
 }
 type AccountActivity {
     createdAt: Timestamp!
@@ -292,6 +304,9 @@ type AccountActivity {
     amount: String!
     reason: AccountActivityReason!
     description: String!
+    stripeTransfer: StripeTransfer
+    status: AccountActivityStatus
+    settleAt: Timestamp!
 }
 
 type AccountHistory {

@@ -5,6 +5,7 @@ import { StripePaymentAccept, User } from "../dynamoose/models";
 import { stripePaymentAcceptResolvers } from "../resolvers/payment";
 import { getUserBalance } from "../functions/account";
 import Decimal from "decimal.js-light";
+import { AccountActivityPK } from "../pks/AccountActivityPK";
 
 let context: RequestContext = {
     batched: createDefaultContextBatched(),
@@ -20,7 +21,6 @@ describe("Payment API", () => {
             });
         } catch (e) {
             if (e instanceof AlreadyExists) {
-                console.log("User already exists");
                 user = await context.batched.User.get({
                     email: "testuser1.fastchargeapi@gmail.com",
                 });
@@ -65,24 +65,20 @@ describe("Payment API", () => {
         expect(stripePaymentAccept).not.toBe(null);
         expect(stripePaymentAccept.accountActivity).not.toBe(null);
         expect(stripePaymentAccept.accountActivity.length).not.toBe(0);
+
         context.batched.AccountHistory.clearCache();
         let newBalance = new Decimal(
             await getUserBalance(context, user!.email)
         );
         expect(newBalance).toEqual(oldBalance.plus(1));
-    });
 
-    // test("Check AccountActivity", async () => {
-    //     let accountActivities = await context.batched.AccountActivity.query({
-    //         user: user.email,
-    //     });
-    //     expect(accountActivities.length).toBe(1);
-    //     let accountActivity = accountActivities[0];
-    //     expect(accountActivity.amountCents).toBe(100);
-    //     expect(accountActivity.currency).toBe("usd");
-    //     expect(accountActivity.type).toBe("stripe-payment-accept");
-    //     expect(accountActivity.stripeSessionId).toBe("test");
-    //     expect(accountActivity.stripePaymentIntent).toBe("test");
-    //     expect(accountActivity.stripeSessionObject).toBe("test");
-    // });
+        // Examine the account activity
+        let accountActivity = await context.batched.AccountActivity.get(
+            AccountActivityPK.parse(stripePaymentAccept.accountActivity)
+        );
+        expect(accountActivity.reason).toBe("topup");
+        expect(accountActivity.type).toBe("debit");
+        expect(accountActivity.amount).toBe("1");
+        expect(accountActivity.description).toMatch(/top-up/i);
+    });
 });

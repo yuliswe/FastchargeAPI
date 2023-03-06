@@ -9,6 +9,7 @@ import {
     PricingModel,
     UsageLogModel,
     UsageSummaryModel,
+    User,
 } from "../dynamoose/models";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
 import { UsageLogPK } from "../pks/UsageLogPK";
@@ -21,24 +22,29 @@ let context: RequestContext = {
 };
 // jest.retryTimes(2);
 describe("Usage API", () => {
+    let user: User;
     test("create a User", async () => {
         try {
-            let user = await context.batched.User.create({
+            user = await context.batched.User.create({
                 email: "testuser1.fastchargeapi@gmail.com",
             });
         } catch (e) {
             if (e instanceof AlreadyExists) {
-                console.log("User already exists");
+                user = await context.batched.User.get({
+                    email: "testuser1.fastchargeapi@gmail.com",
+                });
             } else {
                 throw e;
             }
         }
+        expect(user).not.toBe(null);
     });
+
     test("create an App", async () => {
         try {
             let app = await context.batched.App.create({
                 name: "myapp",
-                owner: "testuser1.fastchargeapi@gmail.com",
+                owner: user.email,
             });
         } catch (e) {
             if (e instanceof AlreadyExists) {

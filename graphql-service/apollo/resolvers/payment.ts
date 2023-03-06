@@ -65,10 +65,13 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
                 type: "debit",
                 reason: "topup",
                 settleAt: Date.now(),
+                description: "Account top-up by you",
             });
             parent.stripeSessionObject = JSON.parse(stripeSessionObject);
             parent.accountActivity = AccountActivityPK.stringify(activity);
-            await collectAccountActivities(context, UserPK.stringify(user));
+            await collectAccountActivities(context, UserPK.stringify(user), {
+                consistentReadAccountActivities: true,
+            });
             await parent.save();
             return parent;
         },

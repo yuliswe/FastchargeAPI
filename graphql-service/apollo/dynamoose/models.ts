@@ -85,20 +85,15 @@ function String_Required_NotEmpty(fieldName: string) {
     };
 }
 
-function String_Decimal(fieldName: string) {
-    return {
-        type: String,
-        validate: (str: string) => {
-            if (!/^-?\d+(\.\d+)?$/.test(str)) {
-                throw new ValidationError(
-                    fieldName,
-                    `String must be a decimal number: "${str}"`
-                );
-            }
-            return true;
-        },
-    };
-}
+const validateStringDecimal = (fieldName: string) => (str: string) => {
+    if (!/^-?\d+(\.\d+)?$/.test(str)) {
+        throw new ValidationError(
+            fieldName,
+            `String must be a decimal number: "${str}"`
+        );
+    }
+    return true;
+};
 
 const UserTableSchema = new dynamoose.Schema(
     {
@@ -291,6 +286,7 @@ const AccountActivityTableSchema = new dynamoose.Schema(
             validate: (str: string) =>
                 [
                     "payout",
+                    "payout_fee",
                     "topup",
                     "api_per_request_charge",
                     "api_min_monthly_charge",
@@ -303,8 +299,13 @@ const AccountActivityTableSchema = new dynamoose.Schema(
             default: "pending",
         },
         settleAt: { type: Number, required: true },
-        amount: { ...String_Decimal("amount"), required: true },
+        amount: {
+            type: String,
+            required: true,
+            validate: validateStringDecimal("amount"),
+        },
         usageSummary: { type: String, default: undefined },
+        stripeTransfer: { type: String, default: undefined },
         description: { type: String, default: "" },
     },
     {
@@ -319,10 +320,15 @@ const AccountHistoryTableSchema = new dynamoose.Schema(
         user: { hashKey: true, ...String_Required_NotEmpty("user") },
         startingTime: { type: Number, rangeKey: true, required: true },
         startingBalance: {
+            type: String,
             required: true,
-            ...String_Decimal("startingBalance"),
+            validate: validateStringDecimal("startingBalance"),
         },
-        closingBalance: { required: true, ...String_Decimal("closingBalance") },
+        closingBalance: {
+            type: String,
+            required: true,
+            validate: validateStringDecimal("closingBalance"),
+        },
         closingTime: { required: true, type: Number },
         sequentialID: { required: true, type: Number },
     },
@@ -377,14 +383,27 @@ const StripeTransferTableSchema = new dynamoose.Schema(
             rangeKey: true,
             default: DEFAULT_FOR_CREATED_AT_RANGE_KEY,
         },
-        receiveCents: { type: Number, required: true },
-        withdrawCents: { type: Number, required: true },
-        currency: { ...String_Required_NotEmpty("currency") },
-        stripeTransferId: {
-            ...String_Required_NotEmpty("stripePaymentIntent"),
+        receiveAmount: {
+            type: String,
+            required: true,
+            validate: validateStringDecimal("receiveAmount"),
         },
-        stripeTransferObject: { type: Object, required: true },
+        withdrawAmount: {
+            type: String,
+            required: true,
+            validate: validateStringDecimal("withdrawAmount"),
+        },
+        currency: { ...String_Required_NotEmpty("currency") },
+        stripeTransferId: { type: String, required: false },
+        stripeTransferObject: { type: Object, required: false },
         accountActivity: { type: String, required: false },
+        feeActivity: { type: String, required: false },
+        transferAt: { type: Number, required: true },
+        status: {
+            type: String,
+            enum: ["pending", "transferred"],
+            required: true,
+        },
     },
     {
         timestamps: {
@@ -510,13 +529,24 @@ export class UsageSummary extends Item {
     maxSecondsInQueue: number | null; // Max seconds in queue setting when collected, for debug purpose
     billingAccountActivity: string | null; // ID of the AccountActivity item or null if not yet billed
 }
+
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
+/**
+ * Records a single account activity.
+ *
+ * @settleAt We use the word "settle" to mean the activity is reflected in the
+ * user's balance. The time can be in the past or in the future. If the time is
+ * in the future, for example, when depositing to the user's balance, we might
+ * want to hold the money for a period of time, then at somepoint the
+ * AccountActivity should be settled in the future, just not now.
+ */
 export class AccountActivity extends Item {
     user: string; // User who's account is affected
     type: "debit" | "credit";
     reason:
         | "payout"
+        | "payout_fee"
         | "topup"
         | "api_per_request_charge"
         | "api_min_monthly_charge"
@@ -528,6 +558,7 @@ export class AccountActivity extends Item {
     accountHistory: string | null; // ID of the AccountHistory item or null if not related to account history
     createdAt: number;
     description: string;
+    stripeTransfer: string | null; // ID of the StripeTransfer item or null if not related to Stripe
 }
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
@@ -539,6 +570,7 @@ export class AccountHistory extends Item {
     closingTime: number;
     sequentialID: number;
 }
+
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
 
@@ -561,15 +593,34 @@ export class StripePaymentAccept extends Item {
     stripeSessionId: string; // The stripe checkout session ID, copied from stripe checkout session object for debugging purpose
     accountActivity: string; // When the stripe payment is accepted, an account activity item is created
 }
+
+/**
+ * StripeTransfer represents an event when the user withdraw money to their
+ * Stripe account.
+ *
+ * @accountActivity The ID of the AccountActivity item which represents the
+ * amount the user will receive.
+ *
+ * @feeActivity The ID of the AccountActivity item which represents the fee that
+ * the user pays us.
+ *
+ * @transferAt The time when the transfer is actually moved out of our account.
+ * The time can be in the future or in the past. If the time is in the future,
+ * then at some point the money will be transferred in the future, by a cron
+ * job.
+ */
 export class StripeTransfer extends Item {
     receiver: string;
-    withdrawCents: number;
-    receiveCents: number;
+    withdrawAmount: string;
+    receiveAmount: string;
     currency: string;
-    stripeTransferObject: object;
-    stripeTransferId: string;
+    stripeTransferObject: object | null;
+    stripeTransferId: string | null;
     createdAt: number;
     accountActivity: string;
+    feeActivity: string;
+    transferAt: number;
+    status: "pending" | "transferred";
 }
 
 export class Secret extends Item {

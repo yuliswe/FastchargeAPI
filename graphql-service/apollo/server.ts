@@ -19,6 +19,7 @@ import { RequestContext } from "./RequestContext";
 import { usageSummaryResolvers } from "./resolvers/usage-sum";
 import { secretResolvers } from "./resolvers/secret";
 import { accountHistoryResolvers } from "./resolvers/account-history";
+import { accountActivityResolvers } from "./resolvers/account";
 
 initializeDB();
 
@@ -37,6 +38,7 @@ const resolvers: GQLResolvers = {
     UsageSummary: usageSummaryResolvers.UsageSummary,
     Secret: secretResolvers.Secret,
     AccountHistory: accountHistoryResolvers.AccountHistory,
+    AccountActivity: accountActivityResolvers.AccountActivity,
     Query: {
         ...appResolvers.Query,
         ...userResolvers.Query,
@@ -50,6 +52,7 @@ const resolvers: GQLResolvers = {
         ...usageSummaryResolvers.Query,
         ...secretResolvers.Query,
         ...accountHistoryResolvers.Query,
+        ...accountActivityResolvers.Query,
     },
     Mutation: {
         ...appResolvers.Mutation,
@@ -64,6 +67,7 @@ const resolvers: GQLResolvers = {
         ...usageSummaryResolvers.Mutation,
         ...secretResolvers.Mutation,
         ...accountHistoryResolvers.Mutation,
+        ...accountActivityResolvers.Mutation,
     },
 };
 

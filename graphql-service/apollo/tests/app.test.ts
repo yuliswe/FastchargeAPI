@@ -21,7 +21,6 @@ describe("APP API", () => {
             });
         } catch (e) {
             if (e instanceof AlreadyExists) {
-                console.log("User already exists");
                 user = await context.batched.User.get({
                     email: "testuser1.fastchargeapi@gmail.com",
                 });

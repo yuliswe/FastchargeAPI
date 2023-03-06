@@ -1,12 +1,6 @@
 import { Item } from "dynamoose/dist/Item";
 import { RequestContext } from "../RequestContext";
-import {
-    AccountActivity,
-    AccountHistory,
-    disableDBLogging,
-    enableDBLogging,
-    withDBLogging,
-} from "../dynamoose/models";
+import { AccountActivity, AccountHistory } from "../dynamoose/models";
 import { AccountHistoryPK } from "../pks/AccountHistoryPK";
 import Decimal from "decimal.js-light";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
@@ -17,10 +11,19 @@ import { AccountActivityPK } from "../pks/AccountActivityPK";
  * collected activities.
  * @param context
  * @param accountUser
+ * @param options.consistentReadAccountActivities If true, the AccountActivity
+ * are read consistently, ie, wait for all prior writes to finish before
+ * reading. This is more expensive, and isn't always necessary. For example, if
+ * you are processing billing for usage logs, you don't need to wait for all
+ * usage logs to be written (if we miss some we'll collect them later). Sometime
+ * it is important to wait for all writes, for example, when testing.
  */
 export async function collectAccountActivities(
     context: RequestContext,
-    accountUser: string
+    accountUser: string,
+    options?: {
+        consistentReadAccountActivities: boolean;
+    }
 ): Promise<{
     accountHistory: AccountHistory;
     previousAccountHistory: AccountHistory | null;
@@ -28,11 +31,16 @@ export async function collectAccountActivities(
 } | null> {
     let closingTime = Date.now();
 
-    let activities = await context.batched.AccountActivity.many({
-        user: accountUser,
-        status: "pending",
-        settleAt: { le: closingTime },
-    });
+    let activities = await context.batched.AccountActivity.many(
+        {
+            user: accountUser,
+            status: "pending",
+            settleAt: { le: closingTime },
+        },
+        {
+            consistent: options?.consistentReadAccountActivities,
+        }
+    );
 
     if (activities.length === 0) {
         return null;
@@ -45,13 +53,14 @@ export async function collectAccountActivities(
         {
             sort: "descending",
             limit: 1,
+            consistent: true, // Must use consistently, otherwise we might not get a correct startingTime, or sequentialID
         }
     );
 
     let accountHistory = await context.batched.AccountHistory.create({
         user: accountUser,
         startingBalance: previous == null ? "0" : previous.closingBalance,
-        closingBalance: "0",
+        closingBalance: previous == null ? "0" : previous.closingBalance,
         startingTime: previous == null ? 0 : previous.closingTime,
         closingTime,
         sequentialID: previous == null ? 0 : previous.sequentialID + 1,
@@ -101,8 +110,18 @@ export async function collectAccountActivities(
  */
 export async function getUserBalance(
     context: RequestContext,
-    user: string
+    user: string,
+    {
+        refresh,
+        consistent,
+    }: {
+        refresh?: boolean;
+        consistent?: boolean;
+    } = {}
 ): Promise<string> {
+    if (refresh) {
+        context.batched.AccountActivity.clearCache();
+    }
     let accountHistory = await context.batched.AccountHistory.getOrNull(
         {
             user: user,
@@ -110,6 +129,7 @@ export async function getUserBalance(
         {
             sort: "descending",
             limit: 1,
+            consistent,
         }
     );
     if (accountHistory) {

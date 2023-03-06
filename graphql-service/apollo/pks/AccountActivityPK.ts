@@ -22,4 +22,11 @@ export class AccountActivityPK {
             )
         );
     }
+
+    static extract(item: AccountActivityPKContent): AccountActivityPKContent {
+        return {
+            user: item.user,
+            createdAt: item.createdAt,
+        };
+    }
 }

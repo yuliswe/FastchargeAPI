@@ -3,13 +3,16 @@ import {
     GQLMutationCreateStripeTransferArgs,
     GQLResolvers,
     GQLStripeTransferResolvers,
+    GQLStripeTransferStatus,
 } from "../__generated__/resolvers-types";
 import { StripeTransferModel } from "../dynamoose/models";
 import { RequestContext } from "../RequestContext";
 import Decimal from "decimal.js-light";
 import { UserPK } from "../pks/UserPK";
-import { collectAccountActivities } from "../functions/account";
+import { collectAccountActivities, getUserBalance } from "../functions/account";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
+import { BadInput } from "../errors";
+import { createAccountActivitiesForTransfer } from "../functions/transfer";
 
 /**
  * Remember to add your resolver to the resolvers object in server.ts.
@@ -26,13 +29,15 @@ export const stripeTransferResolvers: GQLResolvers & {
             let user = await context.batched.User.get(parent.receiver);
             return user;
         },
-        withdrawCents: (parent) => parent.withdrawCents,
-        receiveCents: (parent) => parent.receiveCents,
+        withdrawAmount: (parent) => parent.withdrawAmount,
+        receiveAmount: (parent) => parent.receiveAmount,
         stripeTransferId: (parent) => parent.stripeTransferId,
         stripeTransferObject: (parent) =>
             JSON.stringify(parent.stripeTransferObject),
         createdAt: (parent) => parent.createdAt,
         currency: (parent) => parent.currency,
+        transferAt: (parent) => parent.transferAt,
+        status: (parent) => parent.status as GQLStripeTransferStatus,
 
         /**
          * A StripeTransfer happens when the user withdraws money from their
@@ -49,16 +54,10 @@ export const stripeTransferResolvers: GQLResolvers & {
             let user = await context.batched.User.get({
                 email: parent.receiver,
             });
-            let transferAmount = new Decimal(parent.withdrawCents).div(100);
-            let activity = await context.batched.AccountActivity.create({
-                user: UserPK.stringify(user),
-                amount: transferAmount.toString(),
-                type: "credit",
-                reason: "payout",
+            await createAccountActivitiesForTransfer(context, {
+                transfer: parent,
+                userPK: UserPK.stringify(user),
             });
-            await collectAccountActivities(context, UserPK.stringify(user));
-            parent.accountActivity = AccountActivityPK.stringify(activity);
-            await parent.save();
             return parent;
         },
     },
@@ -66,25 +65,27 @@ export const stripeTransferResolvers: GQLResolvers & {
     Mutation: {
         async createStripeTransfer(
             parent,
-            args: GQLMutationCreateStripeTransferArgs,
+            {
+                receiver,
+                withdrawAmount,
+                receiveAmount,
+                currency,
+                stripeTransferId,
+                stripeTransferObject,
+            }: GQLMutationCreateStripeTransferArgs,
             context: RequestContext,
             info: GraphQLResolveInfo
         ) {
-            let {
+            let transfer = await context.batched.StripeTransfer.create({
                 receiver,
-                withdrawCents,
-                receiveCents,
-                stripeTransferId,
-                stripeTransferObject,
-                currency,
-            } = args;
-            let transfer = await StripeTransferModel.create({
-                receiver,
-                withdrawCents,
-                receiveCents,
+                withdrawAmount,
+                receiveAmount,
                 stripeTransferId,
                 currency,
-                stripeTransferObject: JSON.parse(stripeTransferObject),
+                stripeTransferObject:
+                    stripeTransferObject && JSON.parse(stripeTransferObject),
+                transferAt: Date.now() + 1000 * 60 * 60 * 24, // Transfer after 24 hours
+                status: "pending",
             });
             return transfer;
         },

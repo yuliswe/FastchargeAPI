@@ -3,8 +3,10 @@ import {
     GQLAccountActivityResolvers,
     GQLAccountActivityType,
     GQLAccountActivityReason,
+    GQLAccountActivityStatus,
 } from "../__generated__/resolvers-types";
 import { AccountActivityModel } from "../dynamoose/models";
+import { StripeTransferPK } from "../pks/StripeTransferPK";
 
 /**
  * Remember to add your resolver to the resolvers object in server.ts.
@@ -23,6 +25,18 @@ export const accountActivityResolvers: GQLResolvers & {
         type: (parent) => parent.type as GQLAccountActivityType,
         reason: (parent) => parent.reason as GQLAccountActivityReason,
         description: (parent) => parent.description,
+        status: (parent) => parent.status as GQLAccountActivityStatus,
+        settleAt: (parent) => parent.settleAt,
+
+        async stripeTransfer(parent, args, context, info) {
+            if (parent.stripeTransfer) {
+                return await context.batched.StripeTransfer.get(
+                    StripeTransferPK.parse(parent.stripeTransfer)
+                );
+            } else {
+                return null;
+            }
+        },
     },
     Query: {},
     Mutation: {},
