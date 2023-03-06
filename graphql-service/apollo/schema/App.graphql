@@ -63,7 +63,7 @@ type Mutation {
 
     createStripePaymentAccept(
         user: String!
-        amountCents: Int!
+        amount: NonNegativeDecimal!
         currency: String!
         stripePaymentStatus: String!
         stripeSessionId: String!
@@ -244,7 +244,7 @@ type UsageSummary {
 
 type StripePaymentAccept {
     user: User!
-    amountCents: Int!
+    amount: NonNegativeDecimal!
     currency: String!
     stripePaymentStatus: String!
     stripeSessionObject: String!

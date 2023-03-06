@@ -353,7 +353,11 @@ const StripePaymentAcceptTableSchema = new dynamoose.Schema(
             rangeKey: true,
             default: DEFAULT_FOR_CREATED_AT_RANGE_KEY,
         },
-        amountCents: { type: Number, required: true },
+        amount: {
+            type: String,
+            required: true,
+            validate: validateStringDecimal("amount"),
+        },
         currency: { ...String_Required_NotEmpty("currency") },
         // @stripePaymentStatus: Do not check enum, as the source is stripe and
         // can change. Read the comment of the stripePaymentStatus field in the
@@ -579,12 +583,12 @@ export class AccountHistory extends Item {
  * the Stripe checkout session. StripePaymentAccept corresponds to an
  * AccountActivity which is created when the StripePaymentAccept object settles.
  * The The object is created by the payment-servce when it receives the webhook
- * event from Stripe. The only important fields are user and amountCents. The
- * rest are for debugging purpose.
+ * event from Stripe. The only important fields are user and amount. The rest
+ * are for debugging purpose.
  */
 export class StripePaymentAccept extends Item {
     user: string;
-    amountCents: number;
+    amount: string;
     createdAt: number;
     currency: string;
     stripePaymentStatus: "unpaid" | "paid" | "no_payment_required"; // This is copied from stripe checkout session's payment_status, for debugging purpose

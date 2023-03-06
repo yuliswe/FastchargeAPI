@@ -171,7 +171,7 @@ export type GQLMutationCreateSecretArgs = {
 
 
 export type GQLMutationCreateStripePaymentAcceptArgs = {
-  amountCents: Scalars['Int'];
+  amount: Scalars['NonNegativeDecimal'];
   currency: Scalars['String'];
   stripePaymentIntent: Scalars['String'];
   stripePaymentStatus: Scalars['String'];
@@ -291,7 +291,7 @@ export enum GQLSortDirection {
 
 export type GQLStripePaymentAccept = {
   __typename?: 'StripePaymentAccept';
-  amountCents: Scalars['Int'];
+  amount: Scalars['NonNegativeDecimal'];
   createdAt: Scalars['Timestamp'];
   currency: Scalars['String'];
   settlePayment?: Maybe<GQLStripePaymentAccept>;
@@ -606,7 +606,7 @@ export type GQLMutationResolvers<ContextType = RequestContext, ParentType extend
   createEndpoint?: Resolver<GQLResolversTypes['Endpoint'], ParentType, ContextType, RequireFields<GQLMutationCreateEndpointArgs, 'app' | 'destination' | 'method' | 'path'>>;
   createPricing?: Resolver<GQLResolversTypes['Pricing'], ParentType, ContextType, RequireFields<GQLMutationCreatePricingArgs, 'app' | 'callToAction' | 'chargePerRequest' | 'minMonthlyCharge' | 'name'>>;
   createSecret?: Resolver<GQLResolversTypes['Secret'], ParentType, ContextType, RequireFields<GQLMutationCreateSecretArgs, 'key' | 'value'>>;
-  createStripePaymentAccept?: Resolver<GQLResolversTypes['StripePaymentAccept'], ParentType, ContextType, RequireFields<GQLMutationCreateStripePaymentAcceptArgs, 'amountCents' | 'currency' | 'stripePaymentIntent' | 'stripePaymentStatus' | 'stripeSessionId' | 'stripeSessionObject' | 'user'>>;
+  createStripePaymentAccept?: Resolver<GQLResolversTypes['StripePaymentAccept'], ParentType, ContextType, RequireFields<GQLMutationCreateStripePaymentAcceptArgs, 'amount' | 'currency' | 'stripePaymentIntent' | 'stripePaymentStatus' | 'stripeSessionId' | 'stripeSessionObject' | 'user'>>;
   createStripeTransfer?: Resolver<GQLResolversTypes['StripeTransfer'], ParentType, ContextType, RequireFields<GQLMutationCreateStripeTransferArgs, 'currency' | 'receiveAmount' | 'receiver' | 'withdrawAmount'>>;
   createSubscription?: Resolver<GQLResolversTypes['Subscribe'], ParentType, ContextType, RequireFields<GQLMutationCreateSubscriptionArgs, 'app' | 'pricing' | 'subscriber'>>;
   createUsageLog?: Resolver<GQLResolversTypes['UsageLog'], ParentType, ContextType, RequireFields<GQLMutationCreateUsageLogArgs, 'app' | 'path' | 'subscriber' | 'volume'>>;
@@ -652,7 +652,7 @@ export type GQLSecretResolvers<ContextType = RequestContext, ParentType extends 
 }>;
 
 export type GQLStripePaymentAcceptResolvers<ContextType = RequestContext, ParentType extends GQLResolversParentTypes['StripePaymentAccept'] = GQLResolversParentTypes['StripePaymentAccept']> = ResolversObject<{
-  amountCents?: Resolver<GQLResolversTypes['Int'], ParentType, ContextType>;
+  amount?: Resolver<GQLResolversTypes['NonNegativeDecimal'], ParentType, ContextType>;
   createdAt?: Resolver<GQLResolversTypes['Timestamp'], ParentType, ContextType>;
   currency?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
   settlePayment?: Resolver<Maybe<GQLResolversTypes['StripePaymentAccept']>, ParentType, ContextType, RequireFields<GQLStripePaymentAcceptSettlePaymentArgs, 'stripeSessionObject'>>;

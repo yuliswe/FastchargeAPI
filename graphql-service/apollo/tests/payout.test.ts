@@ -39,7 +39,7 @@ describe("Payout API", () => {
             {},
             {
                 user: user.email,
-                amountCents: 100_00,
+                amount: "100",
                 currency: "usd",
                 stripePaymentStatus: "paid",
                 stripeSessionId: "test",

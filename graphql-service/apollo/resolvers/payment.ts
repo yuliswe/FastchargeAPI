@@ -33,7 +33,7 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
             let user = await context.batched.User.get(parent.user);
             return user;
         },
-        amountCents: (parent) => parent.amountCents,
+        amount: (parent) => parent.amount,
         currency: (parent) => parent.currency,
         stripePaymentIntent: (parent) => parent.stripePaymentIntent,
         stripeSessionId: (parent) => parent.stripeSessionId,
@@ -55,13 +55,12 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
         async settlePayment(
             parent: StripePaymentAccept,
             { stripeSessionObject },
-            context,
-            info
+            context
         ) {
             let user = await context.batched.User.get({ email: parent.user });
             let activity = await context.batched.AccountActivity.create({
                 user: UserPK.stringify(user),
-                amount: new Decimal(parent.amountCents).div(100).toString(),
+                amount: parent.amount,
                 type: "debit",
                 reason: "topup",
                 settleAt: Date.now(),
@@ -118,7 +117,7 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
             parent: {},
             {
                 user,
-                amountCents,
+                amount,
                 currency,
                 stripePaymentStatus,
                 stripeSessionId,
@@ -133,7 +132,7 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
             }
             let stripePaymentAccept = await StripePaymentAcceptModel.create({
                 user,
-                amountCents,
+                amount,
                 currency,
                 stripePaymentStatus: stripePaymentStatus as any,
                 stripeSessionId,
