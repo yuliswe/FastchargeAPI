@@ -209,6 +209,17 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: graphql-service-usage-log-queue
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt UsageLogDeadLetterQueue.Arn
+        maxReceiveCount: 1
+      Tags:
+        - Key: service-name
+          Value: graphql-service
+
+  UsageLogDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: graphql-service-usage-log-dead-letter-queue
       Tags:
         - Key: service-name
           Value: graphql-service
@@ -219,10 +230,21 @@ Resources:
       QueueName: graphql-service-billing-queue.fifo
       FifoQueue: true
       DelaySeconds: 10
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt BillingDeadLetterQueue.Arn
+        maxReceiveCount: 1
       Tags:
         - Key: service-name
           Value: graphql-service
 
+  BillingDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      FifoQueue: true
+      QueueName: graphql-service-billing-dead-letter-queue.fifo
+      Tags:
+        - Key: service-name
+          Value: graphql-service
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
