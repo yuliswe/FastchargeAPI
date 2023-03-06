@@ -81,6 +81,7 @@ Resources:
       Policies:
         - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
         - AWSLambdaRole # This will allow this lambda to send http request to the graphql api
+        - AmazonSQSFullAccess # Allows sending billing to the graphql service
       Events:
         POST:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -103,6 +104,7 @@ Resources:
       Policies:
         - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
         - AWSLambdaRole # This will allow this lambda to send http request to the graphql api
+        - AmazonSQSFullAccess # Allows sending billing to the graphql service
       Events:
         POST:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -123,6 +125,7 @@ Resources:
       Policies:
         - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
         - AWSLambdaRole # This will allow this lambda to send http request to the graphql api
+        - AmazonSQSFullAccess # Allows sending billing to the graphql service
       Events:
         POST:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -145,6 +148,7 @@ Resources:
       Policies:
         - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
         - AWSLambdaRole # This will allow this lambda to send http request to the graphql api
+        - AmazonSQSFullAccess # Allows sending billing to the graphql service
       Events:
         POST:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -167,6 +171,7 @@ Resources:
       Policies:
         - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
         - AWSLambdaRole # This will allow this lambda to send http request to the graphql api
+        - AmazonSQSFullAccess # Allows sending billing to the graphql service
       Events:
         GET:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -187,6 +192,7 @@ Resources:
       Policies:
         - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
         - AWSLambdaRole # This will allow this lambda to send http request to the graphql api
+        - AmazonSQSFullAccess # Allows sending billing to the graphql service
       Events:
         POST:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api

@@ -1,9 +1,11 @@
 import json
+import time
 from typing import Optional
 
 from utils.stripe import parse_stripe_webhook_event
 
 from utils.graphql import get_graphql_client
+from utils.sqs_graphql import get_sqs_graphql_client, PredefinedSQSQueue
 import stripe
 from gql import Client, gql
 from gql.transport.requests import RequestsHTTPTransport
@@ -64,7 +66,11 @@ def fulfill_order(session):
     client = get_graphql_client()
     update_customer_id(user_email, session["customer"])
     try:
-        result = client.execute(
+        get_sqs_graphql_client(
+            queue=PredefinedSQSQueue.billing_fifo_queue,
+            dedup_id=f"{user_email}-{time.time()}-{session_id}",
+            group_id=user_email,
+        ).execute(
             gql(
                 """
                 query GetStripePaymentAcceptObjectAndFulfill (
@@ -93,18 +99,14 @@ def fulfill_order(session):
                 "stripeSessionObject": json.dumps(session),
                 "stripePaymentStatus": payment_status,
             },
-        )["createStripePaymentAccept"]
+        )
     except Exception as e:
         print(e)
         return {
             "statusCode": 500,
             "body": "Failed to fulfill order with the graphql service.",
         }
-    else:
-        return {
-            "statusCode": 200 if result["createdAt"] > 0 else 500,
-            "body": json.dumps(result),
-        }
+    return {"statusCode": 200, "body": json.dumps({})}
 
 
 # TODO: Make this idempotent
@@ -116,14 +118,17 @@ def create_and_fulfill_order(session):
     payment_status = session["payment_status"]
     amount_cents = session["amount_total"]
 
-    client = get_graphql_client()
     try:
-        result = client.execute(
+        get_sqs_graphql_client(
+            queue=PredefinedSQSQueue.billing_fifo_queue,
+            dedup_id=f"{user_email}-{time.time()}-{session_id}",
+            group_id=user_email,
+        ).execute(
             gql(
                 """
                 mutation CreateStripePaymentAcceptAndSettle (
                     $user: String!,
-                    $amountCents: Int!,
+                    $amount: NonNegativeDecimal!,
                     $currency: String!,
                     $stripePaymentStatus: String!,
                     $stripeSessionId: String!,
@@ -132,7 +137,7 @@ def create_and_fulfill_order(session):
                 ) {
                     createStripePaymentAccept(
                         user: $user,
-                        amountCents: $amountCents,
+                        amount: $amount,
                         currency: $currency,
                         stripePaymentStatus: $stripePaymentStatus,
                         stripeSessionId: $stripeSessionId,
@@ -150,22 +155,21 @@ def create_and_fulfill_order(session):
             ),
             variable_values={
                 "user": user_email,
-                "amountCents": amount_cents,
+                "amount": f"{amount_cents / 100:.2f}",
                 "currency": currency,
                 "stripePaymentStatus": payment_status,
                 "stripeSessionId": session_id,
                 "stripePaymentIntent": payment_intent,
                 "stripeSessionObject": json.dumps(session),
             },
-        )["createStripePaymentAccept"]["settlePayment"]
+        )
     except Exception as e:
         print(e)
         return {
             "statusCode": 500,
             "body": "Failed to create order with the graphql server.",
         }
-    if result["createdAt"] > 0:
-        return {"statusCode": 200, "body": json.dumps(result)}
+    return {"statusCode": 200, "body": json.dumps({})}
 
 
 # TODO: Make this idempotent
@@ -177,14 +181,17 @@ def create_order(session):
     payment_status = session["payment_status"]
     amount_cents = session["amount_total"]
 
-    client = get_graphql_client()
     try:
-        result = client.execute(
+        get_sqs_graphql_client(
+            queue=PredefinedSQSQueue.billing_fifo_queue,
+            dedup_id=f"{user_email}-{time.time()}-{session_id}",
+            group_id=user_email,
+        ).execute(
             gql(
                 """
                 mutation (
                     $user: String!,
-                    $amountCents: Int!,
+                    $amount: NonNegativeDecimal!,
                     $currency: String!,
                     $stripePaymentStatus: String!,
                     $stripeSessionId: String!,
@@ -193,7 +200,7 @@ def create_order(session):
                 ) {
                     createStripePaymentAccept(
                         user: $user,
-                        amountCents: $amountCents,
+                        amount: $amount,
                         currency: $currency,
                         stripePaymentStatus: $stripePaymentStatus,
                         stripeSessionId: $stripeSessionId,
@@ -207,22 +214,21 @@ def create_order(session):
             ),
             variable_values={
                 "user": user_email,
-                "amountCents": amount_cents,
+                "amount": f"{amount_cents / 100:.2f}",
                 "currency": currency,
                 "stripePaymentStatus": payment_status,
                 "stripeSessionId": session_id,
                 "stripePaymentIntent": payment_intent,
                 "stripeSessionObject": json.dumps(session),
             },
-        )["createStripePaymentAccept"]
+        )
     except Exception as e:
         print(e)
         return {
             "statusCode": 500,
             "body": "Failed to create order with the graphql server.",
         }
-    if result["createdAt"] > 0:
-        return {"statusCode": 200, "body": json.dumps(result)}
+    return {"statusCode": 200, "body": json.dumps({})}
 
 
 # TODO: Send email
