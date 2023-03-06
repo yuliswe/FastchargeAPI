@@ -9,7 +9,8 @@
   "scripts": {
     "build": "sam build",
     "deploy": "npm run build && sam deploy",
-    "stripe-listen": "stripe listen --forward-to https://api.payment.fastchargeapi.com/accept -e 'checkout.session.completed,checkout.session.expired,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed' & stripe listen --forward-to https://api.payment.fastchargeapi.com/onboard/accept -e 'account.updated'"
+    "stripe-listen": "stripe listen --forward-to https://api.payment.fastchargeapi.com/accept -e 'checkout.session.completed,checkout.session.expired,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed' & stripe listen --forward-to https://api.payment.fastchargeapi.com/onboard/accept -e 'account.updated'",
+    "logs": "sam logs --stack-name payment-service --tail"
   },
   "author": "",
   "license": "ISC"

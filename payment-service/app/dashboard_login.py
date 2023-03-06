@@ -2,6 +2,7 @@ import json
 from utils.graphql import get_graphql_client
 from utils.stripe import get_stripe_api_secret_key
 from utils.session import get_current_user
+from utils.cors import cors_headers
 import stripe
 from gql import gql
 import colorama
@@ -30,7 +31,7 @@ def handle_lambda(event, context):
     account_id = client.execute(
         gql(
             """
-            query GetUserAndUpdate($user_email: Email!) {
+            query GetUserStripeAccountID($user_email: Email!) {
                 user(email: $user_email) {
                     stripeConnectAccountId
                 }
@@ -43,4 +44,11 @@ def handle_lambda(event, context):
     print("Generating Stripe login link for account:", account_id)
     # This can fail if the account has not completed onboarding setup.
     link = stripe.Account.create_login_link(account_id)
-    return {"statusCode": 200, "body": json.dumps({"location": link["url"]})}
+    origin = event["headers"].get("origin") or event["headers"].get("Origin") or ""
+    return {
+        "statusCode": 200,
+        "body": json.dumps({"location": link["url"]}),
+        "headers": {
+            **cors_headers(origin),
+        },
+    }

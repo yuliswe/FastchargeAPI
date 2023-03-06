@@ -2,11 +2,6 @@ from gql import Client
 from gql.transport.requests import RequestsHTTPTransport
 from . import signing
 import os
-import boto3
-from botocore.auth import SigV4Auth
-from botocore.awsrequest import AWSRequest
-import requests
-from aws_requests_auth.aws_auth import AWSRequestsAuth
 
 from aws_requests_auth.boto_utils import BotoAWSRequestsAuth
 
