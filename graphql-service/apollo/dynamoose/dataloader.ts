@@ -31,6 +31,27 @@ type Query<T> = {
  * DataLoader.
  */
 
+function applyBatchOptionsToQuery<T>(
+    query: DynamogooseQuery<T>,
+    options: BatchOptions
+): DynamogooseQuery<T> {
+    if (options) {
+        if (options.limit != null) {
+            query = query.limit(options.limit);
+        }
+        if (options.sort != null) {
+            query = query.sort(options.sort);
+        }
+        if (options.using != null) {
+            query = query.using(options.using);
+        }
+        if (options.consistent) {
+            query = query.consistent();
+        }
+    }
+    return query;
+}
+
 /**
  * Extracts primary key from item, and if present, the range key too.
  * @param model
@@ -100,7 +121,12 @@ type BatchKey<I extends Item> = {
  * @returns
  */
 function createBatchGet<I extends Item>(model: ModelType<I>) {
-    return async (bkArray: BatchKey<I>[]): Promise<I[][]> => {
+    // At the moment, DynamoDB's BatchGetItem can handle at most 100 items at a
+    // time
+    async function batchGet100Max(bkArray: BatchKey<I>[]): Promise<I[][]> {
+        if (bkArray.length > 100) {
+            throw new Error("Cannot batch get more than 100 items at a time");
+        }
         // Type 1 is when the query contains only a hashKey, and the table only
         // has a hashKey as well (no rangeKey)
         let batch1: PrimaryKey[] = [];
@@ -168,18 +194,7 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
                 );
             }
             if (bk.options) {
-                if (bk.options.limit != null) {
-                    query = query.limit(bk.options.limit);
-                }
-                if (bk.options.sort != null) {
-                    query = query.sort(bk.options.sort);
-                }
-                if (bk.options.using != null) {
-                    query = query.using(bk.options.using);
-                }
-                if (bk.options.consistent) {
-                    query = query.consistent();
-                }
+                query = applyBatchOptionsToQuery(query, bk.options);
             }
             return query.exec();
         }
@@ -233,6 +248,17 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
             }
         }
 
+        return resultArr;
+    }
+
+    // Split the batch into chunks of 100, and call batchGet100Max on each chunk
+    return async (bkArray: BatchKey<I>[]): Promise<I[][]> => {
+        let resultArr: I[][] = [];
+        for (let i = 0; i < bkArray.length; i += 100) {
+            let batch = bkArray.slice(i, Math.min(i + 100, bkArray.length));
+            let result = await batchGet100Max(batch);
+            resultArr.push(...result);
+        }
         return resultArr;
     };
 }
@@ -381,13 +407,27 @@ export class Batched<I extends Item> {
         return await Promise.all(result);
     }
 
-    async count(key: string | Query<I>): Promise<number> {
+    async count(
+        key: string | Query<I>,
+        options?: BatchOptions
+    ): Promise<number> {
         if (typeof key === "object") {
             key = stripNullKeys(key)!;
         }
-        let result = await this.model.query(key).count().exec();
+        let query = this.model.query(key);
+        if (options != undefined) {
+            options = stripNullKeys(options, {
+                deep: true,
+                returnUndefine: true,
+            });
+        }
+        if (options != undefined) {
+            query = applyBatchOptionsToQuery(query, options);
+        }
+        let result = await query.count().exec();
         return result.count;
     }
+
     async exists(key: string | Partial<I>): Promise<boolean> {
         let result = await this.many(key);
         return result.length > 0;
