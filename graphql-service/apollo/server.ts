@@ -1,7 +1,7 @@
 import { ApolloServer } from "@apollo/server";
 import { readFileSync } from "fs";
 import { GraphQLFormattedError } from "graphql";
-import { formatDynamooseError } from "./dynamoose/error";
+import { handleError } from "./dynamoose/error";
 import { resolvers as scalarResolvers } from "graphql-scalars";
 import { typeDefs as scalarTypeDefs } from "graphql-scalars";
 import { appResolvers } from "./resolvers/app";
@@ -82,7 +82,5 @@ export const server = new ApolloServer<RequestContext>({
     typeDefs,
     resolvers,
     includeStacktraceInErrorResponses: true,
-    formatError(formattedError, error): GraphQLFormattedError {
-        return formatDynamooseError(formattedError, error);
-    },
+    formatError: handleError,
 });

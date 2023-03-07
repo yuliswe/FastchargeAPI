@@ -6,7 +6,7 @@ export async function findUserSubscription(
     context: RequestContext,
     { user, app }: { user: string; app: string }
 ): Promise<Subscription | null> {
-    return await context.batched.Subscribe.getOrNull({
+    return await context.batched.Subscription.getOrNull({
         subscriber: user,
         app,
     });

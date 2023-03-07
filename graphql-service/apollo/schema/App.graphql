@@ -18,6 +18,24 @@ type Query {
     stripePaymentAccept(stripeSessionId: String!): StripePaymentAccept!
 
     secret(key: String!): Secret!
+
+    checkUserIsAllowedForGatewayRequest(
+        user: ID!
+        app: ID!
+    ): GatewayDecisionResponse!
+}
+
+enum GatewayDecisionResponseReason {
+    ok
+    insufficient_balance
+    owner_insufficient_balance
+    not_subscribed
+    too_many_requests
+}
+
+type GatewayDecisionResponse {
+    allowed: Boolean!
+    reason: String
 }
 
 type Mutation {
@@ -293,6 +311,7 @@ enum AccountActivityReason {
     topup
     api_per_request_charge
     api_min_monthly_charge
+    api_min_monthly_charge_upgrade
 }
 enum AccountActivityStatus {
     pending
@@ -307,6 +326,7 @@ type AccountActivity {
     stripeTransfer: StripeTransfer
     status: AccountActivityStatus
     settleAt: Timestamp!
+    billedApp: App
 }
 
 type AccountHistory {

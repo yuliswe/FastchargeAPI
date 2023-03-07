@@ -18,14 +18,14 @@ import { AccountActivityPK } from "../pks/AccountActivityPK";
  * usage logs to be written (if we miss some we'll collect them later). Sometime
  * it is important to wait for all writes, for example, when testing.
  */
-export async function collectAccountActivities(
+export async function settleAccountActivities(
     context: RequestContext,
     accountUser: string,
     options?: {
         consistentReadAccountActivities: boolean;
     }
 ): Promise<{
-    accountHistory: AccountHistory;
+    newAccountHistory: AccountHistory;
     previousAccountHistory: AccountHistory | null;
     affectedAccountActivities: AccountActivity[];
 } | null> {
@@ -99,7 +99,7 @@ export async function collectAccountActivities(
 
     return {
         previousAccountHistory: previous,
-        accountHistory,
+        newAccountHistory: accountHistory,
         affectedAccountActivities: activities,
     };
 }

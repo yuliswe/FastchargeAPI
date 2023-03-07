@@ -67,7 +67,7 @@ class ValidationError {
     }
 }
 
-const DEFAULT_FOR_CREATED_AT_RANGE_KEY = (async () => {
+const defaultCreatedAt = (async () => {
     await new Promise((resolve) => setTimeout(resolve, 1));
     return Date.now();
 }) as any;
@@ -142,7 +142,7 @@ const EndpointTableSchema = new dynamoose.Schema(
         createdAt: {
             type: Number,
             rangeKey: true,
-            default: DEFAULT_FOR_CREATED_AT_RANGE_KEY,
+            default: defaultCreatedAt,
         },
         method: {
             type: String,
@@ -175,7 +175,7 @@ const PricingTableSchema = new dynamoose.Schema(
         createdAt: {
             rangeKey: true,
             type: Number,
-            ...DEFAULT_FOR_CREATED_AT_RANGE_KEY,
+            default: defaultCreatedAt,
         },
         name: { ...String_Required_NotEmpty("name") },
         callToAction: { type: String, default: "" },
@@ -213,7 +213,7 @@ const UsageLogTableSchema = new dynamoose.Schema(
         createdAt: {
             type: Number,
             rangeKey: true,
-            default: DEFAULT_FOR_CREATED_AT_RANGE_KEY,
+            default: defaultCreatedAt,
         },
         app: { ...String_Required_NotEmpty("app") },
         status: {
@@ -221,7 +221,7 @@ const UsageLogTableSchema = new dynamoose.Schema(
             enum: ["pending", "collected"],
             default: "pending",
         },
-        collectedAt: { type: Number, ...DEFAULT_FOR_CREATED_AT_RANGE_KEY },
+        collectedAt: { type: Number, required: false },
         path: String_Required_NotEmpty("path"),
         volume: { type: Number, default: 1 },
         queuePosition: { type: Number, default: 0 },
@@ -243,7 +243,7 @@ const UsageSummaryTableSchema = new dynamoose.Schema(
         createdAt: {
             type: Number,
             rangeKey: true,
-            default: DEFAULT_FOR_CREATED_AT_RANGE_KEY,
+            default: defaultCreatedAt,
         },
         app: {
             ...String_Required_NotEmpty("app"),
@@ -273,7 +273,7 @@ const AccountActivityTableSchema = new dynamoose.Schema(
         createdAt: {
             type: Number,
             rangeKey: true,
-            default: DEFAULT_FOR_CREATED_AT_RANGE_KEY,
+            default: defaultCreatedAt,
         },
         type: {
             type: String,
@@ -290,6 +290,7 @@ const AccountActivityTableSchema = new dynamoose.Schema(
                     "topup",
                     "api_per_request_charge",
                     "api_min_monthly_charge",
+                    "api_min_monthly_charge_upgrade",
                     "refund_api_min_monthly_charge",
                 ].includes(str),
         },
@@ -307,6 +308,7 @@ const AccountActivityTableSchema = new dynamoose.Schema(
         usageSummary: { type: String, default: undefined },
         stripeTransfer: { type: String, default: undefined },
         description: { type: String, default: "" },
+        billedApp: { type: String, required: false, default: undefined },
     },
     {
         timestamps: {
@@ -351,7 +353,7 @@ const StripePaymentAcceptTableSchema = new dynamoose.Schema(
         createdAt: {
             type: Number,
             rangeKey: true,
-            default: DEFAULT_FOR_CREATED_AT_RANGE_KEY,
+            default: defaultCreatedAt,
         },
         amount: {
             type: String,
@@ -385,7 +387,7 @@ const StripeTransferTableSchema = new dynamoose.Schema(
         createdAt: {
             type: Number,
             rangeKey: true,
-            default: DEFAULT_FOR_CREATED_AT_RANGE_KEY,
+            default: defaultCreatedAt,
         },
         receiveAmount: {
             type: String,
@@ -554,6 +556,7 @@ export class AccountActivity extends Item {
         | "topup"
         | "api_per_request_charge"
         | "api_min_monthly_charge"
+        | "api_min_monthly_charge_upgrade"
         | "refund_api_min_monthly_charge";
     status: "settled" | "pending";
     settleAt: number; // Unix timestamp when the activity is settled. Can be in the future.
@@ -563,6 +566,7 @@ export class AccountActivity extends Item {
     createdAt: number;
     description: string;
     stripeTransfer: string | null; // ID of the StripeTransfer item or null if not related to Stripe
+    billedApp: string | null; // ID of the App item if the activity is related to billing an app. This is the same as usageSummary.app
 }
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.

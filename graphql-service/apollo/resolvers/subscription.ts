@@ -41,7 +41,7 @@ export const subscribeResolvers: GQLResolvers = {
             { pricing }: GQLSubscribeUpdateSubscriptionArgs,
             context: RequestContext
         ): Promise<Subscription> {
-            return context.batched.Subscribe.update(parent, {
+            return context.batched.Subscription.update(parent, {
                 pricing,
             });
         },
@@ -54,11 +54,11 @@ export const subscribeResolvers: GQLResolvers = {
         ) {
             let subscribe: Subscription;
             if (pk) {
-                subscribe = await context.batched.Subscribe.get(
+                subscribe = await context.batched.Subscription.get(
                     SubscriptionPK.parse(pk)
                 );
             } else {
-                subscribe = await context.batched.Subscribe.get({
+                subscribe = await context.batched.Subscription.get({
                     subscriber,
                     app,
                 });
@@ -87,7 +87,7 @@ export const subscribeResolvers: GQLResolvers = {
             }
             await context.batched.Pricing.get(PricingPK.parse(pricing)); // Checks if the pricing plan exists
             await context.batched.User.get({ email: subscriber }); // Checks if the user exists
-            let Subscribe = await context.batched.Subscribe.create({
+            let Subscribe = await context.batched.Subscription.create({
                 app,
                 pricing,
                 subscriber,

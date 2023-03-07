@@ -30,7 +30,7 @@ export function createDefaultContextBatched() {
         App: new Batched(AppModel),
         Endpoint: new Batched(EndpointModel),
         Pricing: new Batched(PricingModel),
-        Subscribe: new Batched(SubscriptionModel),
+        Subscription: new Batched(SubscriptionModel),
         UsageLog: new Batched(UsageLogModel),
         UsageSummary: new Batched(UsageSummaryModel),
         StripePaymentAccept: new Batched(StripePaymentAcceptModel),

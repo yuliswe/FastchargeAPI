@@ -14,7 +14,7 @@ import {
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
 import { UsageLogPK } from "../pks/UsageLogPK";
 import { PricingPK } from "../pks/PricingPK";
-import { collectAccountActivities } from "../functions/account";
+import { settleAccountActivities } from "../functions/account";
 
 let context: RequestContext = {
     batched: createDefaultContextBatched(),
@@ -127,20 +127,28 @@ describe("Usage API", () => {
             appAuthor: "testuser1.fastchargeapi@gmail.com",
             disableMonthlyCharge: true,
         });
-        expect((await result.appAuthorPerRequest).amount).toEqual("0.003");
-        expect((await result.appAuthorPerRequest).type).toEqual("debit");
-        expect((await result.subscriberPerRequest).amount).toEqual("0.003");
-        expect((await result.subscriberPerRequest).type).toEqual("credit");
+        expect(
+            result.createdAccountActivities.appAuthorRequestFee.amount
+        ).toEqual("0.003");
+        expect(
+            result.createdAccountActivities.appAuthorRequestFee.type
+        ).toEqual("debit");
+        expect(
+            result.createdAccountActivities.subscriberRequestFee.amount
+        ).toEqual("0.003");
+        expect(
+            result.createdAccountActivities.subscriberRequestFee.type
+        ).toEqual("credit");
     });
 
-    test("Create AccountHistory", async () => {
-        let result = await collectAccountActivities(
+    test("Create AccountHistory for API caller", async () => {
+        let result = await settleAccountActivities(
             context,
             "testuser1.fastchargeapi@gmail.com"
         );
         expect(result).not.toBeNull();
         let {
-            accountHistory,
+            newAccountHistory: accountHistory,
             affectedAccountActivities: accountActivities,
             previousAccountHistory,
         } = result!;

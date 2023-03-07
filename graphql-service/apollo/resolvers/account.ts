@@ -5,7 +5,8 @@ import {
     GQLAccountActivityReason,
     GQLAccountActivityStatus,
 } from "../__generated__/resolvers-types";
-import { AccountActivityModel } from "../dynamoose/models";
+import { AccountActivity, AccountActivityModel } from "../dynamoose/models";
+import { AppPK } from "../functions/AppPK";
 import { StripeTransferPK } from "../pks/StripeTransferPK";
 
 /**
@@ -27,7 +28,15 @@ export const accountActivityResolvers: GQLResolvers & {
         description: (parent) => parent.description,
         status: (parent) => parent.status as GQLAccountActivityStatus,
         settleAt: (parent) => parent.settleAt,
-
+        async billedApp(parent: AccountActivity, args: {}, context, info) {
+            if (parent.billedApp) {
+                return await context.batched.App.get(
+                    AppPK.parse(parent.billedApp)
+                );
+            } else {
+                return null;
+            }
+        },
         async stripeTransfer(parent, args, context, info) {
             if (parent.stripeTransfer) {
                 return await context.batched.StripeTransfer.get(

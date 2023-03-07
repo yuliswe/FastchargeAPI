@@ -9,7 +9,7 @@ import { StripeTransferModel } from "../dynamoose/models";
 import { RequestContext } from "../RequestContext";
 import Decimal from "decimal.js-light";
 import { UserPK } from "../pks/UserPK";
-import { collectAccountActivities, getUserBalance } from "../functions/account";
+import { settleAccountActivities, getUserBalance } from "../functions/account";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { BadInput } from "../errors";
 import { createAccountActivitiesForTransfer } from "../functions/transfer";

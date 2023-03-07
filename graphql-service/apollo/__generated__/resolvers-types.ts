@@ -24,6 +24,7 @@ export type Scalars = {
 export type GQLAccountActivity = {
   __typename?: 'AccountActivity';
   amount: Scalars['String'];
+  billedApp?: Maybe<GQLApp>;
   createdAt: Scalars['Timestamp'];
   description: Scalars['String'];
   reason: GQLAccountActivityReason;
@@ -35,6 +36,7 @@ export type GQLAccountActivity = {
 
 export enum GQLAccountActivityReason {
   ApiMinMonthlyCharge = 'api_min_monthly_charge',
+  ApiMinMonthlyChargeUpgrade = 'api_min_monthly_charge_upgrade',
   ApiPerRequestCharge = 'api_per_request_charge',
   Payout = 'payout',
   PayoutFee = 'payout_fee',
@@ -549,6 +551,7 @@ export type GQLResolversParentTypes = ResolversObject<{
 
 export type GQLAccountActivityResolvers<ContextType = RequestContext, ParentType extends GQLResolversParentTypes['AccountActivity'] = GQLResolversParentTypes['AccountActivity']> = ResolversObject<{
   amount?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
+  billedApp?: Resolver<Maybe<GQLResolversTypes['App']>, ParentType, ContextType>;
   createdAt?: Resolver<GQLResolversTypes['Timestamp'], ParentType, ContextType>;
   description?: Resolver<GQLResolversTypes['String'], ParentType, ContextType>;
   reason?: Resolver<GQLResolversTypes['AccountActivityReason'], ParentType, ContextType>;

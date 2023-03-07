@@ -45,7 +45,7 @@ export const userResolvers: GQLResolvers & {
             context: RequestContext,
             info: GraphQLResolveInfo
         ) {
-            return await context.batched.Subscribe.many({
+            return await context.batched.Subscription.many({
                 subscriber: parent.email,
             });
         },

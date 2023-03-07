@@ -17,7 +17,7 @@ import { BadInput, Denied } from "../errors";
 import { Can } from "../permissions";
 import { UserPK } from "../pks/UserPK";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
-import { collectAccountActivities } from "../functions/account";
+import { settleAccountActivities } from "../functions/account";
 /**
  * Remember to add your resolver to the resolvers object in server.ts.
  *
@@ -68,7 +68,7 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
             });
             parent.stripeSessionObject = JSON.parse(stripeSessionObject);
             parent.accountActivity = AccountActivityPK.stringify(activity);
-            await collectAccountActivities(context, UserPK.stringify(user), {
+            await settleAccountActivities(context, UserPK.stringify(user), {
                 consistentReadAccountActivities: true,
             });
             await parent.save();

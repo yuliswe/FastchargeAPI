@@ -4,7 +4,7 @@ import { AccountActivity, StripeTransfer } from "../dynamoose/models";
 import { BadInput } from "../errors";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { UserPK } from "../pks/UserPK";
-import { getUserBalance, collectAccountActivities } from "./account";
+import { getUserBalance, settleAccountActivities } from "./account";
 import { StripeTransferPK } from "../pks/StripeTransferPK";
 
 /**
@@ -64,7 +64,7 @@ export async function createAccountActivitiesForTransfer(
         description: `Stripe service fee`,
         stripeTransfer: StripeTransferPK.stringify(transfer),
     });
-    await collectAccountActivities(context, userPK, {
+    await settleAccountActivities(context, userPK, {
         consistentReadAccountActivities: true,
     });
     transfer.accountActivity = AccountActivityPK.stringify(activity);
