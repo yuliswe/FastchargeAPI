@@ -9,18 +9,20 @@ import {
     FormControlLabel,
     Link,
     Grid,
-    List,
     Paper,
     Radio,
     RadioGroup,
     Stack,
     Typography,
 } from "@mui/material";
-import { SearchAppState } from "../states/SearchAppState";
+import { AppSearchResultState } from "../states/AppSearchResultState";
 import { AppContext, ReactAppContextType } from "../AppContext";
+import { appStore } from "../store-config";
+import { AppSearchResultEvent, SearchResult } from "../events/AppSearchResultEvent";
+import { PaginatedList, PaginatedListOnPageChangeHandler } from "../stateless-components/PaginatedList";
 
 type Props = {
-    searchAppState: SearchAppState;
+    searchResultState: AppSearchResultState;
 };
 
 class _SearchResultPage extends React.Component<Props, {}> {
@@ -28,15 +30,33 @@ class _SearchResultPage extends React.Component<Props, {}> {
     get _context(): AppContext {
         return this.context as AppContext;
     }
+    
+    componentDidMount(): void {
+        console.log("SearchResultPage.componentDidMount");
+        appStore.dispatch(new AppSearchResultEvent.SearchResultEvent(this._context, this._context.route.query.get("q")!));
+    }
+
+    searchResultPageChangeHandler: PaginatedListOnPageChangeHandler = ({
+        page,
+    }) => {
+        appStore.dispatch(
+            new AppSearchResultEvent.SearchResultEvent(this._context, this._context.route.query.get("q")!)
+        );
+    };
+
+    searchForAppsbyKeyword = (keyword: string) => {
+        appStore.dispatch(new AppSearchResultEvent.SearchResultEvent(this._context, keyword));
+    };
+
     render() {
         return (
-            <SiteLayout>
+            <SiteLayout onSearch={this.searchForAppsbyKeyword}>
                 <Container maxWidth="xl">
                     <Grid container>
                         <Grid item xs={3} pl={5}>
                             <Typography variant="h6" my={5}>
-                                {this.props.searchAppState.numResults} result
-                                {this.props.searchAppState.numResults > 1 &&
+                                {this.props.searchResultState.searchResults.length} result
+                                {this.props.searchResultState.searchResults.length > 1 &&
                                     "s"}{" "}
                                 found
                             </Typography>
@@ -74,51 +94,16 @@ class _SearchResultPage extends React.Component<Props, {}> {
                             </FormControl>
                         </Grid>
                         <Grid item xs={9}>
-                            <List sx={{ mt: 0 }}>
-                                <Paper
-                                    sx={{
-                                        py: 3,
-                                        borderBottom: 1,
-                                        borderBottomColor: "divider",
-                                        bgcolor: "transparent",
-                                    }}
-                                >
-                                    <Link
-                                        href={`/apis/appname`}
-                                        underline="hover"
-                                    >
-                                        <Typography variant="h6" my={2}>
-                                            API-FOOTBALL API
-                                        </Typography>
-                                    </Link>
-                                    <Typography variant="body1" my={2}>
-                                        +960 football leagues & cups. Livescore
-                                        (15s), live & pre-match odds, events,
-                                        line-ups, coachs, players, top scorers,
-                                        standings, statistics, transfers,
-                                        predictions.
-                                    </Typography>
-                                    <Stack
-                                        direction="row"
-                                        spacing={1}
-                                        alignItems="center"
-                                    >
-                                        <Avatar src="./logo192.png" />
-                                        <Typography
-                                            variant="body1"
-                                            fontWeight={500}
-                                        >
-                                            alsontang
-                                        </Typography>
-                                        <Typography variant="body1">
-                                            published 1.0.0
-                                        </Typography>
-                                        <Typography variant="body1" pl={2}>
-                                            3 months ago
-                                        </Typography>
-                                    </Stack>
-                                </Paper>
-                            </List>
+                            <PaginatedList<SearchResult>
+                                sourceItems={this.props.searchResultState.searchResults}
+                                urlNamespace="s"
+                                itemsPerPage={7}
+                                onChange={this.searchResultPageChangeHandler}
+                                listItemGenerator={generateAppSearchResultComponents}
+                            />
+                            {/* <List sx={{ mt: 0 }}>
+                                {createListItems(this.props.searchResultState.searchResults)}
+                            </List> */}
                         </Grid>
                     </Grid>
                 </Container>
@@ -127,8 +112,48 @@ class _SearchResultPage extends React.Component<Props, {}> {
     }
 }
 
+const generateAppSearchResultComponents = (
+    searchResults: SearchResult[]
+): JSX.Element[] => {
+    return searchResults.map((result) => (
+        <Paper
+            sx={{
+                py: 3,
+                borderBottom: 1,
+                borderBottomColor: "divider",
+                bgcolor: "transparent",
+            }}
+        >
+            <Link
+                href={`/apis/appname`}
+                underline="hover"
+            >
+                <Typography variant="h6" my={2}>
+                    {result.name}
+                </Typography>
+            </Link>
+            <Typography variant="body1" my={2}>
+                {result.description}
+            </Typography>
+            <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+            >
+                <Avatar src="./logo192.png" />
+                <Typography
+                    variant="body1"
+                    fontWeight={500}
+                >
+                    {result.owner.author}
+                </Typography>
+            </Stack>
+        </Paper>
+    ));
+}
+
 export const SearchResultPage = connect<Props, {}, {}, RootAppState>(
     (rootAppState: RootAppState) => ({
-        searchAppState: rootAppState.search,
+        searchResultState: rootAppState.search,
     })
 )(_SearchResultPage);

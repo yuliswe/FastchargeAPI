@@ -15,6 +15,7 @@ import { AppContext, ReactAppContextType } from "./AppContext";
 import CopyrightIcon from "@mui/icons-material/Copyright";
 type Props = {
     children: React.ReactNode;
+    onSearch?: (query: string) => void;
 };
 
 export class SiteLayout extends React.PureComponent<Props> {
@@ -26,7 +27,9 @@ export class SiteLayout extends React.PureComponent<Props> {
     render() {
         return (
             <React.Fragment>
-                <AppBar></AppBar>
+                <AppBar
+                    onSearch={this.props.onSearch}
+                />
                 {this.props.children}
                 <Paper sx={{ mt: 15, bgcolor: "primary.main", p: 5 }}>
                     <Container maxWidth="lg">

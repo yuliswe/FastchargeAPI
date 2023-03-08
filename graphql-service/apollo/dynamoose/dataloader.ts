@@ -5,6 +5,7 @@ import { AlreadyExists, NotFound, UpdateContainsPrimaryKey } from "../errors";
 import hash from "object-hash";
 import { ConditionalCheckFailedException } from "@aws-sdk/client-dynamodb";
 import { Query as DynamogooseQuery } from "dynamoose/dist/ItemRetriever";
+
 type Optional<T> = T | undefined | null;
 type ConditionQuery<V> = {
     where?: Optional<V>;
@@ -565,12 +566,14 @@ export class Batched<I extends Item> {
         const lowerCaseKey = key.toLowerCase();
         const upperCaseKey = key.toUpperCase();
         const keyWithFirstLetterCapitalized = capitalizeFirstLetter(key);
+
         let query = this.model.scan();
-        for (let propertyName of propertyNames) {
-            if (query !== this.model.scan()) {
-                query.or();
+        for (let i = 0; i < propertyNames.length; i++) {
+            const propertyName = propertyNames[i];
+            if (i !== 0) {
+                query = query.or();
             }
-            query
+            query = query
                 .where(propertyName)
                 .contains(key)
                 .or()
@@ -582,9 +585,9 @@ export class Batched<I extends Item> {
                 .or()
                 .where(propertyName)
                 .contains(keyWithFirstLetterCapitalized)
-                .or();
         }
-        return await query.exec();
+        const result = await query.exec();
+        return result;
     }
 
     // prime(values: Iterable<I>) {

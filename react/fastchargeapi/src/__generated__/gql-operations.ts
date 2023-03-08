@@ -228,6 +228,7 @@ export type GQLPricing = {
 export type GQLQuery = {
   __typename?: 'Query';
   app: GQLApp;
+  appFullTextSearch: Array<GQLApp>;
   apps?: Maybe<Array<Maybe<GQLApp>>>;
   endpoint: GQLEndpoint;
   endpoints?: Maybe<Array<Maybe<GQLEndpoint>>>;
@@ -241,6 +242,11 @@ export type GQLQuery = {
 
 export type GQLQueryAppArgs = {
   name?: InputMaybe<Scalars['String']>;
+};
+
+
+export type GQLQueryAppFullTextSearchArgs = {
+  query: Scalars['String'];
 };
 
 
@@ -441,6 +447,13 @@ export type GQLAppDetailLoadEndpointsQueryVariables = Exact<{
 
 
 export type GQLAppDetailLoadEndpointsQuery = { __typename?: 'Query', app: { __typename?: 'App', endpoints: Array<{ __typename?: 'Endpoint', method: GQLHttpMethod, path: string, description?: string | null, destination?: string | null }> } };
+
+export type GQLAppFullTextSearchQueryVariables = Exact<{
+  query: Scalars['String'];
+}>;
+
+
+export type GQLAppFullTextSearchQuery = { __typename?: 'Query', appFullTextSearch: Array<{ __typename?: 'App', name: string, description: string, owner: { __typename?: 'User', author: string } }> };
 
 export type GQLGetAccountBalanceQueryVariables = Exact<{
   email: Scalars['Email'];

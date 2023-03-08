@@ -29,7 +29,11 @@ type State = {
     anchorEl: HTMLElement | null;
 };
 
-export class AppBar extends React.Component<{}, State> {
+type Props = {
+    onSearch?: (searchText: string) => void;
+};
+
+export class AppBar extends React.Component<Props, State> {
     static contextType = ReactAppContextType;
     get _context(): AppContext {
         return this.context as AppContext;
@@ -164,6 +168,7 @@ export class AppBar extends React.Component<{}, State> {
                                         value={this.state.searchText}
                                         onKeyDown={(event) => {
                                             if (event.key === "Enter") {
+                                                this.props.onSearch?.(this.state.searchText);
                                                 this._context.route?.navigate({
                                                     pathname: "/search",
                                                     search: createSearchParams({
@@ -197,6 +202,9 @@ export class AppBar extends React.Component<{}, State> {
                                             px: 2,
                                         }}
                                         href={`/search?q=${this.state.searchText}`}
+                                        onClick={() => {
+                                            this.props.onSearch?.(this.state.searchText);
+                                        }}
                                     >
                                         <Typography>Search</Typography>
                                     </ButtonBase>

@@ -231,6 +231,7 @@ export type GQLPricing = {
 export type GQLQuery = {
   __typename?: 'Query';
   app: GQLApp;
+  appFullTextSearch: Array<GQLApp>;
   apps?: Maybe<Array<Maybe<GQLApp>>>;
   endpoint: GQLEndpoint;
   endpoints?: Maybe<Array<Maybe<GQLEndpoint>>>;
@@ -244,6 +245,11 @@ export type GQLQuery = {
 
 export type GQLQueryAppArgs = {
   name?: InputMaybe<Scalars['String']>;
+};
+
+
+export type GQLQueryAppFullTextSearchArgs = {
+  query: Scalars['String'];
 };
 
 
@@ -632,6 +638,7 @@ export type GQLPricingResolvers<ContextType = RequestContext, ParentType extends
 
 export type GQLQueryResolvers<ContextType = RequestContext, ParentType extends GQLResolversParentTypes['Query'] = GQLResolversParentTypes['Query']> = ResolversObject<{
   app?: Resolver<GQLResolversTypes['App'], ParentType, ContextType, Partial<GQLQueryAppArgs>>;
+  appFullTextSearch?: Resolver<Array<GQLResolversTypes['App']>, ParentType, ContextType, RequireFields<GQLQueryAppFullTextSearchArgs, 'query'>>;
   apps?: Resolver<Maybe<Array<Maybe<GQLResolversTypes['App']>>>, ParentType, ContextType>;
   endpoint?: Resolver<GQLResolversTypes['Endpoint'], ParentType, ContextType, Partial<GQLQueryEndpointArgs>>;
   endpoints?: Resolver<Maybe<Array<Maybe<GQLResolversTypes['Endpoint']>>>, ParentType, ContextType>;
