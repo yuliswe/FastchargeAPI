@@ -181,11 +181,11 @@ func (v *GetUserSubscriptionPlanSubscriptionSubscribePricing) GetChargePerReques
 
 // TriggerBillingResponse is returned by TriggerBilling on success.
 type TriggerBillingResponse struct {
-	TriggerBilling TriggerBillingTriggerBillingUsageSummary `json:"triggerBilling"`
+	TriggerBilling []TriggerBillingTriggerBillingUsageSummary `json:"triggerBilling"`
 }
 
 // GetTriggerBilling returns TriggerBillingResponse.TriggerBilling, and is useful for accessing the field via an interface.
-func (v *TriggerBillingResponse) GetTriggerBilling() TriggerBillingTriggerBillingUsageSummary {
+func (v *TriggerBillingResponse) GetTriggerBilling() []TriggerBillingTriggerBillingUsageSummary {
 	return v.TriggerBilling
 }
 

@@ -77,7 +77,7 @@ type SQSGraphQLClientConfig struct {
 //
 // MessageGroupId: Only for fifo queues. Sets the MessageGroupId for the SQS
 // message delay_seconds: selects the SQS queue to use based on the
-// delay_seconds
+// delay_seconds. For the billing queue, this must be "main".
 //
 // Effectively, MessageDeduplicationId deduplicates messages with the same ID.
 // Messages with the same MessageGroupId are processed in FIFO order.
@@ -91,6 +91,9 @@ func getSQSGraphQLClient(config SQSGraphQLClientConfig) graphql.Client {
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region: aws.String("us-east-1"),
 	}))
+	if config.QueueUrl == BillingFifoQueueUrl {
+		config.MessageGroupId = "main"
+	}
 	baseClient := http.Client{
 		Transport: &SQSTransport{
 			Headers: map[string]string{

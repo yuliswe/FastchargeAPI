@@ -344,7 +344,7 @@ func billUsage(user string, app string, path string) {
 		context.Background(),
 		getSQSGraphQLClient(SQSGraphQLClientConfig{
 			MessageDeduplicationId: fmt.Sprintf("trigger-billing-%s-%d", user, time.Now().Unix()),
-			MessageGroupId:         user,
+			MessageGroupId:         "main",
 			QueueUrl:               BillingFifoQueueUrl,
 		}),
 		user,

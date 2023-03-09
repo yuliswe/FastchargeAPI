@@ -1,6 +1,6 @@
 {
     "GatewayFunction": {
         "TRUST_X_USER_EMAIL_HEADER": "1",
-        "LOCAL_GRAPHQL": "0"
+        "LOCAL_GRAPHQL": "1"
     }
 }
