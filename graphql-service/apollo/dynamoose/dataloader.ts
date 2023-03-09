@@ -25,16 +25,22 @@ type GQLPartial<T> = { [K in keyof T]?: Optional<T[K]> };
 type Query<T> = {
     [K in keyof T]?: Optional<T[K] | ConditionQuery<T[K]>>;
 };
-
+type UpdateQuery<T> = NormalUpdateQuery<T> | AdvancedUpdateQuery<T>;
+type NormalUpdateQuery<T> = {
+    [K in keyof T]?: Optional<T[K] | ConditionQuery<T[K]>>;
+};
+type AdvancedUpdateQuery<T> = {
+    $SET?: NormalUpdateQuery<T>;
+    $REMOVE?: (keyof T)[];
+    $ADD?: NormalUpdateQuery<T>;
+    $DELETE?: NormalUpdateQuery<T>;
+};
 /**
  * This file is a collection of functions that are used to bridge Dynamoose with
  * DataLoader.
  */
 
-function applyBatchOptionsToQuery<T>(
-    query: DynamogooseQuery<T>,
-    options: BatchOptions
-): DynamogooseQuery<T> {
+function applyBatchOptionsToQuery<T>(query: DynamogooseQuery<T>, options: BatchOptions): DynamogooseQuery<T> {
     if (options) {
         if (options.limit != null) {
             query = query.limit(options.limit);
@@ -58,10 +64,7 @@ function applyBatchOptionsToQuery<T>(
  * @param item
  * @returns An object { [hashKeyName]: hashKey, [rangeKeyName]?: rangeKey }
  */
-function extractKeysFromItems<I extends Item>(
-    model: ModelType<I>,
-    item: GQLPartial<I>
-): Partial<I> {
+function extractKeysFromItems<I extends Item>(model: ModelType<I>, item: GQLPartial<I>): Partial<I> {
     let hashKeyName = model.table().hashKey;
     let rangeKeyName: keyof I | undefined = model.table().rangeKey as keyof I;
     let query = {
@@ -138,9 +141,7 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
         let bkType: number[] = [];
         let resultArr: I[][] = Array(bkArray.length).fill([]);
         let hashKeyName = model.table().hashKey as keyof I & string;
-        let rangeKeyName = model.table().rangeKey as
-            | (keyof I & string)
-            | undefined;
+        let rangeKeyName = model.table().rangeKey as (keyof I & string) | undefined;
         for (let [index, bk] of bkArray.entries()) {
             if (
                 hashKeyName &&
@@ -186,12 +187,7 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
             } else if (typeof bk.query === "object") {
                 query = model.query(bk.query);
             } else {
-                throw new Error(
-                    "Invalid query type: " +
-                        typeof bk.query +
-                        " " +
-                        bk.query.toString()
-                );
+                throw new Error("Invalid query type: " + typeof bk.query + " " + bk.query.toString());
             }
             if (bk.options) {
                 query = applyBatchOptionsToQuery(query, bk.options);
@@ -207,9 +203,7 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
         ]);
 
         for (let [index, items] of result3.entries()) {
-            resultArr[unbatchable[index]] = await Promise.all(
-                items.map(assignDefaults)
-            );
+            resultArr[unbatchable[index]] = await Promise.all(items.map(assignDefaults));
         }
 
         let keyMap1 = new Map<PrimaryKey, I[]>();
@@ -240,10 +234,7 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
             if (type === 1) {
                 resultArr[index] = keyMap1.get(batch1[index]) || [];
             } else if (type === 2) {
-                let key = [
-                    batch2[index][hashKeyName],
-                    batch2[index][rangeKeyName!],
-                ].toString();
+                let key = [batch2[index][hashKeyName], batch2[index][rangeKeyName!]].toString();
                 resultArr[index] = keyMap2.get(key) || [];
             }
         }
@@ -265,7 +256,7 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
 
 function stripNullKeys<T extends object>(
     object: T,
-    options?: { returnUndefine?: boolean; deep?: boolean }
+    options?: { returnUndefined?: boolean; deep?: boolean }
 ): Partial<T> | undefined {
     let data: Partial<T> = {};
     for (let [key, val] of Object.entries(object)) {
@@ -276,7 +267,7 @@ function stripNullKeys<T extends object>(
             data[key as keyof T] = val;
         }
     }
-    if (options?.returnUndefine && Object.keys(object).length == 0) {
+    if (options?.returnUndefined && Object.keys(object).length == 0) {
         return undefined;
     }
     return data;
@@ -346,20 +337,13 @@ export class Batched<I extends Item> {
         if (result.length === 0) {
             throw new NotFound(this.model.name, JSON.stringify(key));
         } else if (result.length > 1) {
-            throw new Error(
-                `Found more than one ${
-                    this.model.name
-                } with key ${JSON.stringify(key)}`
-            );
+            throw new Error(`Found more than one ${this.model.name} with key ${JSON.stringify(key)}`);
         } else {
             return result[0];
         }
     }
 
-    async getOrNull(
-        key: string | Query<I>,
-        options?: BatchOptions
-    ): Promise<I | null> {
+    async getOrNull(key: string | Query<I>, options?: BatchOptions): Promise<I | null> {
         try {
             return await this.get(key, options);
         } catch (e) {
@@ -397,7 +381,7 @@ export class Batched<I extends Item> {
         if (options != undefined) {
             options = stripNullKeys(options, {
                 deep: true,
-                returnUndefine: true,
+                returnUndefined: true,
             });
         }
         let result = await this.loader.load({
@@ -407,10 +391,7 @@ export class Batched<I extends Item> {
         return await Promise.all(result);
     }
 
-    async count(
-        key: string | Query<I>,
-        options?: BatchOptions
-    ): Promise<number> {
+    async count(key: string | Query<I>, options?: BatchOptions): Promise<number> {
         if (typeof key === "object") {
             key = stripNullKeys(key)!;
         }
@@ -418,7 +399,7 @@ export class Batched<I extends Item> {
         if (options != undefined) {
             options = stripNullKeys(options, {
                 deep: true,
-                returnUndefine: true,
+                returnUndefined: true,
             });
         }
         if (options != undefined) {
@@ -475,10 +456,7 @@ export class Batched<I extends Item> {
                 if (e instanceof ConditionalCheckFailedException) {
                     let query = extractKeysFromItems(this.model, stripped);
                     if ((await this.many(query)).length > 0) {
-                        throw new AlreadyExists(
-                            this.model.name,
-                            JSON.stringify(item)
-                        );
+                        throw new AlreadyExists(this.model.name, JSON.stringify(item));
                     } else if (retries < maxAttempts - 1) {
                         // The insert could fail when the item uses createdAt as
                         // a range key. In this case we just retry the insert.
@@ -513,6 +491,8 @@ export class Batched<I extends Item> {
     /**
      * Look up the item with the given keys, and update the item with the given
      * new values. The new values cannot contain the hash key or the range key.
+     * It is normal to use get() to look up the item, and then update the item
+     * by putting the item in the first argument.
      *
      * @param keys A primary + range key (optional) to lookup the item. If extra
      * keys are provided, they are ignored.
@@ -533,32 +513,43 @@ export class Batched<I extends Item> {
     // mistakes. So we disallow updating the primary key. If updating the
     // primary key is needed, the client should delete the old object and create
     // a new one.
-    async update(keys: GQLPartial<I>, newVals: GQLPartial<I>): Promise<I> {
-        newVals = stripNullKeys(newVals)!;
+    async update(keys: GQLPartial<I>, newVals: UpdateQuery<I>): Promise<I> {
+        newVals = stripNullKeys(newVals, {
+            deep: true,
+            returnUndefined: true,
+        })!;
+
+        if (newVals === undefined) {
+            return await this.get(keys);
+        }
+
         // Extract keys to ingore extra properties
         const query = extractKeysFromItems(this.model, keys);
 
         let hashKeyName = this.model.table().hashKey;
         if (hashKeyName in newVals) {
-            throw new UpdateContainsPrimaryKey(
-                this.model.name,
-                hashKeyName,
-                newVals
-            );
+            throw new UpdateContainsPrimaryKey(this.model.name, hashKeyName, newVals);
+        }
+        if (!(hashKeyName in query)) {
+            throw new Error(`Query must contain hash key ${hashKeyName}`);
         }
         let rangeKeyName = this.model.table().rangeKey;
         if (rangeKeyName && rangeKeyName in newVals) {
-            throw new UpdateContainsPrimaryKey(
-                this.model.name,
-                rangeKeyName,
-                newVals
-            );
+            throw new UpdateContainsPrimaryKey(this.model.name, rangeKeyName, newVals);
         }
-        let updated = await this.get(query);
-        Object.assign(updated, newVals);
+        if (rangeKeyName && !(rangeKeyName in query)) {
+            throw new Error(`Query must contain range key ${rangeKeyName}`);
+        }
 
+        let result: I;
+        try {
+            result = await (this.model.update(query as any, newVals as any) as any);
+        } catch (e) {
+            await this.get(query); // Check if the item exists, throws NotFound if not
+            throw e;
+        }
         this.clearCache();
-        return (await updated.save()) as I;
+        return result;
     }
 
     async scan(): Promise<I[]> {

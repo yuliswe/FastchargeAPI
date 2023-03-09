@@ -13,7 +13,7 @@ Parameters:
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 1
+    Timeout: 10
     MemorySize: 3008
     Tracing: Active
     Tags:
@@ -134,10 +134,10 @@ Resources:
             Path: /
             Method: post
             RestApiId: !Ref APIGateway
-      # Environment:
-      #   Variables:
-      #     TRUST_X_USER_EMAIL_HEADER: "" # WARNING: X-User-Email must not be trusted in production.
-      #     AWS_LAMBDA_EXEC_WRAPPER: ""
+      Environment:
+        Variables:
+          TRUST_X_USER_EMAIL_HEADER: "" # WARNING: X-User-Email must not be trusted in production.
+          # AWS_LAMBDA_EXEC_WRAPPER: ""
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:

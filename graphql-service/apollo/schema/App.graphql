@@ -19,14 +19,10 @@ type Query {
 
     secret(key: String!): Secret!
 
-    checkUserIsAllowedForGatewayRequest(
-        user: ID!
-        app: ID!
-    ): GatewayDecisionResponse!
+    checkUserIsAllowedForGatewayRequest(user: ID!, app: ID!, forceBalanceCheck: Boolean): GatewayDecisionResponse!
 }
 
 enum GatewayDecisionResponseReason {
-    ok
     insufficient_balance
     owner_insufficient_balance
     not_subscribed
@@ -35,7 +31,7 @@ enum GatewayDecisionResponseReason {
 
 type GatewayDecisionResponse {
     allowed: Boolean!
-    reason: String
+    reason: GatewayDecisionResponseReason
 }
 
 type Mutation {
@@ -66,18 +62,9 @@ type Mutation {
         chargePerRequest: String!
     ): Pricing!
 
-    createSubscription(
-        app: String!
-        pricing: ID!
-        subscriber: Email!
-    ): Subscribe!
+    createSubscription(app: String!, pricing: ID!, subscriber: Email!): Subscribe!
 
-    createUsageLog(
-        app: String!
-        path: String!
-        subscriber: Email!
-        volume: Int! = 1
-    ): UsageLog!
+    createUsageLog(app: String!, path: String!, subscriber: Email!, volume: Int! = 1): UsageLog!
 
     createStripePaymentAccept(
         user: String!
@@ -100,12 +87,7 @@ type Mutation {
 
     triggerBilling(user: ID!, app: ID!): UsageSummary
 
-    createSecret(
-        key: String!
-        value: String!
-        description: String
-        expireAt: Timestamp
-    ): Secret!
+    createSecret(key: String!, value: String!, description: String, expireAt: Timestamp): Secret!
 }
 
 type Secret {
@@ -128,18 +110,9 @@ type User {
     stripeConnectAccountId: String
     apps: [App!]!
 
-    usageLogs(
-        app: String
-        path: String
-        limit: Int = 5
-        dateRange: DateRangeInput
-    ): [UsageLog!]!
+    usageLogs(app: String, path: String, limit: Int = 5, dateRange: DateRangeInput): [UsageLog!]!
 
-    updateUser(
-        author: String
-        stripeCustomerId: String
-        stripeConnectAccountId: String
-    ): User
+    updateUser(author: String, stripeCustomerId: String, stripeConnectAccountId: String): User
 
     usageSummaries(
         app: ID!
@@ -206,12 +179,7 @@ type Endpoint {
     createdAt: Timestamp!
     updatedAt: Timestamp!
 
-    updateEndpoint(
-        method: HTTPMethod
-        path: String
-        destination: String
-        description: String
-    ): Endpoint
+    updateEndpoint(method: HTTPMethod, path: String, destination: String, description: String): Endpoint
 
     deleteEndpoint: Endpoint
 }
@@ -270,10 +238,7 @@ type StripePaymentAccept {
     stripeSessionId: String!
     createdAt: Timestamp!
 
-    updateStripePaymentAccept(
-        stripePaymentStatus: String
-        stripeSessionObject: String
-    ): StripePaymentAccept
+    updateStripePaymentAccept(stripePaymentStatus: String, stripeSessionObject: String): StripePaymentAccept
 
     settlePayment(stripeSessionObject: String!): StripePaymentAccept
 }

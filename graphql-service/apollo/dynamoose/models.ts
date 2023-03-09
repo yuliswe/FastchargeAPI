@@ -87,10 +87,7 @@ function String_Required_NotEmpty(fieldName: string) {
 
 const validateStringDecimal = (fieldName: string) => (str: string) => {
     if (!/^-?\d+(\.\d+)?$/.test(str)) {
-        throw new ValidationError(
-            fieldName,
-            `String must be a decimal number: "${str}"`
-        );
+        throw new ValidationError(fieldName, `String must be a decimal number: "${str}"`);
     }
     return true;
 };
@@ -121,10 +118,7 @@ const AppTableSchema = new dynamoose.Schema(
                     return true;
                 }
                 if (!/proxy|redirect/.test(str)) {
-                    throw new ValidationError(
-                        "gatewayMode",
-                        "Must be either 'proxy' or 'redirect'"
-                    );
+                    throw new ValidationError("gatewayMode", "Must be either 'proxy' or 'redirect'");
                 }
                 return true;
             },
@@ -147,16 +141,7 @@ const EndpointTableSchema = new dynamoose.Schema(
         method: {
             type: String,
             default: "ANY",
-            enum: [
-                "ANY",
-                "GET",
-                "HEAD",
-                "POST",
-                "PUT",
-                "DELETE",
-                "OPTIONS",
-                "PATCH",
-            ],
+            enum: ["ANY", "GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
         },
         path: { ...String_Required_NotEmpty("path") },
         destination: { ...String_Required_NotEmpty("destination") },
@@ -433,6 +418,33 @@ const SecretTableSchema = new dynamoose.Schema(
     }
 );
 
+const GatewayRequestCounterTableSchema = new dynamoose.Schema(
+    {
+        requester: { hashKey: true, type: String, required: true },
+        app: { rangeKey: true, type: String, required: true },
+        isGlobalCounter: { type: Boolean, required: true, default: false },
+        counter: { type: Number, required: true, default: 0 },
+        counterSinceLastReset: { type: Number, required: true, default: 0 },
+        lastResetTime: { type: Number, required: true, default: 0 },
+    },
+    {
+        timestamps: true,
+    }
+);
+
+const GatewayRequestDecisionCacheTableSchema = new dynamoose.Schema(
+    {
+        requester: { hashKey: true, type: String, required: true },
+        app: { rangeKey: true, type: String, required: true },
+        useGlobalCounter: { type: Boolean, required: true, default: false },
+        nextForcedBalanceCheckRequestCount: { type: Number, required: true },
+        nextForcedBalanceCheckTime: { type: Number, required: true },
+    },
+    {
+        timestamps: true,
+    }
+);
+
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
 export class App extends Item {
@@ -448,15 +460,7 @@ export class App extends Item {
 export class Endpoint extends Item {
     app: string;
     path: string;
-    method:
-        | "GET"
-        | "POST"
-        | "PUT"
-        | "DELETE"
-        | "PATCH"
-        | "HEAD"
-        | "OPTIONS"
-        | "ANY";
+    method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS" | "ANY";
     destination: string;
     description: string;
     createdAt: number;
@@ -639,59 +643,60 @@ export class Secret extends Item {
     createdAt: number;
 }
 
+export class GatewayRequestCounter extends Item {
+    requester: string;
+    app: string | null;
+    counter: number;
+    counterSinceLastReset: number;
+    lastResetTime: number;
+    isGlobalCounter: boolean;
+}
+
+export class GatewayRequestDecisionCache extends Item {
+    requester: string;
+    app: string | null;
+    useGlobalCounter: boolean;
+    nextForcedBalanceCheckRequestCount: number;
+    nextForcedBalanceCheckTime: number;
+}
+
 export const AppModel = dynamoose.model<App>("App", AppTableSchema, {
     ...tableConfigs,
 });
-export const EndpointModel = dynamoose.model<Endpoint>(
-    "Endpoint",
-    EndpointTableSchema,
-    { ...tableConfigs }
-);
+export const EndpointModel = dynamoose.model<Endpoint>("Endpoint", EndpointTableSchema, { ...tableConfigs });
 export const UserModel = dynamoose.model<User>("User", UserTableSchema, {
     ...tableConfigs,
 });
-export const SubscriptionModel = dynamoose.model<Subscription>(
-    "Subscription",
-    SubscriptionTableSchema,
-    { ...tableConfigs }
-);
-export const PricingModel = dynamoose.model<Pricing>(
-    "Pricing",
-    PricingTableSchema,
-    { ...tableConfigs }
-);
-export const UsageLogModel = dynamoose.model<UsageLog>(
-    "UsageLog",
-    UsageLogTableSchema,
-    { ...tableConfigs }
-);
-export const UsageSummaryModel = dynamoose.model<UsageSummary>(
-    "UsageSummary",
-    UsageSummaryTableSchema,
-    { ...tableConfigs }
-);
+export const SubscriptionModel = dynamoose.model<Subscription>("Subscription", SubscriptionTableSchema, {
+    ...tableConfigs,
+});
+export const PricingModel = dynamoose.model<Pricing>("Pricing", PricingTableSchema, { ...tableConfigs });
+export const UsageLogModel = dynamoose.model<UsageLog>("UsageLog", UsageLogTableSchema, { ...tableConfigs });
+export const UsageSummaryModel = dynamoose.model<UsageSummary>("UsageSummary", UsageSummaryTableSchema, {
+    ...tableConfigs,
+});
 export const StripePaymentAcceptModel = dynamoose.model<StripePaymentAccept>(
     "StripePaymentAccept",
     StripePaymentAcceptTableSchema,
     { ...tableConfigs }
 );
-export const StripeTransferModel = dynamoose.model<StripeTransfer>(
-    "StripeTransfer",
-    StripeTransferTableSchema,
+export const StripeTransferModel = dynamoose.model<StripeTransfer>("StripeTransfer", StripeTransferTableSchema, {
+    ...tableConfigs,
+});
+export const AccountHistoryModel = dynamoose.model<AccountHistory>("AccountHistory", AccountHistoryTableSchema, {
+    ...tableConfigs,
+});
+export const AccountActivityModel = dynamoose.model<AccountActivity>("AccountActivity", AccountActivityTableSchema, {
+    ...tableConfigs,
+});
+export const SecretModel = dynamoose.model<Secret>("Secret", SecretTableSchema, { ...tableConfigs });
+export const GatewayRequestCounterModel = dynamoose.model<GatewayRequestCounter>(
+    "GatewayRequestCounter",
+    GatewayRequestCounterTableSchema,
     { ...tableConfigs }
 );
-export const AccountHistoryModel = dynamoose.model<AccountHistory>(
-    "AccountHistory",
-    AccountHistoryTableSchema,
-    { ...tableConfigs }
-);
-export const AccountActivityModel = dynamoose.model<AccountActivity>(
-    "AccountActivity",
-    AccountActivityTableSchema,
-    { ...tableConfigs }
-);
-export const SecretModel = dynamoose.model<Secret>(
-    "Secret",
-    SecretTableSchema,
+export const GatewayRequestDecisionCacheModel = dynamoose.model<GatewayRequestDecisionCache>(
+    "GatewayRequestDecisionCache",
+    GatewayRequestDecisionCacheTableSchema,
     { ...tableConfigs }
 );

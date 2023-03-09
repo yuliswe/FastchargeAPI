@@ -53,8 +53,7 @@ export async function generateAccountActivities(
 ): Promise<GenerateAccountActivitiesResult> {
     let promises = [];
     let results = {
-        createdAccountActivities:
-            {} as GenerateAccountActivitiesResult["createdAccountActivities"],
+        createdAccountActivities: {} as GenerateAccountActivitiesResult["createdAccountActivities"],
     } as GenerateAccountActivitiesResult;
     {
         // Process per-request charge
@@ -65,110 +64,86 @@ export async function generateAccountActivities(
         usageSummary.billedAt = Date.now();
         results.newUsageSummary = usageSummary;
 
-        let subscriberPerRequestActivityPromise =
-            context.batched.AccountActivity.create({
-                user: subscriber,
-                type: "credit",
-                reason: "api_per_request_charge",
-                status: "pending",
-                settleAt: Date.now(),
-                amount: amount.toString(),
-                usageSummary: UsageSummaryPK.stringify(usageSummary),
-                description: `API request charge`,
-                billedApp: usageSummary.app,
-            }).then(async (activity) => {
-                results.createdAccountActivities.subscriberRequestFee =
-                    activity;
-                usageSummary.billingAccountActivity =
-                    AccountActivityPK.stringify(activity);
-                await usageSummary.save();
-                results.newUsageSummary = usageSummary;
-                return activity;
-            });
+        let subscriberPerRequestActivityPromise = context.batched.AccountActivity.create({
+            user: subscriber,
+            type: "credit",
+            reason: "api_per_request_charge",
+            status: "pending",
+            settleAt: Date.now(),
+            amount: amount.toString(),
+            usageSummary: UsageSummaryPK.stringify(usageSummary),
+            description: `API request charge`,
+            billedApp: usageSummary.app,
+        }).then(async (activity) => {
+            results.createdAccountActivities.subscriberRequestFee = activity;
+            usageSummary.billingAccountActivity = AccountActivityPK.stringify(activity);
+            await usageSummary.save();
+            results.newUsageSummary = usageSummary;
+            return activity;
+        });
 
-        let appAuthorPerRequestActivityPromise =
-            context.batched.AccountActivity.create({
-                user: appAuthor,
-                type: "debit",
-                reason: "api_per_request_charge",
-                status: "pending",
-                settleAt: Date.now(),
-                amount: amount.toString(),
-                usageSummary: UsageSummaryPK.stringify(usageSummary),
-                description: `API request charge paid by customer`,
-                billedApp: usageSummary.app,
-            }).then((activity) => {
-                results.createdAccountActivities.appAuthorRequestFee = activity;
-                return activity;
-            });
+        let appAuthorPerRequestActivityPromise = context.batched.AccountActivity.create({
+            user: appAuthor,
+            type: "debit",
+            reason: "api_per_request_charge",
+            status: "pending",
+            settleAt: Date.now(),
+            amount: amount.toString(),
+            usageSummary: UsageSummaryPK.stringify(usageSummary),
+            description: `API request charge paid by customer`,
+            billedApp: usageSummary.app,
+        }).then((activity) => {
+            results.createdAccountActivities.appAuthorRequestFee = activity;
+            return activity;
+        });
 
-        promises.push(
-            subscriberPerRequestActivityPromise,
-            appAuthorPerRequestActivityPromise
-        );
+        promises.push(subscriberPerRequestActivityPromise, appAuthorPerRequestActivityPromise);
     }
     {
         // Process min monthly charge
-        let { shouldBill, amount, isUpgrade } =
-            await shouldCollectMonthlyCharge(context, {
-                subscriber,
-                app: usageSummary.app,
-            });
+        let { shouldBill, amount, isUpgrade } = await shouldCollectMonthlyCharge(context, {
+            subscriber,
+            app: usageSummary.app,
+            pricing: pricing,
+        });
         if (forceMonthlyCharge || (!disableMonthlyCharge && shouldBill)) {
-            let subscriberMonthlyActivityPromise =
-                context.batched.AccountActivity.create({
-                    user: subscriber,
-                    type: "credit",
-                    reason: isUpgrade
-                        ? "api_min_monthly_charge_upgrade"
-                        : "api_min_monthly_charge",
-                    status: "pending",
-                    settleAt: Date.now(), // We want to charge the subscriber immediately
-                    amount: amount.toString(),
-                    usageSummary: UsageSummaryPK.stringify(usageSummary),
-                    description: `API subscription fee every 30 days`,
-                    billedApp: usageSummary.app,
-                }).then((activity) => {
-                    results.createdAccountActivities.subscriberMonthlyFee =
-                        activity;
-                    return activity;
-                });
+            let subscriberMonthlyActivityPromise = context.batched.AccountActivity.create({
+                user: subscriber,
+                type: "credit",
+                reason: isUpgrade ? "api_min_monthly_charge_upgrade" : "api_min_monthly_charge",
+                status: "pending",
+                settleAt: Date.now(), // We want to charge the subscriber immediately
+                amount: amount.toString(),
+                usageSummary: UsageSummaryPK.stringify(usageSummary),
+                description: `API subscription fee every 30 days`,
+                billedApp: usageSummary.app,
+            }).then((activity) => {
+                results.createdAccountActivities.subscriberMonthlyFee = activity;
+                return activity;
+            });
 
-            let appAuthorMonthlyActivityPromise =
-                context.batched.AccountActivity.create({
-                    user: appAuthor,
-                    type: "debit",
-                    reason: isUpgrade
-                        ? "api_min_monthly_charge_upgrade"
-                        : "api_min_monthly_charge",
-                    status: "pending",
-                    settleAt:
-                        Date.now() + 1000 * monthlyChargeOnHoldPeriodInSeconds,
-                    amount: amount.toString(),
-                    usageSummary: UsageSummaryPK.stringify(usageSummary),
-                    description: `API subscription fee paid by customer`,
-                    billedApp: usageSummary.app,
-                }).then((activity) => {
-                    results.createdAccountActivities.appAuthorMonthlyFee =
-                        activity;
-                    return activity;
-                });
+            let appAuthorMonthlyActivityPromise = context.batched.AccountActivity.create({
+                user: appAuthor,
+                type: "debit",
+                reason: isUpgrade ? "api_min_monthly_charge_upgrade" : "api_min_monthly_charge",
+                status: "pending",
+                settleAt: Date.now() + 1000 * monthlyChargeOnHoldPeriodInSeconds,
+                amount: amount.toString(),
+                usageSummary: UsageSummaryPK.stringify(usageSummary),
+                description: `API subscription fee paid by customer`,
+                billedApp: usageSummary.app,
+            }).then((activity) => {
+                results.createdAccountActivities.appAuthorMonthlyFee = activity;
+                return activity;
+            });
 
-            promises.push(
-                subscriberMonthlyActivityPromise,
-                appAuthorMonthlyActivityPromise
-            );
+            promises.push(subscriberMonthlyActivityPromise, appAuthorMonthlyActivityPromise);
         }
     }
     let errors: string[] = [];
     for (let result of await Promise.allSettled(promises)) {
         if (result.status === "rejected") {
-            console.error(
-                "Error creating AccountActivity:",
-                result.reason,
-                "for usage summary:",
-                usageSummary
-            );
+            console.error("Error creating AccountActivity:", result.reason, "for usage summary:", usageSummary);
             errors.push(result.reason);
         }
     }
@@ -178,23 +153,27 @@ export async function generateAccountActivities(
     return results;
 }
 
+export type ShouldCollectMonthlyChargePromiseResult = {
+    shouldBill: boolean;
+    amount: string;
+    isUpgrade: boolean;
+};
+
 /**
  * Checks whether this user should be billed the monthly fee when making a
  * request to the app. Also takes into account the case where the user upgraded
  * their plan from a cheaper plan to a more expensive plan.
  *
- * Throws error if the user is not subscribed to the app.
- *
  * @returns The amount that should be billed. In the case of an upgrade, this is
  * the additional amount that should be billed.
  */
-async function shouldCollectMonthlyCharge(
+export async function shouldCollectMonthlyCharge(
     context: RequestContext,
-    { subscriber, app }: { subscriber: string; app: string },
+    { subscriber, app, pricing }: { subscriber: string; app: string; pricing: Pricing },
     {
         collectionPeriodInSeconds = 60 * 60 * 24 * 30, // default to 30 days
     }: { collectionPeriodInSeconds?: number } = {}
-): Promise<{ shouldBill: boolean; amount: string; isUpgrade: boolean }> {
+): Promise<ShouldCollectMonthlyChargePromiseResult> {
     let lastBill = await context.batched.AccountActivity.getOrNull(
         {
             user: subscriber,
@@ -207,13 +186,6 @@ async function shouldCollectMonthlyCharge(
             limit: 1,
         }
     );
-    let pricing = await findUserSubscriptionPricing(context, {
-        user: subscriber,
-        app,
-    });
-    if (!pricing) {
-        throw new Error(`User ${subscriber} is not subscribed to app ${app}`);
-    }
     if (lastBill == null) {
         return {
             shouldBill: true,
@@ -254,14 +226,8 @@ export async function triggerBilling(
     // TODO: fix this: need to add subscription to UsageLog
     let pricing = await findUserSubscriptionPricing(context, { user, app });
     if (!pricing) {
-        console.error(
-            chalk.red("No pricing found during triggerBilling"),
-            user,
-            app
-        );
-        throw new Error(
-            `No pricing found during triggerBilling: ${user}, ${app}`
-        );
+        console.error(chalk.red("No pricing found during triggerBilling"), user, app);
+        throw new Error(`No pricing found during triggerBilling: ${user}, ${app}`);
     }
     let appItem = await context.batched.App.get(AppPK.parse(app));
     await generateAccountActivities(context, {

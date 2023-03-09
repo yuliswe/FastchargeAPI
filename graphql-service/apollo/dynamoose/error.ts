@@ -3,15 +3,10 @@ import { GraphQLFormattedError } from "graphql";
 import { unwrapResolverError } from "@apollo/server/errors";
 import { AlreadyExists, NotFound } from "../errors";
 
-export function handleError(
-    formattedError: GraphQLFormattedError,
-    error: any
-): GraphQLFormattedError {
+export function handleError(formattedError: GraphQLFormattedError, error: any): GraphQLFormattedError {
     let originalError = unwrapResolverError(error);
-    for (let errtype of [
-        DynamooseError.TypeMismatch,
-        DynamooseError.ValidationError,
-    ]) {
+    console.error(originalError);
+    for (let errtype of [DynamooseError.TypeMismatch, DynamooseError.ValidationError]) {
         if (originalError instanceof errtype) {
             return {
                 ...formattedError,
@@ -40,6 +35,5 @@ export function handleError(
             message: originalError.message,
         };
     }
-    console.error(originalError);
     return formattedError;
 }

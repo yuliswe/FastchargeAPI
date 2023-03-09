@@ -12,6 +12,10 @@ export async function findUserSubscription(
     });
 }
 
+/**
+ * @returns the Pricing object that the user is subscribed to, or null if the
+ * user is not subscribed
+ */
 export async function findUserSubscriptionPricing(
     context: RequestContext,
     { user, app }: { user: string; app: string }
@@ -20,7 +24,5 @@ export async function findUserSubscriptionPricing(
     if (subscription == null) {
         return null;
     }
-    return await context.batched.Pricing.getOrNull(
-        PricingPK.parse(subscription.pricing)
-    );
+    return await context.batched.Pricing.getOrNull(PricingPK.parse(subscription.pricing));
 }

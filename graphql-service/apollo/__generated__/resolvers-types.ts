@@ -108,6 +108,19 @@ export type GQLEndpointUpdateEndpointArgs = {
   path?: InputMaybe<Scalars['String']>;
 };
 
+export type GQLGatewayDecisionResponse = {
+  __typename?: 'GatewayDecisionResponse';
+  allowed: Scalars['Boolean'];
+  reason?: Maybe<GQLGatewayDecisionResponseReason>;
+};
+
+export enum GQLGatewayDecisionResponseReason {
+  InsufficientBalance = 'insufficient_balance',
+  NotSubscribed = 'not_subscribed',
+  OwnerInsufficientBalance = 'owner_insufficient_balance',
+  TooManyRequests = 'too_many_requests'
+}
+
 export { GatewayMode };
 
 export enum GQLHttpMethod {
@@ -234,6 +247,7 @@ export type GQLQuery = {
   __typename?: 'Query';
   app: GQLApp;
   apps?: Maybe<Array<Maybe<GQLApp>>>;
+  checkUserIsAllowedForGatewayRequest: GQLGatewayDecisionResponse;
   endpoint: GQLEndpoint;
   endpoints?: Maybe<Array<Maybe<GQLEndpoint>>>;
   secret: GQLSecret;
@@ -246,6 +260,13 @@ export type GQLQuery = {
 
 export type GQLQueryAppArgs = {
   name?: InputMaybe<Scalars['String']>;
+};
+
+
+export type GQLQueryCheckUserIsAllowedForGatewayRequestArgs = {
+  app: Scalars['ID'];
+  forceBalanceCheck?: InputMaybe<Scalars['Boolean']>;
+  user: Scalars['ID'];
 };
 
 
@@ -502,6 +523,8 @@ export type GQLResolversTypes = ResolversObject<{
   DateRangeInput: GQLDateRangeInput;
   Email: ResolverTypeWrapper<Scalars['Email']>;
   Endpoint: ResolverTypeWrapper<EndpointData>;
+  GatewayDecisionResponse: ResolverTypeWrapper<GQLGatewayDecisionResponse>;
+  GatewayDecisionResponseReason: GQLGatewayDecisionResponseReason;
   GatewayMode: GatewayMode;
   HTTPMethod: GQLHttpMethod;
   ID: ResolverTypeWrapper<Scalars['ID']>;
@@ -532,6 +555,7 @@ export type GQLResolversParentTypes = ResolversObject<{
   DateRangeInput: GQLDateRangeInput;
   Email: Scalars['Email'];
   Endpoint: EndpointData;
+  GatewayDecisionResponse: GQLGatewayDecisionResponse;
   ID: Scalars['ID'];
   Int: Scalars['Int'];
   Mutation: {};
@@ -602,6 +626,12 @@ export type GQLEndpointResolvers<ContextType = RequestContext, ParentType extend
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export type GQLGatewayDecisionResponseResolvers<ContextType = RequestContext, ParentType extends GQLResolversParentTypes['GatewayDecisionResponse'] = GQLResolversParentTypes['GatewayDecisionResponse']> = ResolversObject<{
+  allowed?: Resolver<GQLResolversTypes['Boolean'], ParentType, ContextType>;
+  reason?: Resolver<Maybe<GQLResolversTypes['GatewayDecisionResponseReason']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
 export type GQLGatewayModeResolvers = EnumResolverSignature<{ proxy?: any, redirect?: any }, GQLResolversTypes['GatewayMode']>;
 
 export type GQLMutationResolvers<ContextType = RequestContext, ParentType extends GQLResolversParentTypes['Mutation'] = GQLResolversParentTypes['Mutation']> = ResolversObject<{
@@ -636,6 +666,7 @@ export type GQLPricingResolvers<ContextType = RequestContext, ParentType extends
 export type GQLQueryResolvers<ContextType = RequestContext, ParentType extends GQLResolversParentTypes['Query'] = GQLResolversParentTypes['Query']> = ResolversObject<{
   app?: Resolver<GQLResolversTypes['App'], ParentType, ContextType, Partial<GQLQueryAppArgs>>;
   apps?: Resolver<Maybe<Array<Maybe<GQLResolversTypes['App']>>>, ParentType, ContextType>;
+  checkUserIsAllowedForGatewayRequest?: Resolver<GQLResolversTypes['GatewayDecisionResponse'], ParentType, ContextType, RequireFields<GQLQueryCheckUserIsAllowedForGatewayRequestArgs, 'app' | 'user'>>;
   endpoint?: Resolver<GQLResolversTypes['Endpoint'], ParentType, ContextType, Partial<GQLQueryEndpointArgs>>;
   endpoints?: Resolver<Maybe<Array<Maybe<GQLResolversTypes['Endpoint']>>>, ParentType, ContextType>;
   secret?: Resolver<GQLResolversTypes['Secret'], ParentType, ContextType, RequireFields<GQLQuerySecretArgs, 'key'>>;
@@ -744,6 +775,7 @@ export type GQLResolvers<ContextType = RequestContext> = ResolversObject<{
   App?: GQLAppResolvers<ContextType>;
   Email?: GraphQLScalarType;
   Endpoint?: GQLEndpointResolvers<ContextType>;
+  GatewayDecisionResponse?: GQLGatewayDecisionResponseResolvers<ContextType>;
   GatewayMode?: GQLGatewayModeResolvers;
   Mutation?: GQLMutationResolvers<ContextType>;
   NonNegativeDecimal?: GraphQLScalarType;

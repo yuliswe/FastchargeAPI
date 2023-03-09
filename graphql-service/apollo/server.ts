@@ -20,6 +20,7 @@ import { usageSummaryResolvers } from "./resolvers/usage-sum";
 import { secretResolvers } from "./resolvers/secret";
 import { accountHistoryResolvers } from "./resolvers/account-history";
 import { accountActivityResolvers } from "./resolvers/account";
+import { gatewayResolvers } from "./resolvers/gateway";
 
 initializeDB();
 
@@ -40,6 +41,7 @@ const resolvers: GQLResolvers = {
     AccountHistory: accountHistoryResolvers.AccountHistory,
     AccountActivity: accountActivityResolvers.AccountActivity,
     Query: {
+        ...gatewayResolvers.Query,
         ...appResolvers.Query,
         ...userResolvers.Query,
         ...endpointResolvers.Query,
@@ -55,6 +57,7 @@ const resolvers: GQLResolvers = {
         ...accountActivityResolvers.Query,
     },
     Mutation: {
+        ...gatewayResolvers.Mutation,
         ...appResolvers.Mutation,
         ...userResolvers.Mutation,
         ...endpointResolvers.Mutation,

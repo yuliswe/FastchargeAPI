@@ -13,6 +13,8 @@ import {
     AccountHistoryModel,
     SecretModel,
     StripeTransferModel,
+    GatewayRequestCounterModel,
+    GatewayRequestDecisionCacheModel,
 } from "./dynamoose/models";
 
 export type RequestService = "payment" | "gateway" | "internal";
@@ -38,5 +40,7 @@ export function createDefaultContextBatched() {
         AccountHistory: new Batched(AccountHistoryModel),
         Secret: new Batched(SecretModel),
         StripeTransfer: new Batched(StripeTransferModel),
+        GatewayRequestCounter: new Batched(GatewayRequestCounterModel),
+        GatewayRequestDecisionCache: new Batched(GatewayRequestDecisionCacheModel),
     };
 }
