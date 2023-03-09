@@ -263,6 +263,10 @@ export type GQLQueryAppArgs = {
     name?: InputMaybe<Scalars["String"]>;
 };
 
+export type GQLQueryAppFullTextSearchArgs = {
+    query: Scalars["String"];
+};
+
 export type GQLQueryCheckUserIsAllowedForGatewayRequestArgs = {
     app: Scalars["ID"];
     forceBalanceCheck?: InputMaybe<Scalars["Boolean"]>;
