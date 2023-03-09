@@ -69,7 +69,7 @@ def fulfill_order(session):
         get_sqs_graphql_client(
             queue=PredefinedSQSQueue.billing_fifo_queue,
             dedup_id=f"{user_email}-{time.time()}-{session_id}",
-            group_id=user_email,
+            group_id="main",
         ).execute(
             gql(
                 """
@@ -122,7 +122,7 @@ def create_and_fulfill_order(session):
         get_sqs_graphql_client(
             queue=PredefinedSQSQueue.billing_fifo_queue,
             dedup_id=f"{user_email}-{time.time()}-{session_id}",
-            group_id=user_email,
+            group_id="main",
         ).execute(
             gql(
                 """
@@ -185,7 +185,7 @@ def create_order(session):
         get_sqs_graphql_client(
             queue=PredefinedSQSQueue.billing_fifo_queue,
             dedup_id=f"{user_email}-{time.time()}-{session_id}",
-            group_id=user_email,
+            group_id="main",
         ).execute(
             gql(
                 """

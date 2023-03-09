@@ -108,8 +108,8 @@ def handle_lambda(event, context):
     # amount from the user's balance.
     get_sqs_graphql_client(
         queue=PredefinedSQSQueue.billing_fifo_queue,
-        group_id=user_email,
         dedup_id=f"{user_email}-{int(time.time())}",
+        group_id="main",
     ).execute(
         gql(
             """

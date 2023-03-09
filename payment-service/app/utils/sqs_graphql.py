@@ -83,12 +83,14 @@ def get_sqs_graphql_client(
     message.
 
     group_id: Only for fifo queues. Sets the MessageGroupId for the SQS message.
-    If the billing is PredefinedSQSQueue.billing_fifo_queue, you need to use the
-    user's email as the group_id.
+    If the billing is PredefinedSQSQueue.billing_fifo_queue, you need to use
+    "main" as the group_id.
 
     Effectively, MessageDeduplicationId deduplicates messages with the same ID.
     Messages with the same MessageGroupId are processed in FIFO order.
     """
+    if queue == PredefinedSQSQueue.billing_fifo_queue:
+        group_id = "main"
     return Client(
         transport=SQSHttpTransport(
             url="",
