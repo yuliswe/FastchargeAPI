@@ -127,7 +127,9 @@ class _DashboardPage extends React.Component<Props, State> {
             case GQLAccountActivityReason.ApiPerRequestCharge:
                 return "API Request";
             case GQLAccountActivityReason.ApiMinMonthlyCharge:
-                return "API Monthly Fee";
+                return "API Subscription";
+            case GQLAccountActivityReason.ApiMinMonthlyChargeUpgrade:
+                return "API Subscription Upgrade";
         }
     }
 
@@ -147,7 +149,7 @@ class _DashboardPage extends React.Component<Props, State> {
 
     date(activity: AccountActivity): string {
         let date = new Date(activity.createdAt);
-        return date.toUTCString();
+        return date.toLocaleDateString() + " " + date.toLocaleTimeString();
     }
 
     activitiesPerPage = 20;
@@ -426,6 +428,8 @@ class _DashboardPage extends React.Component<Props, State> {
                                 return this.date(activity);
                             case "Reason":
                                 return this.reason(activity);
+                            case "App":
+                                return activity.billedApp?.name || "";
                             case "Description":
                                 return activity.description;
                             case "Income":
@@ -444,6 +448,9 @@ class _DashboardPage extends React.Component<Props, State> {
                         },
                         {
                             title: "Reason",
+                        },
+                        {
+                            title: "App",
                         },
                         {
                             title: "Description",

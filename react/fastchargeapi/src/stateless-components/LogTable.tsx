@@ -59,14 +59,16 @@ export class LogTable<Activity> extends React.Component<
     }
 
     handleActivityDateChange = (date: Date | null) => {
+        // date is in local time, we want to set it to UTC
         date = date || new Date();
-        date.setHours(0, 0, 0, 0);
+        let utc = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+        utc.setHours(23, 59, 59, 999);
         this._context.route.updateQuery({
             [`${this.props.urlNamespace}date`]: date.getTime().toString(),
         });
         this.props.onChange?.({
             page: this.activityPageNum(),
-            dateRange: { end: date.getTime() },
+            dateRange: { end: utc.getTime() },
         });
     };
 

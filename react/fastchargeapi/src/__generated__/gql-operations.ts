@@ -18,6 +18,7 @@ export type Scalars = {
 export type GQLAccountActivity = {
   __typename?: 'AccountActivity';
   amount: Scalars['String'];
+  billedApp?: Maybe<GQLApp>;
   createdAt: Scalars['Timestamp'];
   description: Scalars['String'];
   reason: GQLAccountActivityReason;
@@ -29,6 +30,7 @@ export type GQLAccountActivity = {
 
 export enum GQLAccountActivityReason {
   ApiMinMonthlyCharge = 'api_min_monthly_charge',
+  ApiMinMonthlyChargeUpgrade = 'api_min_monthly_charge_upgrade',
   ApiPerRequestCharge = 'api_per_request_charge',
   Payout = 'payout',
   PayoutFee = 'payout_fee',
@@ -99,6 +101,19 @@ export type GQLEndpointUpdateEndpointArgs = {
   method?: InputMaybe<GQLHttpMethod>;
   path?: InputMaybe<Scalars['String']>;
 };
+
+export type GQLGatewayDecisionResponse = {
+  __typename?: 'GatewayDecisionResponse';
+  allowed: Scalars['Boolean'];
+  reason?: Maybe<GQLGatewayDecisionResponseReason>;
+};
+
+export enum GQLGatewayDecisionResponseReason {
+  InsufficientBalance = 'insufficient_balance',
+  NotSubscribed = 'not_subscribed',
+  OwnerInsufficientBalance = 'owner_insufficient_balance',
+  TooManyRequests = 'too_many_requests'
+}
 
 export enum GQLGatewayMode {
   Proxy = 'proxy',
@@ -230,6 +245,7 @@ export type GQLQuery = {
   app: GQLApp;
   appFullTextSearch: Array<GQLApp>;
   apps?: Maybe<Array<Maybe<GQLApp>>>;
+  checkUserIsAllowedForGatewayRequest: GQLGatewayDecisionResponse;
   endpoint: GQLEndpoint;
   endpoints?: Maybe<Array<Maybe<GQLEndpoint>>>;
   secret: GQLSecret;
@@ -247,6 +263,13 @@ export type GQLQueryAppArgs = {
 
 export type GQLQueryAppFullTextSearchArgs = {
   query: Scalars['String'];
+};
+
+
+export type GQLQueryCheckUserIsAllowedForGatewayRequestArgs = {
+  app: Scalars['ID'];
+  forceBalanceCheck?: InputMaybe<Scalars['Boolean']>;
+  user: Scalars['ID'];
 };
 
 
@@ -468,7 +491,7 @@ export type GQLGetAccountActivitiesQueryVariables = Exact<{
 }>;
 
 
-export type GQLGetAccountActivitiesQuery = { __typename?: 'Query', user: { __typename?: 'User', accountActivities: Array<{ __typename?: 'AccountActivity', createdAt: number, type: GQLAccountActivityType, amount: string, reason: GQLAccountActivityReason, description: string, status?: GQLAccountActivityStatus | null, settleAt: number, stripeTransfer?: { __typename?: 'StripeTransfer', transferAt: number, status?: GQLStripeTransferStatus | null } | null }> } };
+export type GQLGetAccountActivitiesQuery = { __typename?: 'Query', user: { __typename?: 'User', accountActivities: Array<{ __typename?: 'AccountActivity', createdAt: number, type: GQLAccountActivityType, amount: string, reason: GQLAccountActivityReason, description: string, status?: GQLAccountActivityStatus | null, settleAt: number, billedApp?: { __typename?: 'App', name: string } | null, stripeTransfer?: { __typename?: 'StripeTransfer', transferAt: number, status?: GQLStripeTransferStatus | null } | null }> } };
 
 export type GQLGetAccountHistoriesQueryVariables = Exact<{
   email: Scalars['Email'];

@@ -97,6 +97,9 @@ class LoadActivities extends AppEvent<RootAppState> {
                             description
                             status
                             settleAt
+                            billedApp {
+                                name
+                            }
                             stripeTransfer {
                                 transferAt
                                 status
