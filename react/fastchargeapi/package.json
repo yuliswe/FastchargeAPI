@@ -4,11 +4,11 @@
   "private": true,
   "scripts": {
     "eject": "react-scripts eject",
-    "gen": "graphql-codegen --config codegen.yml",
+    "gen": "graphql-codegen --config codegen.yml && prettier -w ./src/__generated__/",
     "build": "npm run gen && react-scripts build",
     "test": "npm run gen && react-scripts test",
     "start": "npm run gen && PORT=8000 react-scripts start",
-    "watch": "npm run start & nodemon -e ts,tsx,yml,yaml -i build/,__generated__ --exec 'npm run gen'",
+    "watch": "nodemon -e ts,tsx,yml,yaml -i build/ -i src/__generated__ --exec 'npm run gen' & PORT=8000 react-scripts start",
     "new-page": "node ../react-appevent-redux-tools/dist/index.js",
     "fix": "eslint --fix ./"
   },

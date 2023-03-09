@@ -1,564 +1,691 @@
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
-export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+export type Exact<T extends { [key: string]: unknown }> = {
+    [K in keyof T]: T[K];
+};
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
+    [SubKey in K]?: Maybe<T[SubKey]>;
+};
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
+    [SubKey in K]: Maybe<T[SubKey]>;
+};
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
-  ID: string;
-  String: string;
-  Boolean: boolean;
-  Int: number;
-  Float: number;
-  Email: any;
-  NonNegativeDecimal: any;
-  Timestamp: number;
+    ID: string;
+    String: string;
+    Boolean: boolean;
+    Int: number;
+    Float: number;
+    Email: any;
+    NonNegativeDecimal: any;
+    Timestamp: number;
 };
 
 export type GQLAccountActivity = {
-  __typename?: 'AccountActivity';
-  amount: Scalars['String'];
-  billedApp?: Maybe<GQLApp>;
-  createdAt: Scalars['Timestamp'];
-  description: Scalars['String'];
-  reason: GQLAccountActivityReason;
-  settleAt: Scalars['Timestamp'];
-  status?: Maybe<GQLAccountActivityStatus>;
-  stripeTransfer?: Maybe<GQLStripeTransfer>;
-  type: GQLAccountActivityType;
+    __typename?: "AccountActivity";
+    amount: Scalars["String"];
+    billedApp?: Maybe<GQLApp>;
+    createdAt: Scalars["Timestamp"];
+    description: Scalars["String"];
+    reason: GQLAccountActivityReason;
+    settleAt: Scalars["Timestamp"];
+    status?: Maybe<GQLAccountActivityStatus>;
+    stripeTransfer?: Maybe<GQLStripeTransfer>;
+    type: GQLAccountActivityType;
 };
 
 export enum GQLAccountActivityReason {
-  ApiMinMonthlyCharge = 'api_min_monthly_charge',
-  ApiMinMonthlyChargeUpgrade = 'api_min_monthly_charge_upgrade',
-  ApiPerRequestCharge = 'api_per_request_charge',
-  Payout = 'payout',
-  PayoutFee = 'payout_fee',
-  Topup = 'topup'
+    ApiMinMonthlyCharge = "api_min_monthly_charge",
+    ApiMinMonthlyChargeUpgrade = "api_min_monthly_charge_upgrade",
+    ApiPerRequestCharge = "api_per_request_charge",
+    Payout = "payout",
+    PayoutFee = "payout_fee",
+    Topup = "topup",
 }
 
 export enum GQLAccountActivityStatus {
-  Pending = 'pending',
-  Settled = 'settled'
+    Pending = "pending",
+    Settled = "settled",
 }
 
 export enum GQLAccountActivityType {
-  Credit = 'credit',
-  Debit = 'debit'
+    Credit = "credit",
+    Debit = "debit",
 }
 
 export type GQLAccountHistory = {
-  __typename?: 'AccountHistory';
-  closingBalance: Scalars['String'];
-  closingTime: Scalars['Timestamp'];
+    __typename?: "AccountHistory";
+    closingBalance: Scalars["String"];
+    closingTime: Scalars["Timestamp"];
 };
 
 export type GQLApp = {
-  __typename?: 'App';
-  createAppUserToken: Scalars['String'];
-  deleteApp: GQLApp;
-  description: Scalars['String'];
-  endpoints: Array<GQLEndpoint>;
-  gatewayMode: GQLGatewayMode;
-  homepage?: Maybe<Scalars['String']>;
-  name: Scalars['String'];
-  ownedByYou: Scalars['Boolean'];
-  owner: GQLUser;
-  pricingPlans: Array<GQLPricing>;
-  repository?: Maybe<Scalars['String']>;
-  revokeAppUserToken: Scalars['Boolean'];
-  updateApp: GQLApp;
+    __typename?: "App";
+    createAppUserToken: Scalars["String"];
+    deleteApp: GQLApp;
+    description: Scalars["String"];
+    endpoints: Array<GQLEndpoint>;
+    gatewayMode: GQLGatewayMode;
+    homepage?: Maybe<Scalars["String"]>;
+    name: Scalars["String"];
+    ownedByYou: Scalars["Boolean"];
+    owner: GQLUser;
+    pricingPlans: Array<GQLPricing>;
+    repository?: Maybe<Scalars["String"]>;
+    revokeAppUserToken: Scalars["Boolean"];
+    updateApp: GQLApp;
 };
 
-
 export type GQLAppUpdateAppArgs = {
-  description?: InputMaybe<Scalars['String']>;
-  gatewayMode?: InputMaybe<GQLGatewayMode>;
+    description?: InputMaybe<Scalars["String"]>;
+    gatewayMode?: InputMaybe<GQLGatewayMode>;
 };
 
 export type GQLDateRangeInput = {
-  end?: InputMaybe<Scalars['Timestamp']>;
-  start?: InputMaybe<Scalars['Timestamp']>;
+    end?: InputMaybe<Scalars["Timestamp"]>;
+    start?: InputMaybe<Scalars["Timestamp"]>;
 };
 
 export type GQLEndpoint = {
-  __typename?: 'Endpoint';
-  createdAt: Scalars['Timestamp'];
-  deleteEndpoint?: Maybe<GQLEndpoint>;
-  description?: Maybe<Scalars['String']>;
-  destination?: Maybe<Scalars['String']>;
-  method: GQLHttpMethod;
-  path: Scalars['String'];
-  pk: Scalars['String'];
-  updateEndpoint?: Maybe<GQLEndpoint>;
-  updatedAt: Scalars['Timestamp'];
+    __typename?: "Endpoint";
+    createdAt: Scalars["Timestamp"];
+    deleteEndpoint?: Maybe<GQLEndpoint>;
+    description?: Maybe<Scalars["String"]>;
+    destination?: Maybe<Scalars["String"]>;
+    method: GQLHttpMethod;
+    path: Scalars["String"];
+    pk: Scalars["String"];
+    updateEndpoint?: Maybe<GQLEndpoint>;
+    updatedAt: Scalars["Timestamp"];
 };
 
-
 export type GQLEndpointUpdateEndpointArgs = {
-  description?: InputMaybe<Scalars['String']>;
-  destination?: InputMaybe<Scalars['String']>;
-  method?: InputMaybe<GQLHttpMethod>;
-  path?: InputMaybe<Scalars['String']>;
+    description?: InputMaybe<Scalars["String"]>;
+    destination?: InputMaybe<Scalars["String"]>;
+    method?: InputMaybe<GQLHttpMethod>;
+    path?: InputMaybe<Scalars["String"]>;
 };
 
 export type GQLGatewayDecisionResponse = {
-  __typename?: 'GatewayDecisionResponse';
-  allowed: Scalars['Boolean'];
-  reason?: Maybe<GQLGatewayDecisionResponseReason>;
+    __typename?: "GatewayDecisionResponse";
+    allowed: Scalars["Boolean"];
+    reason?: Maybe<GQLGatewayDecisionResponseReason>;
 };
 
 export enum GQLGatewayDecisionResponseReason {
-  InsufficientBalance = 'insufficient_balance',
-  NotSubscribed = 'not_subscribed',
-  OwnerInsufficientBalance = 'owner_insufficient_balance',
-  TooManyRequests = 'too_many_requests'
+    InsufficientBalance = "insufficient_balance",
+    NotSubscribed = "not_subscribed",
+    OwnerInsufficientBalance = "owner_insufficient_balance",
+    TooManyRequests = "too_many_requests",
 }
 
 export enum GQLGatewayMode {
-  Proxy = 'proxy',
-  Redirect = 'redirect'
+    Proxy = "proxy",
+    Redirect = "redirect",
 }
 
 export enum GQLHttpMethod {
-  Any = 'ANY',
-  Delete = 'DELETE',
-  Get = 'GET',
-  Head = 'HEAD',
-  Options = 'OPTIONS',
-  Patch = 'PATCH',
-  Post = 'POST',
-  Put = 'PUT'
+    Any = "ANY",
+    Delete = "DELETE",
+    Get = "GET",
+    Head = "HEAD",
+    Options = "OPTIONS",
+    Patch = "PATCH",
+    Post = "POST",
+    Put = "PUT",
 }
 
 export type GQLMutation = {
-  __typename?: 'Mutation';
-  createApp: GQLApp;
-  createEndpoint: GQLEndpoint;
-  createPricing: GQLPricing;
-  createSecret: GQLSecret;
-  createStripePaymentAccept: GQLStripePaymentAccept;
-  createStripeTransfer: GQLStripeTransfer;
-  createSubscription: GQLSubscribe;
-  createUsageLog: GQLUsageLog;
-  createUser: GQLUser;
-  triggerBilling?: Maybe<GQLUsageSummary>;
+    __typename?: "Mutation";
+    createApp: GQLApp;
+    createEndpoint: GQLEndpoint;
+    createPricing: GQLPricing;
+    createSecret: GQLSecret;
+    createStripePaymentAccept: GQLStripePaymentAccept;
+    createStripeTransfer: GQLStripeTransfer;
+    createSubscription: GQLSubscribe;
+    createUsageLog: GQLUsageLog;
+    createUser: GQLUser;
+    triggerBilling?: Maybe<GQLUsageSummary>;
 };
-
 
 export type GQLMutationCreateAppArgs = {
-  description?: InputMaybe<Scalars['String']>;
-  gatewayMode?: InputMaybe<GQLGatewayMode>;
-  homepage?: InputMaybe<Scalars['String']>;
-  name: Scalars['String'];
-  owner: Scalars['String'];
-  repository?: InputMaybe<Scalars['String']>;
+    description?: InputMaybe<Scalars["String"]>;
+    gatewayMode?: InputMaybe<GQLGatewayMode>;
+    homepage?: InputMaybe<Scalars["String"]>;
+    name: Scalars["String"];
+    owner: Scalars["String"];
+    repository?: InputMaybe<Scalars["String"]>;
 };
-
 
 export type GQLMutationCreateEndpointArgs = {
-  app: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
-  destination: Scalars['String'];
-  method: GQLHttpMethod;
-  path: Scalars['String'];
+    app: Scalars["String"];
+    description?: InputMaybe<Scalars["String"]>;
+    destination: Scalars["String"];
+    method: GQLHttpMethod;
+    path: Scalars["String"];
 };
-
 
 export type GQLMutationCreatePricingArgs = {
-  app: Scalars['String'];
-  callToAction: Scalars['String'];
-  chargePerRequest: Scalars['String'];
-  minMonthlyCharge: Scalars['String'];
-  name: Scalars['String'];
+    app: Scalars["String"];
+    callToAction: Scalars["String"];
+    chargePerRequest: Scalars["String"];
+    minMonthlyCharge: Scalars["String"];
+    name: Scalars["String"];
 };
-
 
 export type GQLMutationCreateSecretArgs = {
-  description?: InputMaybe<Scalars['String']>;
-  expireAt?: InputMaybe<Scalars['Timestamp']>;
-  key: Scalars['String'];
-  value: Scalars['String'];
+    description?: InputMaybe<Scalars["String"]>;
+    expireAt?: InputMaybe<Scalars["Timestamp"]>;
+    key: Scalars["String"];
+    value: Scalars["String"];
 };
-
 
 export type GQLMutationCreateStripePaymentAcceptArgs = {
-  amount: Scalars['NonNegativeDecimal'];
-  currency: Scalars['String'];
-  stripePaymentIntent: Scalars['String'];
-  stripePaymentStatus: Scalars['String'];
-  stripeSessionId: Scalars['String'];
-  stripeSessionObject: Scalars['String'];
-  user: Scalars['String'];
+    amount: Scalars["NonNegativeDecimal"];
+    currency: Scalars["String"];
+    stripePaymentIntent: Scalars["String"];
+    stripePaymentStatus: Scalars["String"];
+    stripeSessionId: Scalars["String"];
+    stripeSessionObject: Scalars["String"];
+    user: Scalars["String"];
 };
-
 
 export type GQLMutationCreateStripeTransferArgs = {
-  currency: Scalars['String'];
-  receiveAmount: Scalars['NonNegativeDecimal'];
-  receiver: Scalars['Email'];
-  stripeTransferId?: InputMaybe<Scalars['String']>;
-  stripeTransferObject?: InputMaybe<Scalars['String']>;
-  withdrawAmount: Scalars['NonNegativeDecimal'];
+    currency: Scalars["String"];
+    receiveAmount: Scalars["NonNegativeDecimal"];
+    receiver: Scalars["Email"];
+    stripeTransferId?: InputMaybe<Scalars["String"]>;
+    stripeTransferObject?: InputMaybe<Scalars["String"]>;
+    withdrawAmount: Scalars["NonNegativeDecimal"];
 };
-
 
 export type GQLMutationCreateSubscriptionArgs = {
-  app: Scalars['String'];
-  pricing: Scalars['ID'];
-  subscriber: Scalars['Email'];
+    app: Scalars["String"];
+    pricing: Scalars["ID"];
+    subscriber: Scalars["Email"];
 };
-
 
 export type GQLMutationCreateUsageLogArgs = {
-  app: Scalars['String'];
-  path: Scalars['String'];
-  subscriber: Scalars['Email'];
-  volume?: Scalars['Int'];
+    app: Scalars["String"];
+    path: Scalars["String"];
+    subscriber: Scalars["Email"];
+    volume?: Scalars["Int"];
 };
-
 
 export type GQLMutationCreateUserArgs = {
-  email: Scalars['Email'];
+    email: Scalars["Email"];
 };
 
-
 export type GQLMutationTriggerBillingArgs = {
-  app: Scalars['ID'];
-  user: Scalars['ID'];
+    app: Scalars["ID"];
+    user: Scalars["ID"];
 };
 
 export type GQLPricing = {
-  __typename?: 'Pricing';
-  app: GQLApp;
-  callToAction: Scalars['String'];
-  chargePerRequest: Scalars['String'];
-  deletePricing?: Maybe<GQLPricing>;
-  freeQuota: Scalars['Int'];
-  minMonthlyCharge: Scalars['String'];
-  name: Scalars['String'];
-  pk: Scalars['ID'];
+    __typename?: "Pricing";
+    app: GQLApp;
+    callToAction: Scalars["String"];
+    chargePerRequest: Scalars["String"];
+    deletePricing?: Maybe<GQLPricing>;
+    freeQuota: Scalars["Int"];
+    minMonthlyCharge: Scalars["String"];
+    name: Scalars["String"];
+    pk: Scalars["ID"];
 };
 
 export type GQLQuery = {
-  __typename?: 'Query';
-  app: GQLApp;
-  appFullTextSearch: Array<GQLApp>;
-  apps?: Maybe<Array<Maybe<GQLApp>>>;
-  checkUserIsAllowedForGatewayRequest: GQLGatewayDecisionResponse;
-  endpoint: GQLEndpoint;
-  endpoints?: Maybe<Array<Maybe<GQLEndpoint>>>;
-  secret: GQLSecret;
-  stripePaymentAccept: GQLStripePaymentAccept;
-  subscription: GQLSubscribe;
-  user: GQLUser;
-  users?: Maybe<Array<Maybe<GQLUser>>>;
+    __typename?: "Query";
+    app: GQLApp;
+    appFullTextSearch: Array<GQLApp>;
+    apps?: Maybe<Array<Maybe<GQLApp>>>;
+    checkUserIsAllowedForGatewayRequest: GQLGatewayDecisionResponse;
+    endpoint: GQLEndpoint;
+    endpoints?: Maybe<Array<Maybe<GQLEndpoint>>>;
+    secret: GQLSecret;
+    stripePaymentAccept: GQLStripePaymentAccept;
+    subscription: GQLSubscribe;
+    user: GQLUser;
+    users?: Maybe<Array<Maybe<GQLUser>>>;
 };
-
 
 export type GQLQueryAppArgs = {
-  name?: InputMaybe<Scalars['String']>;
+    name?: InputMaybe<Scalars["String"]>;
 };
-
 
 export type GQLQueryAppFullTextSearchArgs = {
-  query: Scalars['String'];
+    query: Scalars["String"];
 };
-
 
 export type GQLQueryCheckUserIsAllowedForGatewayRequestArgs = {
-  app: Scalars['ID'];
-  forceBalanceCheck?: InputMaybe<Scalars['Boolean']>;
-  user: Scalars['ID'];
+    app: Scalars["ID"];
+    forceBalanceCheck?: InputMaybe<Scalars["Boolean"]>;
+    user: Scalars["ID"];
 };
-
 
 export type GQLQueryEndpointArgs = {
-  app?: InputMaybe<Scalars['String']>;
-  path?: InputMaybe<Scalars['String']>;
-  pk?: InputMaybe<Scalars['ID']>;
+    app?: InputMaybe<Scalars["String"]>;
+    path?: InputMaybe<Scalars["String"]>;
+    pk?: InputMaybe<Scalars["ID"]>;
 };
-
 
 export type GQLQuerySecretArgs = {
-  key: Scalars['String'];
+    key: Scalars["String"];
 };
-
 
 export type GQLQueryStripePaymentAcceptArgs = {
-  stripeSessionId: Scalars['String'];
+    stripeSessionId: Scalars["String"];
 };
-
 
 export type GQLQuerySubscriptionArgs = {
-  app?: InputMaybe<Scalars['String']>;
-  pk?: InputMaybe<Scalars['ID']>;
-  subscriber?: InputMaybe<Scalars['Email']>;
+    app?: InputMaybe<Scalars["String"]>;
+    pk?: InputMaybe<Scalars["ID"]>;
+    subscriber?: InputMaybe<Scalars["Email"]>;
 };
 
-
 export type GQLQueryUserArgs = {
-  email?: InputMaybe<Scalars['Email']>;
+    email?: InputMaybe<Scalars["Email"]>;
 };
 
 export type GQLSecret = {
-  __typename?: 'Secret';
-  createdAt: Scalars['Timestamp'];
-  deleteSecret?: Maybe<GQLSecret>;
-  expireAt?: Maybe<Scalars['Timestamp']>;
-  key: Scalars['String'];
-  value: Scalars['String'];
+    __typename?: "Secret";
+    createdAt: Scalars["Timestamp"];
+    deleteSecret?: Maybe<GQLSecret>;
+    expireAt?: Maybe<Scalars["Timestamp"]>;
+    key: Scalars["String"];
+    value: Scalars["String"];
 };
 
 export enum GQLSortDirection {
-  Ascending = 'ascending',
-  Descending = 'descending'
+    Ascending = "ascending",
+    Descending = "descending",
 }
 
 export type GQLStripePaymentAccept = {
-  __typename?: 'StripePaymentAccept';
-  amount: Scalars['NonNegativeDecimal'];
-  createdAt: Scalars['Timestamp'];
-  currency: Scalars['String'];
-  settlePayment?: Maybe<GQLStripePaymentAccept>;
-  stripePaymentIntent: Scalars['String'];
-  stripePaymentStatus: Scalars['String'];
-  stripeSessionId: Scalars['String'];
-  stripeSessionObject: Scalars['String'];
-  updateStripePaymentAccept?: Maybe<GQLStripePaymentAccept>;
-  user: GQLUser;
+    __typename?: "StripePaymentAccept";
+    amount: Scalars["NonNegativeDecimal"];
+    createdAt: Scalars["Timestamp"];
+    currency: Scalars["String"];
+    settlePayment?: Maybe<GQLStripePaymentAccept>;
+    stripePaymentIntent: Scalars["String"];
+    stripePaymentStatus: Scalars["String"];
+    stripeSessionId: Scalars["String"];
+    stripeSessionObject: Scalars["String"];
+    updateStripePaymentAccept?: Maybe<GQLStripePaymentAccept>;
+    user: GQLUser;
 };
-
 
 export type GQLStripePaymentAcceptSettlePaymentArgs = {
-  stripeSessionObject: Scalars['String'];
+    stripeSessionObject: Scalars["String"];
 };
 
-
 export type GQLStripePaymentAcceptUpdateStripePaymentAcceptArgs = {
-  stripePaymentStatus?: InputMaybe<Scalars['String']>;
-  stripeSessionObject?: InputMaybe<Scalars['String']>;
+    stripePaymentStatus?: InputMaybe<Scalars["String"]>;
+    stripeSessionObject?: InputMaybe<Scalars["String"]>;
 };
 
 export type GQLStripeTransfer = {
-  __typename?: 'StripeTransfer';
-  createdAt: Scalars['Timestamp'];
-  currency?: Maybe<Scalars['String']>;
-  receiveAmount: Scalars['NonNegativeDecimal'];
-  receiver: GQLUser;
-  settleStripeTransfer: GQLStripeTransfer;
-  status?: Maybe<GQLStripeTransferStatus>;
-  stripeTransferId?: Maybe<Scalars['String']>;
-  stripeTransferObject?: Maybe<Scalars['String']>;
-  transferAt: Scalars['Timestamp'];
-  withdrawAmount: Scalars['NonNegativeDecimal'];
+    __typename?: "StripeTransfer";
+    createdAt: Scalars["Timestamp"];
+    currency?: Maybe<Scalars["String"]>;
+    receiveAmount: Scalars["NonNegativeDecimal"];
+    receiver: GQLUser;
+    settleStripeTransfer: GQLStripeTransfer;
+    status?: Maybe<GQLStripeTransferStatus>;
+    stripeTransferId?: Maybe<Scalars["String"]>;
+    stripeTransferObject?: Maybe<Scalars["String"]>;
+    transferAt: Scalars["Timestamp"];
+    withdrawAmount: Scalars["NonNegativeDecimal"];
 };
 
 export enum GQLStripeTransferStatus {
-  Pending = 'pending',
-  Transferred = 'transferred'
+    Pending = "pending",
+    Transferred = "transferred",
 }
 
 export type GQLSubscribe = {
-  __typename?: 'Subscribe';
-  app: GQLApp;
-  createdAt: Scalars['Timestamp'];
-  deleteSubscription?: Maybe<GQLSubscribe>;
-  pk: Scalars['String'];
-  pricing: GQLPricing;
-  subscriber: GQLUser;
-  updateSubscription?: Maybe<GQLSubscribe>;
-  updatedAt: Scalars['Timestamp'];
+    __typename?: "Subscribe";
+    app: GQLApp;
+    createdAt: Scalars["Timestamp"];
+    deleteSubscription?: Maybe<GQLSubscribe>;
+    pk: Scalars["String"];
+    pricing: GQLPricing;
+    subscriber: GQLUser;
+    updateSubscription?: Maybe<GQLSubscribe>;
+    updatedAt: Scalars["Timestamp"];
 };
 
-
 export type GQLSubscribeUpdateSubscriptionArgs = {
-  pricing?: InputMaybe<Scalars['ID']>;
+    pricing?: InputMaybe<Scalars["ID"]>;
 };
 
 export type GQLUsageLog = {
-  __typename?: 'UsageLog';
-  app: GQLApp;
-  collectedAt: Scalars['Timestamp'];
-  createdAt: Scalars['Timestamp'];
-  endpoint: GQLEndpoint;
-  status: Scalars['String'];
-  subscriber: GQLUser;
-  volume: Scalars['Int'];
+    __typename?: "UsageLog";
+    app: GQLApp;
+    collectedAt: Scalars["Timestamp"];
+    createdAt: Scalars["Timestamp"];
+    endpoint: GQLEndpoint;
+    status: Scalars["String"];
+    subscriber: GQLUser;
+    volume: Scalars["Int"];
 };
 
 export type GQLUsageSummary = {
-  __typename?: 'UsageSummary';
-  app: GQLApp;
-  billed: Scalars['Boolean'];
-  billedAt?: Maybe<Scalars['Timestamp']>;
-  billingAccountActivity?: Maybe<GQLAccountActivity>;
-  createdAt: Scalars['Timestamp'];
-  subscriber: GQLUser;
-  volume: Scalars['Int'];
+    __typename?: "UsageSummary";
+    app: GQLApp;
+    billed: Scalars["Boolean"];
+    billedAt?: Maybe<Scalars["Timestamp"]>;
+    billingAccountActivity?: Maybe<GQLAccountActivity>;
+    createdAt: Scalars["Timestamp"];
+    subscriber: GQLUser;
+    volume: Scalars["Int"];
 };
 
 export type GQLUser = {
-  __typename?: 'User';
-  accountActivities: Array<GQLAccountActivity>;
-  accountHistories: Array<GQLAccountHistory>;
-  apps: Array<GQLApp>;
-  author: Scalars['String'];
-  balance: Scalars['String'];
-  createdAt: Scalars['Timestamp'];
-  email: Scalars['Email'];
-  stripeConnectAccountId?: Maybe<Scalars['String']>;
-  stripeCustomerId?: Maybe<Scalars['String']>;
-  subscriptions: Array<GQLSubscribe>;
-  updateUser?: Maybe<GQLUser>;
-  updatedAt: Scalars['Timestamp'];
-  usageLogs: Array<GQLUsageLog>;
-  usageSummaries: Array<GQLUsageSummary>;
+    __typename?: "User";
+    accountActivities: Array<GQLAccountActivity>;
+    accountHistories: Array<GQLAccountHistory>;
+    apps: Array<GQLApp>;
+    author: Scalars["String"];
+    balance: Scalars["String"];
+    createdAt: Scalars["Timestamp"];
+    email: Scalars["Email"];
+    stripeConnectAccountId?: Maybe<Scalars["String"]>;
+    stripeCustomerId?: Maybe<Scalars["String"]>;
+    subscriptions: Array<GQLSubscribe>;
+    updateUser?: Maybe<GQLUser>;
+    updatedAt: Scalars["Timestamp"];
+    usageLogs: Array<GQLUsageLog>;
+    usageSummaries: Array<GQLUsageSummary>;
 };
-
 
 export type GQLUserAccountActivitiesArgs = {
-  dateRange?: InputMaybe<GQLDateRangeInput>;
-  limit?: InputMaybe<Scalars['Int']>;
+    dateRange?: InputMaybe<GQLDateRangeInput>;
+    limit?: InputMaybe<Scalars["Int"]>;
 };
-
 
 export type GQLUserAccountHistoriesArgs = {
-  dateRange?: InputMaybe<GQLDateRangeInput>;
-  limit?: InputMaybe<Scalars['Int']>;
+    dateRange?: InputMaybe<GQLDateRangeInput>;
+    limit?: InputMaybe<Scalars["Int"]>;
 };
-
 
 export type GQLUserUpdateUserArgs = {
-  author?: InputMaybe<Scalars['String']>;
-  stripeConnectAccountId?: InputMaybe<Scalars['String']>;
-  stripeCustomerId?: InputMaybe<Scalars['String']>;
+    author?: InputMaybe<Scalars["String"]>;
+    stripeConnectAccountId?: InputMaybe<Scalars["String"]>;
+    stripeCustomerId?: InputMaybe<Scalars["String"]>;
 };
-
 
 export type GQLUserUsageLogsArgs = {
-  app?: InputMaybe<Scalars['String']>;
-  dateRange?: InputMaybe<GQLDateRangeInput>;
-  limit?: InputMaybe<Scalars['Int']>;
-  path?: InputMaybe<Scalars['String']>;
+    app?: InputMaybe<Scalars["String"]>;
+    dateRange?: InputMaybe<GQLDateRangeInput>;
+    limit?: InputMaybe<Scalars["Int"]>;
+    path?: InputMaybe<Scalars["String"]>;
 };
 
-
 export type GQLUserUsageSummariesArgs = {
-  app: Scalars['ID'];
-  dateRange?: InputMaybe<GQLDateRangeInput>;
-  limit?: InputMaybe<Scalars['Int']>;
+    app: Scalars["ID"];
+    dateRange?: InputMaybe<GQLDateRangeInput>;
+    limit?: InputMaybe<Scalars["Int"]>;
 };
 
 export type GQLAppDetailLoadAppInfoQueryVariables = Exact<{
-  appName: Scalars['String'];
+    appName: Scalars["String"];
 }>;
 
-
-export type GQLAppDetailLoadAppInfoQuery = { __typename?: 'Query', app: { __typename?: 'App', name: string, description: string, repository?: string | null, homepage?: string | null, owner: { __typename?: 'User', author: string } } };
+export type GQLAppDetailLoadAppInfoQuery = {
+    __typename?: "Query";
+    app: {
+        __typename?: "App";
+        name: string;
+        description: string;
+        repository?: string | null;
+        homepage?: string | null;
+        owner: { __typename?: "User"; author: string };
+    };
+};
 
 export type GQLAppDetailLoadPricingsQueryVariables = Exact<{
-  appName: Scalars['String'];
+    appName: Scalars["String"];
 }>;
 
-
-export type GQLAppDetailLoadPricingsQuery = { __typename?: 'Query', app: { __typename?: 'App', pricingPlans: Array<{ __typename?: 'Pricing', name: string, callToAction: string, minMonthlyCharge: string, chargePerRequest: string, freeQuota: number }> } };
+export type GQLAppDetailLoadPricingsQuery = {
+    __typename?: "Query";
+    app: {
+        __typename?: "App";
+        pricingPlans: Array<{
+            __typename?: "Pricing";
+            name: string;
+            callToAction: string;
+            minMonthlyCharge: string;
+            chargePerRequest: string;
+            freeQuota: number;
+        }>;
+    };
+};
 
 export type GQLAppDetailLoadEndpointsQueryVariables = Exact<{
-  appName: Scalars['String'];
+    appName: Scalars["String"];
 }>;
 
-
-export type GQLAppDetailLoadEndpointsQuery = { __typename?: 'Query', app: { __typename?: 'App', endpoints: Array<{ __typename?: 'Endpoint', method: GQLHttpMethod, path: string, description?: string | null, destination?: string | null }> } };
+export type GQLAppDetailLoadEndpointsQuery = {
+    __typename?: "Query";
+    app: {
+        __typename?: "App";
+        endpoints: Array<{
+            __typename?: "Endpoint";
+            method: GQLHttpMethod;
+            path: string;
+            description?: string | null;
+            destination?: string | null;
+        }>;
+    };
+};
 
 export type GQLAppFullTextSearchQueryVariables = Exact<{
-  query: Scalars['String'];
+    query: Scalars["String"];
 }>;
 
-
-export type GQLAppFullTextSearchQuery = { __typename?: 'Query', appFullTextSearch: Array<{ __typename?: 'App', name: string, description: string, owner: { __typename?: 'User', author: string } }> };
+export type GQLAppFullTextSearchQuery = {
+    __typename?: "Query";
+    appFullTextSearch: Array<{
+        __typename?: "App";
+        name: string;
+        description: string;
+        owner: { __typename?: "User"; author: string };
+    }>;
+};
 
 export type GQLGetAccountBalanceQueryVariables = Exact<{
-  email: Scalars['Email'];
+    email: Scalars["Email"];
 }>;
 
-
-export type GQLGetAccountBalanceQuery = { __typename?: 'Query', user: { __typename?: 'User', balance: string } };
+export type GQLGetAccountBalanceQuery = {
+    __typename?: "Query";
+    user: { __typename?: "User"; balance: string };
+};
 
 export type GQLGetAccountActivitiesQueryVariables = Exact<{
-  email: Scalars['Email'];
-  dateRange: GQLDateRangeInput;
+    email: Scalars["Email"];
+    dateRange: GQLDateRangeInput;
 }>;
 
-
-export type GQLGetAccountActivitiesQuery = { __typename?: 'Query', user: { __typename?: 'User', accountActivities: Array<{ __typename?: 'AccountActivity', createdAt: number, type: GQLAccountActivityType, amount: string, reason: GQLAccountActivityReason, description: string, status?: GQLAccountActivityStatus | null, settleAt: number, billedApp?: { __typename?: 'App', name: string } | null, stripeTransfer?: { __typename?: 'StripeTransfer', transferAt: number, status?: GQLStripeTransferStatus | null } | null }> } };
+export type GQLGetAccountActivitiesQuery = {
+    __typename?: "Query";
+    user: {
+        __typename?: "User";
+        accountActivities: Array<{
+            __typename?: "AccountActivity";
+            createdAt: number;
+            type: GQLAccountActivityType;
+            amount: string;
+            reason: GQLAccountActivityReason;
+            description: string;
+            status?: GQLAccountActivityStatus | null;
+            settleAt: number;
+            billedApp?: { __typename?: "App"; name: string } | null;
+            stripeTransfer?: {
+                __typename?: "StripeTransfer";
+                transferAt: number;
+                status?: GQLStripeTransferStatus | null;
+            } | null;
+        }>;
+    };
+};
 
 export type GQLGetAccountHistoriesQueryVariables = Exact<{
-  email: Scalars['Email'];
-  dateRange: GQLDateRangeInput;
+    email: Scalars["Email"];
+    dateRange: GQLDateRangeInput;
 }>;
 
-
-export type GQLGetAccountHistoriesQuery = { __typename?: 'Query', user: { __typename?: 'User', accountHistories: Array<{ __typename?: 'AccountHistory', closingBalance: string, closingTime: number }> } };
+export type GQLGetAccountHistoriesQuery = {
+    __typename?: "Query";
+    user: {
+        __typename?: "User";
+        accountHistories: Array<{
+            __typename?: "AccountHistory";
+            closingBalance: string;
+            closingTime: number;
+        }>;
+    };
+};
 
 export type GQLMyAppGetDetailQueryVariables = Exact<{
-  appName: Scalars['String'];
+    appName: Scalars["String"];
 }>;
 
-
-export type GQLMyAppGetDetailQuery = { __typename?: 'Query', app: { __typename?: 'App', name: string, description: string, repository?: string | null, homepage?: string | null, pricingPlans: Array<{ __typename?: 'Pricing', pk: string, name: string, minMonthlyCharge: string, chargePerRequest: string, freeQuota: number, callToAction: string }>, endpoints: Array<{ __typename?: 'Endpoint', pk: string, path: string, description?: string | null, destination?: string | null, method: GQLHttpMethod }> } };
+export type GQLMyAppGetDetailQuery = {
+    __typename?: "Query";
+    app: {
+        __typename?: "App";
+        name: string;
+        description: string;
+        repository?: string | null;
+        homepage?: string | null;
+        pricingPlans: Array<{
+            __typename?: "Pricing";
+            pk: string;
+            name: string;
+            minMonthlyCharge: string;
+            chargePerRequest: string;
+            freeQuota: number;
+            callToAction: string;
+        }>;
+        endpoints: Array<{
+            __typename?: "Endpoint";
+            pk: string;
+            path: string;
+            description?: string | null;
+            destination?: string | null;
+            method: GQLHttpMethod;
+        }>;
+    };
+};
 
 export type GQLGetUserAppsQueryVariables = Exact<{
-  email: Scalars['Email'];
+    email: Scalars["Email"];
 }>;
 
-
-export type GQLGetUserAppsQuery = { __typename?: 'Query', user: { __typename?: 'User', apps: Array<{ __typename?: 'App', name: string, description: string }> } };
+export type GQLGetUserAppsQuery = {
+    __typename?: "Query";
+    user: {
+        __typename?: "User";
+        apps: Array<{ __typename?: "App"; name: string; description: string }>;
+    };
+};
 
 export type GQLGetAvailablePlansQueryVariables = Exact<{
-  appName: Scalars['String'];
+    appName: Scalars["String"];
 }>;
 
-
-export type GQLGetAvailablePlansQuery = { __typename?: 'Query', app: { __typename?: 'App', pricingPlans: Array<{ __typename?: 'Pricing', name: string, pk: string, minMonthlyCharge: string, chargePerRequest: string, freeQuota: number, callToAction: string }> } };
+export type GQLGetAvailablePlansQuery = {
+    __typename?: "Query";
+    app: {
+        __typename?: "App";
+        pricingPlans: Array<{
+            __typename?: "Pricing";
+            name: string;
+            pk: string;
+            minMonthlyCharge: string;
+            chargePerRequest: string;
+            freeQuota: number;
+            callToAction: string;
+        }>;
+    };
+};
 
 export type GQLGetUserSubscriptionDetailQueryVariables = Exact<{
-  user: Scalars['Email'];
-  appName: Scalars['String'];
+    user: Scalars["Email"];
+    appName: Scalars["String"];
 }>;
 
-
-export type GQLGetUserSubscriptionDetailQuery = { __typename?: 'Query', subscription: { __typename?: 'Subscribe', pricing: { __typename?: 'Pricing', pk: string, name: string } } };
+export type GQLGetUserSubscriptionDetailQuery = {
+    __typename?: "Query";
+    subscription: {
+        __typename?: "Subscribe";
+        pricing: { __typename?: "Pricing"; pk: string; name: string };
+    };
+};
 
 export type GQLGetSubscriptionDetailAppInfoQueryVariables = Exact<{
-  appName: Scalars['String'];
+    appName: Scalars["String"];
 }>;
 
-
-export type GQLGetSubscriptionDetailAppInfoQuery = { __typename?: 'Query', app: { __typename?: 'App', name: string, description: string } };
+export type GQLGetSubscriptionDetailAppInfoQuery = {
+    __typename?: "Query";
+    app: { __typename?: "App"; name: string; description: string };
+};
 
 export type GQLGetUsageSummaryQueryVariables = Exact<{
-  userEmail: Scalars['Email'];
-  appName: Scalars['ID'];
-  dateRange?: InputMaybe<GQLDateRangeInput>;
+    userEmail: Scalars["Email"];
+    appName: Scalars["ID"];
+    dateRange?: InputMaybe<GQLDateRangeInput>;
 }>;
 
-
-export type GQLGetUsageSummaryQuery = { __typename?: 'Query', user: { __typename?: 'User', usageSummaries: Array<{ __typename?: 'UsageSummary', createdAt: number, volume: number, billingAccountActivity?: { __typename?: 'AccountActivity', amount: string } | null }> } };
+export type GQLGetUsageSummaryQuery = {
+    __typename?: "Query";
+    user: {
+        __typename?: "User";
+        usageSummaries: Array<{
+            __typename?: "UsageSummary";
+            createdAt: number;
+            volume: number;
+            billingAccountActivity?: {
+                __typename?: "AccountActivity";
+                amount: string;
+            } | null;
+        }>;
+    };
+};
 
 export type GQLGetUserSubscriptionsQueryVariables = Exact<{
-  email: Scalars['Email'];
+    email: Scalars["Email"];
 }>;
 
-
-export type GQLGetUserSubscriptionsQuery = { __typename?: 'Query', user: { __typename?: 'User', subscriptions: Array<{ __typename?: 'Subscribe', pk: string, pricing: { __typename?: 'Pricing', name: string }, app: { __typename?: 'App', name: string, owner: { __typename?: 'User', author: string } } }> } };
+export type GQLGetUserSubscriptionsQuery = {
+    __typename?: "Query";
+    user: {
+        __typename?: "User";
+        subscriptions: Array<{
+            __typename?: "Subscribe";
+            pk: string;
+            pricing: { __typename?: "Pricing"; name: string };
+            app: {
+                __typename?: "App";
+                name: string;
+                owner: { __typename?: "User"; author: string };
+            };
+        }>;
+    };
+};
 
 export type GQLPutSecretMutationVariables = Exact<{
-  key: Scalars['String'];
-  value: Scalars['String'];
-  description?: InputMaybe<Scalars['String']>;
-  expireAt?: InputMaybe<Scalars['Timestamp']>;
+    key: Scalars["String"];
+    value: Scalars["String"];
+    description?: InputMaybe<Scalars["String"]>;
+    expireAt?: InputMaybe<Scalars["Timestamp"]>;
 }>;
 
-
-export type GQLPutSecretMutation = { __typename?: 'Mutation', createSecret: { __typename?: 'Secret', createdAt: number } };
+export type GQLPutSecretMutation = {
+    __typename?: "Mutation";
+    createSecret: { __typename?: "Secret"; createdAt: number };
+};
