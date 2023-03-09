@@ -8,6 +8,32 @@ import (
 	"github.com/Khan/genqlient/graphql"
 )
 
+// CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse includes the requested fields of the GraphQL type GatewayDecisionResponse.
+type CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse struct {
+	Allowed bool                          `json:"allowed"`
+	Reason  GatewayDecisionResponseReason `json:"reason"`
+}
+
+// GetAllowed returns CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse.Allowed, and is useful for accessing the field via an interface.
+func (v *CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse) GetAllowed() bool {
+	return v.Allowed
+}
+
+// GetReason returns CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse.Reason, and is useful for accessing the field via an interface.
+func (v *CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse) GetReason() GatewayDecisionResponseReason {
+	return v.Reason
+}
+
+// CheckUserIsAllowedToCallEndpointResponse is returned by CheckUserIsAllowedToCallEndpoint on success.
+type CheckUserIsAllowedToCallEndpointResponse struct {
+	CheckUserIsAllowedForGatewayRequest CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse `json:"checkUserIsAllowedForGatewayRequest"`
+}
+
+// GetCheckUserIsAllowedForGatewayRequest returns CheckUserIsAllowedToCallEndpointResponse.CheckUserIsAllowedForGatewayRequest, and is useful for accessing the field via an interface.
+func (v *CheckUserIsAllowedToCallEndpointResponse) GetCheckUserIsAllowedForGatewayRequest() CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse {
+	return v.CheckUserIsAllowedForGatewayRequest
+}
+
 // CreateUsageLogCreateUsageLog includes the requested fields of the GraphQL type UsageLog.
 type CreateUsageLogCreateUsageLog struct {
 	CreatedAt int64 `json:"createdAt"`
@@ -25,6 +51,15 @@ type CreateUsageLogResponse struct {
 func (v *CreateUsageLogResponse) GetCreateUsageLog() CreateUsageLogCreateUsageLog {
 	return v.CreateUsageLog
 }
+
+type GatewayDecisionResponseReason string
+
+const (
+	GatewayDecisionResponseReasonInsufficientBalance      GatewayDecisionResponseReason = "insufficient_balance"
+	GatewayDecisionResponseReasonOwnerInsufficientBalance GatewayDecisionResponseReason = "owner_insufficient_balance"
+	GatewayDecisionResponseReasonNotSubscribed            GatewayDecisionResponseReason = "not_subscribed"
+	GatewayDecisionResponseReasonTooManyRequests          GatewayDecisionResponseReason = "too_many_requests"
+)
 
 // GetAppRoutesApp includes the requested fields of the GraphQL type App.
 type GetAppRoutesApp struct {
@@ -162,6 +197,18 @@ type TriggerBillingTriggerBillingUsageSummary struct {
 // GetCreatedAt returns TriggerBillingTriggerBillingUsageSummary.CreatedAt, and is useful for accessing the field via an interface.
 func (v *TriggerBillingTriggerBillingUsageSummary) GetCreatedAt() int64 { return v.CreatedAt }
 
+// __CheckUserIsAllowedToCallEndpointInput is used internally by genqlient
+type __CheckUserIsAllowedToCallEndpointInput struct {
+	User string `json:"user"`
+	App  string `json:"app"`
+}
+
+// GetUser returns __CheckUserIsAllowedToCallEndpointInput.User, and is useful for accessing the field via an interface.
+func (v *__CheckUserIsAllowedToCallEndpointInput) GetUser() string { return v.User }
+
+// GetApp returns __CheckUserIsAllowedToCallEndpointInput.App, and is useful for accessing the field via an interface.
+func (v *__CheckUserIsAllowedToCallEndpointInput) GetApp() string { return v.App }
+
 // __CreateUsageLogInput is used internally by genqlient
 type __CreateUsageLogInput struct {
 	UserEmail string `json:"userEmail"`
@@ -229,6 +276,41 @@ func (v *__TriggerBillingInput) GetUser() string { return v.User }
 
 // GetApp returns __TriggerBillingInput.App, and is useful for accessing the field via an interface.
 func (v *__TriggerBillingInput) GetApp() string { return v.App }
+
+func CheckUserIsAllowedToCallEndpoint(
+	ctx context.Context,
+	client graphql.Client,
+	user string,
+	app string,
+) (*CheckUserIsAllowedToCallEndpointResponse, error) {
+	req := &graphql.Request{
+		OpName: "CheckUserIsAllowedToCallEndpoint",
+		Query: `
+query CheckUserIsAllowedToCallEndpoint ($user: ID!, $app: ID!) {
+	checkUserIsAllowedForGatewayRequest(user: $user, app: $app) {
+		allowed
+		reason
+	}
+}
+`,
+		Variables: &__CheckUserIsAllowedToCallEndpointInput{
+			User: user,
+			App:  app,
+		},
+	}
+	var err error
+
+	var data CheckUserIsAllowedToCallEndpointResponse
+	resp := &graphql.Response{Data: &data}
+
+	err = client.MakeRequest(
+		ctx,
+		req,
+		resp,
+	)
+
+	return &data, err
+}
 
 func CreateUsageLog(
 	ctx context.Context,

@@ -25,7 +25,6 @@ import (
 
 func main() {
 	initGraphQLClient()
-	initSQSGraphQLClient()
 	lambda.Start(lambdaHandler)
 }
 
@@ -62,38 +61,46 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 	setGraphqlClientUser(user)
 
 	//fmt.Println("Checking is user is allowed to access app", app, "user:", user)
+	startTimer := time.Now()
 	if allowed, reason := userIsAllowedToAccess(user, app, path); !allowed {
 		//fmt.Println(color.Red, "User ", user, " is not allowed to access ", app, path, color.Reset)
 		return reason, nil
 	}
+	stopTimer := time.Now()
+	fmt.Println(color.Purple, "userIsAllowedToAccess took", stopTimer.Sub(startTimer), color.Reset)
+
 	//fmt.Println("Creating a usage token for user", user, "on app", app, "for path", path)
 	// fastchargeUserToken, err := createUserUsageToken(app, user)
 	// if err != nil {
 	// 	panic(fmt.Sprintln("Cannot generate _fct: ", err))
 	// }
-	fastchargeUserToken := ""
 	//fmt.Println("Getting route for app", app, "and path", path)
-	if destination, mode, found := getRoute(app, path); !found {
+	destination, mode, found := getRoute(app, path)
+	if !found {
 		response := apiGatewayErrorResponse(404, "NOT_FOUND", "Path Not Found: "+path)
 		return &response, nil
-	} else {
-		switch mode {
-		case RedirectMode:
-			if response, err := makeRedirectResponse(destination, request, fastchargeUserToken); err != nil {
-				fmt.Println(color.Red, "Error making a redirect response", err, color.Reset)
-				return &response, err
-			} else {
-				go billUsage(user, app, path)
-				return &response, nil
-			}
-		default:
-			if response, err := makeForwardResponse(destination, request, fastchargeUserToken); err != nil {
-				fmt.Println(color.Red, "Error making a forward response", err, color.Reset)
-				return response, err
-			} else {
-				go billUsage(user, app, path)
-				return response, nil
-			}
+	}
+
+	fastchargeUserToken := "" // TODO: implement this
+	switch mode {
+	case RedirectMode:
+		if response, err := makeRedirectResponse(destination, request, fastchargeUserToken); err != nil {
+			fmt.Println(color.Red, "Error making a redirect response", err, color.Reset)
+			return &response, err
+		} else {
+			go billUsage(user, app, path)
+			return &response, nil
+		}
+	default:
+		startTimer := time.Now()
+		if response, err := makeForwardResponse(destination, request, fastchargeUserToken); err != nil {
+			fmt.Println(color.Red, "Error making a forward response", err, color.Reset)
+			return response, err
+		} else {
+			stopTimer := time.Now()
+			fmt.Println(color.Purple, "makeForwardResponse took", stopTimer.Sub(startTimer), color.Reset)
+			go billUsage(user, app, path)
+			return response, nil
 		}
 	}
 }
@@ -326,7 +333,7 @@ func billUsage(user string, app string, path string) {
 	//fmt.Println(color.Yellow, "Billing usage for", user, app, path, color.Reset)
 	if _, err := CreateUsageLog(
 		context.Background(),
-		SQSGraphQLClient{QueueUrl: UsageLogQueueUrl}.New(),
+		getSQSGraphQLClient(SQSGraphQLClientConfig{QueueUrl: UsageLogQueueUrl}),
 		user,
 		app,
 		path,
@@ -335,11 +342,11 @@ func billUsage(user string, app string, path string) {
 	}
 	if _, err := TriggerBilling(
 		context.Background(),
-		SQSGraphQLClient{
+		getSQSGraphQLClient(SQSGraphQLClientConfig{
 			MessageDeduplicationId: fmt.Sprintf("trigger-billing-%s-%d", user, time.Now().Unix()),
 			MessageGroupId:         user,
 			QueueUrl:               BillingFifoQueueUrl,
-		}.New(),
+		}),
 		user,
 		app,
 	); err != nil {
@@ -358,38 +365,38 @@ func apiGatewayErrorResponse(code int, reason string, message string) events.API
 	}
 }
 
-type userIsAllowedToAccessCacheKey struct {
-	User string
-	App  string
-	Path string
-}
-
-var userIsAllowedToAccessCache, _ = lru.New[userIsAllowedToAccessCacheKey, bool](1000)
-
 // Checks if the user is allowed to access the endpoint. Caches the result if
 // the user is allowed to access. Otherwise, send queries to the graphql backend
 // to find out if the user is allowed to access.
 func userIsAllowedToAccess(user string, app string, path string) (bool, *events.APIGatewayProxyResponse) {
-	if allowed, found := userIsAllowedToAccessCache.Get(userIsAllowedToAccessCacheKey{User: user, App: app, Path: path}); found {
-		return allowed, nil
-	}
-	// In order to access an endpoint, the user must be subscribed to the app,
-	// and have enough balance.
-	var subscription GetUserSubscriptionPlanSubscriptionSubscribe
-	if result, err := GetUserSubscriptionPlan(context.Background(), getGraphQLClient(), user, app); err != nil {
-		fmt.Println(color.Red, "Error getting subscription for", user, app, "Error:", err, color.Reset)
-		response := apiGatewayErrorResponse(402, "NOT_SUBSCRIBED", "You are not subscribed to this app.")
-		return false, &response
-	} else {
-		subscription = result.Subscription
-	}
-	cost := getEndpointCost(subscription, user, app, path)
-	if getUserBalance(user).LessThan(cost) {
-		response := apiGatewayErrorResponse(402, "INSUFFICIENT_BALANCE", "You need to have at least $"+cost.String()+" in your balance to access this endpoint.")
+	result, err := CheckUserIsAllowedToCallEndpoint(context.Background(), getGraphQLClient(), user, app)
+	if err != nil {
+		fmt.Println(color.Red, "Error checking if user is allowed to call endpoint:", err, color.Reset)
+		response := apiGatewayErrorResponse(500, "INTERNAL_SERVER_ERROR", "Internal Server Error")
 		return false, &response
 	}
-	userIsAllowedToAccessCache.Add(userIsAllowedToAccessCacheKey{User: user, App: app, Path: path}, true)
-	return true, nil
+	if result.CheckUserIsAllowedForGatewayRequest.Allowed {
+		return true, nil
+	}
+	if result.CheckUserIsAllowedForGatewayRequest.Allowed == false {
+		switch result.CheckUserIsAllowedForGatewayRequest.Reason {
+		case GatewayDecisionResponseReasonTooManyRequests:
+			response := apiGatewayErrorResponse(429, "TOO_MANY_REQUESTS", "You have made too many requests to this endpoint.")
+			return false, &response
+		case GatewayDecisionResponseReasonNotSubscribed:
+			response := apiGatewayErrorResponse(402, "NOT_SUBSCRIBED", "You are not subscribed to this app.")
+			return false, &response
+		case GatewayDecisionResponseReasonInsufficientBalance:
+			response := apiGatewayErrorResponse(402, "INSUFFICIENT_BALANCE", "Your account balance is too low to make this request.")
+			return false, &response
+		case GatewayDecisionResponseReasonOwnerInsufficientBalance:
+			response := apiGatewayErrorResponse(402, "OWNER_INSUFFICIENT_BALANCE", "The owner of this app does not have enough balance to pay for the free quota used by this request.")
+			return false, &response
+		}
+	}
+
+	response := apiGatewayErrorResponse(401, "UNKNOWN_REASON", "You are not allowed to access this endpoint.")
+	return false, &response
 }
 
 func getUserBalance(user string) decimal.Decimal {

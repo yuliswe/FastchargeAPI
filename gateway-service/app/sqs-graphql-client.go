@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"os"
 	"strings"
 
 	"net/http"
@@ -63,14 +64,10 @@ func (self *SQSTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	}, nil
 }
 
-type SQSGraphQLClient struct {
+type SQSGraphQLClientConfig struct {
 	MessageDeduplicationId string
 	MessageGroupId         string
 	QueueUrl               string
-}
-
-func (self SQSGraphQLClient) New() graphql.Client {
-	return getSQSGraphQLClient(self)
 }
 
 // Returns a GraphQL client that uses SQS as a transport layer.
@@ -84,7 +81,12 @@ func (self SQSGraphQLClient) New() graphql.Client {
 //
 // Effectively, MessageDeduplicationId deduplicates messages with the same ID.
 // Messages with the same MessageGroupId are processed in FIFO order.
-func getSQSGraphQLClient(config SQSGraphQLClient) graphql.Client {
+func getSQSGraphQLClient(config SQSGraphQLClientConfig) graphql.Client {
+	if os.Getenv("LOCAL_GRAPHQL") == "1" {
+		fmt.Println(color.Red, "Using local GraphQL in place of SQS", color.Reset)
+		return getGraphQLClient() // Use normal GraphQL client (local in this case)
+	}
+
 	// Doc: https://github.com/sha1sum/aws_signing_client
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region: aws.String("us-east-1"),
@@ -101,10 +103,4 @@ func getSQSGraphQLClient(config SQSGraphQLClient) graphql.Client {
 		},
 	}
 	return graphql.NewClient("", &baseClient)
-}
-
-var DefaultSQSGqlClient graphql.Client
-
-func initSQSGraphQLClient() {
-	DefaultSQSGqlClient = getSQSGraphQLClient(SQSGraphQLClient{})
 }

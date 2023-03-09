@@ -36,7 +36,7 @@ func initGraphQLClient() {
 	var graphqlService string
 	if os.Getenv("LOCAL_GRAPHQL") == "1" {
 		graphqlService = "http://host.docker.internal:4000"
-		fmt.Println(color.Green, "Connecting to", graphqlService, color.Reset)
+		fmt.Println(color.Red, "Connecting to", graphqlService, color.Reset)
 	} else {
 		graphqlService = "https://api.iam.graphql.fastchargeapi.com"
 		fmt.Println(color.Green, "Connecting to", graphqlService, color.Reset)
@@ -54,7 +54,11 @@ func initGraphQLClient() {
 		Transport: globalGraphQLClientTransport,
 	}
 	var awsClient, _ = aws_signing_client.New(signer, &baseClient, "execute-api", "us-east-1")
-	globalGqlClient = graphql.NewClient(graphqlService, awsClient)
+	if os.Getenv("LOCAL_GRAPHQL") == "1" {
+		globalGqlClient = graphql.NewClient(graphqlService, http.DefaultClient)
+	} else {
+		globalGqlClient = graphql.NewClient(graphqlService, awsClient)
+	}
 }
 
 var globalGqlClient graphql.Client
