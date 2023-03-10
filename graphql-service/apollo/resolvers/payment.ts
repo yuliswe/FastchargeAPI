@@ -12,7 +12,6 @@ import {
     GQLStripePaymentAcceptResolvers,
     GQLStripePaymentAcceptUpdateStripePaymentAcceptArgs,
 } from "../__generated__/resolvers-types";
-import Decimal from "decimal.js-light";
 import { BadInput, Denied } from "../errors";
 import { Can } from "../permissions";
 import { UserPK } from "../pks/UserPK";

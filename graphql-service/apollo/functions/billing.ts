@@ -1,10 +1,7 @@
 import {
     AccountActivity,
-    AccountActivityModel,
     Pricing,
     UsageSummary,
-    disableDBLogging,
-    enableDBLogging,
 } from "../dynamoose/models";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
 import { RequestContext } from "../RequestContext";
@@ -12,12 +9,9 @@ import Decimal from "decimal.js-light";
 import { findUserSubscriptionPricing } from "./subscription";
 import { collectUsageLogs } from "./usage";
 import { Chalk } from "chalk";
-import { getAppAuthorUser } from "./app";
-import { UserPK } from "../pks/UserPK";
 import { settleAccountActivities } from "./account";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { AppPK } from "./AppPK";
-import dynamoose from "dynamoose";
 const chalk = new Chalk({ level: 3 });
 
 export type GenerateAccountActivitiesResult = {

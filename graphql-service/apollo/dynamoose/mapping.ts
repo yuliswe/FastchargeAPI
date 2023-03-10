@@ -1,6 +1,3 @@
-import { App, AppModel, User, UserModel } from "./models"
-import { ModelType } from "dynamoose/dist/General";
-import { GQLApp, GQLUser, ResolverTypeWrapper } from "../__generated__/resolvers-types";
 
 declare module "dynamoose/dist/Model" {
     interface Model<T> {

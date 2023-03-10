@@ -1,4 +1,3 @@
-import { GraphQLResolveInfo } from "graphql";
 import { Endpoint, EndpointModel } from "../dynamoose/models";
 import { Denied } from "../errors";
 import { Can } from "../permissions";

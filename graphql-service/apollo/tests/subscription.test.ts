@@ -4,13 +4,12 @@ import { usageLogResolvers } from "../resolvers/usage";
 import { collectUsageLogs as collectUsageSummary } from "../functions/usage";
 import { AlreadyExists } from "../errors";
 import { generateAccountActivities } from "../functions/billing";
-import { Pricing, PricingModel, Subscription, UsageLogModel, UsageSummaryModel, User } from "../dynamoose/models";
+import { PricingModel, Subscription, UsageLogModel, UsageSummaryModel, User } from "../dynamoose/models";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
 import { UsageLogPK } from "../pks/UsageLogPK";
 import { PricingPK } from "../pks/PricingPK";
 import { settleAccountActivities } from "../functions/account";
 import { UserPK } from "../pks/UserPK";
-import { SubscriptionPK } from "../pks/SubscriptionPK";
 import Decimal from "decimal.js-light";
 
 let context: RequestContext = {

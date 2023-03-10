@@ -3,7 +3,6 @@ import { RequestContext } from "../RequestContext";
 import { AccountActivity, StripeTransfer } from "../dynamoose/models";
 import { BadInput } from "../errors";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
-import { UserPK } from "../pks/UserPK";
 import { getUserBalance, settleAccountActivities } from "./account";
 import { StripeTransferPK } from "../pks/StripeTransferPK";
 

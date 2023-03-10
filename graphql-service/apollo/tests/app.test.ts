@@ -1,10 +1,7 @@
 import { describe, expect, test } from "@jest/globals";
 import { RequestContext, createDefaultContextBatched } from "../RequestContext";
 import { AlreadyExists } from "../errors";
-import { GatewayMode, StripePaymentAccept, User } from "../dynamoose/models";
-import { stripePaymentAcceptResolvers } from "../resolvers/payment";
-import { getUserBalance } from "../functions/account";
-import Decimal from "decimal.js-light";
+import { GatewayMode, User } from "../dynamoose/models";
 import { appResolvers } from "../resolvers/app";
 
 let context: RequestContext = {

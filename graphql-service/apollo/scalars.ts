@@ -1,11 +1,9 @@
 import {
     GraphQLError,
-    GraphQLFloat,
-    GraphQLInt,
     GraphQLScalarType,
     Kind,
 } from "graphql";
-import { GraphQLBigInt, GraphQLSafeInt } from "graphql-scalars";
+import { GraphQLSafeInt } from "graphql-scalars";
 
 function checkNonNegativeDecimal(value: string) {
     let n = Number.parseFloat(value);

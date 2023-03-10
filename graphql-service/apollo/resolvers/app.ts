@@ -1,12 +1,9 @@
 import { GraphQLResolveInfo } from "graphql";
 import {
     App,
-    AppModel,
-    User,
-    UserModel,
     GatewayMode,
 } from "../dynamoose/models";
-import { Denied, NotFound } from "../errors";
+import { Denied } from "../errors";
 import { Can } from "../permissions";
 import { RequestContext } from "../RequestContext";
 import {

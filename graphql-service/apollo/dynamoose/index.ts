@@ -1,5 +1,3 @@
-import { AppModel, UserModel } from "./models";
-import dynamoose from "dynamoose";
 
 export function initializeDB() {
 

@@ -1,6 +1,6 @@
 import { Item } from "dynamoose/dist/Item";
 import { RequestContext } from "../RequestContext";
-import { AccountActivity, AccountHistory, disableDBLogging, enableDBLogging } from "../dynamoose/models";
+import { AccountActivity, AccountHistory } from "../dynamoose/models";
 import { AccountHistoryPK } from "../pks/AccountHistoryPK";
 import Decimal from "decimal.js-light";
 import { AccountActivityPK } from "../pks/AccountActivityPK";

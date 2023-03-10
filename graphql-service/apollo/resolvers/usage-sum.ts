@@ -1,9 +1,7 @@
 import { Chalk } from "chalk";
 import { GQLResolvers, GQLUsageSummaryResolvers } from "../__generated__/resolvers-types";
 import { UsageSummary, UsageSummaryModel } from "../dynamoose/models";
-import { generateAccountActivities, triggerBilling } from "../functions/billing";
-import { findUserSubscriptionPricing } from "../functions/subscription";
-import { collectUsageLogs } from "../functions/usage";
+import { triggerBilling } from "../functions/billing";
 import { getUserByPK } from "../functions/user";
 import { RequestContext } from "../RequestContext";
 import { getAppByPK } from "../functions/app";

@@ -1,5 +1,5 @@
 import { GraphQLResolveInfo } from "graphql";
-import { AccountActivity, AppModel, User, UserModel } from "../dynamoose/models";
+import { AccountActivity, User, UserModel } from "../dynamoose/models";
 import { Denied } from "../errors";
 import { Can } from "../permissions";
 import { RequestContext } from "../RequestContext";
@@ -7,7 +7,6 @@ import {
     GQLMutationCreateUserArgs,
     GQLQueryUserArgs,
     GQLResolvers,
-    GQLUser,
     GQLUserAccountActivitiesArgs,
     GQLUserResolvers,
     GQLUserUpdateUserArgs,

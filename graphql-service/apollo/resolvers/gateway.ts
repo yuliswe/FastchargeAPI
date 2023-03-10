@@ -1,27 +1,20 @@
 import { RequestContext } from "../RequestContext";
 import {
-    GQLGatewayDecisionResponse,
     GQLGatewayDecisionResponseReason,
     GQLGatewayDecisionResponseResolvers,
-    GQLPricing,
     GQLQueryCheckUserIsAllowedForGatewayRequestArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
 import { getUserBalance } from "../functions/account";
 import { findUserSubscriptionPricing } from "../functions/subscription";
 import { ShouldCollectMonthlyChargePromiseResult, shouldCollectMonthlyCharge } from "../functions/billing";
-import { getAppAuthorUser } from "../functions/app";
 import Decimal from "decimal.js-light";
 import {
     GatewayRequestCounter,
-    GatewayRequestCounterModel,
     GatewayRequestDecisionCache,
     Pricing,
-    disableDBLogging,
-    enableDBLogging,
 } from "../dynamoose/models";
 import { Chalk } from "chalk";
-import dynamoose from "dynamoose";
 import { AlreadyExists, NotFound } from "../errors";
 import { PricingPK } from "../pks/PricingPK";
 import { AppPK } from "../functions/AppPK";

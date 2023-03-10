@@ -3,7 +3,6 @@ import {
     GQLMutationCreateSecretArgs,
     GQLQuerySecretArgs,
     GQLResolvers,
-    GQLSecret,
     GQLSecretResolvers,
 } from "../__generated__/resolvers-types";
 import { Secret, SecretModel } from "../dynamoose/models";

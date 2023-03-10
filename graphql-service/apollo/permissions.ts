@@ -1,9 +1,6 @@
 import { App, Endpoint, Pricing, Subscription, User } from "./dynamoose/models";
-import { Denied } from "./errors";
 import { RequestContext } from "./RequestContext";
 import {
-    GQLEndpointUpdateEndpointArgs,
-    GQLMutationCreateAppArgs,
     GQLMutationCreateEndpointArgs,
     GQLMutationCreateSubscriptionArgs,
     GQLMutationCreateUsageLogArgs,

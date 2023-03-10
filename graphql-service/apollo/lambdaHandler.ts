@@ -6,7 +6,7 @@ import { HeaderMap } from "@apollo/server";
 import { BadInput, Unauthorized } from "./errors";
 import { RequestService, createDefaultContextBatched } from "./RequestContext";
 import { Chalk } from "chalk";
-import { LambdaRequest, LambdaResponse, MiddlewareFn } from "@as-integrations/aws-lambda/dist/middleware";
+import { LambdaRequest, LambdaResponse } from "@as-integrations/aws-lambda/dist/middleware";
 
 const chalk = new Chalk({ level: 3 });
 
