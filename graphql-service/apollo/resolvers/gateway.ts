@@ -24,6 +24,7 @@ import { Chalk } from "chalk";
 import dynamoose from "dynamoose";
 import { AlreadyExists, NotFound } from "../errors";
 import { PricingPK } from "../pks/PricingPK";
+import { AppPK } from "../functions/AppPK";
 const chalk = new Chalk({ level: 3 });
 
 type GatewayDecisionResponse = {
@@ -47,6 +48,11 @@ export const gatewayResolvers: GQLResolvers & {
             { user, app, forceBalanceCheck }: GQLQueryCheckUserIsAllowedForGatewayRequestArgs,
             context: RequestContext
         ): Promise<GatewayDecisionResponse> {
+            // Attention: You will see a lot of Promises being passed in this
+            // function, because this way we can maximize the parallelism when
+            // making requests. In general, only await the Promise at the last
+            // moment when you need the value.
+
             // let startTimer = Date.now();
 
             // Increment the request counter, or create it if it doesn't exist
@@ -81,6 +87,17 @@ export const gatewayResolvers: GQLResolvers & {
                 return { allowed: false, reason: GQLGatewayDecisionResponseReason.TooManyRequests, pricingPK: null };
             }
 
+            let pricingPromise = findUserSubscriptionPricing(context, { app, user });
+
+            // Recompute the decision when there're 10 requests left, or there's 10 minutes left, asynchronously
+            if (
+                gatewayDecisionCache.nextForcedBalanceCheckRequestCount - globalRequestCounter.counter < 10 ||
+                gatewayDecisionCache.nextForcedBalanceCheckTime - Date.now() < 10 * 60 * 1000 // 10 minutes
+            ) {
+                // eslint-disable-next-line @typescript-eslint/no-floating-promises
+                createOrUpdateGatewayDecisionCache(context, { user, app, globalRequestCounterPromise, pricingPromise });
+            }
+
             // Check if the account balance check can be skipped
             if (
                 !forceBalanceCheck &&
@@ -97,12 +114,6 @@ export const gatewayResolvers: GQLResolvers & {
                 // }
                 return { allowed: true, reason: null, pricingPK: gatewayDecisionCache.pricing };
             }
-
-            let pricingPromise = findUserSubscriptionPricing(context, { app, user });
-            // If the balance check cannot be skipped, recompute the decision,
-            // to try to make more allowance for the next request.
-            // eslint-disable-next-line @typescript-eslint/no-floating-promises
-            createOrUpdateGatewayDecisionCache(context, { user, app, globalRequestCounterPromise, pricingPromise });
 
             // Run all these promises concurrently
             let shouldCollectMonthlyChargePromise = checkShouldChargeMonthlyFee(context, { app, user, pricingPromise });
@@ -342,7 +353,7 @@ async function createOrUpdateGatewayDecisionCache(
         globalRequestCounterPromise: Promise<GatewayRequestCounter | null>;
     }
 ): Promise<GatewayRequestDecisionCache | null> {
-    let startTimer = Date.now();
+    // let startTimer = Date.now();
 
     let currentRequestCounter = await globalRequestCounterPromise;
     let pricing = await pricingPromise;
@@ -355,6 +366,7 @@ async function createOrUpdateGatewayDecisionCache(
     let { numChecksToSkip, timeUntilNextCheckSeconds } = await estimateAllowanceToSkipBalanceCheck(context, {
         app,
         user,
+        pricing,
     });
     let decision = await context.batched.GatewayRequestDecisionCache.getOrNull({
         requester: user,
@@ -386,8 +398,8 @@ async function createOrUpdateGatewayDecisionCache(
         });
     }
 
-    let stopTimer = Date.now();
-    console.log(chalk.magenta(`createOrUpdateGatewayDecisionCache took ${stopTimer - startTimer}ms`));
+    // let stopTimer = Date.now();
+    // console.log(chalk.magenta(`createOrUpdateGatewayDecisionCache took ${stopTimer - startTimer}ms`));
     return decision;
 }
 
@@ -398,14 +410,34 @@ type EstimateAllowanceToSkipBalanceCheckResult = {
 
 /**
  * Returns an estimate of how many requests the user can make without the
- * balance being checked.
+ * balance being checked, using an heuristic.
  */
 async function estimateAllowanceToSkipBalanceCheck(
     context: RequestContext,
-    { app, user }: { app: string; user: string }
+    { app, user, pricing }: { app: string; user: string; pricing: Pricing }
 ): Promise<EstimateAllowanceToSkipBalanceCheckResult> {
+    // Heuristic: take the user's balance, substract the monthly charge, and
+    // devide by the request charge, and divide by 100.
+    let maxRequests = new Decimal(await getUserBalance(context, user))
+        .minus(pricing.minMonthlyCharge)
+        .div(pricing.chargePerRequest)
+        .div(100)
+        .toInteger()
+        .toNumber();
+    maxRequests = Math.max(0, maxRequests);
+    // Another heuristic: get app owner's balance, divide by the per-request fee
+    // we charge, and divide by 10000.
+    let ourFee = "0.0001";
+    let appItem = await context.batched.App.get(AppPK.parse(app));
+    let maxRequestsForAppOwner = new Decimal(await getUserBalance(context, appItem.owner))
+        .div(ourFee)
+        .div(10000)
+        .toInteger()
+        .toNumber();
+    // Take the minimum of the two values, and limit to 100.
+    const numChecksToSkip = Math.min(maxRequests, maxRequestsForAppOwner, 100);
     return await Promise.resolve({
-        numChecksToSkip: 100,
+        numChecksToSkip,
         timeUntilNextCheckSeconds: 60 * 60, // 1 hour
     });
 }
