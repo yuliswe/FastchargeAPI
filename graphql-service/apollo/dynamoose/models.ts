@@ -202,9 +202,8 @@ const UsageLogTableSchema = new dynamoose.Schema(
         collectedAt: { type: Number, required: false },
         path: String_Required_NotEmpty("path"),
         volume: { type: Number, default: 1 },
-        queuePosition: { type: Number, default: 0 },
         usageSummary: { type: String, required: false, default: undefined },
-        pricing: { type: String, required: false, default: undefined },
+        pricing: { type: String, required: true },
     },
     {
         timestamps: {
@@ -234,10 +233,9 @@ const UsageSummaryTableSchema = new dynamoose.Schema(
             default: "pending",
         },
         billedAt: { type: Number, default: undefined },
-        queueSize: { type: Number, required: true },
-        maxQueueSize: { type: Number, default: undefined },
-        maxSecondsInQueue: { type: Number, default: undefined },
+        numberOfLogs: { type: Number, required: true },
         billingAccountActivity: { type: String, default: undefined },
+        pricing: { type: String, required: true },
     },
     {
         timestamps: {
@@ -523,11 +521,10 @@ export class UsageLog extends Item {
     path: string;
     createdAt: number;
     volume: number; // Number of requests. This is always 1 for now. Set to 2 for double rate charging.
-    queuePosition: number; // Position in the queue before collection
     status: "pending" | "collected";
     collectedAt: number; // When the UsageSummary was created
     usageSummary: string | null; // ID of the UsageSummary item or null if not yet collected
-    pricing: string | null;
+    pricing: string;
 }
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
@@ -543,10 +540,9 @@ export class UsageSummary extends Item {
     createdAt: number;
     status: "pending" | "billed"; // billed when account activities have been created
     billedAt: number | null;
-    queueSize: number; // Number of usage logs in the queue when collected
-    maxQueueSize: number | null; // Max queue size setting when collected, for debug purpose
-    maxSecondsInQueue: number | null; // Max seconds in queue setting when collected, for debug purpose
+    numberOfLogs: number; // Number of usage logs in the queue when collected
     billingAccountActivity: string | null; // ID of the AccountActivity item or null if not yet billed
+    pricing: string;
 }
 
 /// When creating a new Item class, remember to add it to codegen.yml mappers

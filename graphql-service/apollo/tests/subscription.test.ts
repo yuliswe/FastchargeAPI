@@ -4,7 +4,7 @@ import { usageLogResolvers } from "../resolvers/usage";
 import { collectUsageLogs as collectUsageSummary } from "../functions/usage";
 import { AlreadyExists } from "../errors";
 import { generateAccountActivities } from "../functions/billing";
-import { PricingModel, Subscription, UsageLogModel, UsageSummaryModel, User } from "../dynamoose/models";
+import { Subscription, UsageLogModel, UsageSummaryModel, User } from "../dynamoose/models";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
 import { UsageLogPK } from "../pks/UsageLogPK";
 import { PricingPK } from "../pks/PricingPK";
@@ -107,16 +107,17 @@ describe("Test when making a request the monthly subscription fee is charged.", 
 
     let usageSummaryPK: string;
     test("Create a UsageSummary", async () => {
-        let usageSummary = await collectUsageSummary(context, {
+        let { affectedUsageSummaries } = await collectUsageSummary(context, {
             user: "testuser1.fastchargeapi@gmail.com",
             app: "myapp",
         });
+        let usageSummary = affectedUsageSummaries[0];
         let usageLog = await UsageLogModel.get(UsageLogPK.parse(usageLogPK));
         expect(usageSummary).not.toBeNull();
-        expect(usageSummary!.queueSize).toEqual(3);
+        expect(usageSummary.numberOfLogs).toEqual(3);
         expect(usageLog.status).toEqual("collected");
-        expect(usageLog.usageSummary).toEqual(UsageSummaryPK.stringify(usageSummary!));
-        usageSummaryPK = UsageSummaryPK.stringify(usageSummary!);
+        expect(usageLog.usageSummary).toEqual(UsageSummaryPK.stringify(usageSummary));
+        usageSummaryPK = UsageSummaryPK.stringify(usageSummary);
     });
 
     /**
@@ -128,11 +129,8 @@ describe("Test when making a request the monthly subscription fee is charged.", 
      */
     test("Create AccountActivity", async () => {
         let usageSummary = await UsageSummaryModel.get(UsageSummaryPK.parse(usageSummaryPK));
-        let pricing = await PricingModel.get(PricingPK.parse(pricingPK));
-        expect(pricing.chargePerRequest).toEqual("0.001"); // made 3 UsageLogs, so the total amount is 0.003
         let result = await generateAccountActivities(context, {
             usageSummary,
-            pricing,
             subscriber: "testuser1.fastchargeapi@gmail.com",
             appAuthor: "testuser1.fastchargeapi@gmail.com",
             forceMonthlyCharge: true,

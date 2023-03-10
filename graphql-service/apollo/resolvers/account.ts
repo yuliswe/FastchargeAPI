@@ -8,7 +8,7 @@ import {
     GQLQueryAccountActivitiesArgs,
 } from "../__generated__/resolvers-types";
 import { AccountActivity, AccountActivityModel } from "../dynamoose/models";
-import { AppPK } from "../functions/AppPK";
+import { AppPK } from "../pks/AppPK";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { StripeTransferPK } from "../pks/StripeTransferPK";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
@@ -42,7 +42,8 @@ export const accountActivityResolvers: GQLResolvers & {
         },
         async usageSummary(parent, args, context, info) {
             if (parent.usageSummary) {
-                return await context.batched.UsageSummary.get(UsageSummaryPK.parse(parent.usageSummary));
+                // Use getOrNull because the usage summary may have been deleted
+                return await context.batched.UsageSummary.getOrNull(UsageSummaryPK.parse(parent.usageSummary));
             } else {
                 return null;
             }

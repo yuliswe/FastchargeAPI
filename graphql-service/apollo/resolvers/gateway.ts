@@ -9,15 +9,11 @@ import { getUserBalance } from "../functions/account";
 import { findUserSubscriptionPricing } from "../functions/subscription";
 import { ShouldCollectMonthlyChargePromiseResult, shouldCollectMonthlyCharge } from "../functions/billing";
 import Decimal from "decimal.js-light";
-import {
-    GatewayRequestCounter,
-    GatewayRequestDecisionCache,
-    Pricing,
-} from "../dynamoose/models";
+import { GatewayRequestCounter, GatewayRequestDecisionCache, Pricing } from "../dynamoose/models";
 import { Chalk } from "chalk";
 import { AlreadyExists, NotFound } from "../errors";
 import { PricingPK } from "../pks/PricingPK";
-import { AppPK } from "../functions/AppPK";
+import { AppPK } from "../pks/AppPK";
 const chalk = new Chalk({ level: 3 });
 
 type GatewayDecisionResponse = {
@@ -115,6 +111,7 @@ export const gatewayResolvers: GQLResolvers & {
                 app,
                 user,
                 shouldCollectMonthlyChargePromise,
+                pricingPromise,
             });
             let ownerHasSufficientBalancePromise = checkOwnerHasSufficientBalance(context, {
                 app,
@@ -189,14 +186,15 @@ async function checkHasSufficientBalance(
         app,
         user,
         shouldCollectMonthlyChargePromise,
+        pricingPromise,
     }: {
         app: string;
         user: string;
         shouldCollectMonthlyChargePromise: Promise<ShouldCollectMonthlyChargePromiseResult | null>;
+        pricingPromise: Promise<Pricing | null>;
     }
 ): Promise<boolean | null> {
     let balancePromise = getUserBalance(context, user);
-    let pricingPromise = findUserSubscriptionPricing(context, { user, app });
     let needMonthlyFeePromise = shouldCollectMonthlyChargePromise.then((r) => r && r.shouldBill);
 
     let pricing = await pricingPromise;

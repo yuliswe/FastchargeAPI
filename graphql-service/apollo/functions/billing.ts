@@ -1,17 +1,13 @@
-import {
-    AccountActivity,
-    Pricing,
-    UsageSummary,
-} from "../dynamoose/models";
+import { AccountActivity, Pricing, UsageSummary } from "../dynamoose/models";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
 import { RequestContext } from "../RequestContext";
 import Decimal from "decimal.js-light";
-import { findUserSubscriptionPricing } from "./subscription";
 import { collectUsageLogs } from "./usage";
 import { Chalk } from "chalk";
 import { settleAccountActivities } from "./account";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
-import { AppPK } from "./AppPK";
+import { AppPK } from "../pks/AppPK";
+import { PricingPK } from "../pks/PricingPK";
 const chalk = new Chalk({ level: 3 });
 
 export type GenerateAccountActivitiesResult = {
@@ -29,7 +25,6 @@ export type GenerateAccountActivitiesResult = {
  * account the per request charge, and the min monthly charge.
  * @param context
  * @param usageSummary The API call usage summary
- * @param pricing The pricng plan which the price is based on
  * @param subscriber API caller
  * @param appAuthor API author
  * @returns { subscriber: AccountActivity, appAuthor: AccountActivity }
@@ -38,7 +33,6 @@ export async function generateAccountActivities(
     context: RequestContext,
     {
         usageSummary,
-        pricing,
         subscriber,
         appAuthor,
         monthlyChargeOnHoldPeriodInSeconds = 60 * 60 * 24 * 30, // default to 30 days
@@ -47,7 +41,6 @@ export async function generateAccountActivities(
         serviceFeePerRequest = "0.0001",
     }: {
         usageSummary: UsageSummary;
-        pricing: Pricing;
         subscriber: string;
         appAuthor: string;
         monthlyChargeOnHoldPeriodInSeconds?: number;
@@ -60,6 +53,7 @@ export async function generateAccountActivities(
     let results = {
         createdAccountActivities: {} as GenerateAccountActivitiesResult["createdAccountActivities"],
     } as GenerateAccountActivitiesResult;
+    let pricing = await context.batched.Pricing.get(PricingPK.parse(usageSummary.pricing));
     {
         // Process per-request charge
         let volume = usageSummary.volume;
@@ -263,12 +257,7 @@ export async function triggerBilling(
         app,
         status: "pending",
     });
-    // TODO: fix this: need to add subscription to UsageLog
-    let pricing = await findUserSubscriptionPricing(context, { user, app });
-    if (!pricing) {
-        console.error(chalk.red("No pricing found during triggerBilling"), user, app);
-        throw new Error(`No pricing found during triggerBilling: ${user}, ${app}`);
-    }
+
     let appItem = await context.batched.App.get(AppPK.parse(app));
 
     let promises = [];
@@ -276,7 +265,6 @@ export async function triggerBilling(
         promises.push(
             generateAccountActivities(context, {
                 usageSummary,
-                pricing,
                 subscriber: user,
                 appAuthor: appItem.owner,
             })

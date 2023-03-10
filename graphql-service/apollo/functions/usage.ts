@@ -1,7 +1,10 @@
 import { Item } from "dynamoose/dist/Item";
 import { RequestContext } from "../RequestContext";
-import { UsageSummary } from "../dynamoose/models";
+import { UsageLog, UsageSummary } from "../dynamoose/models";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
+import { Chalk } from "chalk";
+
+const chalk = new Chalk({ level: 3 });
 
 /**
  * Create a UsageSummary for the given user's usage logs that are not collected.
@@ -17,84 +20,56 @@ export async function collectUsageLogs(
     {
         user,
         app,
-        maxQueueSize = 1000,
-        maxSecondsInQueue = 60 * 60 * 24,
     }: {
         user: string;
         app: string;
-        maxQueueSize?: number;
-        maxSecondsInQueue?: number;
     }
-): Promise<UsageSummary | null> {
+): Promise<{ affectedUsageSummaries: UsageSummary[] }> {
     let usageLogs = await context.batched.UsageLog.many({
         subscriber: user,
         app,
         status: "pending",
     });
     if (usageLogs.length === 0) {
-        return null;
+        return {
+            affectedUsageSummaries: [],
+        };
     }
-    let summary = {
-        subscriber: user,
-        app: app,
-        queueSize: usageLogs.length,
-        volume: 0,
-        maxQueueSize,
-        maxSecondsInQueue,
-    };
+    // These usage logs could be subscribed to different pricings. We need to
+    // group them by pricing.
+    let usageLogsByPricing = new Map<string, UsageLog[]>();
     for (let usage of usageLogs) {
-        summary.volume += usage.volume;
+        let pricing = usage.pricing;
+        let logs = usageLogsByPricing.get(pricing);
+        if (logs == undefined) {
+            logs = [];
+            usageLogsByPricing.set(pricing, logs);
+        }
+        logs.push(usage);
     }
-    let usageSummary = await context.batched.UsageSummary.create(summary);
-    let promises: Promise<Item>[] = [];
-    for (let usage of usageLogs) {
-        usage.usageSummary = UsageSummaryPK.stringify(usageSummary);
-        usage.status = "collected";
-        usage.collectedAt = usageSummary.createdAt;
-        promises.push(usage.save());
-    }
-    await Promise.all(promises);
-    return usageSummary;
-}
 
-// /**
-//  * Returns true if maxQueueSize or maxSecondsInQueue has been exceeded.
-//  * @param user
-//  * @param context
-//  * @param maxQueueSize
-//  * @param maxSecondsInQueue
-//  * @returns
-//  */
-// export async function shouldCollectUsageLogs(
-//     user: string,
-//     context: RequestContext,
-//     maxQueueSize = 1000,
-//     maxSecondsInQueue: number = 60 * 60 * 24
-// ): Promise<boolean> {
-//     let lastUsageLog = await context.batched.UsageLog.many(
-//         {
-//             subscriber: user,
-//         },
-//         {
-//             sort: "descending",
-//             limit: 1,
-//         }
-//     );
-//     if (lastUsageLog.length === 0) {
-//         return false;
-//     }
-//     if (lastUsageLog[0].queuePosition > maxQueueSize) {
-//         return true;
-//     }
-//     let firstUsageLog = await context.batched.UsageLog.many(
-//         {
-//             subscriber: user,
-//             createdAt: { lt: Date.now() - 1000 * maxSecondsInQueue },
-//         },
-//         { limit: 1, sort: "descending" }
-//     );
-//     if (firstUsageLog.length === 0) {
-//         return false;
-//     }
-//     return firstUsageLog[0].usageSummary == null;
-// }
+    let summaryPromises = [...usageLogsByPricing.entries()].map(async ([pricingPK, usageLogs]) => {
+        let summary = {
+            subscriber: user,
+            app: app,
+            numberOfLogs: usageLogs.length,
+            volume: 0,
+            pricing: pricingPK,
+        };
+        for (let usage of usageLogs) {
+            summary.volume += usage.volume;
+        }
+        let usageSummary = await context.batched.UsageSummary.create(summary);
+        let promises: Promise<Item>[] = [];
+        for (let usage of usageLogs) {
+            usage.usageSummary = UsageSummaryPK.stringify(usageSummary);
+            usage.status = "collected";
+            usage.collectedAt = usageSummary.createdAt;
+            promises.push(usage.save());
+        }
+        await Promise.all(promises);
+        return usageSummary;
+    });
+    let affectedUsageSummaries = await Promise.all(summaryPromises);
+    return { affectedUsageSummaries };
+}
