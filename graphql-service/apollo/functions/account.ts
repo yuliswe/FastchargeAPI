@@ -1,9 +1,13 @@
 import { Item } from "dynamoose/dist/Item";
 import { RequestContext } from "../RequestContext";
-import { AccountActivity, AccountHistory } from "../dynamoose/models";
+import { AccountActivity, AccountHistory, disableDBLogging, enableDBLogging } from "../dynamoose/models";
 import { AccountHistoryPK } from "../pks/AccountHistoryPK";
 import Decimal from "decimal.js-light";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
+import { Chalk } from "chalk";
+import { AlreadyExists } from "../errors";
+
+const chalk = new Chalk({ level: 3 });
 
 /**
  * Collect any account activities that are in the pending status, and have the
@@ -17,6 +21,9 @@ import { AccountActivityPK } from "../pks/AccountActivityPK";
  * you are processing billing for usage logs, you don't need to wait for all
  * usage logs to be written (if we miss some we'll collect them later). Sometime
  * it is important to wait for all writes, for example, when testing.
+ * @idempotent Yes
+ * @workerSafe No - When called from multiple processes, it can cause the same
+ * AccountActivity to be processed multiple times.
  */
 export async function settleAccountActivities(
     context: RequestContext,
@@ -29,8 +36,18 @@ export async function settleAccountActivities(
     previousAccountHistory: AccountHistory | null;
     affectedAccountActivities: AccountActivity[];
 } | null> {
-    let closingTime = Date.now();
+    if (!context.isSQSMessage) {
+        if (!process.env.UNSAFE_BILLING) {
+            console.error(
+                chalk.red(
+                    `settleAccountActivities() must be called from an SQS message. If you are not running in production, you can set the UNSAFE_BILLING=1 environment variable to bypass this check.`
+                )
+            );
+            throw new Error("settleAccountActivities() must be called from SQS");
+        }
+    }
 
+    let closingTime = Date.now();
     let activities = await context.batched.AccountActivity.many(
         {
             user: accountUser,
@@ -41,7 +58,6 @@ export async function settleAccountActivities(
             consistent: options?.consistentReadAccountActivities,
         }
     );
-
     if (activities.length === 0) {
         return null;
     }
@@ -57,14 +73,32 @@ export async function settleAccountActivities(
         }
     );
 
-    let accountHistory = await context.batched.AccountHistory.create({
-        user: accountUser,
-        startingBalance: previous == null ? "0" : previous.closingBalance,
-        closingBalance: previous == null ? "0" : previous.closingBalance,
-        startingTime: previous == null ? 0 : previous.closingTime,
-        closingTime,
-        sequentialID: previous == null ? 0 : previous.sequentialID + 1,
-    });
+    let accountHistory: AccountHistory | undefined = undefined;
+    try {
+        accountHistory = await context.batched.AccountHistory.create({
+            user: accountUser,
+            startingBalance: previous == null ? "0" : previous.closingBalance,
+            closingBalance: previous == null ? "0" : previous.closingBalance,
+            startingTime: previous == null ? 0 : previous.closingTime,
+            closingTime,
+            sequentialID: previous == null ? 0 : previous.sequentialID + 1,
+        });
+    } catch (e) {
+        if (e instanceof AlreadyExists) {
+            if (process.env.UNSAFE_BILLING == "1") {
+                return null;
+            }
+            throw new Error(
+                chalk.red(
+                    "AccountHistory already exists. If you are running in production, this is a bug. " +
+                        "settleAccountActivities() might be called from multiple workers, while it is not multi-workers safe. " +
+                        "If you are running in development, this is likely to be ok. " +
+                        "You can set the UNSAFE_BILLING=1 environment variable to bypass this check."
+                )
+            );
+        }
+        throw e;
+    }
 
     let balance = new Decimal(accountHistory.startingBalance);
 
@@ -139,9 +173,6 @@ export async function getUserBalance(
     }
 }
 
-export function getAccountActivityByPK(
-    context: RequestContext,
-    pk: string
-): Promise<AccountActivity> {
+export function getAccountActivityByPK(context: RequestContext, pk: string): Promise<AccountActivity> {
     return context.batched.AccountActivity.get(AccountActivityPK.parse(pk));
 }

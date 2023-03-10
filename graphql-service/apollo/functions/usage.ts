@@ -57,44 +57,44 @@ export async function collectUsageLogs(
     return usageSummary;
 }
 
-/**
- * Returns true if maxQueueSize or maxSecondsInQueue has been exceeded.
- * @param user
- * @param context
- * @param maxQueueSize
- * @param maxSecondsInQueue
- * @returns
- */
-export async function shouldCollectUsageLogs(
-    user: string,
-    context: RequestContext,
-    maxQueueSize = 1000,
-    maxSecondsInQueue: number = 60 * 60 * 24
-): Promise<boolean> {
-    let lastUsageLog = await context.batched.UsageLog.many(
-        {
-            subscriber: user,
-        },
-        {
-            sort: "descending",
-            limit: 1,
-        }
-    );
-    if (lastUsageLog.length === 0) {
-        return false;
-    }
-    if (lastUsageLog[0].queuePosition > maxQueueSize) {
-        return true;
-    }
-    let firstUsageLog = await context.batched.UsageLog.many(
-        {
-            subscriber: user,
-            createdAt: { lt: Date.now() - 1000 * maxSecondsInQueue },
-        },
-        { limit: 1, sort: "descending" }
-    );
-    if (firstUsageLog.length === 0) {
-        return false;
-    }
-    return firstUsageLog[0].usageSummary == null;
-}
+// /**
+//  * Returns true if maxQueueSize or maxSecondsInQueue has been exceeded.
+//  * @param user
+//  * @param context
+//  * @param maxQueueSize
+//  * @param maxSecondsInQueue
+//  * @returns
+//  */
+// export async function shouldCollectUsageLogs(
+//     user: string,
+//     context: RequestContext,
+//     maxQueueSize = 1000,
+//     maxSecondsInQueue: number = 60 * 60 * 24
+// ): Promise<boolean> {
+//     let lastUsageLog = await context.batched.UsageLog.many(
+//         {
+//             subscriber: user,
+//         },
+//         {
+//             sort: "descending",
+//             limit: 1,
+//         }
+//     );
+//     if (lastUsageLog.length === 0) {
+//         return false;
+//     }
+//     if (lastUsageLog[0].queuePosition > maxQueueSize) {
+//         return true;
+//     }
+//     let firstUsageLog = await context.batched.UsageLog.many(
+//         {
+//             subscriber: user,
+//             createdAt: { lt: Date.now() - 1000 * maxSecondsInQueue },
+//         },
+//         { limit: 1, sort: "descending" }
+//     );
+//     if (firstUsageLog.length === 0) {
+//         return false;
+//     }
+//     return firstUsageLog[0].usageSummary == null;
+// }

@@ -10,6 +10,7 @@ import { AccountActivityPK } from "../pks/AccountActivityPK";
 let context: RequestContext = {
     batched: createDefaultContextBatched(),
     isServiceRequest: false,
+    isSQSMessage: true,
 };
 // jest.retryTimes(2);
 describe("Payment API", () => {
@@ -33,8 +34,7 @@ describe("Payment API", () => {
 
     let stripePaymentAccept: StripePaymentAccept;
     test("Create a StripePayment", async () => {
-        stripePaymentAccept = (await stripePaymentAcceptResolvers.Mutation!
-            .createStripePaymentAccept!(
+        stripePaymentAccept = (await stripePaymentAcceptResolvers.Mutation!.createStripePaymentAccept!(
             {},
             {
                 user: user.email,
@@ -52,24 +52,19 @@ describe("Payment API", () => {
     });
 
     test("Settle the payment", async () => {
-        let oldBalance = new Decimal(
-            await getUserBalance(context, user!.email)
-        );
-        stripePaymentAccept =
-            (await stripePaymentAcceptResolvers.StripePaymentAccept.settlePayment(
-                stripePaymentAccept,
-                { stripeSessionObject: "{}" },
-                context,
-                {} as any
-            ))!;
+        let oldBalance = new Decimal(await getUserBalance(context, user!.email));
+        stripePaymentAccept = (await stripePaymentAcceptResolvers.StripePaymentAccept.settlePayment(
+            stripePaymentAccept,
+            { stripeSessionObject: "{}" },
+            context,
+            {} as any
+        ))!;
         expect(stripePaymentAccept).not.toBe(null);
         expect(stripePaymentAccept.accountActivity).not.toBe(null);
         expect(stripePaymentAccept.accountActivity.length).not.toBe(0);
 
         context.batched.AccountHistory.clearCache();
-        let newBalance = new Decimal(
-            await getUserBalance(context, user!.email)
-        );
+        let newBalance = new Decimal(await getUserBalance(context, user!.email));
         expect(newBalance).toEqual(oldBalance.plus(1));
 
         // Examine the account activity

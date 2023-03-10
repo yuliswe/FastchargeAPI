@@ -10,6 +10,7 @@ import { appResolvers } from "../resolvers/app";
 let context: RequestContext = {
     batched: createDefaultContextBatched(),
     isServiceRequest: false,
+    isSQSMessage: false,
 };
 // jest.retryTimes(2);
 describe("APP API", () => {

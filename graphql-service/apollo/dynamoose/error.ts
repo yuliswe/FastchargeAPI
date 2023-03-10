@@ -2,9 +2,13 @@ import DynamooseError from "dynamoose-utils/dist/Error";
 import { GraphQLFormattedError } from "graphql";
 import { unwrapResolverError } from "@apollo/server/errors";
 import { AlreadyExists, NotFound } from "../errors";
+import { Chalk } from "chalk";
+
+const chalk = new Chalk({ level: 3 });
 
 export function handleError(formattedError: GraphQLFormattedError, error: any): GraphQLFormattedError {
     let originalError = unwrapResolverError(error);
+    console.error(chalk.red(JSON.stringify(originalError)));
     console.error(originalError);
     for (let errtype of [DynamooseError.TypeMismatch, DynamooseError.ValidationError]) {
         if (originalError instanceof errtype) {

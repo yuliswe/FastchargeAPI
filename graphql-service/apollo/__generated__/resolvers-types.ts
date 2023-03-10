@@ -40,17 +40,24 @@ export type GQLAccountActivity = {
     billedApp?: Maybe<GQLApp>;
     createdAt: Scalars["Timestamp"];
     description: Scalars["String"];
+    pk: Scalars["ID"];
     reason: GQLAccountActivityReason;
     settleAt: Scalars["Timestamp"];
     status?: Maybe<GQLAccountActivityStatus>;
     stripeTransfer?: Maybe<GQLStripeTransfer>;
     type: GQLAccountActivityType;
+    usageSummary?: Maybe<GQLUsageSummary>;
 };
+
+export enum GQLAccountActivityIndex {
+    IndexByStatusSettleAtOnlyPk = "indexByStatus_settleAt__onlyPK",
+}
 
 export enum GQLAccountActivityReason {
     ApiMinMonthlyCharge = "api_min_monthly_charge",
     ApiMinMonthlyChargeUpgrade = "api_min_monthly_charge_upgrade",
     ApiPerRequestCharge = "api_per_request_charge",
+    FastchargeapiPerRequestServiceFee = "fastchargeapi_per_request_service_fee",
     Payout = "payout",
     PayoutFee = "payout_fee",
     Topup = "topup",
@@ -156,7 +163,7 @@ export type GQLMutation = {
     createSubscription: GQLSubscribe;
     createUsageLog: GQLUsageLog;
     createUser: GQLUser;
-    triggerBilling?: Maybe<GQLUsageSummary>;
+    triggerBilling: Array<GQLUsageSummary>;
 };
 
 export type GQLMutationCreateAppArgs = {
@@ -246,6 +253,7 @@ export type GQLPricing = {
 
 export type GQLQuery = {
     __typename?: "Query";
+    accountActivities: Array<GQLAccountActivity>;
     app: GQLApp;
     appFullTextSearch: Array<GQLApp>;
     apps?: Maybe<Array<Maybe<GQLApp>>>;
@@ -256,7 +264,13 @@ export type GQLQuery = {
     stripePaymentAccept: GQLStripePaymentAccept;
     subscription: GQLSubscribe;
     user: GQLUser;
-    users?: Maybe<Array<Maybe<GQLUser>>>;
+    users: Array<GQLUser>;
+};
+
+export type GQLQueryAccountActivitiesArgs = {
+    settleAtRange?: InputMaybe<GQLDateRangeInput>;
+    status?: InputMaybe<GQLAccountActivityStatus>;
+    using?: InputMaybe<GQLAccountActivityIndex>;
 };
 
 export type GQLQueryAppArgs = {
@@ -295,6 +309,10 @@ export type GQLQuerySubscriptionArgs = {
 
 export type GQLQueryUserArgs = {
     email?: InputMaybe<Scalars["Email"]>;
+};
+
+export type GQLQueryUsersArgs = {
+    pk?: InputMaybe<Array<Scalars["ID"]>>;
 };
 
 export type GQLSecret = {
@@ -400,6 +418,7 @@ export type GQLUser = {
     balance: Scalars["String"];
     createdAt: Scalars["Timestamp"];
     email: Scalars["Email"];
+    settleAccountActivities: Array<GQLAccountActivity>;
     stripeConnectAccountId?: Maybe<Scalars["String"]>;
     stripeCustomerId?: Maybe<Scalars["String"]>;
     subscriptions: Array<GQLSubscribe>;
@@ -509,6 +528,7 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 /** Mapping between all available schema types and the resolvers types */
 export type GQLResolversTypes = ResolversObject<{
     AccountActivity: ResolverTypeWrapper<AccountActivityData>;
+    AccountActivityIndex: GQLAccountActivityIndex;
     AccountActivityReason: GQLAccountActivityReason;
     AccountActivityStatus: GQLAccountActivityStatus;
     AccountActivityType: GQLAccountActivityType;
@@ -576,11 +596,13 @@ export type GQLAccountActivityResolvers<
     billedApp?: Resolver<Maybe<GQLResolversTypes["App"]>, ParentType, ContextType>;
     createdAt?: Resolver<GQLResolversTypes["Timestamp"], ParentType, ContextType>;
     description?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
+    pk?: Resolver<GQLResolversTypes["ID"], ParentType, ContextType>;
     reason?: Resolver<GQLResolversTypes["AccountActivityReason"], ParentType, ContextType>;
     settleAt?: Resolver<GQLResolversTypes["Timestamp"], ParentType, ContextType>;
     status?: Resolver<Maybe<GQLResolversTypes["AccountActivityStatus"]>, ParentType, ContextType>;
     stripeTransfer?: Resolver<Maybe<GQLResolversTypes["StripeTransfer"]>, ParentType, ContextType>;
     type?: Resolver<GQLResolversTypes["AccountActivityType"], ParentType, ContextType>;
+    usageSummary?: Resolver<Maybe<GQLResolversTypes["UsageSummary"]>, ParentType, ContextType>;
     __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -723,7 +745,7 @@ export type GQLMutationResolvers<
         RequireFields<GQLMutationCreateUserArgs, "email">
     >;
     triggerBilling?: Resolver<
-        Maybe<GQLResolversTypes["UsageSummary"]>,
+        Array<GQLResolversTypes["UsageSummary"]>,
         ParentType,
         ContextType,
         RequireFields<GQLMutationTriggerBillingArgs, "app" | "user">
@@ -754,6 +776,12 @@ export type GQLQueryResolvers<
     ContextType = RequestContext,
     ParentType extends GQLResolversParentTypes["Query"] = GQLResolversParentTypes["Query"]
 > = ResolversObject<{
+    accountActivities?: Resolver<
+        Array<GQLResolversTypes["AccountActivity"]>,
+        ParentType,
+        ContextType,
+        Partial<GQLQueryAccountActivitiesArgs>
+    >;
     app?: Resolver<GQLResolversTypes["App"], ParentType, ContextType, Partial<GQLQueryAppArgs>>;
     appFullTextSearch?: Resolver<
         Array<GQLResolversTypes["App"]>,
@@ -779,7 +807,7 @@ export type GQLQueryResolvers<
     >;
     subscription?: Resolver<GQLResolversTypes["Subscribe"], ParentType, ContextType, Partial<GQLQuerySubscriptionArgs>>;
     user?: Resolver<GQLResolversTypes["User"], ParentType, ContextType, Partial<GQLQueryUserArgs>>;
-    users?: Resolver<Maybe<Array<Maybe<GQLResolversTypes["User"]>>>, ParentType, ContextType>;
+    users?: Resolver<Array<GQLResolversTypes["User"]>, ParentType, ContextType, Partial<GQLQueryUsersArgs>>;
 }>;
 
 export type GQLSecretResolvers<
@@ -911,6 +939,7 @@ export type GQLUserResolvers<
     balance?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
     createdAt?: Resolver<GQLResolversTypes["Timestamp"], ParentType, ContextType>;
     email?: Resolver<GQLResolversTypes["Email"], ParentType, ContextType>;
+    settleAccountActivities?: Resolver<Array<GQLResolversTypes["AccountActivity"]>, ParentType, ContextType>;
     stripeConnectAccountId?: Resolver<Maybe<GQLResolversTypes["String"]>, ParentType, ContextType>;
     stripeCustomerId?: Resolver<Maybe<GQLResolversTypes["String"]>, ParentType, ContextType>;
     subscriptions?: Resolver<Array<GQLResolversTypes["Subscribe"]>, ParentType, ContextType>;

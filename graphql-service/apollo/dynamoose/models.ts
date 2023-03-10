@@ -19,13 +19,6 @@ if (process.env.TEST == "1") {
     console.warn("Using remote database us-east-1");
 }
 
-export async function withDBLogging(context: () => Promise<void>) {
-    let logger = await dynamoose.logger();
-    logger.providers.set(console);
-    await context();
-    logger.providers.set(null);
-}
-
 export async function enableDBLogging() {
     let logger = await dynamoose.logger();
     logger.providers.set(console);
@@ -61,7 +54,7 @@ export enum GatewayMode {
 }
 
 class ValidationError {
-    constructor(public field: string, public message: string) {}
+    constructor(public field: string, public message: string) { }
     toString() {
         return `Validation faild on field "${this.field}": "${this.message}".`;
     }
@@ -268,20 +261,28 @@ const AccountActivityTableSchema = new dynamoose.Schema(
         reason: {
             type: String,
             required: true,
-            validate: (str: string) =>
-                [
-                    "payout",
-                    "payout_fee",
-                    "topup",
-                    "api_per_request_charge",
-                    "api_min_monthly_charge",
-                    "api_min_monthly_charge_upgrade",
-                    "refund_api_min_monthly_charge",
-                ].includes(str),
+            enum: [
+                "payout",
+                "payout_fee",
+                "topup",
+                "api_per_request_charge",
+                "api_min_monthly_charge",
+                "api_min_monthly_charge_upgrade",
+                "fastchargeapi_per_request_service_fee",
+                "refund_api_min_monthly_charge",
+            ],
         },
         status: {
             type: String,
+            index: {
+                name: "indexByStatus_settleAt__onlyPK",
+                rangeKey: "settleAt",
+                type: "global",
+                // project: ["settleAt", "status"],
+                project: true,
+            },
             enum: ["settled", "pending"],
+            required: true,
             default: "pending",
         },
         settleAt: { type: Number, required: true },
@@ -561,6 +562,7 @@ export class AccountActivity extends Item {
         | "api_per_request_charge"
         | "api_min_monthly_charge"
         | "api_min_monthly_charge_upgrade"
+        | "fastchargeapi_per_request_service_fee"
         | "refund_api_min_monthly_charge";
     status: "settled" | "pending";
     settleAt: number; // Unix timestamp when the activity is settled. Can be in the future.

@@ -8,7 +8,7 @@ type Query {
     app(name: String): App!
     appFullTextSearch(query: String!): [App!]!
     ### User API
-    users: [User] # Get all users in the system
+    users(pk: [ID!]): [User!]! # Get all users in the system
     user(email: Email): User!
     ### Endpoint API
     endpoint(pk: ID, app: String, path: String): Endpoint!
@@ -16,6 +16,11 @@ type Query {
     ### Subscriptions API
     subscription(pk: ID, subscriber: Email, app: String): Subscribe!
 
+    accountActivities(
+        status: AccountActivityStatus
+        settleAtRange: DateRangeInput
+        using: AccountActivityIndex
+    ): [AccountActivity!]!
     stripePaymentAccept(stripeSessionId: String!): StripePaymentAccept!
 
     secret(key: String!): Secret!
@@ -86,7 +91,7 @@ type Mutation {
         stripeTransferObject: String
     ): StripeTransfer!
 
-    triggerBilling(user: ID!, app: ID!): UsageSummary
+    triggerBilling(user: ID!, app: ID!): [UsageSummary!]!
 
     createSecret(key: String!, value: String!, description: String, expireAt: Timestamp): Secret!
 }
@@ -130,6 +135,10 @@ type User {
         limit: Int = 1000 # Support maximum of 1000
         dateRange: DateRangeInput
     ): [AccountHistory!]!
+
+    # Trigger a workflow where it goes through all user's activities, and settle
+    # those that are due. This should only be called from the billing queue.
+    settleAccountActivities: [AccountActivity!]!
 }
 
 input DateRangeInput {
@@ -278,12 +287,17 @@ enum AccountActivityReason {
     api_per_request_charge
     api_min_monthly_charge
     api_min_monthly_charge_upgrade
+    fastchargeapi_per_request_service_fee
 }
 enum AccountActivityStatus {
     pending
     settled
 }
+enum AccountActivityIndex {
+    indexByStatus_settleAt__onlyPK
+}
 type AccountActivity {
+    pk: ID!
     createdAt: Timestamp!
     type: AccountActivityType!
     amount: String!
@@ -293,6 +307,7 @@ type AccountActivity {
     status: AccountActivityStatus
     settleAt: Timestamp!
     billedApp: App
+    usageSummary: UsageSummary
 }
 
 type AccountHistory {

@@ -31,6 +31,7 @@ let { url } = await startStandaloneServer<RequestContext>(server, {
             currentUser: email,
             batched,
             isServiceRequest: false,
+            isSQSMessage: false,
         });
     },
 });

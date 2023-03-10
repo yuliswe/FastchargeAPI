@@ -1,13 +1,17 @@
+import { RequestContext } from "../RequestContext";
 import {
     GQLResolvers,
     GQLAccountActivityResolvers,
     GQLAccountActivityType,
     GQLAccountActivityReason,
     GQLAccountActivityStatus,
+    GQLQueryAccountActivitiesArgs,
 } from "../__generated__/resolvers-types";
 import { AccountActivity, AccountActivityModel } from "../dynamoose/models";
 import { AppPK } from "../functions/AppPK";
+import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { StripeTransferPK } from "../pks/StripeTransferPK";
+import { UsageSummaryPK } from "../pks/UsageSummaryPK";
 
 /**
  * Remember to add your resolver to the resolvers object in server.ts.
@@ -21,6 +25,7 @@ export const accountActivityResolvers: GQLResolvers & {
 } = {
     AccountActivity: {
         __isTypeOf: (parent) => parent instanceof AccountActivityModel,
+        pk: (parent) => AccountActivityPK.stringify(parent),
         createdAt: (parent) => parent.createdAt,
         amount: (parent) => parent.amount,
         type: (parent) => parent.type as GQLAccountActivityType,
@@ -30,23 +35,31 @@ export const accountActivityResolvers: GQLResolvers & {
         settleAt: (parent) => parent.settleAt,
         async billedApp(parent: AccountActivity, args: {}, context, info) {
             if (parent.billedApp) {
-                return await context.batched.App.get(
-                    AppPK.parse(parent.billedApp)
-                );
+                return await context.batched.App.get(AppPK.parse(parent.billedApp));
+            } else {
+                return null;
+            }
+        },
+        async usageSummary(parent, args, context, info) {
+            if (parent.usageSummary) {
+                return await context.batched.UsageSummary.get(UsageSummaryPK.parse(parent.usageSummary));
             } else {
                 return null;
             }
         },
         async stripeTransfer(parent, args, context, info) {
             if (parent.stripeTransfer) {
-                return await context.batched.StripeTransfer.get(
-                    StripeTransferPK.parse(parent.stripeTransfer)
-                );
+                return await context.batched.StripeTransfer.get(StripeTransferPK.parse(parent.stripeTransfer));
             } else {
                 return null;
             }
         },
     },
-    Query: {},
+    Query: {
+        async accountActivities(parent: {}, { status, using }: GQLQueryAccountActivitiesArgs, context: RequestContext) {
+            let activities = await context.batched.AccountActivity.many({ status }, { using });
+            return activities;
+        },
+    },
     Mutation: {},
 };

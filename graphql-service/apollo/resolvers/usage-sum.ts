@@ -1,13 +1,7 @@
 import { Chalk } from "chalk";
-import {
-    GQLResolvers,
-    GQLUsageSummaryResolvers,
-} from "../__generated__/resolvers-types";
+import { GQLResolvers, GQLUsageSummaryResolvers } from "../__generated__/resolvers-types";
 import { UsageSummary, UsageSummaryModel } from "../dynamoose/models";
-import {
-    generateAccountActivities,
-    triggerBilling,
-} from "../functions/billing";
+import { generateAccountActivities, triggerBilling } from "../functions/billing";
 import { findUserSubscriptionPricing } from "../functions/subscription";
 import { collectUsageLogs } from "../functions/usage";
 import { getUserByPK } from "../functions/user";
@@ -38,11 +32,7 @@ export const usageSummaryResolvers: GQLResolvers & {
         app(parent: UsageSummary, args: {}, context: RequestContext) {
             return getAppByPK(context, parent.app);
         },
-        billingAccountActivity(
-            parent: UsageSummary,
-            args: {},
-            context: RequestContext
-        ) {
+        billingAccountActivity(parent: UsageSummary, args: {}, context: RequestContext) {
             return parent.billingAccountActivity
                 ? getAccountActivityByPK(context, parent.billingAccountActivity)
                 : null;
@@ -52,11 +42,7 @@ export const usageSummaryResolvers: GQLResolvers & {
     Mutation: {
         async triggerBilling(parent, { user, app }, context, info) {
             let result = await triggerBilling(context, { user, app });
-            if (result) {
-                return result.usageSummary;
-            } else {
-                return null;
-            }
+            return result.affectedUsageSummaries;
         },
     },
 };

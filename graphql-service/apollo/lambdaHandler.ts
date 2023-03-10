@@ -139,6 +139,7 @@ let handle = startServerAndCreateLambdaHandler(
                 service: serviceName,
                 isServiceRequest,
                 batched: createDefaultContextBatched(),
+                isSQSMessage: false,
             });
         },
         middleware: [corsMiddleware],

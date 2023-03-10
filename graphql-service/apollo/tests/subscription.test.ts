@@ -11,9 +11,11 @@ import { PricingPK } from "../pks/PricingPK";
 import { settleAccountActivities } from "../functions/account";
 import { UserPK } from "../pks/UserPK";
 import { SubscriptionPK } from "../pks/SubscriptionPK";
+import Decimal from "decimal.js-light";
 
 let context: RequestContext = {
     batched: createDefaultContextBatched(),
+    isSQSMessage: true,
     isServiceRequest: false,
 };
 // jest.retryTimes(2);
@@ -140,24 +142,28 @@ describe("Test when making a request the monthly subscription fee is charged.", 
         expect(result.createdAccountActivities.subscriberMonthlyFee).not.toBeNull();
         expect(result.createdAccountActivities.appAuthorRequestFee).not.toBeNull();
         expect(result.createdAccountActivities.subscriberRequestFee).not.toBeNull();
+        expect(result.createdAccountActivities.appAuthorServiceFee).not.toBeNull();
         expect(result.createdAccountActivities.appAuthorMonthlyFee?.amount).toEqual("1");
         expect(result.createdAccountActivities.appAuthorMonthlyFee?.type).toEqual("debit");
         expect(result.createdAccountActivities.subscriberMonthlyFee?.amount).toEqual("1");
         expect(result.createdAccountActivities.subscriberMonthlyFee?.type).toEqual("credit");
+        expect(result.createdAccountActivities.appAuthorServiceFee?.type).toEqual("credit");
 
         let now = Date.now();
         expect(result.createdAccountActivities.subscriberMonthlyFee?.settleAt).toBeLessThan(now);
         expect(result.createdAccountActivities.subscriberRequestFee?.settleAt).toBeLessThan(now);
         expect(result.createdAccountActivities.appAuthorRequestFee?.settleAt).toBeLessThan(now);
+        expect(result.createdAccountActivities.appAuthorServiceFee?.settleAt).toBeLessThan(now);
         expect(result.createdAccountActivities.appAuthorMonthlyFee?.settleAt).toBeGreaterThan(now);
     });
 
     /**
-     * This step should create 1 AccountHistory. It should case 3 out of 4
+     * This step should create 1 AccountHistory. It should cause these 4 of 5
      * AccountActivities that were created in the previous step to be settled:
      *  1. Monthly fee for the subscriber as credit
      *  2. Request fee for the app author
      *  3. Request fee for the subscriber
+     *  4. Fastcharge service fee for the app author
      *
      * The AccountActivity not settled is the Monthly fee for the app author as
      * income, and we should check that the settleAt property of this
@@ -166,15 +172,11 @@ describe("Test when making a request the monthly subscription fee is charged.", 
     test("Create AccountHistory", async () => {
         let result = await settleAccountActivities(context, "testuser1.fastchargeapi@gmail.com");
         expect(result).not.toBeNull();
-        let {
-            newAccountHistory: accountHistory,
-            affectedAccountActivities: accountActivities,
-            previousAccountHistory,
-        } = result!;
-        expect(accountActivities.length).toEqual(3);
-        expect(accountHistory.startingTime).toEqual(previousAccountHistory!.closingTime);
-        expect(Number.parseFloat(accountHistory.closingBalance)).toEqual(
-            Number.parseFloat(previousAccountHistory!.closingBalance) - 1
+        let { newAccountHistory, affectedAccountActivities, previousAccountHistory } = result!;
+        expect(affectedAccountActivities.length).toEqual(4);
+        expect(newAccountHistory.startingTime).toEqual(previousAccountHistory!.closingTime);
+        expect(new Decimal(newAccountHistory.closingBalance).toString()).toEqual(
+            new Decimal(previousAccountHistory!.closingBalance).sub("1.0003").toString()
         );
     });
 });

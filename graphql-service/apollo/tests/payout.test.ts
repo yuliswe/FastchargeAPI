@@ -12,6 +12,7 @@ import { GraphQLResolveInfo } from "graphql";
 let context: RequestContext = {
     batched: createDefaultContextBatched(),
     isServiceRequest: false,
+    isSQSMessage: true,
 };
 // jest.retryTimes(2);
 describe("Payout API", () => {
@@ -34,8 +35,7 @@ describe("Payout API", () => {
     });
 
     test("Add monty to the account", async () => {
-        let stripePaymentAccept = (await stripePaymentAcceptResolvers.Mutation!
-            .createStripePaymentAccept!(
+        let stripePaymentAccept = (await stripePaymentAcceptResolvers.Mutation!.createStripePaymentAccept!(
             {},
             {
                 user: user.email,
@@ -59,11 +59,8 @@ describe("Payout API", () => {
     });
 
     test("Withdraw the money", async () => {
-        let balanceBefore = new Decimal(
-            await getUserBalance(context, user.email)
-        );
-        let transfer = await stripeTransferResolvers.Mutation
-            ?.createStripeTransfer!(
+        let balanceBefore = new Decimal(await getUserBalance(context, user.email));
+        let transfer = await stripeTransferResolvers.Mutation?.createStripeTransfer!(
             {},
             {
                 receiver: user.email,
@@ -75,13 +72,12 @@ describe("Payout API", () => {
             {} as GraphQLResolveInfo
         );
 
-        transfer =
-            await stripeTransferResolvers.StripeTransfer.settleStripeTransfer(
-                transfer!,
-                {},
-                context,
-                {} as GraphQLResolveInfo
-            );
+        transfer = await stripeTransferResolvers.StripeTransfer.settleStripeTransfer(
+            transfer!,
+            {},
+            context,
+            {} as GraphQLResolveInfo
+        );
 
         expect(transfer.accountActivity).not.toBe(null);
         expect(transfer.feeActivity).not.toBe(null);
@@ -94,9 +90,7 @@ describe("Payout API", () => {
         expect(accountActivity.amount).toEqual("75");
         expect(accountActivity.status).toEqual("settled");
 
-        let feeActivity = await context.batched.AccountActivity.get(
-            AccountActivityPK.parse(transfer.feeActivity)
-        );
+        let feeActivity = await context.batched.AccountActivity.get(AccountActivityPK.parse(transfer.feeActivity));
         expect(feeActivity.type).toEqual("credit");
         expect(feeActivity.amount).toEqual("25");
         expect(feeActivity.status).toEqual("settled");
@@ -109,8 +103,6 @@ describe("Payout API", () => {
             })
         );
 
-        expect(balanceAfter.toString()).toEqual(
-            balanceBefore.minus(100).toString()
-        );
+        expect(balanceAfter.toString()).toEqual(balanceBefore.minus(100).toString());
     });
 });

@@ -23,6 +23,7 @@ export interface RequestContext extends BaseContext {
     service?: RequestService;
     isServiceRequest: boolean;
     batched: ReturnType<typeof createDefaultContextBatched>;
+    isSQSMessage: boolean;
 }
 
 // Add more models here when new models are created

@@ -55,6 +55,7 @@ let handle = startServerAndCreateLambdaHandler<RequestHandler<SQSRecord, void>, 
                 currentUser: userEmail,
                 service: serviceName,
                 isServiceRequest,
+                isSQSMessage: true,
                 batched: createDefaultContextBatched(),
             });
         },

@@ -4,21 +4,17 @@ import { usageLogResolvers } from "../resolvers/usage";
 import { collectUsageLogs as collectUsageSummary } from "../functions/usage";
 import { AlreadyExists } from "../errors";
 import { generateAccountActivities } from "../functions/billing";
-import {
-    Pricing,
-    PricingModel,
-    UsageLogModel,
-    UsageSummaryModel,
-    User,
-} from "../dynamoose/models";
+import { Pricing, PricingModel, UsageLogModel, UsageSummaryModel, User } from "../dynamoose/models";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
 import { UsageLogPK } from "../pks/UsageLogPK";
 import { PricingPK } from "../pks/PricingPK";
 import { settleAccountActivities } from "../functions/account";
+import Decimal from "decimal.js-light";
 
 let context: RequestContext = {
     batched: createDefaultContextBatched(),
     isServiceRequest: false,
+    isSQSMessage: true,
 };
 // jest.retryTimes(2);
 describe("Usage API", () => {
@@ -108,16 +104,12 @@ describe("Usage API", () => {
         expect(usageSummary).not.toBeNull();
         expect(usageSummary!.queueSize).toEqual(3);
         expect(usageLog.status).toEqual("collected");
-        expect(usageLog.usageSummary).toEqual(
-            UsageSummaryPK.stringify(usageSummary!)
-        );
+        expect(usageLog.usageSummary).toEqual(UsageSummaryPK.stringify(usageSummary!));
         usageSummaryPK = UsageSummaryPK.stringify(usageSummary!);
     });
 
     test("Create AccountActivity", async () => {
-        let usageSummary = await UsageSummaryModel.get(
-            UsageSummaryPK.parse(usageSummaryPK)
-        );
+        let usageSummary = await UsageSummaryModel.get(UsageSummaryPK.parse(usageSummaryPK));
         let pricing = await PricingModel.get(PricingPK.parse(pricingPK));
         expect(pricing.chargePerRequest).toEqual("0.001"); // made 3 UsageLogs, so the total amount is 0.003
         let result = await generateAccountActivities(context, {
@@ -127,37 +119,22 @@ describe("Usage API", () => {
             appAuthor: "testuser1.fastchargeapi@gmail.com",
             disableMonthlyCharge: true,
         });
-        expect(
-            result.createdAccountActivities.appAuthorRequestFee.amount
-        ).toEqual("0.003");
-        expect(
-            result.createdAccountActivities.appAuthorRequestFee.type
-        ).toEqual("debit");
-        expect(
-            result.createdAccountActivities.subscriberRequestFee.amount
-        ).toEqual("0.003");
-        expect(
-            result.createdAccountActivities.subscriberRequestFee.type
-        ).toEqual("credit");
+        expect(result.createdAccountActivities.appAuthorRequestFee.amount).toEqual("0.003");
+        expect(result.createdAccountActivities.appAuthorRequestFee.type).toEqual("debit");
+        expect(result.createdAccountActivities.subscriberRequestFee.amount).toEqual("0.003");
+        expect(result.createdAccountActivities.subscriberRequestFee.type).toEqual("credit");
+        expect(result.createdAccountActivities.appAuthorServiceFee.amount).toEqual("0.0003");
+        expect(result.createdAccountActivities.appAuthorServiceFee.type).toEqual("credit");
     });
 
     test("Create AccountHistory for API caller", async () => {
-        let result = await settleAccountActivities(
-            context,
-            "testuser1.fastchargeapi@gmail.com"
-        );
+        let result = await settleAccountActivities(context, "testuser1.fastchargeapi@gmail.com");
         expect(result).not.toBeNull();
-        let {
-            newAccountHistory: accountHistory,
-            affectedAccountActivities: accountActivities,
-            previousAccountHistory,
-        } = result!;
-        expect(accountActivities.length).toEqual(2);
-        expect(accountHistory.startingTime).toEqual(
-            previousAccountHistory!.closingTime
-        );
-        expect(Number.parseFloat(accountHistory.closingBalance)).toEqual(
-            Number.parseFloat(previousAccountHistory!.closingBalance)
+        let { newAccountHistory, affectedAccountActivities, previousAccountHistory } = result!;
+        expect(affectedAccountActivities.length).toEqual(3);
+        expect(newAccountHistory.startingTime).toEqual(previousAccountHistory!.closingTime);
+        expect(new Decimal(newAccountHistory.closingBalance).toString()).toEqual(
+            new Decimal(previousAccountHistory!.closingBalance).sub("0.0003").toString()
         );
     });
 });

@@ -9,9 +9,11 @@ build-CopyDependencies:
 	mkdir -p "$(BUILD_DIR)/ApolloServer"
 	mkdir -p "$(BUILD_DIR)/ApolloServerIAM"
 	mkdir -p "$(BUILD_DIR)/SQSApolloServer"
+	mkdir -p "$(BUILD_DIR)/SettleAccountActivitiesCronJob"
 
 	cp -r ./schema "$(BUILD_DIR)/ApolloServer/schema"
 	cp -r ./schema "$(BUILD_DIR)/ApolloServerIAM/schema"
 	cp -r ./schema "$(BUILD_DIR)/SQSApolloServer/schema"
+	cp -r ./schema "$(BUILD_DIR)/SettleAccountActivitiesCronJob/schema"
 
 	cp rtwrapper "$(BUILD_DIR)/ApolloServer/rtwrapper"

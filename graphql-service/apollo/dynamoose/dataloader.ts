@@ -190,7 +190,8 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
             } else {
                 throw new Error("Invalid query type: " + typeof bk.query + " " + bk.query.toString());
             }
-            if (bk.options) {
+            query = query.using({ auto: false })
+            if (bk.options != undefined) {
                 query = applyBatchOptionsToQuery(query, bk.options);
             }
             return query.exec();
@@ -367,8 +368,17 @@ export class Batched<I extends Item> {
      * key, or an index. If anything else is passed in, it will be passed to
      * DynamoDB and DynamoDB will raise an error.
      *
-     * @param key Support the hash key, or an object that will be passed to
+     * @key Support the hash key, or an object that will be passed to
      * dynamoose.Model.query().
+     * @options
+     *   @using Use an index to lookup the item, assuming the index contains
+     *          only the primary key. This will cause a second lookup to get the
+     *          actual objects with the primary keys.
+     *   @sort descending or ascending, sorted by the range key.
+     *   @limit The maximum number of items to query. Note that when setting the
+     *          limit, DynamoDB looks at most @limit items BEFORE applying the
+     *          query. This means that the returned number of items can be less
+     *          than the actual number of items matching the query.
      * @returns An array of objects of the model type.
      */
     async many(key: string | Query<I>, options?: BatchOptions): Promise<I[]> {
@@ -381,11 +391,26 @@ export class Batched<I extends Item> {
                 returnUndefined: true,
             });
         }
-        let result = await this.loader.load({
-            query: key,
-            options,
-        });
-        return await Promise.all(result);
+        // If index is used, first use the index to get the primary keys, then
+        // do a second lookup with the primary keys.
+        if (options?.using) {
+            let result = await this.loader.load({
+                query: key,
+                options,
+            });
+            // The result only contains primary keys
+            let primaryKeys = result.map((item) => extractKeysFromItems(this.model, item));
+            // Options shouldn't be needed this time.
+            let promises = primaryKeys.map((pk) => this.loader.load({ query: pk }));
+            let results = await Promise.all(promises);
+            return results.flat();
+        } else {
+            let result = await this.loader.load({
+                query: key,
+                options,
+            });
+            return result;
+        }
     }
 
     async count(key: string | Query<I>, options?: BatchOptions): Promise<number> {
@@ -575,7 +600,7 @@ export class Batched<I extends Item> {
                 .contains(upperCaseKey)
                 .or()
                 .where(propertyName)
-                .contains(keyWithFirstLetterCapitalized)
+                .contains(keyWithFirstLetterCapitalized);
         }
         const result = await query.exec();
         return result;

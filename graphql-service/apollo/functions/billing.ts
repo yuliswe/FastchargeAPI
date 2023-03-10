@@ -1,4 +1,11 @@
-import { AccountActivity, Pricing, UsageSummary } from "../dynamoose/models";
+import {
+    AccountActivity,
+    AccountActivityModel,
+    Pricing,
+    UsageSummary,
+    disableDBLogging,
+    enableDBLogging,
+} from "../dynamoose/models";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
 import { RequestContext } from "../RequestContext";
 import Decimal from "decimal.js-light";
@@ -10,6 +17,7 @@ import { UserPK } from "../pks/UserPK";
 import { settleAccountActivities } from "./account";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { AppPK } from "./AppPK";
+import dynamoose from "dynamoose";
 const chalk = new Chalk({ level: 3 });
 
 export type GenerateAccountActivitiesResult = {
@@ -19,6 +27,7 @@ export type GenerateAccountActivitiesResult = {
         appAuthorRequestFee: AccountActivity;
         subscriberMonthlyFee?: AccountActivity;
         appAuthorMonthlyFee?: AccountActivity;
+        appAuthorServiceFee: AccountActivity;
     };
 };
 /**
@@ -41,6 +50,7 @@ export async function generateAccountActivities(
         monthlyChargeOnHoldPeriodInSeconds = 60 * 60 * 24 * 30, // default to 30 days
         disableMonthlyCharge = false, // for testing purpose
         forceMonthlyCharge = false, // for testing purpose
+        serviceFeePerRequest = "0.0001",
     }: {
         usageSummary: UsageSummary;
         pricing: Pricing;
@@ -49,6 +59,7 @@ export async function generateAccountActivities(
         monthlyChargeOnHoldPeriodInSeconds?: number;
         disableMonthlyCharge?: boolean;
         forceMonthlyCharge?: boolean;
+        serviceFeePerRequest?: string;
     }
 ): Promise<GenerateAccountActivitiesResult> {
     let promises = [];
@@ -59,7 +70,6 @@ export async function generateAccountActivities(
         // Process per-request charge
         let volume = usageSummary.volume;
         let price = new Decimal(pricing.chargePerRequest);
-        let amount = price.mul(volume);
         usageSummary.status = "billed";
         usageSummary.billedAt = Date.now();
         results.newUsageSummary = usageSummary;
@@ -70,7 +80,7 @@ export async function generateAccountActivities(
             reason: "api_per_request_charge",
             status: "pending",
             settleAt: Date.now(),
-            amount: amount.toString(),
+            amount: price.mul(volume).toString(),
             usageSummary: UsageSummaryPK.stringify(usageSummary),
             description: `API request charge`,
             billedApp: usageSummary.app,
@@ -88,7 +98,7 @@ export async function generateAccountActivities(
             reason: "api_per_request_charge",
             status: "pending",
             settleAt: Date.now(),
-            amount: amount.toString(),
+            amount: price.mul(volume).toString(),
             usageSummary: UsageSummaryPK.stringify(usageSummary),
             description: `API request charge paid by customer`,
             billedApp: usageSummary.app,
@@ -97,23 +107,46 @@ export async function generateAccountActivities(
             return activity;
         });
 
-        promises.push(subscriberPerRequestActivityPromise, appAuthorPerRequestActivityPromise);
+        let appAuthorServiceFeePerRequestActivityPromise = context.batched.AccountActivity.create({
+            user: appAuthor,
+            type: "credit",
+            reason: "fastchargeapi_per_request_service_fee",
+            status: "pending",
+            settleAt: Date.now(),
+            amount: new Decimal(serviceFeePerRequest).mul(volume).toString(),
+            usageSummary: UsageSummaryPK.stringify(usageSummary),
+            description: `API request service fee`,
+            billedApp: usageSummary.app,
+        }).then((activity) => {
+            results.createdAccountActivities.appAuthorServiceFee = activity;
+            return activity;
+        });
+
+        promises.push(
+            subscriberPerRequestActivityPromise,
+            appAuthorPerRequestActivityPromise,
+            appAuthorServiceFeePerRequestActivityPromise
+        );
     }
     {
         // Process min monthly charge
-        let { shouldBill, amount, isUpgrade } = await shouldCollectMonthlyCharge(context, {
+        let {
+            shouldBill: shouldBillMonthly,
+            amount: monthlyBill,
+            isUpgrade,
+        } = await shouldCollectMonthlyCharge(context, {
             subscriber,
             app: usageSummary.app,
             pricing: pricing,
         });
-        if (forceMonthlyCharge || (!disableMonthlyCharge && shouldBill)) {
+        if (forceMonthlyCharge || (!disableMonthlyCharge && shouldBillMonthly)) {
             let subscriberMonthlyActivityPromise = context.batched.AccountActivity.create({
                 user: subscriber,
                 type: "credit",
                 reason: isUpgrade ? "api_min_monthly_charge_upgrade" : "api_min_monthly_charge",
                 status: "pending",
                 settleAt: Date.now(), // We want to charge the subscriber immediately
-                amount: amount.toString(),
+                amount: forceMonthlyCharge ? pricing.minMonthlyCharge : monthlyBill.toString(),
                 usageSummary: UsageSummaryPK.stringify(usageSummary),
                 description: `API subscription fee every 30 days`,
                 billedApp: usageSummary.app,
@@ -128,7 +161,7 @@ export async function generateAccountActivities(
                 reason: isUpgrade ? "api_min_monthly_charge_upgrade" : "api_min_monthly_charge",
                 status: "pending",
                 settleAt: Date.now() + 1000 * monthlyChargeOnHoldPeriodInSeconds,
-                amount: amount.toString(),
+                amount: forceMonthlyCharge ? pricing.minMonthlyCharge : monthlyBill.toString(),
                 usageSummary: UsageSummaryPK.stringify(usageSummary),
                 description: `API subscription fee paid by customer`,
                 billedApp: usageSummary.app,
@@ -174,28 +207,19 @@ export async function shouldCollectMonthlyCharge(
         collectionPeriodInSeconds = 60 * 60 * 24 * 30, // default to 30 days
     }: { collectionPeriodInSeconds?: number } = {}
 ): Promise<ShouldCollectMonthlyChargePromiseResult> {
-    let lastBill = await context.batched.AccountActivity.getOrNull(
-        {
-            user: subscriber,
-            billedApp: app,
-            type: "credit",
-            reason: "api_min_monthly_charge",
-            settleAt: { le: Date.now() - collectionPeriodInSeconds }, // get the last bill in 30 days
-        },
-        {
-            limit: 1,
-        }
-    );
-    if (lastBill == null) {
-        return {
-            shouldBill: true,
-            amount: pricing.minMonthlyCharge,
-            isUpgrade: false,
-        };
+    let allBillsThisMonth = await context.batched.AccountActivity.many({
+        user: subscriber,
+        billedApp: app,
+        type: "credit",
+        reason: "api_min_monthly_charge",
+        settleAt: { ge: Date.now() - 1000 * collectionPeriodInSeconds }, // get the last bill in 30 days
+    });
+    let totalPaidThisMonth = new Decimal(0);
+    for (let bill of allBillsThisMonth) {
+        totalPaidThisMonth = totalPaidThisMonth.add(bill.amount);
     }
     let currMonthlyCharge = new Decimal(pricing.minMonthlyCharge);
-    let lastMonthlyCharge = new Decimal(lastBill.amount);
-    let diff = currMonthlyCharge.sub(lastMonthlyCharge);
+    let diff = currMonthlyCharge.sub(totalPaidThisMonth);
     if (diff.gt(0)) {
         return {
             shouldBill: true,
@@ -214,15 +238,37 @@ export async function shouldCollectMonthlyCharge(
 /**
  * Start collecting UsageLogs for the given app, computes the UsageSummary, and
  * creates AccountActivities for both the subscriber and the app author.
+ * Finally, settles the AccountActivities. This function has the effect of
+ * cleaning up all the UsageLogs and UsageSummary that are in the pending state.
+ * It creates AccountActivities for the subscriber and the app author, and set
+ * the settleAt field to the different time for the subscriber and the app
+ * author. It also settles all pending AccountActivities that have the settleAt
+ * value in the past.
+ *
+ * @idempotent Yes
+ * @workerSafe No - Only can be called on a single worker queue.
  */
 export async function triggerBilling(
     context: RequestContext,
     { user, app }: { user: string; app: string }
-): Promise<{ usageSummary: UsageSummary } | null> {
-    let usageSummary = await collectUsageLogs(context, { user, app });
-    if (usageSummary == null) {
-        return null;
+): Promise<{ affectedUsageSummaries: UsageSummary[] }> {
+    if (!context.isSQSMessage) {
+        if (!process.env.UNSAFE_BILLING) {
+            console.error(
+                chalk.red(
+                    `triggerBilling must be called from an SQS message. If you are not running in production, you can set the UNSAFE_BILLING=1 environment variable to bypass this check.`
+                )
+            );
+            throw new Error("triggerBilling must be called from an SQS message");
+        }
     }
+
+    await collectUsageLogs(context, { user, app });
+    let uncollectedUsageSummaries = await context.batched.UsageSummary.many({
+        subscriber: user,
+        app,
+        status: "pending",
+    });
     // TODO: fix this: need to add subscription to UsageLog
     let pricing = await findUserSubscriptionPricing(context, { user, app });
     if (!pricing) {
@@ -230,12 +276,20 @@ export async function triggerBilling(
         throw new Error(`No pricing found during triggerBilling: ${user}, ${app}`);
     }
     let appItem = await context.batched.App.get(AppPK.parse(app));
-    await generateAccountActivities(context, {
-        usageSummary,
-        pricing,
-        subscriber: user,
-        appAuthor: appItem.owner,
-    });
+
+    let promises = [];
+    for (let usageSummary of uncollectedUsageSummaries) {
+        promises.push(
+            generateAccountActivities(context, {
+                usageSummary,
+                pricing,
+                subscriber: user,
+                appAuthor: appItem.owner,
+            })
+        );
+    }
+    await Promise.allSettled(promises);
+
     await settleAccountActivities(context, user, {
         consistentReadAccountActivities: true,
     });
@@ -243,6 +297,6 @@ export async function triggerBilling(
         consistentReadAccountActivities: true,
     });
     return {
-        usageSummary,
+        affectedUsageSummaries: uncollectedUsageSummaries,
     };
 }

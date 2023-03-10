@@ -1,5 +1,5 @@
 import { GraphQLResolveInfo } from "graphql";
-import { AppModel, User, UserModel } from "../dynamoose/models";
+import { AccountActivity, AppModel, User, UserModel } from "../dynamoose/models";
 import { Denied } from "../errors";
 import { Can } from "../permissions";
 import { RequestContext } from "../RequestContext";
@@ -15,7 +15,7 @@ import {
     GQLUserUsageSummariesArgs,
 } from "../__generated__/resolvers-types";
 import { UserPK } from "../pks/UserPK";
-import { getUserBalance } from "../functions/account";
+import { getUserBalance, settleAccountActivities } from "../functions/account";
 
 export const userResolvers: GQLResolvers & {
     User: Required<GQLUserResolvers>;
@@ -29,22 +29,12 @@ export const userResolvers: GQLResolvers & {
             }
             return user.email;
         },
-        async apps(
-            parent: User,
-            args: {},
-            context: RequestContext,
-            info: GraphQLResolveInfo
-        ) {
+        async apps(parent: User, args: {}, context: RequestContext, info: GraphQLResolveInfo) {
             let apps = await context.batched.App.many({ owner: parent.email });
             let visableApps = await Can.viewAppFilter(apps, context);
             return visableApps;
         },
-        async subscriptions(
-            parent: User,
-            args: {},
-            context: RequestContext,
-            info: GraphQLResolveInfo
-        ) {
+        async subscriptions(parent: User, args: {}, context: RequestContext, info: GraphQLResolveInfo) {
             return await context.batched.Subscription.many({
                 subscriber: parent.email,
             });
@@ -57,11 +47,7 @@ export const userResolvers: GQLResolvers & {
         updatedAt: (parent) => parent.updatedAt,
         stripeCustomerId: (parent) => parent.stripeCustomerId,
         stripeConnectAccountId: (parent) => parent.stripeConnectAccountId,
-        accountActivities: async (
-            parent: User,
-            { limit, dateRange }: GQLUserAccountActivitiesArgs,
-            context
-        ) => {
+        accountActivities: async (parent: User, { limit, dateRange }: GQLUserAccountActivitiesArgs, context) => {
             let result = await context.batched.AccountActivity.many(
                 {
                     user: UserPK.stringify(parent),
@@ -79,11 +65,7 @@ export const userResolvers: GQLResolvers & {
             );
             return result;
         },
-        accountHistories: async (
-            parent: User,
-            { limit, dateRange }: GQLUserAccountActivitiesArgs,
-            context
-        ) => {
+        accountHistories: async (parent: User, { limit, dateRange }: GQLUserAccountActivitiesArgs, context) => {
             let result = await context.batched.AccountHistory.many(
                 {
                     user: UserPK.stringify(parent),
@@ -103,11 +85,7 @@ export const userResolvers: GQLResolvers & {
         },
         async updateUser(
             parent: User,
-            {
-                author,
-                stripeCustomerId,
-                stripeConnectAccountId,
-            }: GQLUserUpdateUserArgs,
+            { author, stripeCustomerId, stripeConnectAccountId }: GQLUserUpdateUserArgs,
             context: RequestContext,
             info: GraphQLResolveInfo
         ): Promise<User> {
@@ -122,12 +100,7 @@ export const userResolvers: GQLResolvers & {
             return user;
         },
 
-        async usageLogs(
-            parent: User,
-            args: GQLUserUsageLogsArgs,
-            context,
-            info
-        ) {
+        async usageLogs(parent: User, args: GQLUserUsageLogsArgs, context, info) {
             let { app, path, limit, dateRange } = args;
             let usage = await context.batched.UsageLog.many(
                 {
@@ -148,12 +121,7 @@ export const userResolvers: GQLResolvers & {
             return usage;
         },
 
-        async usageSummaries(
-            parent: User,
-            { limit, app, dateRange }: GQLUserUsageSummariesArgs,
-            context,
-            info
-        ) {
+        async usageSummaries(parent: User, { limit, app, dateRange }: GQLUserUsageSummariesArgs, context, info) {
             let usageSummaries = await context.batched.UsageSummary.many(
                 {
                     subscriber: parent.email,
@@ -172,26 +140,27 @@ export const userResolvers: GQLResolvers & {
             );
             return usageSummaries;
         },
+
+        /**
+         * settleAccountActivities should only be called from the billing queue.
+         */
+        async settleAccountActivities(parent: User, args: {}, context: RequestContext): Promise<AccountActivity[]> {
+            let result = await settleAccountActivities(context, UserPK.stringify(parent));
+            if (result === null) {
+                return [];
+            }
+            return result.affectedAccountActivities;
+        },
     },
     Query: {
-        async users(
-            parent: {},
-            args: {},
-            context: RequestContext,
-            info: GraphQLResolveInfo
-        ): Promise<User[]> {
+        async users(parent: {}, args: {}, context: RequestContext, info: GraphQLResolveInfo): Promise<User[]> {
             if (!(await Can.listUsers(context))) {
                 throw new Denied();
             }
             let users = await context.batched.User.scan();
             return users;
         },
-        async user(
-            parent: {},
-            { email }: GQLQueryUserArgs,
-            context: RequestContext,
-            info: GraphQLResolveInfo
-        ) {
+        async user(parent: {}, { email }: GQLQueryUserArgs, context: RequestContext, info: GraphQLResolveInfo) {
             let user = await context.batched.User.get({ email });
             if (!(await Can.viewUser(user, context))) {
                 throw new Denied();

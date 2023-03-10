@@ -13,7 +13,7 @@ Parameters:
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 10
+    Timeout: 1
     MemorySize: 3008
     Tracing: Active
     Tags:
@@ -183,12 +183,14 @@ Resources:
         - AWSLambdaRole
         - AmazonDynamoDBFullAccess # Give the Lambda service access to poll your DynamoDB Stream
         - AmazonSSMFullAccess # Allows getting private key from System Manager
+      Timeout: 30
       Events:
         UsageLogQueueEvent:
           Type: SQS
           Properties:
             Queue: !GetAtt UsageLogQueue.Arn
             BatchSize: 10
+            MaximumBatchingWindowInSeconds: 10
             FunctionResponseTypes: 
               - ReportBatchItemFailures
         BillingQueueEvent:
@@ -211,7 +213,7 @@ Resources:
       QueueName: graphql-service-usage-log-queue
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt UsageLogDeadLetterQueue.Arn
-        maxReceiveCount: 1
+        maxReceiveCount: 3
       Tags:
         - Key: service-name
           Value: graphql-service
@@ -220,6 +222,7 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: graphql-service-usage-log-dead-letter-queue
+      VisibilityTimeout: 0
       Tags:
         - Key: service-name
           Value: graphql-service
@@ -229,10 +232,10 @@ Resources:
     Properties:
       QueueName: graphql-service-billing-queue.fifo
       FifoQueue: true
-      DelaySeconds: 10
+      DelaySeconds: 60 # Delay so that the billing is triggered after the UsageLogs are created
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt BillingDeadLetterQueue.Arn
-        maxReceiveCount: 1
+        maxReceiveCount: 3
       Tags:
         - Key: service-name
           Value: graphql-service
@@ -242,9 +245,36 @@ Resources:
     Properties:
       FifoQueue: true
       QueueName: graphql-service-billing-dead-letter-queue.fifo
+      VisibilityTimeout: 0
       Tags:
         - Key: service-name
           Value: graphql-service
+
+  SettleAccountActivitiesCronJob:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./apollo/cron-jobs
+      Handler: settleAccountActivities.lambdaHandler
+      Runtime: nodejs18.x
+      Architectures:
+        - arm64
+      Policies:
+        - AWSLambdaRole
+        - AmazonDynamoDBFullAccess # Give the Lambda service access to poll your DynamoDB Stream
+        - AmazonSSMFullAccess # Allows getting private key from System Manager
+      Timeout: 300
+      Events:
+        ScheduledTrigger:
+          ScheduleEvent:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: "rate(6 hours)"
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Target: "es2022"
+        EntryPoints:
+          - settleAccountActivities.ts
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
