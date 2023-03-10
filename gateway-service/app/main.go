@@ -41,7 +41,7 @@ func lambdaHandler(request events.APIGatewayProxyRequest) (*events.APIGatewayPro
 		return response, nil
 	} else {
 		response := apiGatewayErrorResponse(500, "INTERNAL_SERVER_ERROR", err.Error())
-		return &response, err
+		return response, err
 	}
 }
 
@@ -62,12 +62,13 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 
 	//fmt.Println("Checking is user is allowed to access app", app, "user:", user)
 	startTimer := time.Now()
-	if allowed, reason := userIsAllowedToAccess(user, app, path); !allowed {
+	decision, errorResponse := getGatewayRequestDecision(user, app, path)
+	if errorResponse != nil {
 		//fmt.Println(color.Red, "User ", user, " is not allowed to access ", app, path, color.Reset)
-		return reason, nil
+		return errorResponse, nil
 	}
 	stopTimer := time.Now()
-	fmt.Println(color.Purple, "userIsAllowedToAccess took", stopTimer.Sub(startTimer), color.Reset)
+	fmt.Println(color.Purple, "getGatewayRequestDecision took", stopTimer.Sub(startTimer), color.Reset)
 
 	//fmt.Println("Creating a usage token for user", user, "on app", app, "for path", path)
 	// fastchargeUserToken, err := createUserUsageToken(app, user)
@@ -78,7 +79,7 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 	destination, mode, found := getRoute(app, path)
 	if !found {
 		response := apiGatewayErrorResponse(404, "NOT_FOUND", "Path Not Found: "+path)
-		return &response, nil
+		return response, nil
 	}
 
 	fastchargeUserToken := "" // TODO: implement this
@@ -88,7 +89,7 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 			fmt.Println(color.Red, "Error making a redirect response", err, color.Reset)
 			return &response, err
 		} else {
-			go billUsage(user, app, path)
+			go billUsage(user, app, path, decision.Pricing.Pk)
 			return &response, nil
 		}
 	default:
@@ -99,7 +100,7 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 		} else {
 			stopTimer := time.Now()
 			fmt.Println(color.Purple, "makeForwardResponse took", stopTimer.Sub(startTimer), color.Reset)
-			go billUsage(user, app, path)
+			go billUsage(user, app, path, decision.Pricing.Pk)
 			return response, nil
 		}
 	}
@@ -115,16 +116,16 @@ func parseAppName(request events.APIGatewayProxyRequest) (string, *events.APIGat
 	}
 	if host == "" {
 		response := apiGatewayErrorResponse(404, "NOT_FOUND", "Host header is missing")
-		return "", &response
+		return "", response
 	}
 	app := strings.Split(host, ".")[0]
 	if app == "" {
 		response := apiGatewayErrorResponse(404, "NOT_FOUND", "App name is missing. Host: "+host)
-		return "", &response
+		return "", response
 	}
 	if app == "api" { // this is reserved for our internal api
 		response := apiGatewayErrorResponse(404, "NOT_FOUND", "App Not Found: "+app)
-		return "", &response
+		return "", response
 	}
 	return app, nil
 }
@@ -141,10 +142,10 @@ func parseUser(request events.APIGatewayProxyRequest) (string, *events.APIGatewa
 	if userEmail == "" {
 		if os.Getenv("TRUST_X_USER_EMAIL_HEADER") == "1" {
 			response := apiGatewayErrorResponse(401, "UNAUTHORIZED", "TRUST_X_USER_EMAIL_HEADER enabled. You must provide the X-User-Email header.")
-			return "", &response
+			return "", response
 		} else {
 			response := apiGatewayErrorResponse(401, "UNAUTHORIZED", "You must be logged in to access this resource.")
-			return "", &response
+			return "", response
 		}
 	} else {
 		return userEmail, nil
@@ -184,7 +185,7 @@ func makeForwardResponse(destination string, request events.APIGatewayProxyReque
 	var destinationUrl *url.URL
 	if url, err := url.Parse(destination); err != nil {
 		response := apiGatewayErrorResponse(404, "NOT_FOUND", "Not Found: "+destination)
-		return &response, nil
+		return response, nil
 	} else {
 		destinationUrl = url
 	}
@@ -220,30 +221,30 @@ func makeForwardResponse(destination string, request events.APIGatewayProxyReque
 	forwardRequest.Header.Set("Accept-Encoding", "identity")
 	if response, err := http.DefaultClient.Do(forwardRequest); err != nil {
 		response := apiGatewayErrorResponse(502, "BAD_GATEWAY", "Bad Gateway: "+err.Error())
-		return &response, nil
+		return response, nil
 	} else {
 		var body []byte
 		if err != nil {
 			response := apiGatewayErrorResponse(502, "BAD_GATEWAY", "Bad Gateway: "+err.Error())
-			return &response, nil
+			return response, nil
 		}
 		if response.Header.Get("Content-Encoding") == "gzip" {
 			plaintext, err := gzip.NewReader(response.Body)
 			defer plaintext.Close()
 			if err != nil {
 				response := apiGatewayErrorResponse(502, "BAD_GATEWAY", "Bad Gateway: "+err.Error())
-				return &response, nil
+				return response, nil
 			}
 			body, err = io.ReadAll(plaintext)
 			if err != nil {
 				response := apiGatewayErrorResponse(502, "BAD_GATEWAY", "Bad Gateway: "+err.Error())
-				return &response, nil
+				return response, nil
 			}
 		} else {
 			body, err = io.ReadAll(response.Body)
 			if err != nil {
 				response := apiGatewayErrorResponse(502, "BAD_GATEWAY", "Bad Gateway: "+err.Error())
-				return &response, nil
+				return response, nil
 			}
 		}
 		headers := map[string]string{}
@@ -329,7 +330,7 @@ func createUserUsageToken(app string, user string) (string, error) {
 	return token, err
 }
 
-func billUsage(user string, app string, path string) {
+func billUsage(user string, app string, path string, pricing string) {
 	//fmt.Println(color.Yellow, "Billing usage for", user, app, path, color.Reset)
 	if _, err := CreateUsageLog(
 		context.Background(),
@@ -337,6 +338,7 @@ func billUsage(user string, app string, path string) {
 		user,
 		app,
 		path,
+		pricing,
 	); err != nil {
 		fmt.Println(color.Red, "Error creating UsageLog: ", err, color.Reset)
 	}
@@ -354,49 +356,56 @@ func billUsage(user string, app string, path string) {
 	}
 }
 
-func apiGatewayErrorResponse(code int, reason string, message string) events.APIGatewayProxyResponse {
+func apiGatewayErrorResponse(code int, reason string, message string) *events.APIGatewayProxyResponse {
 	body, _ := json.Marshal(map[string]string{
 		"reason":  reason,
 		"message": message,
 	})
-	return events.APIGatewayProxyResponse{
+	resp := events.APIGatewayProxyResponse{
 		StatusCode: code,
 		Body:       string(body),
 	}
+	return &resp
+}
+
+type GatewayDecisionResponse struct {
+	Allowed bool
+	Pricing string
 }
 
 // Checks if the user is allowed to access the endpoint. Caches the result if
 // the user is allowed to access. Otherwise, send queries to the graphql backend
 // to find out if the user is allowed to access.
-func userIsAllowedToAccess(user string, app string, path string) (bool, *events.APIGatewayProxyResponse) {
+func getGatewayRequestDecision(user string, app string, path string) (decision *CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse, errorResponse *events.APIGatewayProxyResponse) {
 	result, err := CheckUserIsAllowedToCallEndpoint(context.Background(), getGraphQLClient(), user, app)
+	decision = &result.CheckUserIsAllowedForGatewayRequest
 	if err != nil {
 		fmt.Println(color.Red, "Error checking if user is allowed to call endpoint:", err, color.Reset)
-		response := apiGatewayErrorResponse(500, "INTERNAL_SERVER_ERROR", "Internal Server Error")
-		return false, &response
+		errorResponse = apiGatewayErrorResponse(500, "INTERNAL_SERVER_ERROR", "Internal Server Error")
+		return decision, errorResponse
 	}
 	if result.CheckUserIsAllowedForGatewayRequest.Allowed {
-		return true, nil
+		return decision, nil
 	}
 	if result.CheckUserIsAllowedForGatewayRequest.Allowed == false {
 		switch result.CheckUserIsAllowedForGatewayRequest.Reason {
 		case GatewayDecisionResponseReasonTooManyRequests:
-			response := apiGatewayErrorResponse(429, "TOO_MANY_REQUESTS", "You have made too many requests to this endpoint.")
-			return false, &response
+			errorResponse := apiGatewayErrorResponse(429, "TOO_MANY_REQUESTS", "You have made too many requests to this endpoint.")
+			return decision, errorResponse
 		case GatewayDecisionResponseReasonNotSubscribed:
-			response := apiGatewayErrorResponse(402, "NOT_SUBSCRIBED", "You are not subscribed to this app.")
-			return false, &response
+			errorResponse := apiGatewayErrorResponse(402, "NOT_SUBSCRIBED", "You are not subscribed to this app.")
+			return decision, errorResponse
 		case GatewayDecisionResponseReasonInsufficientBalance:
-			response := apiGatewayErrorResponse(402, "INSUFFICIENT_BALANCE", "Your account balance is too low to make this request.")
-			return false, &response
+			errorResponse := apiGatewayErrorResponse(402, "INSUFFICIENT_BALANCE", "Your account balance is too low to make this request.")
+			return decision, errorResponse
 		case GatewayDecisionResponseReasonOwnerInsufficientBalance:
-			response := apiGatewayErrorResponse(402, "OWNER_INSUFFICIENT_BALANCE", "The owner of this app does not have enough balance to pay for the free quota used by this request.")
-			return false, &response
+			errorResponse := apiGatewayErrorResponse(402, "OWNER_INSUFFICIENT_BALANCE", "The owner of this app does not have enough balance to pay for the free quota used by this request.")
+			return decision, errorResponse
 		}
 	}
 
-	response := apiGatewayErrorResponse(401, "UNKNOWN_REASON", "You are not allowed to access this endpoint.")
-	return false, &response
+	errorResponse = apiGatewayErrorResponse(401, "UNKNOWN_REASON", "You are not allowed to access this endpoint.")
+	return decision, errorResponse
 }
 
 func getUserBalance(user string) decimal.Decimal {

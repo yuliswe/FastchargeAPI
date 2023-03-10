@@ -13,8 +13,14 @@ mutation CreateUsageLog(
     $userEmail: Email!
     $app_name: String!
     $path: String!
+    $pricing: ID!
 ) {
-    createUsageLog(subscriber: $userEmail, app: $app_name, path: $path) {
+    createUsageLog(
+        subscriber: $userEmail
+        app: $app_name
+        path: $path
+        pricing: $pricing
+    ) {
         createdAt
     }
 }
@@ -53,5 +59,8 @@ query CheckUserIsAllowedToCallEndpoint($user: ID!, $app: ID!) {
     checkUserIsAllowedForGatewayRequest(user: $user, app: $app) {
         allowed
         reason
+        pricing {
+            pk
+        }
     }
 }

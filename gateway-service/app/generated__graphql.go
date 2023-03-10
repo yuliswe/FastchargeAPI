@@ -10,8 +10,9 @@ import (
 
 // CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse includes the requested fields of the GraphQL type GatewayDecisionResponse.
 type CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse struct {
-	Allowed bool                          `json:"allowed"`
-	Reason  GatewayDecisionResponseReason `json:"reason"`
+	Allowed bool                                                                                              `json:"allowed"`
+	Reason  GatewayDecisionResponseReason                                                                     `json:"reason"`
+	Pricing CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponsePricing `json:"pricing"`
 }
 
 // GetAllowed returns CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse.Allowed, and is useful for accessing the field via an interface.
@@ -22,6 +23,21 @@ func (v *CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGate
 // GetReason returns CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse.Reason, and is useful for accessing the field via an interface.
 func (v *CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse) GetReason() GatewayDecisionResponseReason {
 	return v.Reason
+}
+
+// GetPricing returns CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse.Pricing, and is useful for accessing the field via an interface.
+func (v *CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse) GetPricing() CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponsePricing {
+	return v.Pricing
+}
+
+// CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponsePricing includes the requested fields of the GraphQL type Pricing.
+type CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponsePricing struct {
+	Pk string `json:"pk"`
+}
+
+// GetPk returns CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponsePricing.Pk, and is useful for accessing the field via an interface.
+func (v *CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponsePricing) GetPk() string {
+	return v.Pk
 }
 
 // CheckUserIsAllowedToCallEndpointResponse is returned by CheckUserIsAllowedToCallEndpoint on success.
@@ -214,6 +230,7 @@ type __CreateUsageLogInput struct {
 	UserEmail string `json:"userEmail"`
 	App_name  string `json:"app_name"`
 	Path      string `json:"path"`
+	Pricing   string `json:"pricing"`
 }
 
 // GetUserEmail returns __CreateUsageLogInput.UserEmail, and is useful for accessing the field via an interface.
@@ -224,6 +241,9 @@ func (v *__CreateUsageLogInput) GetApp_name() string { return v.App_name }
 
 // GetPath returns __CreateUsageLogInput.Path, and is useful for accessing the field via an interface.
 func (v *__CreateUsageLogInput) GetPath() string { return v.Path }
+
+// GetPricing returns __CreateUsageLogInput.Pricing, and is useful for accessing the field via an interface.
+func (v *__CreateUsageLogInput) GetPricing() string { return v.Pricing }
 
 // __GetAppRoutesInput is used internally by genqlient
 type __GetAppRoutesInput struct {
@@ -290,6 +310,9 @@ query CheckUserIsAllowedToCallEndpoint ($user: ID!, $app: ID!) {
 	checkUserIsAllowedForGatewayRequest(user: $user, app: $app) {
 		allowed
 		reason
+		pricing {
+			pk
+		}
 	}
 }
 `,
@@ -318,12 +341,13 @@ func CreateUsageLog(
 	userEmail string,
 	app_name string,
 	path string,
+	pricing string,
 ) (*CreateUsageLogResponse, error) {
 	req := &graphql.Request{
 		OpName: "CreateUsageLog",
 		Query: `
-mutation CreateUsageLog ($userEmail: Email!, $app_name: String!, $path: String!) {
-	createUsageLog(subscriber: $userEmail, app: $app_name, path: $path) {
+mutation CreateUsageLog ($userEmail: Email!, $app_name: String!, $path: String!, $pricing: ID!) {
+	createUsageLog(subscriber: $userEmail, app: $app_name, path: $path, pricing: $pricing) {
 		createdAt
 	}
 }
@@ -332,6 +356,7 @@ mutation CreateUsageLog ($userEmail: Email!, $app_name: String!, $path: String!)
 			UserEmail: userEmail,
 			App_name:  app_name,
 			Path:      path,
+			Pricing:   pricing,
 		},
 	}
 	var err error
