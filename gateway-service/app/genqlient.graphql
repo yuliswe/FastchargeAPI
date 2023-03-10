@@ -59,8 +59,6 @@ query CheckUserIsAllowedToCallEndpoint($user: ID!, $app: ID!) {
     checkUserIsAllowedForGatewayRequest(user: $user, app: $app) {
         allowed
         reason
-        pricing {
-            pk
-        }
+        pricingPK
     }
 }

@@ -67,6 +67,7 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 		//fmt.Println(color.Red, "User ", user, " is not allowed to access ", app, path, color.Reset)
 		return errorResponse, nil
 	}
+
 	stopTimer := time.Now()
 	fmt.Println(color.Purple, "getGatewayRequestDecision took", stopTimer.Sub(startTimer), color.Reset)
 
@@ -89,7 +90,7 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 			fmt.Println(color.Red, "Error making a redirect response", err, color.Reset)
 			return &response, err
 		} else {
-			go billUsage(user, app, path, decision.Pricing.Pk)
+			go billUsage(user, app, path, decision.PricingPK)
 			return &response, nil
 		}
 	default:
@@ -100,7 +101,7 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 		} else {
 			stopTimer := time.Now()
 			fmt.Println(color.Purple, "makeForwardResponse took", stopTimer.Sub(startTimer), color.Reset)
-			go billUsage(user, app, path, decision.Pricing.Pk)
+			go billUsage(user, app, path, decision.PricingPK)
 			return response, nil
 		}
 	}

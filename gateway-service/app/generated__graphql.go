@@ -10,9 +10,9 @@ import (
 
 // CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse includes the requested fields of the GraphQL type GatewayDecisionResponse.
 type CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse struct {
-	Allowed bool                                                                                              `json:"allowed"`
-	Reason  GatewayDecisionResponseReason                                                                     `json:"reason"`
-	Pricing CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponsePricing `json:"pricing"`
+	Allowed   bool                          `json:"allowed"`
+	Reason    GatewayDecisionResponseReason `json:"reason"`
+	PricingPK string                        `json:"pricingPK"`
 }
 
 // GetAllowed returns CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse.Allowed, and is useful for accessing the field via an interface.
@@ -25,19 +25,9 @@ func (v *CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGate
 	return v.Reason
 }
 
-// GetPricing returns CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse.Pricing, and is useful for accessing the field via an interface.
-func (v *CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse) GetPricing() CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponsePricing {
-	return v.Pricing
-}
-
-// CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponsePricing includes the requested fields of the GraphQL type Pricing.
-type CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponsePricing struct {
-	Pk string `json:"pk"`
-}
-
-// GetPk returns CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponsePricing.Pk, and is useful for accessing the field via an interface.
-func (v *CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponsePricing) GetPk() string {
-	return v.Pk
+// GetPricingPK returns CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse.PricingPK, and is useful for accessing the field via an interface.
+func (v *CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse) GetPricingPK() string {
+	return v.PricingPK
 }
 
 // CheckUserIsAllowedToCallEndpointResponse is returned by CheckUserIsAllowedToCallEndpoint on success.
@@ -310,9 +300,7 @@ query CheckUserIsAllowedToCallEndpoint ($user: ID!, $app: ID!) {
 	checkUserIsAllowedForGatewayRequest(user: $user, app: $app) {
 		allowed
 		reason
-		pricing {
-			pk
-		}
+		pricingPK
 	}
 }
 `,
