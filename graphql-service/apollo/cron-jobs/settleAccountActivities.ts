@@ -52,7 +52,11 @@ async function handle(event: EventBridgeEvent<string, {}>, context: never, callb
                 },
             });
         } catch (error) {
-            console.error(chalk.red(JSON.stringify(error)));
+            try {
+                console.error(chalk.red(JSON.stringify(error)));
+            } catch {
+                // ignore json error
+            }
         }
     }
 

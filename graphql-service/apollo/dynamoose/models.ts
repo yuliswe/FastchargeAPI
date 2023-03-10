@@ -279,10 +279,9 @@ const AccountActivityTableSchema = new dynamoose.Schema(
                 name: "indexByStatus_settleAt__onlyPK",
                 rangeKey: "settleAt",
                 type: "global",
-                // project: ["settleAt", "status"],
-                project: true,
+                project: ["settleAt", "status"],
             },
-            enum: ["settled", "pending"],
+            enum: ["settled", "pending", "failed"],
             required: true,
             default: "pending",
         },
@@ -394,6 +393,12 @@ const StripeTransferTableSchema = new dynamoose.Schema(
         transferAt: { type: Number, required: true },
         status: {
             type: String,
+            index: {
+                name: "indexByStatus_transferAt__onlyPK",
+                rangeKey: "transferAt",
+                type: "global",
+                project: ["transferAt", "status"],
+            },
             enum: ["pending", "transferred"],
             required: true,
         },
@@ -636,7 +641,7 @@ export class StripeTransfer extends Item {
     accountActivity: string;
     feeActivity: string;
     transferAt: number;
-    status: "pending" | "transferred";
+    status: "pending" | "transferred" | "failed";
 }
 
 export class Secret extends Item {

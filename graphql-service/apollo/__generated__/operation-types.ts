@@ -352,7 +352,12 @@ export type GQLStripeTransfer = {
     withdrawAmount: Scalars["NonNegativeDecimal"];
 };
 
+export enum GQLStripeTransferIndex {
+    IndexByStatusTransferAtOnlyPk = "indexByStatus_transferAt__onlyPK",
+}
+
 export enum GQLStripeTransferStatus {
+    Failed = "failed",
     Pending = "pending",
     Transferred = "transferred",
 }

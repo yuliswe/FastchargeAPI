@@ -262,6 +262,7 @@ enum GatewayMode {
 enum StripeTransferStatus {
     pending
     transferred
+    failed
 }
 
 type StripeTransfer {
@@ -275,6 +276,10 @@ type StripeTransfer {
     settleStripeTransfer: StripeTransfer!
     transferAt: Timestamp!
     status: StripeTransferStatus
+}
+
+enum StripeTransferIndex {
+    indexByStatus_transferAt__onlyPK
 }
 
 enum AccountActivityType {

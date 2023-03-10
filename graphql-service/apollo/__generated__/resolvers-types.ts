@@ -371,7 +371,12 @@ export type GQLStripeTransfer = {
     withdrawAmount: Scalars["NonNegativeDecimal"];
 };
 
+export enum GQLStripeTransferIndex {
+    IndexByStatusTransferAtOnlyPk = "indexByStatus_transferAt__onlyPK",
+}
+
 export enum GQLStripeTransferStatus {
+    Failed = "failed",
     Pending = "pending",
     Transferred = "transferred",
 }
@@ -560,6 +565,7 @@ export type GQLResolversTypes = ResolversObject<{
     String: ResolverTypeWrapper<Scalars["String"]>;
     StripePaymentAccept: ResolverTypeWrapper<StripePaymentAcceptData>;
     StripeTransfer: ResolverTypeWrapper<StripeTransferData>;
+    StripeTransferIndex: GQLStripeTransferIndex;
     StripeTransferStatus: GQLStripeTransferStatus;
     Subscribe: ResolverTypeWrapper<SubscriptionData>;
     Timestamp: ResolverTypeWrapper<Scalars["Timestamp"]>;
