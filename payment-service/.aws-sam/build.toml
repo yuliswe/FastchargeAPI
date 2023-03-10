@@ -10,4 +10,35 @@ manifest_hash = ""
 packagetype = "Zip"
 functions = ["StripeCheckoutSession", "StripeConnectOnboard", "StripeConnectOnboardAcceptWebhook", "AcceptPaymentWebhook", "GetDashboardLoginLink", "Payout"]
 
+[function_build_definitions.a067f16f-468c-4cff-b95a-c8c9ff2b6867]
+codeuri = "/Users/yu/lab/FastchargeAPI/payment-service/cron-jobs"
+runtime = "nodejs18.x"
+architecture = "arm64"
+handler = "executeDailyStripeTransfer.lambdaHandler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["ExecuteDailyStripeTransferCronJob"]
+
+[function_build_definitions.a067f16f-468c-4cff-b95a-c8c9ff2b6867.metadata]
+BuildMethod = "esbuild"
+
+[function_build_definitions.a067f16f-468c-4cff-b95a-c8c9ff2b6867.metadata.BuildProperties]
+Target = "es2022"
+EntryPoints = ["executeDailyStripeTransfer.ts"]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 [layer_build_definitions]

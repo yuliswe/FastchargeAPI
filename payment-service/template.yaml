@@ -201,6 +201,42 @@ Resources:
             Path: /payout
             Method: post
 
+  ExecuteDailyStripeTransferCronJob:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./cron-jobs
+      Handler: executeDailyStripeTransfer.lambdaHandler
+      Runtime: nodejs18.x
+      Architectures:
+        - arm64
+      Policies:
+        - AWSLambdaRole
+        - AmazonDynamoDBFullAccess # Give the Lambda service access to poll your DynamoDB Stream
+        - AmazonSSMFullAccess # Allows getting private key from System Manager
+      ReservedConcurrentExecutions: 1
+      Timeout: 300
+      Events:
+        ScheduledTrigger12AM:
+          ScheduleEvent:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpressionTimezone: America/Toronto
+            ScheduleExpression: "cron(0 0 * * ? *)"
+            Input: '{"dryRun": true}'
+        ScheduledTrigger8PM:
+          ScheduleEvent:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpressionTimezone: America/Toronto
+            ScheduleExpression: "cron(0 20 * * ? *)"
+            Input: '{"dryRun": false}'
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Target: "es2022"
+        EntryPoints:
+          - executeDailyStripeTransfer.ts
+
 Outputs:
   APIGateway:
     Description: API APIGateway endpoint URL for DEV stage for Hello World function
