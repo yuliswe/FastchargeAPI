@@ -110,7 +110,7 @@ export type GQLEndpointUpdateEndpointArgs = {
 export type GQLGatewayDecisionResponse = {
     __typename?: "GatewayDecisionResponse";
     allowed: Scalars["Boolean"];
-    pricing?: Maybe<GQLPricing>;
+    pricingPK?: Maybe<Scalars["String"]>;
     reason?: Maybe<GQLGatewayDecisionResponseReason>;
 };
 

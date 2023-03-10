@@ -23,7 +23,14 @@ import {
 import { Chalk } from "chalk";
 import dynamoose from "dynamoose";
 import { AlreadyExists, NotFound } from "../errors";
+import { PricingPK } from "../pks/PricingPK";
 const chalk = new Chalk({ level: 3 });
+
+type GatewayDecisionResponse = {
+    allowed: boolean;
+    reason: GQLGatewayDecisionResponseReason | null;
+    pricingPK: string | null;
+};
 
 export const gatewayResolvers: GQLResolvers & {
     Query: GQLGatewayDecisionResponseResolvers;
@@ -39,7 +46,7 @@ export const gatewayResolvers: GQLResolvers & {
             parent: GQLQueryCheckUserIsAllowedForGatewayRequestArgs,
             { user, app, forceBalanceCheck }: GQLQueryCheckUserIsAllowedForGatewayRequestArgs,
             context: RequestContext
-        ) {
+        ): Promise<GatewayDecisionResponse> {
             // let startTimer = Date.now();
 
             // Increment the request counter, or create it if it doesn't exist
@@ -58,20 +65,20 @@ export const gatewayResolvers: GQLResolvers & {
 
             // Handle the above race condition
             if (globalRequestCounter === null) {
-                return { allowed: false, reason: GQLGatewayDecisionResponseReason.TooManyRequests };
+                return { allowed: false, reason: GQLGatewayDecisionResponseReason.TooManyRequests, pricingPK: null };
             }
 
             // If the counter is too high since the last reset (which is 60s
             // ago), then deny the request.
             if (globalRequestCounter.counterSinceLastReset > 6000) {
-                return { allowed: false, reason: GQLGatewayDecisionResponseReason.TooManyRequests };
+                return { allowed: false, reason: GQLGatewayDecisionResponseReason.TooManyRequests, pricingPK: null };
             }
 
             let gatewayDecisionCache = await gatewayDecisionCachePromise;
 
             // Handle the above race condition
             if (gatewayDecisionCache === null) {
-                return { allowed: false, reason: GQLGatewayDecisionResponseReason.TooManyRequests };
+                return { allowed: false, reason: GQLGatewayDecisionResponseReason.TooManyRequests, pricingPK: null };
             }
 
             // Check if the account balance check can be skipped
@@ -88,16 +95,16 @@ export const gatewayResolvers: GQLResolvers & {
                 //         "ms"
                 //     );
                 // }
-                return { allowed: true, reason: null };
+                return { allowed: true, reason: null, pricingPK: gatewayDecisionCache.pricing };
             }
 
+            let pricingPromise = findUserSubscriptionPricing(context, { app, user });
             // If the balance check cannot be skipped, recompute the decision,
             // to try to make more allowance for the next request.
             // eslint-disable-next-line @typescript-eslint/no-floating-promises
-            createOrUpdateGatewayDecisionCache(context, { user, app, globalRequestCounterPromise });
+            createOrUpdateGatewayDecisionCache(context, { user, app, globalRequestCounterPromise, pricingPromise });
 
             // Run all these promises concurrently
-            let pricingPromise = findUserSubscriptionPricing(context, { app, user });
             let shouldCollectMonthlyChargePromise = checkShouldChargeMonthlyFee(context, { app, user, pricingPromise });
             let hasSufficientFreeQuotaPromise = checkHasSufficientFreeQuota(context, { app, user });
             let hasSufficientBalancePromise = checkHasSufficientBalance(context, {
@@ -122,7 +129,7 @@ export const gatewayResolvers: GQLResolvers & {
                 return {
                     allowed: false,
                     reason: GQLGatewayDecisionResponseReason.NotSubscribed,
-                    pricing: null,
+                    pricingPK: null,
                 };
             }
 
@@ -134,7 +141,7 @@ export const gatewayResolvers: GQLResolvers & {
                     return {
                         allowed: false,
                         reason: GQLGatewayDecisionResponseReason.OwnerInsufficientBalance,
-                        pricing: pricing,
+                        pricingPK: pricing ? PricingPK.stringify(pricing) : null,
                     };
                 }
             } else if (!hasSufficientBalance) {
@@ -143,7 +150,7 @@ export const gatewayResolvers: GQLResolvers & {
                 return {
                     allowed: false,
                     reason: GQLGatewayDecisionResponseReason.InsufficientBalance,
-                    pricing: pricing,
+                    pricingPK: pricing ? PricingPK.stringify(pricing) : null,
                 };
             }
             // {
@@ -153,7 +160,7 @@ export const gatewayResolvers: GQLResolvers & {
             return {
                 allowed: true,
                 reason: null,
-                pricing: pricing,
+                pricingPK: pricing ? PricingPK.stringify(pricing) : null,
             };
         },
     },
@@ -279,16 +286,26 @@ async function getGatewayDecisionCache(
         user,
         app,
         globalRequestCounterPromise,
-    }: { user: string; app: string; globalRequestCounterPromise: Promise<GatewayRequestCounter | null> }
+    }: {
+        user: string;
+        app: string;
+        globalRequestCounterPromise: Promise<GatewayRequestCounter | null>;
+    }
 ): Promise<GatewayRequestDecisionCache | null> {
     return await context.batched.GatewayRequestDecisionCache.getOrNull({
         requester: user,
         app: "<global>",
-    }).then(async (decisionCache) => {
+    }).then(async (decisionCache: GatewayRequestDecisionCache) => {
         // Create the decision cache if it doesn't exist
         if (decisionCache === null) {
             try {
-                return await createOrUpdateGatewayDecisionCache(context, { user, app, globalRequestCounterPromise });
+                let pricingPromise = findUserSubscriptionPricing(context, { user, app });
+                return await createOrUpdateGatewayDecisionCache(context, {
+                    user,
+                    app,
+                    globalRequestCounterPromise,
+                    pricingPromise,
+                });
             } catch (e) {
                 if (e instanceof AlreadyExists) {
                     return null;
@@ -316,13 +333,23 @@ async function createOrUpdateGatewayDecisionCache(
     {
         user,
         app,
+        pricingPromise,
         globalRequestCounterPromise,
-    }: { user: string; app: string; globalRequestCounterPromise: Promise<GatewayRequestCounter | null> }
+    }: {
+        user: string;
+        app: string;
+        pricingPromise: Promise<Pricing | null>;
+        globalRequestCounterPromise: Promise<GatewayRequestCounter | null>;
+    }
 ): Promise<GatewayRequestDecisionCache | null> {
     let startTimer = Date.now();
 
     let currentRequestCounter = await globalRequestCounterPromise;
+    let pricing = await pricingPromise;
     if (currentRequestCounter == null) {
+        return null;
+    }
+    if (pricing == null) {
         return null;
     }
     let { numChecksToSkip, timeUntilNextCheckSeconds } = await estimateAllowanceToSkipBalanceCheck(context, {
@@ -343,6 +370,7 @@ async function createOrUpdateGatewayDecisionCache(
                 useGlobalCounter: true,
                 nextForcedBalanceCheckRequestCount: currentRequestCounter.counter + numChecksToSkip,
                 nextForcedBalanceCheckTime: Date.now() + 1000 * timeUntilNextCheckSeconds, // 1 hour from now
+                pricing: PricingPK.stringify(pricing),
             });
         } catch (e) {
             if (e instanceof AlreadyExists) {
@@ -354,6 +382,7 @@ async function createOrUpdateGatewayDecisionCache(
         decision = await context.batched.GatewayRequestDecisionCache.update(decision, {
             nextForcedBalanceCheckRequestCount: currentRequestCounter.counter + numChecksToSkip,
             nextForcedBalanceCheckTime: Date.now() + 1000 * timeUntilNextCheckSeconds, // 1 hour from now
+            pricing: PricingPK.stringify(pricing),
         });
     }
 

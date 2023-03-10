@@ -38,7 +38,7 @@ enum GatewayDecisionResponseReason {
 type GatewayDecisionResponse {
     allowed: Boolean!
     reason: GatewayDecisionResponseReason
-    pricing: Pricing
+    pricingPK: String
 }
 
 type Mutation {

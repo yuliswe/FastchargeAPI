@@ -443,6 +443,7 @@ const GatewayRequestDecisionCacheTableSchema = new dynamoose.Schema(
     {
         requester: { hashKey: true, type: String, required: true },
         app: { rangeKey: true, type: String, required: true },
+        pricing: { type: String, required: false },
         useGlobalCounter: { type: Boolean, required: true, default: false },
         nextForcedBalanceCheckRequestCount: { type: Number, required: true },
         nextForcedBalanceCheckTime: { type: Number, required: true },
@@ -664,6 +665,7 @@ export class GatewayRequestCounter extends Item {
 export class GatewayRequestDecisionCache extends Item {
     requester: string;
     app: string | null;
+    pricing: string | null;
     useGlobalCounter: boolean;
     nextForcedBalanceCheckRequestCount: number;
     nextForcedBalanceCheckTime: number;
