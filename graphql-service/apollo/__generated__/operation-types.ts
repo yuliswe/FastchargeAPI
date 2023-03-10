@@ -110,6 +110,7 @@ export type GQLEndpointUpdateEndpointArgs = {
 export type GQLGatewayDecisionResponse = {
     __typename?: "GatewayDecisionResponse";
     allowed: Scalars["Boolean"];
+    pricing?: Maybe<GQLPricing>;
     reason?: Maybe<GQLGatewayDecisionResponseReason>;
 };
 
@@ -210,6 +211,7 @@ export type GQLMutationCreateSubscriptionArgs = {
 export type GQLMutationCreateUsageLogArgs = {
     app: Scalars["String"];
     path: Scalars["String"];
+    pricing: Scalars["ID"];
     subscriber: Scalars["Email"];
     volume?: Scalars["Int"];
 };

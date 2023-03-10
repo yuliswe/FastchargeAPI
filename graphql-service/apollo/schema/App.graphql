@@ -38,6 +38,7 @@ enum GatewayDecisionResponseReason {
 type GatewayDecisionResponse {
     allowed: Boolean!
     reason: GatewayDecisionResponseReason
+    pricing: Pricing
 }
 
 type Mutation {
@@ -70,7 +71,7 @@ type Mutation {
 
     createSubscription(app: String!, pricing: ID!, subscriber: Email!): Subscribe!
 
-    createUsageLog(app: String!, path: String!, subscriber: Email!, volume: Int! = 1): UsageLog!
+    createUsageLog(app: String!, path: String!, subscriber: Email!, volume: Int! = 1, pricing: ID!): UsageLog!
 
     createStripePaymentAccept(
         user: String!

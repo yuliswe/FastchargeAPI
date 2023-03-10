@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "description": "",
-  "main": "app.ts",
+  "main": "index.ts",
   "scripts": {
     "gen": "graphql-codegen --config codegen.yml && prettier -w ./__generated__",
     "build": "npm run gen && tsc",

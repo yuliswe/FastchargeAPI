@@ -36,6 +36,8 @@ generates:
         AccountHistory: ../dynamoose/models#AccountHistory
         UsageSummary: ../dynamoose/models#UsageSummary
         Secret: ../dynamoose/models#Secret
+        GatewayRequestCounter: ../dynamoose/models#GatewayRequestCounter
+        GatewayRequestDecisionCache: ../dynamoose/models#GatewayRequestDecisionCache
       enumValues:
         GatewayMode: ../dynamoose/models#GatewayMode
       scalars:

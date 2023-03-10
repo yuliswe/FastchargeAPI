@@ -13,6 +13,8 @@ import type {
     AccountHistory as AccountHistoryData,
     UsageSummary as UsageSummaryData,
     Secret as SecretData,
+    GatewayRequestCounter as GatewayRequestCounterData,
+    GatewayRequestDecisionCache as GatewayRequestDecisionCacheData,
 } from "../dynamoose/models";
 import type { RequestContext } from "../RequestContext";
 export type Maybe<T> = T | null;
@@ -20,6 +22,7 @@ export type InputMaybe<T> = Maybe<T>;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
 export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
+export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 export type EnumResolverSignature<T, AllowedValues = any> = { [key in keyof T]?: AllowedValues };
 export type RequireFields<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: NonNullable<T[P]> };
 /** All built-in and custom scalars, mapped to their actual values */
@@ -129,6 +132,7 @@ export type GQLEndpointUpdateEndpointArgs = {
 export type GQLGatewayDecisionResponse = {
     __typename?: "GatewayDecisionResponse";
     allowed: Scalars["Boolean"];
+    pricing?: Maybe<GQLPricing>;
     reason?: Maybe<GQLGatewayDecisionResponseReason>;
 };
 
@@ -226,6 +230,7 @@ export type GQLMutationCreateSubscriptionArgs = {
 export type GQLMutationCreateUsageLogArgs = {
     app: Scalars["String"];
     path: Scalars["String"];
+    pricing: Scalars["ID"];
     subscriber: Scalars["Email"];
     volume?: Scalars["Int"];
 };
@@ -538,7 +543,9 @@ export type GQLResolversTypes = ResolversObject<{
     DateRangeInput: GQLDateRangeInput;
     Email: ResolverTypeWrapper<Scalars["Email"]>;
     Endpoint: ResolverTypeWrapper<EndpointData>;
-    GatewayDecisionResponse: ResolverTypeWrapper<GQLGatewayDecisionResponse>;
+    GatewayDecisionResponse: ResolverTypeWrapper<
+        Omit<GQLGatewayDecisionResponse, "pricing"> & { pricing?: Maybe<GQLResolversTypes["Pricing"]> }
+    >;
     GatewayDecisionResponseReason: GQLGatewayDecisionResponseReason;
     GatewayMode: GatewayMode;
     HTTPMethod: GQLHttpMethod;
@@ -570,7 +577,9 @@ export type GQLResolversParentTypes = ResolversObject<{
     DateRangeInput: GQLDateRangeInput;
     Email: Scalars["Email"];
     Endpoint: EndpointData;
-    GatewayDecisionResponse: GQLGatewayDecisionResponse;
+    GatewayDecisionResponse: Omit<GQLGatewayDecisionResponse, "pricing"> & {
+        pricing?: Maybe<GQLResolversParentTypes["Pricing"]>;
+    };
     ID: Scalars["ID"];
     Int: Scalars["Int"];
     Mutation: {};
@@ -665,6 +674,7 @@ export type GQLGatewayDecisionResponseResolvers<
     ParentType extends GQLResolversParentTypes["GatewayDecisionResponse"] = GQLResolversParentTypes["GatewayDecisionResponse"]
 > = ResolversObject<{
     allowed?: Resolver<GQLResolversTypes["Boolean"], ParentType, ContextType>;
+    pricing?: Resolver<Maybe<GQLResolversTypes["Pricing"]>, ParentType, ContextType>;
     reason?: Resolver<Maybe<GQLResolversTypes["GatewayDecisionResponseReason"]>, ParentType, ContextType>;
     __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
@@ -736,7 +746,7 @@ export type GQLMutationResolvers<
         GQLResolversTypes["UsageLog"],
         ParentType,
         ContextType,
-        RequireFields<GQLMutationCreateUsageLogArgs, "app" | "path" | "subscriber" | "volume">
+        RequireFields<GQLMutationCreateUsageLogArgs, "app" | "path" | "pricing" | "subscriber" | "volume">
     >;
     createUser?: Resolver<
         GQLResolversTypes["User"],

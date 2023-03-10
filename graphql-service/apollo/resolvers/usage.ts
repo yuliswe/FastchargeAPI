@@ -3,11 +3,7 @@ import type { UsageLog } from "../dynamoose/models";
 import { Denied } from "../errors";
 import { Can } from "../permissions";
 import { RequestContext } from "../RequestContext";
-import {
-    GQLMutationCreateUsageLogArgs,
-    GQLResolvers,
-    GQLUsageLogResolvers,
-} from "../__generated__/resolvers-types";
+import { GQLMutationCreateUsageLogArgs, GQLResolvers, GQLUsageLogResolvers } from "../__generated__/resolvers-types";
 
 /**
  * Remember to add your resolver to the resolvers object in server.ts.
@@ -38,19 +34,17 @@ export const usageLogResolvers: GQLResolvers & {
         collectedAt: (parent: UsageLog) => parent.collectedAt,
         volume: (parent: UsageLog) => parent.volume,
         createdAt: (parent: UsageLog) => parent.createdAt,
-        __isTypeOf: (parent: UsageLog, context) =>
-            parent instanceof context.batched.UsageLog.model,
+        __isTypeOf: (parent: UsageLog, context) => parent instanceof context.batched.UsageLog.model,
     },
     Query: {},
     Mutation: {
         async createUsageLog(
             parent: {},
-            args: GQLMutationCreateUsageLogArgs,
+            { app, path, subscriber, volume, pricing }: GQLMutationCreateUsageLogArgs,
             context: RequestContext,
             info: GraphQLResolveInfo
         ) {
-            let { app, path, subscriber, volume } = args;
-            if (!(await Can.createUsageLog(args, context))) {
+            if (!(await Can.createUsageLog({ app, path, subscriber, volume, pricing }, context))) {
                 throw new Denied();
             }
             await context.batched.App.assertExists(app);
@@ -59,6 +53,7 @@ export const usageLogResolvers: GQLResolvers & {
                 path,
                 subscriber,
                 volume,
+                pricing,
             });
             return log;
         },

@@ -54,7 +54,7 @@ export enum GatewayMode {
 }
 
 class ValidationError {
-    constructor(public field: string, public message: string) { }
+    constructor(public field: string, public message: string) {}
     toString() {
         return `Validation faild on field "${this.field}": "${this.message}".`;
     }
@@ -204,6 +204,7 @@ const UsageLogTableSchema = new dynamoose.Schema(
         volume: { type: Number, default: 1 },
         queuePosition: { type: Number, default: 0 },
         usageSummary: { type: String, required: false, default: undefined },
+        pricing: { type: String, required: false, default: undefined },
     },
     {
         timestamps: {
@@ -520,6 +521,7 @@ export class UsageLog extends Item {
     status: "pending" | "collected";
     collectedAt: number; // When the UsageSummary was created
     usageSummary: string | null; // ID of the UsageSummary item or null if not yet collected
+    pricing: string | null;
 }
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.

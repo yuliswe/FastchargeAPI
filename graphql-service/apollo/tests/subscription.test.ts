@@ -95,6 +95,7 @@ describe("Test when making a request the monthly subscription fee is charged.", 
                     app: "myapp",
                     path: "/google",
                     volume: 1,
+                    pricing: pricingPK,
                 },
                 context,
                 {} as never

@@ -84,6 +84,7 @@ describe("Usage API", () => {
                     app: "myapp",
                     path: "/google",
                     volume: 1,
+                    pricing: pricingPK,
                 },
                 context,
                 {} as never

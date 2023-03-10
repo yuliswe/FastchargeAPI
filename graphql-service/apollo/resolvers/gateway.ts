@@ -2,6 +2,8 @@ import { RequestContext } from "../RequestContext";
 import {
     GQLGatewayDecisionResponse,
     GQLGatewayDecisionResponseReason,
+    GQLGatewayDecisionResponseResolvers,
+    GQLPricing,
     GQLQueryCheckUserIsAllowedForGatewayRequestArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
@@ -23,7 +25,9 @@ import dynamoose from "dynamoose";
 import { AlreadyExists, NotFound } from "../errors";
 const chalk = new Chalk({ level: 3 });
 
-export const gatewayResolvers: GQLResolvers = {
+export const gatewayResolvers: GQLResolvers & {
+    Query: GQLGatewayDecisionResponseResolvers;
+} = {
     Query: {
         /**
          * Used by the Gateway service to check whether the api caller is
@@ -35,7 +39,7 @@ export const gatewayResolvers: GQLResolvers = {
             parent: GQLQueryCheckUserIsAllowedForGatewayRequestArgs,
             { user, app, forceBalanceCheck }: GQLQueryCheckUserIsAllowedForGatewayRequestArgs,
             context: RequestContext
-        ): Promise<GQLGatewayDecisionResponse> {
+        ) {
             // let startTimer = Date.now();
 
             // Increment the request counter, or create it if it doesn't exist
@@ -112,11 +116,13 @@ export const gatewayResolvers: GQLResolvers = {
             let hasSufficientFreeQuota = await hasSufficientFreeQuotaPromise;
             let hasSufficientBalance = await hasSufficientBalancePromise;
             let ownerHasSufficientBalance = await ownerHasSufficientBalancePromise;
+            let pricing = await pricingPromise;
 
             if (!userIsSubscribed) {
                 return {
                     allowed: false,
                     reason: GQLGatewayDecisionResponseReason.NotSubscribed,
+                    pricing: null,
                 };
             }
 
@@ -128,6 +134,7 @@ export const gatewayResolvers: GQLResolvers = {
                     return {
                         allowed: false,
                         reason: GQLGatewayDecisionResponseReason.OwnerInsufficientBalance,
+                        pricing: pricing,
                     };
                 }
             } else if (!hasSufficientBalance) {
@@ -136,6 +143,7 @@ export const gatewayResolvers: GQLResolvers = {
                 return {
                     allowed: false,
                     reason: GQLGatewayDecisionResponseReason.InsufficientBalance,
+                    pricing: pricing,
                 };
             }
             // {
@@ -145,6 +153,7 @@ export const gatewayResolvers: GQLResolvers = {
             return {
                 allowed: true,
                 reason: null,
+                pricing: pricing,
             };
         },
     },
