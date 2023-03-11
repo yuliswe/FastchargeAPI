@@ -53,8 +53,8 @@ class _SubscriptionsPage extends React.Component<Props> {
     render() {
         return (
             <Grid container spacing={2}>
-                {this.subscriptions().map((sub) => (
-                    <Grid item>
+                {this.subscriptions().map((sub, index) => (
+                    <Grid item key={index}>
                         <Card sx={{ p: 3, borderRadius: 5 }}>
                             <CardContent>
                                 <Stack direction="row" spacing={1}>

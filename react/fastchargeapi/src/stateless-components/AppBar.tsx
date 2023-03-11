@@ -85,14 +85,15 @@ export class AppBar extends React.Component<Props, State> {
                 <MUIAppBar position="static" sx={{ bgcolor: "primary.main" }}>
                     <Container maxWidth="xl">
                         <Toolbar>
-                            <Typography
-                                variant="body1"
+                            <Link
                                 sx={{
                                     flexGrow: 1,
                                 }}
                             >
-                                Enpowering developers
-                            </Typography>
+                                <Typography variant="body1">
+                                    Enpowering developers
+                                </Typography>
+                            </Link>
                             <Stack direction="row" spacing={5} mx={5}>
                                 <Link href="/#tag-pricing">
                                     <Typography
@@ -102,7 +103,10 @@ export class AppBar extends React.Component<Props, State> {
                                         Pricing
                                     </Typography>
                                 </Link>
-                                <Link href="https://doc.fastchargeapi.com">
+                                <Link
+                                    href="https://doc.fastchargeapi.com"
+                                    target="_blank"
+                                >
                                     <Typography variant="body1" sx={{}}>
                                         Documentation
                                     </Typography>
@@ -165,7 +169,7 @@ export class AppBar extends React.Component<Props, State> {
                                         <SearchIcon />
                                     </IconButton>
                                     <InputBase
-                                        placeholder="Search"
+                                        placeholder="Search app"
                                         fullWidth
                                         value={this.state.searchText}
                                         onKeyDown={(event) => {

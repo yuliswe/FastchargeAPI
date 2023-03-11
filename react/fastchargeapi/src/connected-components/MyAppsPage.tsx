@@ -84,8 +84,8 @@ class _MyAppsPage extends React.Component<_Props, _State> {
                     New App
                 </Button>
                 <Grid container spacing={2} mt={2}>
-                    {this.appsList().map((app) => (
-                        <Grid item>
+                    {this.appsList().map((app, index) => (
+                        <Grid item key={index}>
                             <Card sx={{ p: 3, borderRadius: 5 }}>
                                 <CardContent>
                                     <Stack direction="row" spacing={1}>

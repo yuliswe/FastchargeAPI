@@ -1,5 +1,6 @@
 import {
     Box,
+    Button,
     Container,
     CssBaseline,
     Grid,
@@ -7,12 +8,16 @@ import {
     Paper,
     Stack,
     ThemeProvider,
+    Typography,
     createTheme,
 } from "@mui/material";
 import React from "react";
 import { AppBar } from "./stateless-components/AppBar";
 import { AppContext, ReactAppContextType } from "./AppContext";
 import CopyrightIcon from "@mui/icons-material/Copyright";
+import HeartIcon from "@mui/icons-material/Favorite";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import GitHubIcon from "@mui/icons-material/GitHub";
 type Props = {
     children: React.ReactNode;
     onSearch?: (query: string) => void;
@@ -27,9 +32,7 @@ export class SiteLayout extends React.PureComponent<Props> {
     render() {
         return (
             <React.Fragment>
-                <AppBar
-                    onSearch={this.props.onSearch}
-                />
+                <AppBar onSearch={this.props.onSearch} />
                 {this.props.children}
                 <Paper sx={{ mt: 15, bgcolor: "primary.main", p: 5 }}>
                     <Container maxWidth="lg">
@@ -57,13 +60,35 @@ export class SiteLayout extends React.PureComponent<Props> {
                                     >
                                         Pricing
                                     </Link>
-                                    <Link>Documentation</Link>
+                                    <Link
+                                        underline="hover"
+                                        href="https://doc.fastchargeapi.com"
+                                        target="_blank"
+                                    >
+                                        <Typography variant="body1">
+                                            Documentation
+                                        </Typography>
+                                    </Link>
                                 </Stack>
                             </Grid>
                             <Grid item xs={3}>
                                 <Stack>
-                                    <Link>Report an Issue</Link>
-                                    <Link>Get help on Discord</Link>
+                                    <Link
+                                        href="https://github.com/FastchargeAPI/fastchargeapi-cli/issues"
+                                        target="_blank"
+                                        underline="hover"
+                                        display="flex"
+                                        alignItems="center"
+                                    >
+                                        Report an Issue
+                                    </Link>
+                                    <Link
+                                        href="https://discord.gg/sfN267KmmW"
+                                        underline="hover"
+                                        target="_blank"
+                                    >
+                                        Get help on Discord
+                                    </Link>
                                 </Stack>
                             </Grid>
                             <Grid item xs={3}>
@@ -78,7 +103,7 @@ export class SiteLayout extends React.PureComponent<Props> {
                                         underline="hover"
                                         href="/terms-of-service#tos"
                                     >
-                                        Terms & Services
+                                        Terms of Service
                                     </Link>
                                 </Stack>
                             </Grid>

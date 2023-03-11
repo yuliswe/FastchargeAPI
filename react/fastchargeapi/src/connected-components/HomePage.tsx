@@ -80,6 +80,7 @@ class _Home extends React.Component<_Props, _State> {
                                     </Typography>
                                     <Box>
                                         <Button
+                                            href="/auth?redirect=/account"
                                             variant="contained"
                                             sx={{
                                                 fontSize: 18,
