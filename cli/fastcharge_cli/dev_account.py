@@ -1,3 +1,4 @@
+from ast import alias
 import textwrap
 import webbrowser
 
@@ -18,19 +19,45 @@ from gql import gql
 from dataclasses import dataclass
 from click import echo
 from . import config
+from click_aliases import ClickAliasedGroup
 
 terminal = Terminal()
 
 
-@fastcharge_dev.group("account")
+@fastcharge_dev.group("account", cls=ClickAliasedGroup)
 @click.help_option("-h", "--help")
-def fastcharge_dev_account():
+def fastcharge_account():
     """View your account balance and metics"""
 
 
-@fastcharge_dev_account.command("info")
+@fastcharge_account.command("update", aliases=["up"])
 @click.help_option("-h", "--help")
-def fastcharge_dev_account_info():
+@click.option("--author")
+def fastcharge_account_update(author: str):
+    """Update account information."""
+    client, user_email = get_client_info()
+    user = client.execute(
+        gql(
+            """
+            query UpdateUserInfo($email: Email!, $author: String!) {
+                user(email: $email) {
+                    updateUser(author: $author) {
+                        updatedAt
+                    }
+                }
+            }
+            """
+        ),
+        variable_values={
+            "email": user_email,
+            "author": author,
+        },
+    )
+
+
+@fastcharge_account.command("info")
+@click.help_option("-h", "--help")
+def fastcharge_account_info():
     """Show account information."""
     client, user_email = get_client_info()
     echo(f"Account: {user_email}")
@@ -77,10 +104,10 @@ def fastcharge_dev_account_info():
     echo()
 
 
-@fastcharge_dev_account.command("withdraw")
+@fastcharge_account.command("withdraw")
 @click.help_option("-h", "--help")
 @click.argument("amount", type=float, required=True)
-def fastcharge_account_dev_withdraw(amount: str):
+def fastcharge_account_withdraw(amount: str):
     """Withdraw account balance to your Stripe account.
 
     Amount in USD.
@@ -162,7 +189,7 @@ def fastcharge_account_dev_withdraw(amount: str):
         echo(terminal.blue + " " + get_dashboard_login_link() + terminal.normal)
 
 
-@fastcharge_dev_account.command("topup")
+@fastcharge_account.command("topup")
 @click.help_option("-h", "--help")
 @click.argument("amount", type=float, required=True)
 def fastcharge_account_topup(amount: float):

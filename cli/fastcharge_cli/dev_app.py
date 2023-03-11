@@ -23,8 +23,7 @@ def fastcharge_dev_app():
 
 @fastcharge_dev_app.command("create", aliases=["new"])
 @click.argument("name", required=True)
-@click.option("--description", help="Description of the app. (100 characters max)")
-def fastcharge_app_create(name: str, description: str = ""):
+def fastcharge_app_create(name: str):
     """Create a new app with [NAME]."""
     if get_app(name) is not None:
         echo(
@@ -38,8 +37,8 @@ def fastcharge_app_create(name: str, description: str = ""):
     result = client.execute(
         gql(
             """
-                mutation ($name: String!, $owner: String!, $description: String) {
-                    createApp(name: $name, owner: $owner, description: $description) {
+                mutation ($name: String!, $owner: String!) {
+                    createApp(name: $name, owner: $owner) {
                         name
                     }
                 }
@@ -50,7 +49,6 @@ def fastcharge_app_create(name: str, description: str = ""):
             for k, v in {
                 "name": name,
                 "owner": email,
-                "description": description,
             }.items()
             if v
         },
@@ -208,21 +206,20 @@ def validate_gateway_mode_or_exit(mode: str):
 @fastcharge_dev_app.command("update", aliases=["up"])
 @click.argument("app_name", required=True)
 @click.option("--description", help="Description of the app. (100 characters max)")
-@click.option("--gateway-mode", help="Use 'proxy' or 'redirect'. (default: proxy)")
+@click.option("--repository", help="URL to the (Github) repository for the app.")
+@click.option("--homepage", help="URL to the homepage for the app.")
 def fastcharge_app_update(
-    app_name: str, description: str = None, gateway_mode: str = None
+    app_name: str, description: str, repository: str, homepage: str
 ):
     """Update information for an existing app."""
-    if gateway_mode is not None:
-        validate_gateway_mode_or_exit(gateway_mode)
     client, email = get_client_info()
     try:
         result = client.execute(
             gql(
                 """
-                query GetAppAndUpdate($app_name: String!, $description: String, $gateway_mode: GatewayMode) {
+                query GetAppAndUpdate($app_name: String!, $description: String, $gateway_mode: GatewayMode, $repository: String, $homepage: String) {
                     app(name: $app_name) {
-                        updateApp(description: $description, gatewayMode: $gateway_mode) {
+                        updateApp(description: $description, gatewayMode: $gateway_mode, repository: $repository, homepage: $homepage) {
                             name
                         }
                     }
@@ -234,7 +231,8 @@ def fastcharge_app_update(
                 for k, v in {
                     "app_name": app_name,
                     "description": description,
-                    "gateway_mode": gateway_mode,
+                    "repository": repository,
+                    "homepage": homepage,
                 }.items()
                 if v is not None
             },

@@ -2,7 +2,7 @@ from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
 from gql.transport.exceptions import TransportQueryError
 from .auth_file import read_auth_file, read_valid_user_from_auth_file
-from .exceptions import AlreadyExists, NotFound
+from .exceptions import AlreadyExists, NotFound, TooManyResources
 from click import echo
 from .config import graphql_host
 import os
@@ -33,6 +33,8 @@ class GQLClient:
                 raise AlreadyExists(str(e))
             elif ext_code == "NOT_FOUND":
                 raise NotFound(str(e))
+            elif ext_code == "TOO_MANY_RESOURCES":
+                raise TooManyResources(str(e))
             else:
                 raise e
 

@@ -1,5 +1,8 @@
+from ast import alias
 import jwt
 import requests
+
+from .exceptions import NotFound, TooManyResources
 from .graphql import get_client_info
 from gql import gql
 from .groups import fastcharge_client
@@ -10,6 +13,7 @@ import click
 
 terminal = Terminal()
 
+
 @fastcharge_client.group("token", cls=ClickAliasedGroup)
 @click.help_option("-h", "--help")
 def fastcharge_token():
@@ -17,57 +21,74 @@ def fastcharge_token():
     pass
 
 
-@fastcharge_token.command("create")
-@click.option(
-    "-a", "--app", "app_name", help="Generates user token for the specified app.", required=True
-)
+@fastcharge_token.command("create", aliases=["new", "add"])
+@click.argument("app_name", required=True)
 def create_app_user_token(app_name):
+    """Create an API token for the specified app."""
+
     client, email = get_client_info()
     try:
         result = client.execute(
             gql(
                 """
-                query($name: String!) {
-                    app(name: $name) {
-                        createAppUserToken
+                query CreateUserAppTpken($user: Email!, $app: ID!) {
+                    user(email: $user) {
+                        createAppToken(app: $app) {
+                            token
+                        }
                     }
                 }
                 """
             ),
-            { "name": app_name }
+            {"app": app_name, "user": email},
         )
-        token = result["app"]["createAppUserToken"]
-        print(f'Successfully created user token for App "{app_name}"')
-        return token
+        token = result["user"]["createAppToken"]["token"]
+        echo(terminal.green("Token created successfully."))
+        echo(terminal.yellow("Save this token! You will not be able to see it again."))
+        echo(token)
+    except NotFound:
+        echo(terminal.red + f'App "{app_name}" not found.' + terminal.normal)
+        exit(1)
+    except TooManyResources:
+        echo(
+            terminal.red
+            + f'A token for app "{app_name}" already exists.'
+            + terminal.normal
+        )
+        exit(1)
     except Exception as e:
-        print(f'Error creating app user token: {str(e)}')
-        return None
+        echo(f"Error creating app user token: {str(e)}")
 
 
-@fastcharge_token.command("revoke")
-@click.option(
-    "-a", "--app", "app_name", help="Revokes user token for the specified app.", required=True
-)
+@fastcharge_token.command("revoke", aliases=["rm", "del"])
+@click.argument("app_name", required=True)
 def revoke_app_user_token(app_name):
+    """Revoke the API token for the specified app."""
     client, email = get_client_info()
     try:
         result = client.execute(
             gql(
                 """
-                query($name: String!) {
-                    app(name: $name) {
-                        revokeAppUserToken
+                query CreateUserAppTpken($user: Email!, $app: ID!) {
+                    user(email: $user) {
+                        appToken(app: $app) {
+                            deleteUserAppToken {
+                                token
+                            }
+                        }
                     }
                 }
                 """
             ),
-            { "name": app_name }
+            {"app": app_name, "user": email},
         )
-        isTokenFound = result["app"]["revokeAppUserToken"]
-        if isTokenFound:
-            print(f'Successfully revoked user token for App "{app_name}".')
-        else:
-            print(f'Token for App "{app_name}" not found.')
+        echo(
+            terminal.green
+            + f'Successfully revoked user token for app "{app_name}".'
+            + terminal.normal
+        )
+    except NotFound:
+        echo(terminal.red + f'Token for app "{app_name}" not found.' + terminal.normal)
     except Exception as e:
-        print(f'Error revoking app user token: {str(e)}')
+        print(f"Error revoking app user token: {str(e)}")
         return None

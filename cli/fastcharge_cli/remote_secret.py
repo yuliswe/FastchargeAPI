@@ -14,6 +14,8 @@ from jose import jws
 from jose import jwe
 from gql import gql
 
+from .exceptions import NotFound
+
 from .graphql import get_client_info
 
 
@@ -129,10 +131,13 @@ class InteractWithReactResult:
         while True:
             time.sleep(self.poll_interval_seconds)
             tries += 1
-            if value := self.getter_func(
-                key=self.key, jwe_secret=self.jwe_secret, jwt_secret=self.jwt_secret
-            ):
-                return value
+            try:
+                if value := self.getter_func(
+                    key=self.key, jwe_secret=self.jwe_secret, jwt_secret=self.jwt_secret
+                ):
+                    return value
+            except NotFound:
+                pass
             if tries >= self.poll_max_count:
                 input(self.poll_max_reached_prompt)
                 continue

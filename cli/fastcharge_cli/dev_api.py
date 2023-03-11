@@ -56,6 +56,15 @@ def validate_path_or_exit(path: str):
     required=True,
     help="Add the API to the app with [APP_NAME].",
 )
+@click.option(
+    "-m",
+    "--method",
+    required=True,
+    type=click.Choice(
+        ["ANY", "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
+    ),
+    help="Set [METHOD] for the API.",
+)
 @click.option("-p", "--path", required=True, help="Set [PATH] for the API.")
 @click.option(
     "-d",
@@ -67,7 +76,7 @@ def validate_path_or_exit(path: str):
 @click.option(
     "--description", "descr", help="Add a description that is visble to customers."
 )
-def api_add(app_name: str, path: str, dest: str, descr: str):
+def api_add(app_name: str, method: str, path: str, dest: str, descr: str):
     """Add an API endpoint to an app.
 
     The API will start forwarding user requests:
@@ -84,8 +93,8 @@ def api_add(app_name: str, path: str, dest: str, descr: str):
         result = client.execute(
             gql(
                 """
-                mutation CreateEndpoint($app: String!, $path: String!, $destination: String!, $description: String) {
-                    createEndpoint(app: $app, path: $path, destination: $destination, description: $description) {
+                mutation CreateEndpoint($app: String!, $path: String!, $method: HTTPMethod!, $destination: String!, $description: String) {
+                    createEndpoint(app:$app, path:$path, method:$method, destination:$destination, description:$description) {
                         path
                         description
                         destination
@@ -95,6 +104,7 @@ def api_add(app_name: str, path: str, dest: str, descr: str):
             ),
             variable_values={
                 "app": app.name,
+                "method": method,
                 "path": path,
                 "destination": dest,
                 "description": descr or "",
@@ -118,7 +128,7 @@ def api_add(app_name: str, path: str, dest: str, descr: str):
 @dataclass
 class APIInfo:
     path: str
-    ref: str
+    pk: str
     destination: str
     description: str
 
@@ -139,7 +149,7 @@ def api_list(app_name: str):
                             name
                             gatewayMode
                             endpoints {
-                                ref,
+                                pk,
                                 path,
                                 destination,
                                 description,
@@ -161,7 +171,7 @@ def api_list(app_name: str):
                             name
                             gatewayMode
                             endpoints {
-                                ref,
+                                pk,
                                 path,
                                 destination,
                                 description,
@@ -186,7 +196,7 @@ def api_list(app_name: str):
                 endpoint = APIInfo(**endpoint)
                 url = f"https://{app['name']}.fastchargeapi.com{endpoint.path}"
                 echo(terminal.bold, nl=False)
-                echo(" Ref id:      " + endpoint.ref)
+                echo(" ID:      " + endpoint.pk)
                 echo(" Endpoint:    " + f"{url} ~> {endpoint.destination}")
                 echo(
                     colorama.Style.DIM
@@ -200,21 +210,21 @@ def api_list(app_name: str):
 
 @fastcharge_dev_api.command("update", aliases=["up"])
 @click.help_option("-h", "--help")
-@click.argument("api_ref_id", required=True)
+@click.argument("api_id", required=True)
 @click.option("-p", "--path", help="Set a new path.")
 @click.option("-d", "--destination", "dest", help="Set a new destination.")
 @click.option("--description", "descr", help="Set a new description.")
-def api_update(api_ref_id: str, path: str, dest: str, descr: str):
+def api_update(api_id: str, path: str, dest: str, descr: str):
     """Update the information of an API.
 
-    eg. fastcharge api update [API_REF_ID] -p /new/path -d https://new-destination.com
+    eg. fastcharge api update [API_ID] -p /new/path -d https://new-destination.com
 
-    To find the API_REF_IDs, see `fastcharge api list`.
+    To find the API_IDs, see `fastcharge api list`.
     """
     client, email = get_client_info()
     try:
         variable_values = {
-            "api_ref_id": api_ref_id,
+            "api_id": api_id,
             "path": path,
             "destination": dest,
             "description": descr,
@@ -224,10 +234,10 @@ def api_update(api_ref_id: str, path: str, dest: str, descr: str):
             gql(
                 """
                 query GetEnpointAndUpdate (
-                    $api_ref_id: ID!,
+                    $api_id: ID!,
                     $path: String, $destination: String, $description: String
                 ) {
-                    endpoint(ref: $api_ref_id) {
+                    endpoint(ref: $api_id) {
                         path
                         updateEndpoint(
                             path: $path, 
@@ -255,7 +265,7 @@ def api_update(api_ref_id: str, path: str, dest: str, descr: str):
         elif isinstance(e, NotFound):
             echo(
                 terminal.red
-                + f"API endpoint id '{api_ref_id}' does not exist."
+                + f"API endpoint id '{api_id}' does not exist."
                 + terminal.normal
             )
         echo(
@@ -274,21 +284,21 @@ def api_update(api_ref_id: str, path: str, dest: str, descr: str):
 
 @fastcharge_dev_api.command("delete", aliases=["del"])
 @click.help_option("-h", "--help")
-@click.argument("api_ref_id", required=True)
-def api_delete(api_ref_id: str):
+@click.argument("api_id", required=True)
+def api_delete(api_id: str):
     """Delete an API.
 
-    eg. fastcharge api delete [API_REF_ID]
+    eg. fastcharge api delete [api_id]
 
-    To find the API_REF_IDs, see `fastcharge api list`.
+    To find the api_ids, see `fastcharge api list`.
     """
     client, email = get_client_info()
     try:
         result = client.execute(
             gql(
                 """
-                query GetEnpointAndDelete ($ref: ID!) {
-                    endpoint(ref: $ref) {
+                query GetEnpointAndDelete ($pk: ID!) {
+                    endpoint(pk: $pk) {
                         path
                         deleteEndpoint {
                             path,
@@ -298,7 +308,7 @@ def api_delete(api_ref_id: str):
                 """
             ),
             variable_values={
-                "ref": api_ref_id,
+                "pk": api_id,
             },
         )
         echo(
@@ -309,7 +319,7 @@ def api_delete(api_ref_id: str):
     except NotFound:
         echo(
             terminal.red
-            + f"API endpoint id '{api_ref_id}' does not exist."
+            + f"API endpoint id '{api_id}' does not exist."
             + terminal.normal
         )
         echo(
