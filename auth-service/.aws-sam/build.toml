@@ -8,7 +8,7 @@ architecture = "arm64"
 handler = "bootstrap"
 manifest_hash = ""
 packagetype = "Zip"
-functions = ["FirebaseTokenAuthorizer"]
+functions = ["FirebaseTokenAuthorizer", "UserAppTokenAuthorizer"]
 
 [function_build_definitions.a249d207-8a1e-45d0-b898-4145f99ba2b0.metadata]
 BuildMethod = "go1.x"

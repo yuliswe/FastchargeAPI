@@ -10,8 +10,13 @@
     "build": "cd app && go build && rm app && cd .. && sam build",
     "deploy": "npm run build && sam deploy",
     "logs": "sam logs --stack-name auth-service --tail",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "npm run build && sam local start-api",
+    "watch": "nodemon -e go,graphql,yaml.json -i generated__graphql.go --signal SIGINT -x 'npm run start || exit 1'"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^2.0.21"
+  }
 }

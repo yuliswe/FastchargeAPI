@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/TwiN/go-color"
@@ -33,7 +34,13 @@ func lambdaHandler(request events.APIGatewayCustomAuthorizerRequestTypeRequest) 
 		return denied(), nil
 	}
 
-	if user, err := verifyIdToken(auth); err == nil {
+	if os.Getenv("AllowUserAppToken") == "1" {
+		if user, err := verifyUserAppToken(auth); err == nil {
+			return allowed(user), nil
+		}
+	}
+
+	if user, err := verifyFirebaseIdToken(auth); err == nil {
 		return allowed(user), nil
 	}
 
@@ -59,7 +66,7 @@ func allow_preflight() *events.APIGatewayCustomAuthorizerResponse {
 	}
 }
 
-func allowed(user *FirebaseUserClaims) *events.APIGatewayCustomAuthorizerResponse {
+func allowed(user *UserClaims) *events.APIGatewayCustomAuthorizerResponse {
 	return &events.APIGatewayCustomAuthorizerResponse{
 		PrincipalID: user.Sub,
 		PolicyDocument: events.APIGatewayCustomAuthorizerPolicy{
@@ -124,16 +131,16 @@ func getGoogleCert(kid string) (*GoogleCert, error) {
 	var googleCert map[string]string
 	if err := json.NewDecoder(resp.Body).Decode(&googleCert); err != nil {
 		fmt.Println(color.Red + "Error decoding google cert: " + err.Error() + color.Reset)
-		panic(err)
+		return nil, err
 	}
 	// Add certs to cache
 	for k, v := range googleCert {
 		if rsaKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(v)); err != nil {
 			fmt.Println(color.Red + "Error decoding google cert: " + err.Error() + color.Reset)
-			panic(err)
+			return nil, err
 		} else if rsaKey == nil {
 			fmt.Println(color.Red + "Error decoding google cert: " + "rsaKey is nil" + color.Reset)
-			panic(errors.New("rsaKey is nil"))
+			return nil, err
 		} else {
 			googleCertCache.Add(&GoogleCert{
 				kid:    k,
@@ -154,12 +161,12 @@ func getGoogleCert(kid string) (*GoogleCert, error) {
 	}
 }
 
-type FirebaseUserClaims struct {
+type UserClaims struct {
 	Email string `json:"email"`
 	Sub   string `json:"sub"`
 }
 
-func verifyIdToken(idToken string) (*FirebaseUserClaims, error) {
+func verifyFirebaseIdToken(idToken string) (*UserClaims, error) {
 	// To verify the signature, first find out which public key certificate was
 	// used to sign the JWT. The key is identified by the key ID (kid) in the
 	// idToken header.
@@ -167,6 +174,10 @@ func verifyIdToken(idToken string) (*FirebaseUserClaims, error) {
 	if err != nil {
 		fmt.Println(color.Red + "Error parsing id token: " + err.Error() + color.Reset)
 		return nil, err
+	}
+	if tokenUnchecked.Header["kid"] == nil {
+		fmt.Println(color.Red + "Error parsing id token: " + "kid is nil" + color.Reset)
+		return nil, errors.New("kid is nil")
 	}
 	kid := tokenUnchecked.Header["kid"].(string)
 	googleCert, err := getGoogleCert(kid)
@@ -195,9 +206,49 @@ func verifyIdToken(idToken string) (*FirebaseUserClaims, error) {
 		return nil, errors.New("Invalid token")
 	}
 	claims := token.Claims
-	firebaseClaim := FirebaseUserClaims{
+	firebaseClaim := UserClaims{
 		Email: claims.(jwt.MapClaims)["email"].(string),
 		Sub:   claims.(jwt.MapClaims)["sub"].(string),
 	}
 	return &firebaseClaim, nil
+}
+
+func verifyUserAppToken(idToken string) (*UserClaims, error) {
+	// To verify the signature, first find out which public key certificate was
+	// used to sign the JWT. The key is identified by the key ID (kid) in the
+	// idToken header.
+	token, err := jwt.NewParser(
+		jwt.WithIssuedAt(),
+		jwt.WithIssuer("fastchargeapi.com"),
+		jwt.WithValidMethods([]string{"ES256"}),
+	).Parse(idToken,
+		// Find the public key certificate corresponding to the key ID (kid)
+		func(token *jwt.Token) (interface{}, error) {
+			pem := getUserAppTokenPublicKey()
+			if key, err := jwt.ParseECPublicKeyFromPEM([]byte(pem)); err != nil {
+				fmt.Println(color.Red + "Error decoding google cert: " + err.Error() + color.Reset)
+				return nil, err
+			} else {
+				return key, nil
+			}
+		})
+	if err != nil {
+		fmt.Println(color.Red + "Error verifying id token: " + err.Error() + color.Reset)
+		return nil, err
+	}
+	// Verify the token is valid
+	if !token.Valid {
+		fmt.Println(color.Red + "Invalid token" + color.Reset)
+		return nil, errors.New("Invalid token")
+	}
+	claims := token.Claims
+	userAppTokenClaims := UserClaims{
+		Email: claims.(jwt.MapClaims)["email"].(string),
+		Sub:   "",
+	}
+	return &userAppTokenClaims, nil
+}
+
+func getUserAppTokenPublicKey() string {
+	return "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE9CR7SW0cTqQBG1vxWnkjk5dO7zfv\nUeueXgubjSD6i6vcmHdetZ25/ItESQDBmX0LL2qYaPzqTJHbWKxqL+6CtA==\n-----END PUBLIC KEY-----\n"
 }

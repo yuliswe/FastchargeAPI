@@ -43,13 +43,13 @@ Resources:
           MetricsEnabled: True
           ResourcePath: "/*" # allows for logging on any resource
           HttpMethod: "*" # allows for logging on any method
-      Auth: # Uses the FirebaseTokenAuthorizer to identify the session user. 
+      Auth: # Uses the UserAppTokenAuthorizer to identify the session user. 
         ApiKeyRequired: false
-        DefaultAuthorizer: FirebaseTokenAuthorizer
+        DefaultAuthorizer: UserAppTokenAuthorizer
         Authorizers:
-          FirebaseTokenAuthorizer:
+          UserAppTokenAuthorizer:
             FunctionPayloadType: REQUEST
-            FunctionArn: arn:aws:lambda:us-east-1:887279901853:function:FirebaseTokenAuthorizer
+            FunctionArn: arn:aws:lambda:us-east-1:887279901853:function:UserAppTokenAuthorizer
             Identity:
               ReauthorizeEvery: 300
               Headers: [ "Authorization" ]
