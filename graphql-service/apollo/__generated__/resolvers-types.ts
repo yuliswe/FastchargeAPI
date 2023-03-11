@@ -102,6 +102,10 @@ export type GQLAppUpdateAppArgs = {
     gatewayMode?: InputMaybe<GatewayMode>;
 };
 
+export enum GQLAppIndex {
+    IndexByOwnerOnlyPk = "indexByOwner__onlyPK",
+}
+
 export type GQLDateRangeInput = {
     end?: InputMaybe<Scalars["Timestamp"]>;
     start?: InputMaybe<Scalars["Timestamp"]>;
@@ -563,6 +567,7 @@ export type GQLResolversTypes = ResolversObject<{
     AccountActivityType: GQLAccountActivityType;
     AccountHistory: ResolverTypeWrapper<AccountHistoryData>;
     App: ResolverTypeWrapper<AppData>;
+    AppIndex: GQLAppIndex;
     Boolean: ResolverTypeWrapper<Scalars["Boolean"]>;
     DateRangeInput: GQLDateRangeInput;
     Email: ResolverTypeWrapper<Scalars["Email"]>;

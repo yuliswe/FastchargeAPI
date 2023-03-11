@@ -99,21 +99,17 @@ const UserTableSchema = new dynamoose.Schema(
 
 const AppTableSchema = new dynamoose.Schema(
     {
-        name: { hashKey: true, ...String_Required_NotEmpty("name") },
-        owner: { index: true, ...String_Required_NotEmpty("owner") },
-        gatewayMode: {
+        name: { hashKey: true, type: String, required: true },
+        owner: {
             type: String,
-            default: "proxy",
-            validate: (str: string) => {
-                if (str == null) {
-                    return true;
-                }
-                if (!/proxy|redirect/.test(str)) {
-                    throw new ValidationError("gatewayMode", "Must be either 'proxy' or 'redirect'");
-                }
-                return true;
+            required: true,
+            index: {
+                type: "global",
+                name: "indexByOwner__onlyPK",
+                project: ["name", "owner"],
             },
         },
+        gatewayMode: { type: String, default: "proxy", enum: ["proxy", "redirect"] },
         description: { default: "", type: String },
         repository: { default: "", type: String },
         homepage: { default: "", type: String },

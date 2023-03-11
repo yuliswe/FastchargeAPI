@@ -172,6 +172,10 @@ type App {
     deleteApp: App!
 }
 
+enum AppIndex {
+    indexByOwner__onlyPK
+}
+
 enum HTTPMethod {
     ANY
     GET

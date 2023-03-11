@@ -10,6 +10,8 @@ export function handleError(formattedError: GraphQLFormattedError, error: any): 
     let originalError = unwrapResolverError(error);
     console.error(chalk.red(JSON.stringify(originalError)));
     console.error(originalError);
+    console.error(chalk.red(JSON.stringify(error)));
+    console.error(error);
     for (let errtype of [DynamooseError.TypeMismatch, DynamooseError.ValidationError]) {
         if (originalError instanceof errtype) {
             return {

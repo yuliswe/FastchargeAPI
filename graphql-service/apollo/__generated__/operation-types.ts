@@ -80,6 +80,10 @@ export type GQLAppUpdateAppArgs = {
     gatewayMode?: InputMaybe<GQLGatewayMode>;
 };
 
+export enum GQLAppIndex {
+    IndexByOwnerOnlyPk = "indexByOwner__onlyPK",
+}
+
 export type GQLDateRangeInput = {
     end?: InputMaybe<Scalars["Timestamp"]>;
     start?: InputMaybe<Scalars["Timestamp"]>;

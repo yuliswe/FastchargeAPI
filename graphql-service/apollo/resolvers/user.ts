@@ -4,6 +4,7 @@ import { AlreadyExists, Denied, TooManyResources } from "../errors";
 import { Can } from "../permissions";
 import { RequestContext } from "../RequestContext";
 import {
+    GQLAppIndex,
     GQLMutationCreateUserArgs,
     GQLQueryUserArgs,
     GQLResolvers,
@@ -33,7 +34,12 @@ export const userResolvers: GQLResolvers & {
             return user.email;
         },
         async apps(parent: User, args: {}, context: RequestContext, info: GraphQLResolveInfo) {
-            let apps = await context.batched.App.many({ owner: parent.email });
+            let apps = await context.batched.App.many(
+                { owner: parent.email },
+                {
+                    using: GQLAppIndex.IndexByOwnerOnlyPk,
+                }
+            );
             let visableApps = await Can.viewAppFilter(apps, context);
             return visableApps;
         },
