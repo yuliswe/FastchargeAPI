@@ -1,0 +1,76 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* You can override the default Infima variables here. */
+:root {
+    --yellow: #ffc100;
+    --blue: #3772ff;
+    --white: #e8e9eb;
+    --black: #313638;
+    --ifm-color-primary: var(--yellow);
+    --ifm-color-primary-dark: #e6ae00;
+    --ifm-color-primary-darker: #d9a400;
+    --ifm-color-primary-darkest: #b38700;
+    --ifm-color-primary-light: #ffc71a;
+    --ifm-color-primary-lighter: #ffca26;
+    --ifm-color-primary-lightest: #ffd44d;
+    --ifm-code-font-size: 95%;
+    --ifm-heading-color: var(--black);
+    --ifm-font-color-base: var(--black);
+    --ifm-font-color-base-inverse: var(--black);
+    --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+    --ifm-font-family-base: "Ubuntu", sans-serif;
+    --ifm-heading-font-family: "Ubuntu", sans-serif;
+
+    --ifm-link-color: var(--ifm-color-primary-darker);
+    --ifm-navbar-link-hover-color: var(--ifm-color-primary-darker);
+    --ifm-menu-color-active: var(--ifm-color-primary-darkest);
+    --ifm-breadcrumb-color-active: var(--ifm-color-primary-darkest);
+    --ifm-footer-background-color: var(--black);
+}
+
+/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme="dark"] {
+    --ifm-color-primary: var(--yellow);
+    --ifm-color-primary-dark: #e6ae00;
+    --ifm-color-primary-darker: #d9a400;
+    --ifm-color-primary-darkest: #b38700;
+    --ifm-color-primary-light: #ffc71a;
+    --ifm-color-primary-lighter: #ffca26;
+    --ifm-color-primary-lightest: #ffd44d;
+    --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+
+    --ifm-heading-color: var(--white);
+    --ifm-font-color-base: var(--white);
+    --ifm-font-color-base-inverse: var(--white);
+}
+
+html[data-theme="dark"] {
+    --ifm-background-color: #222;
+    --ifm-background-surface-color: #121212;
+}
+
+@font-face {
+    font-family: "Ubuntu";
+    src: url("/font/Ubuntu/Ubuntu-Regular.ttf");
+}
+
+.table-of-contents__link:hover {
+    color: var(--ifm-color-primary-darker);
+}
+.table-of-contents__link--active {
+    color: var(--ifm-menu-color-active);
+}
+
+.hero--primary {
+    background-color: var(--yellow);
+    * {
+        color: var(--black);
+    }
+    .button {
+        font-weight: 300;
+    }
+}

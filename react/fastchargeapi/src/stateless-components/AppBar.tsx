@@ -102,9 +102,11 @@ export class AppBar extends React.Component<Props, State> {
                                         Pricing
                                     </Typography>
                                 </Link>
-                                <Typography variant="body1" sx={{}}>
-                                    Documentation
-                                </Typography>
+                                <Link href="https://doc.fastchargeapi.com">
+                                    <Typography variant="body1" sx={{}}>
+                                        Documentation
+                                    </Typography>
+                                </Link>
                             </Stack>
                         </Toolbar>
                     </Container>
@@ -168,7 +170,9 @@ export class AppBar extends React.Component<Props, State> {
                                         value={this.state.searchText}
                                         onKeyDown={(event) => {
                                             if (event.key === "Enter") {
-                                                this.props.onSearch?.(this.state.searchText);
+                                                this.props.onSearch?.(
+                                                    this.state.searchText
+                                                );
                                                 this._context.route?.navigate({
                                                     pathname: "/search",
                                                     search: createSearchParams({
@@ -203,7 +207,9 @@ export class AppBar extends React.Component<Props, State> {
                                         }}
                                         href={`/search?q=${this.state.searchText}`}
                                         onClick={() => {
-                                            this.props.onSearch?.(this.state.searchText);
+                                            this.props.onSearch?.(
+                                                this.state.searchText
+                                            );
                                         }}
                                     >
                                         <Typography>Search</Typography>

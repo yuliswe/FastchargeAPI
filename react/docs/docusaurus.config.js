@@ -24,6 +24,8 @@ const config = {
     onBrokenLinks: "throw",
     onBrokenMarkdownLinks: "warn",
 
+    staticDirectories: ["static"],
+
     // Even if you don't use internalization, you can use this field to set useful
     // metadata like html lang. For example, if your site is Chinese, you may want
     // to replace "en" with "zh-Hans".
@@ -31,6 +33,8 @@ const config = {
         defaultLocale: "en",
         locales: ["en"],
     },
+
+    plugins: ["docusaurus-plugin-sass"],
 
     presets: [
         [
@@ -52,7 +56,7 @@ const config = {
                         "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/",
                 },
                 theme: {
-                    customCss: require.resolve("./src/css/custom.css"),
+                    customCss: [require.resolve("./src/css/custom.scss")],
                 },
             }),
         ],
@@ -64,10 +68,10 @@ const config = {
             // Replace with your project's social card
             image: "img/docusaurus-social-card.jpg",
             navbar: {
-                title: "My Site",
+                title: "Documentation",
                 logo: {
-                    alt: "My Site Logo",
-                    src: "img/logo.svg",
+                    alt: "FastchargeAPI Logo",
+                    src: "img/logo2.png",
                 },
                 items: [
                     {
@@ -78,9 +82,10 @@ const config = {
                     },
                     { to: "/blog", label: "Blog", position: "left" },
                     {
-                        href: "https://github.com/facebook/docusaurus",
-                        label: "GitHub",
+                        href: "https://fastchargeapi.com",
+                        label: "FastchargeAPI",
                         position: "right",
+                        target: "_self",
                     },
                 ],
             },
