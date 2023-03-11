@@ -4,44 +4,103 @@ sidebar_position: 1
 
 # Tutorial Intro
 
-Let's discover **Docusaurus in less than 5 minutes**.
+FastchargeAPI is an API gateway service that helps meter API usages and charge your customer.
 
-## Getting Started
+Let's set up your API on **FastchargeAPI in less than 5 minutes**.
 
-Get started by **creating a new site**.
+## Getting started
 
-Or **try Docusaurus immediately** with **[docusaurus.new](https://docusaurus.new)**.
+FastchargeAPI is the right choice for you if:
+
+* You have an existing HTTP API service. This can be a REST API, GraphQL, or
+  any HTTP server. 
+* You want to charge API callers on a monthly or a per-request basis.
+* You can set up a Stripe account to receive payment in your region.
+
+
+For the purpose of this tutorial, we will use Google https://google.com as our
+HTTP service, and create an app that charges the customer whenever they send a
+GET request to our app, which is redirected to Google.
+
 
 ### What you'll need
 
--   [Node.js](https://nodejs.org/en/download/) version 16.14 or above:
-    -   When installing Node.js, you are recommended to check all checkboxes related to dependencies.
+-   [Python](https://www.python.org/) version 3.9 or above:
+    -   A package manager such as [pip](https://pypi.org/project/pip/) or
+        [poetry](https://python-poetry.org/).
 
-## Generate a new site
+## Install the FastchargeAPI cli-tools:
 
-Generate a new Docusaurus site using the **classic template**.
-
-The classic template will automatically be added to your project after you run the command:
+Install the cli tool from pypi:
 
 ```bash
-npm init docusaurus@latest my-website classic
+pip install -U fastchargeapi-cli
 ```
 
 You can type this command into Command Prompt, Powershell, Terminal, or any other integrated terminal of your code editor.
 
-The command also installs all necessary dependencies you need to run Docusaurus.
+The command also all necessary dependencies you need. It will install 2 command-line toos:
 
-## Start your site
+* `fastcharge` - tool when you are publishing an app 
+* `fastapi` - tool when you are using an app published by someone else
 
-Run the development server:
+## Create your app
+
+Sign in or sign up for the fist time to FastchargeAPI.com:
 
 ```bash
-cd my-website
-npm run start
+fastcharge login
 ```
 
-The `cd` command changes the directory you're working with. In order to work with your newly created Docusaurus site, you'll need to navigate the terminal there.
+A browser window should open. Complete the sign-in and return to the command-line.
 
-The `npm run start` command builds your website locally and serves it through a development server, ready for you to view at http://localhost:3000/.
+After sign-in, create an app with the following command:
 
-Open `docs/intro.md` (this page) and edit some lines: the site **reloads automatically** and displays your changes.
+```bash
+fastcharge app create [NAME]
+```
+
+Replace the `[NAME]` with a name you desire for the app. The name is
+**case-insensitive**, unique (not registered by someone else), and must satisfy:
+
+* Have a length no greater than 30.
+* Must begin and end with an alpha-numeric (i.e. letters [A-Za-z] or digits
+[0-9]).
+* May contain hyphens (dashes), but may not begin or end with a hyphen.
+
+For example, we use `myapp` as the app name:
+
+```bash
+fastcharge app create "myapp"
+```
+
+
+### Add an API Endpoint
+
+After an app is created, you can add API endpoints to the app. An endpoint
+consists of a `path` and a `destination`. Any endpoint of the app becomes available at:
+
+```
+https://[APP_NAME].fastchargeapi.com/[PATH]
+```
+
+When a customer sends any HTTP request to the url above, the request is billed,
+and proxied to the `destination`.
+
+For example, we add an endpoint with the path being `/google` and the
+destination being `https://google.com`.
+
+
+```bash
+fastcharge api add --app "myapp" --path "/google" --destination "https://google.com"
+```
+
+After that, we have a live endpoint https://myapp.fastchargeapi.com/google pointing to https://google.com.
+
+## Final words
+
+That's it! With 3 simple commands, you have created a live app that charges the
+customer whenever they make a request.
+
+For the next step, you might be interested in learning how to use an app
+published by someone else.

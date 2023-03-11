@@ -25,7 +25,8 @@
     --ifm-font-family-base: "Ubuntu", sans-serif;
     --ifm-heading-font-family: "Ubuntu", sans-serif;
 
-    --ifm-link-color: var(--ifm-color-primary-darker);
+    --ifm-link-color: var(--blue);
+    --ifm-link-hover-color: var(--ifm-color-primary-darker);
     --ifm-navbar-link-hover-color: var(--ifm-color-primary-darker);
     --ifm-menu-color-active: var(--ifm-color-primary-darkest);
     --ifm-breadcrumb-color-active: var(--ifm-color-primary-darkest);
@@ -72,5 +73,19 @@ html[data-theme="dark"] {
     }
     .button {
         font-weight: 300;
+    }
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    a {
+        color: var(--ifm-heading-color);
+        &:hover {
+            color: var(--ifm-color-primary-darker);
+        }
     }
 }
