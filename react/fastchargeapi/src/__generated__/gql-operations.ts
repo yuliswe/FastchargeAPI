@@ -68,7 +68,6 @@ export type GQLAccountHistory = {
 
 export type GQLApp = {
     __typename?: "App";
-    createAppUserToken: Scalars["String"];
     deleteApp: GQLApp;
     description: Scalars["String"];
     endpoints: Array<GQLEndpoint>;
@@ -79,7 +78,6 @@ export type GQLApp = {
     owner: GQLUser;
     pricingPlans: Array<GQLPricing>;
     repository?: Maybe<Scalars["String"]>;
-    revokeAppUserToken: Scalars["Boolean"];
     updateApp: GQLApp;
 };
 
@@ -410,9 +408,11 @@ export type GQLUser = {
     __typename?: "User";
     accountActivities: Array<GQLAccountActivity>;
     accountHistories: Array<GQLAccountHistory>;
+    appToken: GQLUserAppToken;
     apps: Array<GQLApp>;
     author: Scalars["String"];
     balance: Scalars["String"];
+    createAppToken: GQLUserAppToken;
     createdAt: Scalars["Timestamp"];
     email: Scalars["Email"];
     settleAccountActivities: Array<GQLAccountActivity>;
@@ -435,6 +435,14 @@ export type GQLUserAccountHistoriesArgs = {
     limit?: InputMaybe<Scalars["Int"]>;
 };
 
+export type GQLUserAppTokenArgs = {
+    app: Scalars["ID"];
+};
+
+export type GQLUserCreateAppTokenArgs = {
+    app: Scalars["ID"];
+};
+
 export type GQLUserUpdateUserArgs = {
     author?: InputMaybe<Scalars["String"]>;
     stripeConnectAccountId?: InputMaybe<Scalars["String"]>;
@@ -452,6 +460,17 @@ export type GQLUserUsageSummariesArgs = {
     app: Scalars["ID"];
     dateRange?: InputMaybe<GQLDateRangeInput>;
     limit?: InputMaybe<Scalars["Int"]>;
+};
+
+export type GQLUserAppToken = {
+    __typename?: "UserAppToken";
+    app: GQLApp;
+    createdAt: Scalars["Timestamp"];
+    deleteUserAppToken: GQLUserAppToken;
+    signature: Scalars["String"];
+    subscriber: GQLUser;
+    token?: Maybe<Scalars["String"]>;
+    updatedAt: Scalars["Timestamp"];
 };
 
 export type GQLAppDetailLoadAppInfoQueryVariables = Exact<{
