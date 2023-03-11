@@ -15,6 +15,7 @@ import {
     StripeTransferModel,
     GatewayRequestCounterModel,
     GatewayRequestDecisionCacheModel,
+    UserAppTokenModel,
 } from "./dynamoose/models";
 
 export type RequestService = "payment" | "gateway" | "internal";
@@ -43,5 +44,6 @@ export function createDefaultContextBatched() {
         StripeTransfer: new Batched(StripeTransferModel),
         GatewayRequestCounter: new Batched(GatewayRequestCounterModel),
         GatewayRequestDecisionCache: new Batched(GatewayRequestDecisionCacheModel),
+        UserAppToken: new Batched(UserAppTokenModel),
     };
 }

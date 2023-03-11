@@ -1,6 +1,6 @@
 import { GraphQLResolveInfo } from "graphql";
-import { AccountActivity, User, UserModel } from "../dynamoose/models";
-import { Denied } from "../errors";
+import { AccountActivity, User, UserAppToken, UserModel } from "../dynamoose/models";
+import { AlreadyExists, Denied, TooManyResources } from "../errors";
 import { Can } from "../permissions";
 import { RequestContext } from "../RequestContext";
 import {
@@ -8,6 +8,8 @@ import {
     GQLQueryUserArgs,
     GQLResolvers,
     GQLUserAccountActivitiesArgs,
+    GQLUserAppToken,
+    GQLUserCreateAppTokenArgs,
     GQLUserResolvers,
     GQLUserUpdateUserArgs,
     GQLUserUsageLogsArgs,
@@ -15,6 +17,8 @@ import {
 } from "../__generated__/resolvers-types";
 import { UserPK } from "../pks/UserPK";
 import { getUserBalance, settleAccountActivities } from "../functions/account";
+import { makeAppTokenForUser } from "../functions/token";
+import { AppPK } from "../pks/AppPK";
 
 export const userResolvers: GQLResolvers & {
     User: Required<GQLUserResolvers>;
@@ -39,14 +43,17 @@ export const userResolvers: GQLResolvers & {
             });
         },
         author: (parent) => parent.author || "",
-        balance: async (parent, args, context) => {
+        async balance(parent, args, context) {
             return await getUserBalance(context, UserPK.stringify(parent));
         },
         createdAt: (parent) => parent.createdAt,
         updatedAt: (parent) => parent.updatedAt,
         stripeCustomerId: (parent) => parent.stripeCustomerId,
         stripeConnectAccountId: (parent) => parent.stripeConnectAccountId,
-        accountActivities: async (parent: User, { limit, dateRange }: GQLUserAccountActivitiesArgs, context) => {
+        async appToken(parent, { app }, context) {
+            return await context.batched.UserAppToken.get({ subscriber: parent.email, app });
+        },
+        async accountActivities(parent: User, { limit, dateRange }: GQLUserAccountActivitiesArgs, context) {
             let result = await context.batched.AccountActivity.many(
                 {
                     user: UserPK.stringify(parent),
@@ -64,7 +71,7 @@ export const userResolvers: GQLResolvers & {
             );
             return result;
         },
-        accountHistories: async (parent: User, { limit, dateRange }: GQLUserAccountActivitiesArgs, context) => {
+        async accountHistories(parent: User, { limit, dateRange }: GQLUserAccountActivitiesArgs, context) {
             let result = await context.batched.AccountHistory.many(
                 {
                     user: UserPK.stringify(parent),
@@ -149,6 +156,32 @@ export const userResolvers: GQLResolvers & {
                 return [];
             }
             return result.affectedAccountActivities;
+        },
+
+        async createAppToken(
+            parent: User,
+            { app }: GQLUserCreateAppTokenArgs,
+            context: RequestContext
+        ): Promise<UserAppToken> {
+            await context.batched.App.get(AppPK.parse(app)); // check that the app exists
+            let { token: tokenString, signature } = await makeAppTokenForUser(context, {
+                user: UserPK.stringify(parent),
+                app,
+            });
+            let existing = await context.batched.UserAppToken.getOrNull({
+                subscriber: UserPK.stringify(parent),
+                app,
+            });
+            if (existing) {
+                throw new TooManyResources("A token already exists for this user and app.");
+            }
+            let token = await context.batched.UserAppToken.create({
+                subscriber: UserPK.stringify(parent),
+                app,
+                signature,
+            });
+            token.token = tokenString; // Do not store the token string in the database.
+            return token;
         },
     },
     Query: {

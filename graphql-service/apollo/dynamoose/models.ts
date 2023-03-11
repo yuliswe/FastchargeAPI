@@ -91,10 +91,8 @@ const UserTableSchema = new dynamoose.Schema(
         author: { type: String, default: "" },
         stripeCustomerId: { type: String, default: "" }, // Available after the user first tops up their account
         stripeConnectAccountId: { type: String, default: "" }, // Available after the user first onboards their Stripe account
-        appTokens: { type: Object, default: {} },
     },
     {
-        saveUnknown: ["appTokens.*"],
         timestamps: true,
     }
 );
@@ -451,6 +449,24 @@ const GatewayRequestDecisionCacheTableSchema = new dynamoose.Schema(
     }
 );
 
+const UserAppTokenTableSchema = new dynamoose.Schema(
+    {
+        subscriber: { hashKey: true, type: String, required: true },
+        app: { type: String, required: true },
+        signature: { type: String, required: true },
+        createdAt: {
+            type: Number,
+            rangeKey: true,
+            default: defaultCreatedAt,
+        },
+    },
+    {
+        timestamps: {
+            updatedAt: "updatedAt",
+        },
+    }
+);
+
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
 export class App extends Item {
@@ -667,6 +683,15 @@ export class GatewayRequestDecisionCache extends Item {
     nextForcedBalanceCheckTime: number;
 }
 
+export class UserAppToken extends Item {
+    subscriber: string;
+    app: string;
+    signature: string;
+    createdAt: number;
+    updatedAt: number;
+    token: string | null;
+}
+
 export const AppModel = dynamoose.model<App>("App", AppTableSchema, {
     ...tableConfigs,
 });
@@ -707,3 +732,6 @@ export const GatewayRequestDecisionCacheModel = dynamoose.model<GatewayRequestDe
     GatewayRequestDecisionCacheTableSchema,
     { ...tableConfigs }
 );
+export const UserAppTokenModel = dynamoose.model<UserAppToken>("UserAppToken", UserAppTokenTableSchema, {
+    ...tableConfigs,
+});

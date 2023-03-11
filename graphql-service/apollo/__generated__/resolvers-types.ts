@@ -15,6 +15,7 @@ import type {
     Secret as SecretData,
     GatewayRequestCounter as GatewayRequestCounterData,
     GatewayRequestDecisionCache as GatewayRequestDecisionCacheData,
+    UserAppToken as UserAppTokenData,
 } from "../dynamoose/models";
 import type { RequestContext } from "../RequestContext";
 export type Maybe<T> = T | null;
@@ -83,7 +84,6 @@ export type GQLAccountHistory = {
 
 export type GQLApp = {
     __typename?: "App";
-    createAppUserToken: Scalars["String"];
     deleteApp: GQLApp;
     description: Scalars["String"];
     endpoints: Array<GQLEndpoint>;
@@ -94,7 +94,6 @@ export type GQLApp = {
     owner: GQLUser;
     pricingPlans: Array<GQLPricing>;
     repository?: Maybe<Scalars["String"]>;
-    revokeAppUserToken: Scalars["Boolean"];
     updateApp: GQLApp;
 };
 
@@ -422,9 +421,11 @@ export type GQLUser = {
     __typename?: "User";
     accountActivities: Array<GQLAccountActivity>;
     accountHistories: Array<GQLAccountHistory>;
+    appToken: GQLUserAppToken;
     apps: Array<GQLApp>;
     author: Scalars["String"];
     balance: Scalars["String"];
+    createAppToken: GQLUserAppToken;
     createdAt: Scalars["Timestamp"];
     email: Scalars["Email"];
     settleAccountActivities: Array<GQLAccountActivity>;
@@ -447,6 +448,14 @@ export type GQLUserAccountHistoriesArgs = {
     limit?: InputMaybe<Scalars["Int"]>;
 };
 
+export type GQLUserAppTokenArgs = {
+    app: Scalars["ID"];
+};
+
+export type GQLUserCreateAppTokenArgs = {
+    app: Scalars["ID"];
+};
+
 export type GQLUserUpdateUserArgs = {
     author?: InputMaybe<Scalars["String"]>;
     stripeConnectAccountId?: InputMaybe<Scalars["String"]>;
@@ -464,6 +473,17 @@ export type GQLUserUsageSummariesArgs = {
     app: Scalars["ID"];
     dateRange?: InputMaybe<GQLDateRangeInput>;
     limit?: InputMaybe<Scalars["Int"]>;
+};
+
+export type GQLUserAppToken = {
+    __typename?: "UserAppToken";
+    app: GQLApp;
+    createdAt: Scalars["Timestamp"];
+    deleteUserAppToken: GQLUserAppToken;
+    signature: Scalars["String"];
+    subscriber: GQLUser;
+    token?: Maybe<Scalars["String"]>;
+    updatedAt: Scalars["Timestamp"];
 };
 
 export type WithIndex<TObject> = TObject & Record<string, any>;
@@ -569,6 +589,7 @@ export type GQLResolversTypes = ResolversObject<{
     UsageLog: ResolverTypeWrapper<UsageLogData>;
     UsageSummary: ResolverTypeWrapper<UsageSummaryData>;
     User: ResolverTypeWrapper<UserData>;
+    UserAppToken: ResolverTypeWrapper<UserAppTokenData>;
 }>;
 
 /** Mapping between all available schema types and the resolvers parents */
@@ -596,6 +617,7 @@ export type GQLResolversParentTypes = ResolversObject<{
     UsageLog: UsageLogData;
     UsageSummary: UsageSummaryData;
     User: UserData;
+    UserAppToken: UserAppTokenData;
 }>;
 
 export type GQLAccountActivityResolvers<
@@ -629,7 +651,6 @@ export type GQLAppResolvers<
     ContextType = RequestContext,
     ParentType extends GQLResolversParentTypes["App"] = GQLResolversParentTypes["App"]
 > = ResolversObject<{
-    createAppUserToken?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
     deleteApp?: Resolver<GQLResolversTypes["App"], ParentType, ContextType>;
     description?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
     endpoints?: Resolver<Array<GQLResolversTypes["Endpoint"]>, ParentType, ContextType>;
@@ -640,7 +661,6 @@ export type GQLAppResolvers<
     owner?: Resolver<GQLResolversTypes["User"], ParentType, ContextType>;
     pricingPlans?: Resolver<Array<GQLResolversTypes["Pricing"]>, ParentType, ContextType>;
     repository?: Resolver<Maybe<GQLResolversTypes["String"]>, ParentType, ContextType>;
-    revokeAppUserToken?: Resolver<GQLResolversTypes["Boolean"], ParentType, ContextType>;
     updateApp?: Resolver<GQLResolversTypes["App"], ParentType, ContextType, Partial<GQLAppUpdateAppArgs>>;
     __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
@@ -945,9 +965,21 @@ export type GQLUserResolvers<
         ContextType,
         RequireFields<GQLUserAccountHistoriesArgs, "limit">
     >;
+    appToken?: Resolver<
+        GQLResolversTypes["UserAppToken"],
+        ParentType,
+        ContextType,
+        RequireFields<GQLUserAppTokenArgs, "app">
+    >;
     apps?: Resolver<Array<GQLResolversTypes["App"]>, ParentType, ContextType>;
     author?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
     balance?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
+    createAppToken?: Resolver<
+        GQLResolversTypes["UserAppToken"],
+        ParentType,
+        ContextType,
+        RequireFields<GQLUserCreateAppTokenArgs, "app">
+    >;
     createdAt?: Resolver<GQLResolversTypes["Timestamp"], ParentType, ContextType>;
     email?: Resolver<GQLResolversTypes["Email"], ParentType, ContextType>;
     settleAccountActivities?: Resolver<Array<GQLResolversTypes["AccountActivity"]>, ParentType, ContextType>;
@@ -971,6 +1003,20 @@ export type GQLUserResolvers<
     __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
+export type GQLUserAppTokenResolvers<
+    ContextType = RequestContext,
+    ParentType extends GQLResolversParentTypes["UserAppToken"] = GQLResolversParentTypes["UserAppToken"]
+> = ResolversObject<{
+    app?: Resolver<GQLResolversTypes["App"], ParentType, ContextType>;
+    createdAt?: Resolver<GQLResolversTypes["Timestamp"], ParentType, ContextType>;
+    deleteUserAppToken?: Resolver<GQLResolversTypes["UserAppToken"], ParentType, ContextType>;
+    signature?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
+    subscriber?: Resolver<GQLResolversTypes["User"], ParentType, ContextType>;
+    token?: Resolver<Maybe<GQLResolversTypes["String"]>, ParentType, ContextType>;
+    updatedAt?: Resolver<GQLResolversTypes["Timestamp"], ParentType, ContextType>;
+    __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+}>;
+
 export type GQLResolvers<ContextType = RequestContext> = ResolversObject<{
     AccountActivity?: GQLAccountActivityResolvers<ContextType>;
     AccountHistory?: GQLAccountHistoryResolvers<ContextType>;
@@ -991,4 +1037,5 @@ export type GQLResolvers<ContextType = RequestContext> = ResolversObject<{
     UsageLog?: GQLUsageLogResolvers<ContextType>;
     UsageSummary?: GQLUsageSummaryResolvers<ContextType>;
     User?: GQLUserResolvers<ContextType>;
+    UserAppToken?: GQLUserAppTokenResolvers<ContextType>;
 }>;

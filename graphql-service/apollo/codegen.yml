@@ -38,6 +38,7 @@ generates:
         Secret: ../dynamoose/models#Secret
         GatewayRequestCounter: ../dynamoose/models#GatewayRequestCounter
         GatewayRequestDecisionCache: ../dynamoose/models#GatewayRequestDecisionCache
+        UserAppToken: ../dynamoose/models#UserAppToken
       enumValues:
         GatewayMode: ../dynamoose/models#GatewayMode
       scalars:

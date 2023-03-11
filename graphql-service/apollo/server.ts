@@ -20,6 +20,7 @@ import { secretResolvers } from "./resolvers/secret";
 import { accountHistoryResolvers } from "./resolvers/account-history";
 import { accountActivityResolvers } from "./resolvers/account";
 import { gatewayResolvers } from "./resolvers/gateway";
+import { userAppTokenResolvers } from "./resolvers/token";
 
 initializeDB();
 
@@ -39,6 +40,7 @@ const resolvers: GQLResolvers = {
     Secret: secretResolvers.Secret,
     AccountHistory: accountHistoryResolvers.AccountHistory,
     AccountActivity: accountActivityResolvers.AccountActivity,
+    UserAppToken: userAppTokenResolvers.UserAppToken,
     Query: {
         ...gatewayResolvers.Query,
         ...appResolvers.Query,
@@ -54,6 +56,7 @@ const resolvers: GQLResolvers = {
         ...secretResolvers.Query,
         ...accountHistoryResolvers.Query,
         ...accountActivityResolvers.Query,
+        ...userAppTokenResolvers.Query,
     },
     Mutation: {
         ...gatewayResolvers.Mutation,
@@ -70,13 +73,11 @@ const resolvers: GQLResolvers = {
         ...secretResolvers.Mutation,
         ...accountHistoryResolvers.Mutation,
         ...accountActivityResolvers.Mutation,
+        ...userAppTokenResolvers.Mutation,
     },
 };
 
-const typeDefs = [
-    readFileSync("./schema/App.graphql", { encoding: "utf-8" }),
-    ...scalarTypeDefs,
-];
+const typeDefs = [readFileSync("./schema/App.graphql", { encoding: "utf-8" }), ...scalarTypeDefs];
 
 // The ApolloServer constructor requires two parameters: your schema
 // definition and your set of resolvers.

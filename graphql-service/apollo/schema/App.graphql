@@ -140,6 +140,10 @@ type User {
     # Trigger a workflow where it goes through all user's activities, and settle
     # those that are due. This should only be called from the billing queue.
     settleAccountActivities: [AccountActivity!]!
+
+    createAppToken(app: ID!): UserAppToken!
+
+    appToken(app: ID!): UserAppToken!
 }
 
 input DateRangeInput {
@@ -166,8 +170,6 @@ type App {
 
     updateApp(description: String, gatewayMode: GatewayMode): App!
     deleteApp: App!
-    createAppUserToken: String!
-    revokeAppUserToken: Boolean!
 }
 
 enum HTTPMethod {
@@ -319,4 +321,15 @@ type AccountActivity {
 type AccountHistory {
     closingBalance: String!
     closingTime: Timestamp!
+}
+
+type UserAppToken {
+    subscriber: User!
+    app: App!
+    createdAt: Timestamp!
+    updatedAt: Timestamp!
+    signature: String!
+    token: String
+
+    deleteUserAppToken: UserAppToken!
 }

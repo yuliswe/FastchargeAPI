@@ -16,6 +16,14 @@ export class AlreadyExists extends GraphQLError {
     }
 }
 
+export class TooManyResources extends GraphQLError {
+    constructor(public msg: string) {
+        super(msg, {
+            extensions: { code: "TOO_MANY_RESOURCES" },
+        });
+    }
+}
+
 export class BadInput extends GraphQLError {
     constructor(public msg: string) {
         super(msg, {
@@ -41,11 +49,7 @@ export class Unauthorized extends GraphQLError {
 }
 
 export class UpdateContainsPrimaryKey extends GraphQLError {
-    constructor(
-        public resource: string,
-        public key: string,
-        public newValues: object
-    ) {
+    constructor(public resource: string, public key: string, public newValues: object) {
         super(
             `New value of ${resource} cannot contain the primary key component ("${key}"): ${JSON.stringify(
                 newValues
