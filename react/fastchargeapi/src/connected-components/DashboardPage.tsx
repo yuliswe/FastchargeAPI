@@ -130,6 +130,8 @@ class _DashboardPage extends React.Component<Props, State> {
                 return "API Subscription";
             case GQLAccountActivityReason.ApiMinMonthlyChargeUpgrade:
                 return "API Subscription Upgrade";
+            case GQLAccountActivityReason.FastchargeapiPerRequestServiceFee:
+                return "Service Fee";
         }
     }
 
@@ -430,6 +432,8 @@ class _DashboardPage extends React.Component<Props, State> {
                                 return this.reason(activity);
                             case "App":
                                 return activity.billedApp?.name || "";
+                            case "Volume":
+                                return activity.usageSummary?.volume || "";
                             case "Description":
                                 return activity.description;
                             case "Income":
@@ -451,6 +455,9 @@ class _DashboardPage extends React.Component<Props, State> {
                         },
                         {
                             title: "App",
+                        },
+                        {
+                            title: "Volume",
                         },
                         {
                             title: "Description",

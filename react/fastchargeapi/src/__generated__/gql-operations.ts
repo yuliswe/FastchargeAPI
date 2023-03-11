@@ -27,17 +27,24 @@ export type GQLAccountActivity = {
     billedApp?: Maybe<GQLApp>;
     createdAt: Scalars["Timestamp"];
     description: Scalars["String"];
+    pk: Scalars["ID"];
     reason: GQLAccountActivityReason;
     settleAt: Scalars["Timestamp"];
     status?: Maybe<GQLAccountActivityStatus>;
     stripeTransfer?: Maybe<GQLStripeTransfer>;
     type: GQLAccountActivityType;
+    usageSummary?: Maybe<GQLUsageSummary>;
 };
+
+export enum GQLAccountActivityIndex {
+    IndexByStatusSettleAtOnlyPk = "indexByStatus_settleAt__onlyPK",
+}
 
 export enum GQLAccountActivityReason {
     ApiMinMonthlyCharge = "api_min_monthly_charge",
     ApiMinMonthlyChargeUpgrade = "api_min_monthly_charge_upgrade",
     ApiPerRequestCharge = "api_per_request_charge",
+    FastchargeapiPerRequestServiceFee = "fastchargeapi_per_request_service_fee",
     Payout = "payout",
     PayoutFee = "payout_fee",
     Topup = "topup",
@@ -109,6 +116,7 @@ export type GQLEndpointUpdateEndpointArgs = {
 export type GQLGatewayDecisionResponse = {
     __typename?: "GatewayDecisionResponse";
     allowed: Scalars["Boolean"];
+    pricingPK?: Maybe<Scalars["String"]>;
     reason?: Maybe<GQLGatewayDecisionResponseReason>;
 };
 
@@ -146,7 +154,7 @@ export type GQLMutation = {
     createSubscription: GQLSubscribe;
     createUsageLog: GQLUsageLog;
     createUser: GQLUser;
-    triggerBilling?: Maybe<GQLUsageSummary>;
+    triggerBilling: Array<GQLUsageSummary>;
 };
 
 export type GQLMutationCreateAppArgs = {
@@ -209,6 +217,7 @@ export type GQLMutationCreateSubscriptionArgs = {
 export type GQLMutationCreateUsageLogArgs = {
     app: Scalars["String"];
     path: Scalars["String"];
+    pricing: Scalars["ID"];
     subscriber: Scalars["Email"];
     volume?: Scalars["Int"];
 };
@@ -236,6 +245,7 @@ export type GQLPricing = {
 
 export type GQLQuery = {
     __typename?: "Query";
+    accountActivities: Array<GQLAccountActivity>;
     app: GQLApp;
     appFullTextSearch: Array<GQLApp>;
     apps?: Maybe<Array<Maybe<GQLApp>>>;
@@ -246,7 +256,13 @@ export type GQLQuery = {
     stripePaymentAccept: GQLStripePaymentAccept;
     subscription: GQLSubscribe;
     user: GQLUser;
-    users?: Maybe<Array<Maybe<GQLUser>>>;
+    users: Array<GQLUser>;
+};
+
+export type GQLQueryAccountActivitiesArgs = {
+    settleAtRange?: InputMaybe<GQLDateRangeInput>;
+    status?: InputMaybe<GQLAccountActivityStatus>;
+    using?: InputMaybe<GQLAccountActivityIndex>;
 };
 
 export type GQLQueryAppArgs = {
@@ -285,6 +301,10 @@ export type GQLQuerySubscriptionArgs = {
 
 export type GQLQueryUserArgs = {
     email?: InputMaybe<Scalars["Email"]>;
+};
+
+export type GQLQueryUsersArgs = {
+    pk?: InputMaybe<Array<Scalars["ID"]>>;
 };
 
 export type GQLSecret = {
@@ -338,7 +358,12 @@ export type GQLStripeTransfer = {
     withdrawAmount: Scalars["NonNegativeDecimal"];
 };
 
+export enum GQLStripeTransferIndex {
+    IndexByStatusTransferAtOnlyPk = "indexByStatus_transferAt__onlyPK",
+}
+
 export enum GQLStripeTransferStatus {
+    Failed = "failed",
     Pending = "pending",
     Transferred = "transferred",
 }
@@ -390,6 +415,7 @@ export type GQLUser = {
     balance: Scalars["String"];
     createdAt: Scalars["Timestamp"];
     email: Scalars["Email"];
+    settleAccountActivities: Array<GQLAccountActivity>;
     stripeConnectAccountId?: Maybe<Scalars["String"]>;
     stripeCustomerId?: Maybe<Scalars["String"]>;
     subscriptions: Array<GQLSubscribe>;
@@ -523,6 +549,10 @@ export type GQLGetAccountActivitiesQuery = {
             status?: GQLAccountActivityStatus | null;
             settleAt: number;
             billedApp?: { __typename?: "App"; name: string } | null;
+            usageSummary?: {
+                __typename?: "UsageSummary";
+                volume: number;
+            } | null;
             stripeTransfer?: {
                 __typename?: "StripeTransfer";
                 transferAt: number;

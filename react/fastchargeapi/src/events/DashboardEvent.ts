@@ -100,6 +100,9 @@ class LoadActivities extends AppEvent<RootAppState> {
                             billedApp {
                                 name
                             }
+                            usageSummary {
+                                volume
+                            }
                             stripeTransfer {
                                 transferAt
                                 status
