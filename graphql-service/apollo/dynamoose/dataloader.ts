@@ -190,7 +190,7 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
             } else {
                 throw new Error("Invalid query type: " + typeof bk.query + " " + bk.query.toString());
             }
-            query = query.using({ auto: false })
+            query = query.using({ auto: false });
             if (bk.options != undefined) {
                 query = applyBatchOptionsToQuery(query, bk.options);
             }
@@ -204,33 +204,44 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
             ...unbatchable.map(queryUnbatchable), // multiple arrays of I[]
         ]);
 
+        let promises = [];
         for (let [index, items] of result3.entries()) {
-            resultArr[unbatchable[index]] = await Promise.all(items.map(assignDefaults));
+            let promise = Promise.all(items.map(assignDefaults)).then((result) => {
+                resultArr[unbatchable[index]] = result;
+                return result;
+            });
+            promises.push(promise);
         }
 
         let keyMap1 = new Map<PrimaryKey, I[]>();
         for (let item of result1) {
             // batch1 only contains hashKey
-            item = await assignDefaults(item);
-            let key = item[hashKeyName] as PrimaryKey;
-            if (keyMap1.has(key)) {
-                keyMap1.get(key)?.push(item);
-            } else {
-                keyMap1.set(key, [item]);
-            }
+            let promise = assignDefaults(item).then((item) => {
+                let key = item[hashKeyName] as PrimaryKey;
+                if (keyMap1.has(key)) {
+                    keyMap1.get(key)?.push(item);
+                } else {
+                    keyMap1.set(key, [item]);
+                }
+            });
+            promises.push(promise);
         }
 
         let keyMap2 = new Map<string, I[]>();
         for (let item of result2) {
             // batch2 only contains hashKey and rangeKey
-            item = await assignDefaults(item);
-            let key = [item[hashKeyName], item[rangeKeyName!]].toString();
-            if (keyMap2.has(key)) {
-                keyMap2.get(key)?.push(item);
-            } else {
-                keyMap2.set(key, [item]);
-            }
+            let promise = assignDefaults(item).then((item) => {
+                let key = [item[hashKeyName], item[rangeKeyName!]].toString();
+                if (keyMap2.has(key)) {
+                    keyMap2.get(key)?.push(item);
+                } else {
+                    keyMap2.set(key, [item]);
+                }
+            });
+            promises.push(promise);
         }
+
+        await Promise.all(promises);
 
         for (let [index, type] of bkType.entries()) {
             if (type === 1) {
@@ -246,13 +257,14 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
 
     // Split the batch into chunks of 100, and call batchGet100Max on each chunk
     return async (bkArray: BatchKey<I>[]): Promise<I[][]> => {
-        let resultArr: I[][] = [];
+        let promises: Promise<I[][]>[] = [];
         for (let i = 0; i < bkArray.length; i += 100) {
             let batch = bkArray.slice(i, Math.min(i + 100, bkArray.length));
-            let result = await batchGet100Max(batch);
-            resultArr.push(...result);
+            let result = batchGet100Max(batch);
+            promises.push(result);
         }
-        return resultArr;
+        let results = await Promise.all(promises);
+        return results.flat();
     };
 }
 
