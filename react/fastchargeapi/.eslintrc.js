@@ -9,7 +9,7 @@ module.exports = {
         tsconfigRootDir: __dirname,
         project: ["./tsconfig.json", "./**/tsconfig.json"],
     },
-    plugins: ["@typescript-eslint"],
+    plugins: ["@typescript-eslint", "unused-imports"],
     root: true,
     rules: {
         "@typescript-eslint/no-misused-promises": "error",
@@ -23,6 +23,7 @@ module.exports = {
         "@typescript-eslint/no-unsafe-member-access": "off",
         "@typescript-eslint/no-non-null-assertion": "off",
         "@typescript-eslint/ban-types": "off",
+        "unused-imports/no-unused-imports-ts": "warn",
         "require-yield": "off",
         "prefer-const": "off",
     },

@@ -6,8 +6,8 @@ import firebase from "firebase/compat/app";
 import * as firebaseui from "firebaseui";
 import "firebaseui/dist/firebaseui.css";
 import { AppContext, ReactAppContextType } from "../AppContext";
-import * as jose from "jose";
 import { encryptAndSign } from "../graphql-client";
+import { Box, Container, Fade, Grid, Stack, Typography } from "@mui/material";
 
 type _State = {};
 
@@ -171,7 +171,7 @@ class _AuthPage extends React.Component<_Props, _State> {
                     firebase.auth.GoogleAuthProvider.PROVIDER_ID,
                     // firebase.auth.FacebookAuthProvider.PROVIDER_ID,
                     // firebase.auth.TwitterAuthProvider.PROVIDER_ID,
-                    // firebase.auth.GithubAuthProvider.PROVIDER_ID,
+                    firebase.auth.GithubAuthProvider.PROVIDER_ID,
                     // firebase.auth.EmailAuthProvider.PROVIDER_ID,
                     // firebase.auth.PhoneAuthProvider.PROVIDER_ID,
                     // firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID,
@@ -190,6 +190,36 @@ class _AuthPage extends React.Component<_Props, _State> {
         }
     }
 
+    renderSuccessPage() {
+        return (
+            <Stack display="flex" mb={30} p={10}>
+                <Typography variant="h5" display="flex" fontWeight={500}>
+                    Welcome to FastchargeAPI
+                </Typography>
+                <Typography variant="h5" display="flex" fontWeight={500}>
+                    You have successfully signed in.
+                </Typography>
+                <Typography variant="body1" my={1}>
+                    You can close this window.
+                </Typography>
+            </Stack>
+        );
+    }
+
+    renderLoginPage() {
+        return (
+            <Stack display="flex" mb={20} p={10}>
+                <Typography variant="h5" display="flex" fontWeight={500}>
+                    Welcome to FastchargeAPI
+                </Typography>
+                <Typography variant="caption" my={1}>
+                    Please sign in with a 3rd-party provider:
+                </Typography>
+                <Box id="firebaseui-auth-container" my={5}></Box>
+            </Stack>
+        );
+    }
+
     render() {
         return (
             <React.Fragment>
@@ -200,12 +230,61 @@ class _AuthPage extends React.Component<_Props, _State> {
                         defer
                     ></script>
                 </Helmet>
-
-                {this._context.firebase.user ? (
-                    "Success. You can close this window."
-                ) : (
-                    <div id="firebaseui-auth-container"></div>
-                )}
+                <Grid container sx={{ height: "100vh" }}>
+                    <Grid
+                        item
+                        xs={7}
+                        display="flex"
+                        justifyContent="center"
+                        alignItems="center"
+                        bgcolor="primary.main"
+                        height="100%"
+                        sx={{
+                            backgroundImage:
+                                "linear-gradient(to right, #ffecd2 0%, #fcb69f 100%)",
+                        }}
+                    >
+                        <Container maxWidth="md">
+                            <Stack spacing={5} padding={10} mb={30}>
+                                {/* <Typography variant="h1">
+                                Sell your API with 3 simple commands
+                            </Typography> */}
+                                <Fade
+                                    in={true}
+                                    style={{
+                                        transitionDuration: "1s",
+                                    }}
+                                >
+                                    <Typography variant="h4" lineHeight={1.5}>
+                                        Focus on solving what's important.
+                                    </Typography>
+                                </Fade>
+                                <Fade
+                                    in={true}
+                                    style={{
+                                        transitionDuration: "2s",
+                                    }}
+                                >
+                                    <Typography variant="h5">
+                                        Let FastchargeAPI take care of metering
+                                        and billing for you.
+                                    </Typography>
+                                </Fade>
+                            </Stack>
+                        </Container>
+                    </Grid>
+                    <Grid
+                        item
+                        xs={5}
+                        display="flex"
+                        justifyContent="center"
+                        alignItems="center"
+                    >
+                        {this._context.firebase.user
+                            ? this.renderSuccessPage()
+                            : this.renderLoginPage()}
+                    </Grid>
+                </Grid>
             </React.Fragment>
         );
     }

@@ -1,0 +1,30 @@
+.terminal {
+    overflow: hidden;
+    .react-terminal-wrapper {
+        font-size: 0.95rem;
+    }
+    .react-terminal-line {
+        opacity: 0.4;
+    }
+    .react-terminal-line.react-terminal-input {
+        opacity: 1;
+    }
+}
+
+html {
+    background-color: #ffc100;
+}
+
+.firebaseui-card-content {
+    padding: 0 !important;
+    .firebaseui-list-item {
+        display: flex;
+    }
+    button {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        max-width: unset;
+        border-radius: 0.5rem;
+    }
+}

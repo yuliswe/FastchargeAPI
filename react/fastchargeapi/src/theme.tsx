@@ -1,9 +1,9 @@
-import { ThemeProvider, createTheme } from "@mui/material/styles";
-import React, { useEffect, useState } from "react";
+import { createTheme } from "@mui/material/styles";
+import React from "react";
 import { LinkProps as RouterLinkProps } from "react-router-dom";
 import { LinkProps } from "@mui/material/Link";
 import { HashLink } from "react-router-hash-link";
-import "./App.css";
+import "./App.scss";
 
 export function getTheme() {
     const blue = "#3772FF";
@@ -93,7 +93,7 @@ export function getTheme() {
                         fontSize: 50,
                     },
                     h2: {
-                        fontFamily: "Roboto",
+                        fontFamily: "Ubuntu",
                         fontWeight: 400,
                         fontSize: 40,
                     },

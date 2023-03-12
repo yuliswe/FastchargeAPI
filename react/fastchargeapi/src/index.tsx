@@ -3,16 +3,9 @@ import { Provider } from "react-redux";
 import { reduxStore } from "./store-config";
 import { createRoot } from "react-dom/client";
 
-import { Helmet, HelmetProvider } from "react-helmet-async";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
 import React from "react";
-import { HomePage } from "./connected-components/HomePage";
-import { AuthPage } from "./connected-components/AuthPage";
-import { OnboardPage } from "./connected-components/OnboardPage";
-import { TopUpPage } from "./connected-components/TopupPage";
-import { AppContextProvider, defaulAppContext } from "./AppContext";
-import { initializeFirebase } from "./firebase";
-import "./App.css";
+import "./App.scss";
 import App from "./App";
 
 const root = createRoot(document.getElementById("root")!);
