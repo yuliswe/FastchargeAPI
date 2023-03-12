@@ -2,14 +2,12 @@ import React from "react";
 import { RootAppState } from "../states/RootAppState";
 import { connect } from "react-redux";
 import {
-    Box,
     Button,
     Card,
     CardActions,
     CardContent,
     Grid,
     Link,
-    Paper,
     Stack,
     Typography,
 } from "@mui/material";

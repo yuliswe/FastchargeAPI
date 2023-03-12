@@ -1,6 +1,5 @@
 import React from "react";
 import {
-    Box,
     Button,
     ButtonBase,
     Container,
@@ -10,7 +9,6 @@ import {
     AppBar as MUIAppBar,
     Paper,
     Stack,
-    TextField,
     Toolbar,
     Link,
     Typography,
@@ -21,7 +19,6 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { createSearchParams } from "react-router-dom";
-import { AccountCircle } from "@mui/icons-material";
 import firebase from "firebase/compat/app";
 
 type State = {

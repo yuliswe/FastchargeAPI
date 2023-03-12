@@ -1,15 +1,12 @@
 import React from "react";
-import { Helmet } from "react-helmet-async";
 import { connect } from "react-redux";
 import { HomeAppState } from "../states/HomeAppState";
 import { RootAppState } from "../states/RootAppState";
 import { SiteLayout } from "../SiteLayout";
-import { Banner } from "../stateless-components/Banner";
 import {
     Box,
     Button,
     Container,
-    Divider,
     Grid,
     Link,
     Paper,
@@ -62,7 +59,7 @@ class _Home extends React.Component<_Props, _State> {
                         >
                             <Grid item xs={6}>
                                 <Stack spacing={5} p={5}>
-                                    <Typography variant="h1" sx={{}}>
+                                    <Typography variant="h1">
                                         Sell your API with 3 simple commands
                                     </Typography>
                                     <Typography
@@ -71,12 +68,11 @@ class _Home extends React.Component<_Props, _State> {
                                             fontSize: 18,
                                         }}
                                     >
-                                        FastchargeAPI acts as a gateway between
-                                        your API and your customers. We take
-                                        care of metering the API usage and
-                                        billing the customers, so that you can
-                                        focus on solving more important
-                                        problems.
+                                        FastchargeAPI is an API gateway between
+                                        your API and your customers, taking care
+                                        of metering and billing the customers,
+                                        so that you can focus on solving more
+                                        important problems.
                                     </Typography>
                                     <Box>
                                         <Button

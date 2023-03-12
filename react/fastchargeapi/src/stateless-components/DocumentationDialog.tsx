@@ -1,4 +1,4 @@
-import { Dialog, Paper } from "@mui/material";
+import { Dialog } from "@mui/material";
 import React from "react";
 export enum DocumentationName {
     none,

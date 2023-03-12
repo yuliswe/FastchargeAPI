@@ -6,23 +6,13 @@ import {
     Box,
     Breadcrumbs,
     Button,
-    Card,
-    CardActions,
-    CardContent,
     Divider,
     Grid,
     Link,
-    Paper,
     Stack,
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableRow,
     Typography,
 } from "@mui/material";
 import { PricingCard } from "../stateless-components/PricingCard";
-import { SubscriptionEvent } from "../events/SubscriptionEvent";
 import {
     AvailablePlan,
     SubscriotionDetailEvent,
@@ -36,8 +26,6 @@ import {
 } from "../stateless-components/LogTable";
 import {
     DocumentationDialog,
-    DocumentationDialogProps,
-    DocumentationName,
     SupportDocumentation,
     openDocumentationDialog,
 } from "../stateless-components/DocumentationDialog";

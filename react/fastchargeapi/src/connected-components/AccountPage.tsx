@@ -4,9 +4,7 @@ import { RootAppState } from "../states/RootAppState";
 import { connect } from "react-redux";
 import { SiteLayout } from "../SiteLayout";
 import {
-    Breadcrumbs,
     Container,
-    Divider,
     Grid,
     Link,
     List,

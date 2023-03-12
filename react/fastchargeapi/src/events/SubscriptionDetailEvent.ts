@@ -1,7 +1,6 @@
 import {
     AppEvent,
     AppEventStream,
-    AppStore,
     mapState,
     to,
 } from "react-appevent-redux";

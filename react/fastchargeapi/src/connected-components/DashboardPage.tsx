@@ -10,15 +10,7 @@ import {
     Link,
     Menu,
     MenuItem,
-    Pagination,
-    Paper,
     Stack,
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableRow,
-    TextField,
     Typography,
 } from "@mui/material";
 import { DashboardAppState } from "../states/DashboardAppState";
@@ -32,16 +24,13 @@ import {
     GQLAccountActivityType,
     GQLStripeTransferStatus,
 } from "../__generated__/gql-operations";
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { Line } from "react-chartjs-2";
 import "chart.js/auto";
 import {
     LogTable,
     LogTableOnChangeHandler,
 } from "../stateless-components/LogTable";
-import { fetchWithAuth } from "../fetch";
-import { AfterEventOfType, TaskManager } from "react-appevent-redux";
+import { AfterEventOfType } from "react-appevent-redux";
 
 type Props = {
     dashboard: DashboardAppState;

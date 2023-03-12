@@ -2,7 +2,6 @@ import React from "react";
 import { RootAppState } from "../states/RootAppState";
 import { connect } from "react-redux";
 import {
-    Box,
     Button,
     Card,
     CardActions,
