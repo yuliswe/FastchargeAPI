@@ -5,8 +5,8 @@ import {
     NavigateFunction,
     useSearchParams,
 } from "react-router-dom";
-import firebase from "firebase/compat/app";
 import { Theme } from "@mui/material/styles";
+import { User as FirebaseUser } from "firebase/auth";
 
 export const defaulAppContext = {
     DEV: false,
@@ -17,10 +17,10 @@ export const defaulAppContext = {
         md: false,
     },
     firebase: null as unknown as {
-        user: null | firebase.User;
-        userPromise: Promise<firebase.User | null>;
+        user: null | FirebaseUser;
+        userPromise: Promise<FirebaseUser | null>;
     },
-    isLoggedIn: false, // Equivalent to firebase.user != null
+    isLoggedIn: false, // Equivalent to FirebaseUser != null
     route: null as unknown as {
         location: Location;
         locationHref: string; // Equivalent to location.pathname + location.search + location.hash

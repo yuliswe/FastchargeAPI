@@ -19,7 +19,7 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { createSearchParams } from "react-router-dom";
-import firebase from "firebase/compat/app";
+import { getAuth } from "firebase/auth";
 
 type State = {
     searchText: string;
@@ -62,7 +62,7 @@ export class AppBar extends React.Component<Props, State> {
 
     handleLogout = (event: React.MouseEvent<HTMLElement>) => {
         void (async () => {
-            await firebase.auth().signOut();
+            await getAuth().signOut();
             this._context.route?.navigate({
                 pathname: "/",
             });

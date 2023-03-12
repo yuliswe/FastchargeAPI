@@ -1,10 +1,6 @@
-import firebase from "firebase/compat/app";
+import { initializeApp } from "firebase/app";
 
-type FirebaseInitializationResult = {
-    user: Promise<firebase.User | null>;
-};
-
-export function initializeFirebase(): FirebaseInitializationResult {
+export function initializeFirebase() {
     const firebaseConfig = {
         apiKey: "AIzaSyAtSOzX-i3gzBYULHltD4Xkz-H9_9U6tD8",
         // https://stackoverflow.com/questions/44815580/how-to-replace-the-myapp-123-firebaseapp-com-with-my-custom-domain-myapp-com
@@ -16,17 +12,5 @@ export function initializeFirebase(): FirebaseInitializationResult {
         measurementId: "G-8BJ3Q22YR1",
     };
 
-    firebase.initializeApp(firebaseConfig);
-
-    let user = new Promise<firebase.User | null>((resolve, reject) => {
-        firebase.auth().onAuthStateChanged((user) => {
-            if (user) {
-                resolve(user);
-            } else {
-                resolve(null);
-            }
-        });
-    });
-
-    return { user };
+    return initializeApp(firebaseConfig);
 }

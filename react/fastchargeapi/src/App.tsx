@@ -11,29 +11,25 @@ import {
 import { AppContextProvider, defaulAppContext } from "./AppContext";
 import React, { useEffect, useState } from "react";
 import { initializeFirebase } from "./firebase";
-import firebase from "firebase/compat/app";
 import { getTheme } from "./theme";
 import { createRouter } from "./routes";
-
-let firebaseInitialzation = initializeFirebase();
+import { User as FirebaseUser, getAuth } from "firebase/auth";
 
 function WithContext(props: React.PropsWithChildren) {
-    const [firebaseUser, setFirebaseUser] = useState<null | firebase.User>(
-        null
-    );
+    let firebaseApp = initializeFirebase();
+    const [firebaseUser, setFirebaseUser] = useState<null | FirebaseUser>(null);
 
-    useEffect(() => {
-        firebaseInitialzation.user
-            .then((user) => {
+    let userPromise = new Promise<FirebaseUser | null>((resolve) => {
+        useEffect(() => {
+            getAuth(firebaseApp).onAuthStateChanged((user) => {
+                resolve(user);
                 setFirebaseUser(user);
-            })
-            .catch((e) => {
-                // do nothing
             });
-        return () => {
-            // do nothing
-        };
-    }, [firebaseUser]);
+            return () => {
+                // do nothing
+            };
+        }, [firebaseUser]);
+    });
 
     const defaultTheme = createTheme();
     const mediaQueryXs = useMediaQuery(defaultTheme.breakpoints.down("sm"));
@@ -84,7 +80,7 @@ function WithContext(props: React.PropsWithChildren) {
                     },
                     firebase: {
                         user: firebaseUser,
-                        userPromise: firebaseInitialzation.user,
+                        userPromise,
                     },
                     isLoggedIn: firebaseUser != null,
                     route: {
