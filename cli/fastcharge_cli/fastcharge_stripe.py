@@ -6,9 +6,9 @@ from blessings import Terminal
 from .local_server import LocalServerResponse, start_local_server
 
 from .http import HttpClient
-from .dev_app import get_app, get_app_or_prompt_exit
+from .fastcharge_app import get_app, get_app_or_prompt_exit
 from .graphql import get_client_info
-from .groups import fastcharge_dev
+from .groups import fastcharge
 import click
 from gql import gql
 from dataclasses import dataclass
@@ -18,7 +18,7 @@ from . import config
 terminal = Terminal()
 
 
-@fastcharge_dev.group("stripe")
+@fastcharge.group("stripe")
 @click.help_option("-h", "--help")
 def fastcharge_dev_stripe():
     """Manage your Stripe account"""

@@ -14,7 +14,7 @@ from multiprocessing.connection import Listener, Connection, Client
 import json
 import jwt
 from cryptography.x509 import load_pem_x509_certificate
-from .groups import fastcharge_dev, fastcharge_client
+from .groups import fastcharge, fastapi
 from pathos.multiprocessing import ProcessPool
 import diskcache
 from click import echo

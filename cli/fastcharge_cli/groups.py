@@ -4,11 +4,11 @@ from click_aliases import ClickAliasedGroup
 
 @click.group(cls=ClickAliasedGroup)
 @click.help_option("-h", "--help")
-def fastcharge_client():
+def fastapi():
     pass
 
 
 @click.group(cls=ClickAliasedGroup)
 @click.help_option("-h", "--help")
-def fastcharge_dev():
+def fastcharge():
     pass

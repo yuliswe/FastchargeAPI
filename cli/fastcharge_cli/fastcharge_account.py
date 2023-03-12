@@ -1,30 +1,24 @@
-from ast import alias
 import textwrap
-import webbrowser
 
 from blessings import Terminal
 
-from .remote_secret import interact_with_react
+from .account import do_account_topup
 
-from .dev_stripe import get_dashboard_login_link
 
-from .local_server import LocalServerResponse, start_local_server
+from .fastcharge_stripe import get_dashboard_login_link
 
 from .http import HttpClient
-from .dev_app import get_app, get_app_or_prompt_exit
 from .graphql import get_client_info
-from .groups import fastcharge_dev
+from .groups import fastcharge
 import click
 from gql import gql
-from dataclasses import dataclass
 from click import echo
-from . import config
 from click_aliases import ClickAliasedGroup
 
 terminal = Terminal()
 
 
-@fastcharge_dev.group("account", cls=ClickAliasedGroup)
+@fastcharge.group("account", cls=ClickAliasedGroup)
 @click.help_option("-h", "--help")
 def fastcharge_account():
     """View your account balance and metics"""
@@ -197,20 +191,4 @@ def fastcharge_account_topup(amount: float):
 
     Amount in USD.
     """
-    amount_cents = int(amount * 100)
-    client, user_email = get_client_info()
-
-    query, result = interact_with_react()
-    location = (
-        f"{config.react_host}/topup?amount_cents={amount_cents}&"
-        + query.url_query_secrets
-    )
-    webbrowser.open_new(location)
-    echo("Please complete payment in browser:")
-    echo(terminal.blue + " " + location + terminal.normal)
-    result = result.read()  # block
-
-    if result["status"] == "success":
-        echo(terminal.green + "Payment successful." + terminal.normal)
-    elif result["status"] == "canceled":
-        echo(terminal.red + "Payment canceled." + terminal.normal)
+    do_account_topup(amount)

@@ -2,9 +2,9 @@ from typing import Optional
 
 from blessings import Terminal
 import urllib
-from .dev_app import AppInfo, get_app, get_app_or_prompt_exit
+from .fastcharge_app import AppInfo, get_app, get_app_or_prompt_exit
 from .graphql import get_client_info
-from .groups import fastcharge_dev
+from .groups import fastcharge
 import click
 from gql import gql
 import colorama
@@ -18,7 +18,7 @@ import emoji
 terminal = Terminal()
 
 
-@fastcharge_dev.group("api", cls=ClickAliasedGroup)
+@fastcharge.group("api", cls=ClickAliasedGroup)
 @click.help_option("-h", "--help")
 def fastcharge_dev_api():
     """Manage API endpoints for an existing app"""

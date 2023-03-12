@@ -5,7 +5,7 @@ import requests
 from .exceptions import NotFound, TooManyResources
 from .graphql import get_client_info
 from gql import gql
-from .groups import fastcharge_client
+from .groups import fastapi
 from blessings import Terminal
 from click import echo
 from click_aliases import ClickAliasedGroup
@@ -14,7 +14,7 @@ import click
 terminal = Terminal()
 
 
-@fastcharge_client.group("token", cls=ClickAliasedGroup)
+@fastapi.group("token", cls=ClickAliasedGroup)
 @click.help_option("-h", "--help")
 def fastcharge_token():
     """Generate and manage user tokens."""

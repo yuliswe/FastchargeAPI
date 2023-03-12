@@ -1,7 +1,7 @@
 from typing import Optional
 
 from blessings import Terminal
-from .groups import fastcharge_dev
+from .groups import fastcharge
 import click
 from .exceptions import NotFound
 from .graphql import get_client_info
@@ -14,7 +14,7 @@ from click import echo
 terminal = Terminal()
 
 
-@fastcharge_dev.group("app", cls=ClickAliasedGroup)
+@fastcharge.group("app", cls=ClickAliasedGroup)
 @click.help_option("-h", "--help")
 def fastcharge_dev_app():
     """Create and manage apps"""

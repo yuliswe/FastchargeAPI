@@ -5,7 +5,7 @@ import os
 import webbrowser
 
 from .remote_secret import get_remote_secret_from_s3
-from .groups import fastcharge_dev, fastcharge_client
+from .groups import fastcharge, fastapi
 from . import config
 from click import echo
 from .auth_file import (
@@ -16,13 +16,13 @@ from .auth_file import (
 )
 
 
-@fastcharge_client.command("login")
+@fastapi.command("login")
 def fastcharge_client_login():
     """Login to your account."""
     do_login()
 
 
-@fastcharge_dev.command("login")
+@fastcharge.command("login")
 def fastcharge_dev_login():
     """Login to your account."""
     do_login()
@@ -55,13 +55,13 @@ def do_login():
     echo(token)
 
 
-@fastcharge_client.command("logout")
+@fastapi.command("logout")
 def fastcharge_client_logout():
     """Log off your account."""
     do_logout()
 
 
-@fastcharge_dev.command("logout")
+@fastcharge.command("logout")
 def fastcharge_dev_logout():
     """Log off your account."""
     do_logout()
