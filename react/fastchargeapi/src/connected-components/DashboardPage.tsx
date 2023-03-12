@@ -31,6 +31,13 @@ import {
     LogTableOnChangeHandler,
 } from "../stateless-components/LogTable";
 import { AfterEventOfType } from "react-appevent-redux";
+import {
+    DocumentationDialog,
+    SupportDocumentation,
+    openDocumentationDialog,
+    supportDocumenationDefault,
+} from "../stateless-components/DocumentationDialog";
+import Terminal, { ColorMode, TerminalInput } from "react-terminal-ui";
 
 type Props = {
     dashboard: DashboardAppState;
@@ -38,7 +45,7 @@ type Props = {
 
 type State = {
     moveMoneyMenuAnchorEl: HTMLElement | null;
-};
+} & SupportDocumentation;
 
 class _DashboardPage extends React.Component<Props, State> {
     static contextType = ReactAppContextType;
@@ -50,6 +57,7 @@ class _DashboardPage extends React.Component<Props, State> {
         super(props);
         this.state = {
             moveMoneyMenuAnchorEl: null,
+            ...supportDocumenationDefault,
         };
     }
 
@@ -255,217 +263,266 @@ class _DashboardPage extends React.Component<Props, State> {
         );
     };
 
+    renderTransferDocumentation() {
+        return (
+            <Terminal height="5em" colorMode={ColorMode.Light}>
+                <Typography variant="body1" gutterBottom>
+                    We recommend using the cli tool to transfer funds.
+                </Typography>
+                <TerminalInput>
+                    {`fastcharge account withdraw [AMOUNT]`}
+                </TerminalInput>
+            </Terminal>
+        );
+    }
+
+    renderTopUpDocumentation() {
+        return (
+            <Terminal height="5em" colorMode={ColorMode.Light}>
+                <Typography variant="body1" gutterBottom>
+                    We recommend using the cli tool to add funds to your
+                    account.
+                </Typography>
+                <TerminalInput>
+                    {`fastapi account topup [AMOUNT]`}
+                </TerminalInput>
+            </Terminal>
+        );
+    }
+
     render() {
         return (
-            <Stack spacing={6}>
-                <Grid container>
-                    <Grid item md={8} flexGrow={1}>
-                        <Typography variant="h6">Account</Typography>
-                        <Divider sx={{ mb: 1 }} />
-                        <Typography
-                            variant="body1"
-                            fontSize={30}
-                            fontWeight={700}
-                        >
-                            ${this.appState.accountBalance}{" "}
-                        </Typography>
-                    </Grid>
-                    <Grid
-                        item
-                        xs={4}
-                        sx={{
-                            display: "flex",
-                            flexDirection: "row",
-                            justifyContent: "end",
-                            alignItems: "start",
-                        }}
-                    >
-                        <Button
-                            variant="contained"
-                            onClick={this.handleMenu}
-                            endIcon={<KeyboardArrowDownIcon />}
-                        >
-                            Move Money
-                        </Button>
-                        <Menu
-                            anchorEl={this.state.moveMoneyMenuAnchorEl}
-                            anchorOrigin={{
-                                vertical: "bottom",
-                                horizontal: "right",
-                            }}
-                            PaperProps={{
-                                elevation: 1,
-                                sx: {
-                                    // backgroundColor: "background.default",
-                                    borderRadius: 5,
-                                },
-                            }}
-                            keepMounted
-                            transformOrigin={{
-                                vertical: "top",
-                                horizontal: "right",
-                            }}
-                            open={Boolean(this.state.moveMoneyMenuAnchorEl)}
-                            onClose={this.handleClose}
-                        >
-                            <MenuItem
-                                onClick={this.handleClose}
-                                LinkComponent={Button}
+            <React.Fragment>
+                <Stack spacing={6}>
+                    <Grid container>
+                        <Grid item md={8} flexGrow={1}>
+                            <Typography variant="h6">Account</Typography>
+                            <Divider sx={{ mb: 1 }} />
+                            <Typography
+                                variant="body1"
+                                fontSize={30}
+                                fontWeight={700}
                             >
-                                Add funds
-                            </MenuItem>
-                            <MenuItem
-                                href="/account"
-                                onClick={this.handleClose}
-                                LinkComponent={Button}
+                                ${this.appState.accountBalance}{" "}
+                            </Typography>
+                        </Grid>
+                        <Grid
+                            item
+                            xs={4}
+                            sx={{
+                                display: "flex",
+                                flexDirection: "row",
+                                justifyContent: "end",
+                                alignItems: "start",
+                            }}
+                        >
+                            <Button
+                                variant="contained"
+                                onClick={this.handleMenu}
+                                endIcon={<KeyboardArrowDownIcon />}
                             >
-                                Withdraw
-                            </MenuItem>
-                        </Menu>
-                    </Grid>
-                    <Grid item xs={12} sm={12} md={6} pt={5}>
-                        <Line
-                            options={{
-                                plugins: {
-                                    legend: {
-                                        display: false,
+                                Move Money
+                            </Button>
+                            <Menu
+                                anchorEl={this.state.moveMoneyMenuAnchorEl}
+                                anchorOrigin={{
+                                    vertical: "bottom",
+                                    horizontal: "right",
+                                }}
+                                PaperProps={{
+                                    elevation: 1,
+                                    sx: {
+                                        // backgroundColor: "background.default",
+                                        borderRadius: 5,
                                     },
-                                },
-                            }}
-                            data={this.chartData()}
-                        />
-                    </Grid>
-                </Grid>
-                <Box>
-                    <Typography variant="h6">Stripe</Typography>
-                    <Divider sx={{ mb: 2 }} />
-                    <Typography variant="body1">
-                        As an API developer, you can set up a Stripe account to
-                        start receiving payment. If you are using an API that's
-                        developed by someone else, you can skip this step.
-                    </Typography>
-                    <Typography variant="body1" component="div">
-                        To set up a Stripe account,{" "}
-                        <Link href="/onboard" target="_blank" color="info.main">
-                            go to the onboarding page
-                        </Link>{" "}
-                        and complete the registration.
-                    </Typography>
-                    If you have completed the setup above, you can log in to
-                    your Stripe portal.
-                    <Typography variant="body1"></Typography>
-                    <Button
-                        color="secondary"
-                        variant="outlined"
-                        sx={{ mt: 3 }}
-                        disabled={this.appState.loadingStripeLoginLink}
-                        endIcon={
-                            this.appState.loadingStripeLoginLink && (
-                                <CircularProgress size={20} color="info" />
-                            )
-                        }
-                        onClick={() => {
-                            appStore.dispatch(
-                                new DashboardEvent.LoadStripeLoginLink(
-                                    this._context
-                                )
-                            );
-                            appStore.addSchedule(
-                                new AfterEventOfType(
-                                    DashboardEvent.StripeLinkReady,
-                                    {
-                                        id: "StripeLinkReady",
-                                        once: true,
-                                        onTriggered: () => {
-                                            let location =
-                                                this.appState.stripeLoginLink;
-                                            window.open(location, "_blank");
+                                }}
+                                keepMounted
+                                transformOrigin={{
+                                    vertical: "top",
+                                    horizontal: "right",
+                                }}
+                                open={Boolean(this.state.moveMoneyMenuAnchorEl)}
+                                onClick={() => {
+                                    openDocumentationDialog(this, () =>
+                                        this.renderTopUpDocumentation()
+                                    );
+                                    this.handleClose();
+                                }}
+                            >
+                                <MenuItem
+                                    onClick={this.handleClose}
+                                    LinkComponent={Button}
+                                >
+                                    Add funds
+                                </MenuItem>
+                                <MenuItem
+                                    href="/account"
+                                    onClick={() => {
+                                        openDocumentationDialog(this, () =>
+                                            this.renderTransferDocumentation()
+                                        );
+                                        this.handleClose();
+                                    }}
+                                    LinkComponent={Button}
+                                >
+                                    Withdraw
+                                </MenuItem>
+                            </Menu>
+                        </Grid>
+                        <Grid item xs={12} sm={12} md={6} pt={5}>
+                            <Line
+                                options={{
+                                    plugins: {
+                                        legend: {
+                                            display: false,
                                         },
-                                    }
+                                    },
+                                }}
+                                data={this.chartData()}
+                            />
+                        </Grid>
+                    </Grid>
+                    <Box>
+                        <Typography variant="h6">Stripe</Typography>
+                        <Divider sx={{ mb: 2 }} />
+                        <Typography variant="body1">
+                            As an API developer, you can set up a Stripe account
+                            to start receiving payment. If you are using an API
+                            that's developed by someone else, you can skip this
+                            step.
+                        </Typography>
+                        <Typography variant="body1" component="div">
+                            To set up a Stripe account,{" "}
+                            <Link
+                                href="/onboard"
+                                target="_blank"
+                                color="info.main"
+                            >
+                                go to the onboarding page
+                            </Link>{" "}
+                            and complete the registration.
+                        </Typography>
+                        If you have completed the setup above, you can log in to
+                        your Stripe portal.
+                        <Typography variant="body1"></Typography>
+                        <Button
+                            color="secondary"
+                            variant="outlined"
+                            sx={{ mt: 3 }}
+                            disabled={this.appState.loadingStripeLoginLink}
+                            endIcon={
+                                this.appState.loadingStripeLoginLink && (
+                                    <CircularProgress size={20} color="info" />
                                 )
-                            );
-                            // this.setState({
-                            //     loadingStripeLoginLink: true,
-                            // });
-                            // void fetchWithAuth(
-                            //     this._context,
-                            //     "https://api.payment.com/dashboard-login",
-                            //     {}
-                            // )
-                            //     .then(async (result) => {
-                            //         let json = await result.json();
-                            //         let { location } = json;
-                            //         window.open(location, "_blank");
-                            //     })
-                            //     .finally(() => {
-                            //         this.setState({
-                            //             loadingStripeLoginLink: false,
-                            //         });
-                            //     });
+                            }
+                            onClick={() => {
+                                appStore.dispatch(
+                                    new DashboardEvent.LoadStripeLoginLink(
+                                        this._context
+                                    )
+                                );
+                                appStore.addSchedule(
+                                    new AfterEventOfType(
+                                        DashboardEvent.StripeLinkReady,
+                                        {
+                                            id: "StripeLinkReady",
+                                            once: true,
+                                            onTriggered: () => {
+                                                let location =
+                                                    this.appState
+                                                        .stripeLoginLink;
+                                                window.open(location, "_blank");
+                                            },
+                                        }
+                                    )
+                                );
+                                // this.setState({
+                                //     loadingStripeLoginLink: true,
+                                // });
+                                // void fetchWithAuth(
+                                //     this._context,
+                                //     "https://api.payment.com/dashboard-login",
+                                //     {}
+                                // )
+                                //     .then(async (result) => {
+                                //         let json = await result.json();
+                                //         let { location } = json;
+                                //         window.open(location, "_blank");
+                                //     })
+                                //     .finally(() => {
+                                //         this.setState({
+                                //             loadingStripeLoginLink: false,
+                                //         });
+                                //     });
+                            }}
+                        >
+                            Sign in Stripe
+                        </Button>
+                    </Box>
+                    <LogTable<AccountActivity>
+                        tableName="Activities"
+                        urlNamespace="s"
+                        activities={this.allActivities()}
+                        activitiesPerPage={20}
+                        onChange={this.handleActivitiesPageChange}
+                        renderCell={(
+                            head: string,
+                            activity: AccountActivity
+                        ) => {
+                            switch (head) {
+                                case "Date":
+                                    return this.date(activity);
+                                case "Reason":
+                                    return this.reason(activity);
+                                case "App":
+                                    return activity.billedApp?.name || "";
+                                case "Volume":
+                                    return activity.usageSummary?.volume || "";
+                                case "Description":
+                                    return activity.description;
+                                case "Income":
+                                    return this.earned(activity);
+                                case "Spending":
+                                    return this.spent(activity);
+                                case "Estimated Completion":
+                                    return this.eta(activity);
+                                case "Status":
+                                    return this.status(activity);
+                            }
                         }}
-                    >
-                        Sign in Stripe
-                    </Button>
-                </Box>
-                <LogTable<AccountActivity>
-                    tableName="Activities"
-                    urlNamespace="s"
-                    activities={this.allActivities()}
-                    activitiesPerPage={20}
-                    onChange={this.handleActivitiesPageChange}
-                    renderCell={(head: string, activity: AccountActivity) => {
-                        switch (head) {
-                            case "Date":
-                                return this.date(activity);
-                            case "Reason":
-                                return this.reason(activity);
-                            case "App":
-                                return activity.billedApp?.name || "";
-                            case "Volume":
-                                return activity.usageSummary?.volume || "";
-                            case "Description":
-                                return activity.description;
-                            case "Income":
-                                return this.earned(activity);
-                            case "Spending":
-                                return this.spent(activity);
-                            case "Estimated Completion":
-                                return this.eta(activity);
-                            case "Status":
-                                return this.status(activity);
-                        }
-                    }}
-                    headers={[
-                        {
-                            title: "Date",
-                        },
-                        {
-                            title: "Reason",
-                        },
-                        {
-                            title: "App",
-                        },
-                        {
-                            title: "Volume",
-                        },
-                        {
-                            title: "Description",
-                        },
-                        {
-                            title: "Status",
-                        },
-                        {
-                            title: "Estimated Completion",
-                        },
-                        {
-                            title: "Income",
-                        },
-                        {
-                            title: "Spending",
-                        },
-                    ]}
-                />
-            </Stack>
+                        headers={[
+                            {
+                                title: "Date",
+                            },
+                            {
+                                title: "Reason",
+                            },
+                            {
+                                title: "App",
+                            },
+                            {
+                                title: "Volume",
+                            },
+                            {
+                                title: "Description",
+                            },
+                            {
+                                title: "Status",
+                            },
+                            {
+                                title: "Estimated Completion",
+                            },
+                            {
+                                title: "Income",
+                            },
+                            {
+                                title: "Spending",
+                            },
+                        ]}
+                    />
+                </Stack>
+                <DocumentationDialog parent={this} />
+            </React.Fragment>
         );
     }
 }

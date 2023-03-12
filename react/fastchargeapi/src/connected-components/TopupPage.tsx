@@ -3,7 +3,14 @@ import { Helmet } from "react-helmet-async";
 import { connect } from "react-redux";
 import { RootAppState } from "../states/RootAppState";
 import { TopUpAppState } from "../states/TopupAppState";
-import { CircularProgress, Typography } from "@mui/material";
+import {
+    CircularProgress,
+    Container,
+    Fade,
+    Grid,
+    Stack,
+    Typography,
+} from "@mui/material";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { setRemoteSecret } from "../graphql-client";
 
@@ -185,28 +192,61 @@ class _TopUp extends React.Component<_Props, _State> {
 
     renderSuccessPage() {
         return (
-            <Typography>
-                TopUping successful. You can close this page.
-            </Typography>
+            <Stack justifyContent="center" display="flex" mb={30}>
+                <Typography variant="h5" fontWeight={500} gutterBottom>
+                    Top-up succeeded. Thank you!
+                </Typography>
+                <Typography variant="body1">
+                    The fund may take up to a minute to appear in your account.
+                </Typography>
+                <Typography variant="body1">
+                    You can now close this page.
+                </Typography>
+            </Stack>
         );
     }
 
     renderCancelPage() {
         return (
-            <Typography>TopUping canceled. You can close this page.</Typography>
+            <Stack justifyContent="center" display="flex" mb={30}>
+                <Typography variant="h5" fontWeight={500} gutterBottom>
+                    Top-up was canceled.
+                </Typography>
+                <Typography variant="body1">
+                    You can close this page.
+                </Typography>
+            </Stack>
         );
     }
 
     renderLoadingPage() {
         return (
-            <React.Fragment>
-                <Typography>
-                    TopUping your account with Stripe. This could take up to a
-                    minute. Please wait.
+            <Stack justifyContent="center" display="flex" mb={30}>
+                <Typography
+                    variant="h5"
+                    fontWeight={500}
+                    gutterBottom
+                    display="flex"
+                    alignItems="center"
+                >
+                    <CircularProgress sx={{ mr: 2 }} />
+                    Creating an order with Stripe.
                 </Typography>
-                <CircularProgress />
-            </React.Fragment>
+                <Typography variant="body1" sx={{ ml: 7.5 }}>
+                    Please wait...
+                </Typography>
+            </Stack>
         );
+    }
+
+    renderPaymentResult() {
+        if (this.isSuccess()) {
+            return this.renderSuccessPage();
+        }
+        if (this.isCanceled()) {
+            return this.renderCancelPage();
+        }
+        return this.renderLoadingPage();
     }
 
     render() {
@@ -219,11 +259,69 @@ class _TopUp extends React.Component<_Props, _State> {
                         defer
                     ></script>
                 </Helmet>
-                {this.isSuccess() && this.renderSuccessPage()}
-                {this.isCanceled() && this.renderCancelPage()}
-                {!this.isSuccess() &&
-                    !this.isCanceled() &&
-                    this.renderLoadingPage()}
+                <Grid container sx={{ height: "100vh" }}>
+                    <Grid
+                        item
+                        xs={5}
+                        display="flex"
+                        justifyContent="center"
+                        alignItems="center"
+                        bgcolor="primary.main"
+                        height="100%"
+                        sx={{
+                            backgroundImage:
+                                "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
+                            // "linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%)",
+                            // "linear-gradient(to top, #e6b980 0%, #eacda3 100%)",
+                        }}
+                    >
+                        <Container maxWidth="md">
+                            <Stack spacing={5} padding={10} mb={30}>
+                                {/* <Typography variant="h1">
+                                Sell your API with 3 simple commands
+                            </Typography> */}
+                                <Fade
+                                    in={true}
+                                    style={{
+                                        transitionDuration: "1s",
+                                    }}
+                                >
+                                    <Typography
+                                        variant="h4"
+                                        lineHeight={1.5}
+                                        fontFamily="Ubuntu"
+                                    >
+                                        Focus on solving what's important.
+                                    </Typography>
+                                </Fade>
+                                <Fade
+                                    in={true}
+                                    style={{
+                                        transitionDuration: "2s",
+                                    }}
+                                >
+                                    <Typography
+                                        variant="h6"
+                                        fontWeight={300}
+                                        pl={1}
+                                    >
+                                        FastchargeAPI will take care of metering
+                                        and billing.
+                                    </Typography>
+                                </Fade>
+                            </Stack>
+                        </Container>
+                    </Grid>
+                    <Grid
+                        item
+                        xs={7}
+                        display="flex"
+                        justifyContent="center"
+                        alignItems="center"
+                    >
+                        {this.renderPaymentResult()}
+                    </Grid>
+                </Grid>
             </React.Fragment>
         );
     }
