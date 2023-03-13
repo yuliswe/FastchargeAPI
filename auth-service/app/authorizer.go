@@ -20,9 +20,9 @@ func main() {
 	lambda.Start(lambdaHandler)
 }
 
-func lambdaHandler(request events.APIGatewayCustomAuthorizerRequestTypeRequest) (*events.APIGatewayCustomAuthorizerResponse, error) {
-	if request.HTTPMethod == "OPTIONS" {
-		return allow_preflight(), nil
+func lambdaHandler(request events.APIGatewayV2CustomAuthorizerV2Request) (*events.APIGatewayV2CustomAuthorizerIAMPolicyResponse, error) {
+	if request.RequestContext.HTTP.Method == "OPTIONS" {
+		return allowPreflight(), nil
 	}
 
 	auth := request.Headers["Authorization"]
@@ -47,8 +47,8 @@ func lambdaHandler(request events.APIGatewayCustomAuthorizerRequestTypeRequest) 
 	return denied(), nil
 }
 
-func allow_preflight() *events.APIGatewayCustomAuthorizerResponse {
-	return &events.APIGatewayCustomAuthorizerResponse{
+func allowPreflight() *events.APIGatewayV2CustomAuthorizerIAMPolicyResponse {
+	return &events.APIGatewayV2CustomAuthorizerIAMPolicyResponse{
 		PrincipalID: "CORS_PREFLIGHT",
 		PolicyDocument: events.APIGatewayCustomAuthorizerPolicy{
 			Version: "2012-10-17",
@@ -66,8 +66,8 @@ func allow_preflight() *events.APIGatewayCustomAuthorizerResponse {
 	}
 }
 
-func allowed(user *UserClaims) *events.APIGatewayCustomAuthorizerResponse {
-	return &events.APIGatewayCustomAuthorizerResponse{
+func allowed(user *UserClaims) *events.APIGatewayV2CustomAuthorizerIAMPolicyResponse {
+	return &events.APIGatewayV2CustomAuthorizerIAMPolicyResponse{
 		PrincipalID: user.Sub,
 		PolicyDocument: events.APIGatewayCustomAuthorizerPolicy{
 			Version: "2012-10-17",
@@ -87,8 +87,8 @@ func allowed(user *UserClaims) *events.APIGatewayCustomAuthorizerResponse {
 	}
 }
 
-func denied() *events.APIGatewayCustomAuthorizerResponse {
-	return &events.APIGatewayCustomAuthorizerResponse{
+func denied() *events.APIGatewayV2CustomAuthorizerIAMPolicyResponse {
+	return &events.APIGatewayV2CustomAuthorizerIAMPolicyResponse{
 		PrincipalID: "DENIED",
 		PolicyDocument: events.APIGatewayCustomAuthorizerPolicy{
 			Version: "2012-10-17",
