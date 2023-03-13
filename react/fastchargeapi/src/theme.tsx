@@ -117,6 +117,7 @@ export function getTheme() {
                 },
                 defaultProps: {
                     color: "primary.contrastText",
+                    underline: "hover",
                     component: LinkBehavior,
                 } as LinkProps,
             },

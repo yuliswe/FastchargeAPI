@@ -20,8 +20,12 @@ function WithContext(props: React.PropsWithChildren) {
     const [firebaseUser, setFirebaseUser] = useState<null | FirebaseUser>(null);
 
     let userPromise = new Promise<FirebaseUser | null>((resolve) => {
+        let auth = getAuth(firebaseApp);
+        if (auth.currentUser) {
+            resolve(auth.currentUser);
+        }
         useEffect(() => {
-            getAuth(firebaseApp).onAuthStateChanged((user) => {
+            auth.onAuthStateChanged((user) => {
                 resolve(user);
                 setFirebaseUser(user);
             });

@@ -190,10 +190,11 @@ class LoadAccountHistory extends AppEvent<RootAppState> {
     }
 }
 
-class LoadStripeLoginLink extends AppEvent<RootAppState> {
+class SendStripeLoginLink extends AppEvent<RootAppState> {
     constructor(public context: AppContext) {
         super();
     }
+
     reducer(state: RootAppState): RootAppState {
         let res!: (value: string) => void;
         let linkPromise = new Promise<string>((resolve, reject) => {
@@ -206,31 +207,34 @@ class LoadStripeLoginLink extends AppEvent<RootAppState> {
         });
     }
 
-    location = "";
     async *run(state: RootAppState): AppEventStream<RootAppState> {
         let result = await fetchWithAuth(
             this.context,
-            "https://api.payment.fastchargeapi.com/dashboard-login",
-            {}
+            "https://api.v2.payment.fastchargeapi.com/send-stripe-login-link",
+            {
+                method: "POST",
+            }
         );
-        let json = await result.json();
-        this.location = json.location;
-        yield new StripeLinkReady(this.context, { location: this.location });
+        yield new StripeLinkReady(this.context);
+    }
+
+    reduceAfter(state: RootAppState): RootAppState {
+        return state.mapState({
+            dashboard: mapState({
+                loadingStripeLoginLink: to(false),
+            }),
+        });
     }
 }
 
 class StripeLinkReady extends AppEvent<RootAppState> {
-    constructor(
-        public context: AppContext,
-        public options: { location: string }
-    ) {
+    constructor(public context: AppContext) {
         super();
     }
     reducer(state: RootAppState): RootAppState {
         return state.mapState({
             dashboard: mapState({
                 loadingStripeLoginLink: to(false),
-                stripeLoginLink: to(this.options.location),
             }),
         });
     }
@@ -243,6 +247,6 @@ export const DashboardEvent = {
     LoadAccontBalance,
     LoadActivities,
     LoadAccountHistory,
-    LoadStripeLoginLink,
+    SendStripeLoginLink,
     StripeLinkReady,
 };

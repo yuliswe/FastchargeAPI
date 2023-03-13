@@ -45,6 +45,7 @@ type Props = {
 
 type State = {
     moveMoneyMenuAnchorEl: HTMLElement | null;
+    stripeLoginLinkTimeout: number;
 } & SupportDocumentation;
 
 class _DashboardPage extends React.Component<Props, State> {
@@ -57,6 +58,7 @@ class _DashboardPage extends React.Component<Props, State> {
         super(props);
         this.state = {
             moveMoneyMenuAnchorEl: null,
+            stripeLoginLinkTimeout: 0,
             ...supportDocumenationDefault,
         };
     }
@@ -290,6 +292,66 @@ class _DashboardPage extends React.Component<Props, State> {
         );
     }
 
+    renderLoginStripeDocumentation() {
+        return (
+            <Box padding={5} maxWidth={500}>
+                <Typography variant="h6" gutterBottom>
+                    Sign in to Stripe
+                </Typography>
+                <Typography variant="body1" gutterBottom>
+                    To verify your identity, we will send an email containing
+                    the Stripe login link to your email.
+                </Typography>
+                <Button
+                    variant="contained"
+                    color="secondary"
+                    sx={{ mt: 2 }}
+                    disabled={
+                        this.appState.loadingStripeLoginLink ||
+                        this.state.stripeLoginLinkTimeout > 0
+                    }
+                    endIcon={
+                        this.appState.loadingStripeLoginLink && (
+                            <CircularProgress size={20} color="info" />
+                        )
+                    }
+                    onClick={() => {
+                        appStore.dispatch(
+                            new DashboardEvent.SendStripeLoginLink(
+                                this._context
+                            )
+                        );
+                        appStore.addSchedule(
+                            new AfterEventOfType(
+                                DashboardEvent.StripeLinkReady,
+                                {
+                                    id: "StripeLinkReady",
+                                    once: true,
+                                    onTriggered: () => {
+                                        void (async () => {
+                                            for (let i = 60; i > 0; i--) {
+                                                this.setState({
+                                                    stripeLoginLinkTimeout: i,
+                                                });
+                                                await new Promise((resolve) =>
+                                                    setTimeout(resolve, 1000)
+                                                );
+                                            }
+                                        })();
+                                    },
+                                }
+                            )
+                        );
+                    }}
+                >
+                    {this.state.stripeLoginLinkTimeout > 0
+                        ? `Email Sent (Retry in ${this.state.stripeLoginLinkTimeout}s)`
+                        : "Send Email"}
+                </Button>
+            </Box>
+        );
+    }
+
     render() {
         return (
             <React.Fragment>
@@ -405,56 +467,24 @@ class _DashboardPage extends React.Component<Props, State> {
                         If you have completed the setup above, you can log in to
                         your Stripe portal.
                         <Typography variant="body1"></Typography>
+                        <Box my={1}>
+                            <Link
+                                color="info.main"
+                                onClick={() => {
+                                    openDocumentationDialog(this, () =>
+                                        this.renderLoginStripeDocumentation()
+                                    );
+                                }}
+                            >
+                                Having trouble signing in?
+                            </Link>
+                        </Box>
                         <Button
+                            href="https://connect.stripe.com/express_login"
+                            target="_blank"
                             color="secondary"
                             variant="outlined"
-                            sx={{ mt: 3 }}
-                            disabled={this.appState.loadingStripeLoginLink}
-                            endIcon={
-                                this.appState.loadingStripeLoginLink && (
-                                    <CircularProgress size={20} color="info" />
-                                )
-                            }
-                            onClick={() => {
-                                appStore.dispatch(
-                                    new DashboardEvent.LoadStripeLoginLink(
-                                        this._context
-                                    )
-                                );
-                                appStore.addSchedule(
-                                    new AfterEventOfType(
-                                        DashboardEvent.StripeLinkReady,
-                                        {
-                                            id: "StripeLinkReady",
-                                            once: true,
-                                            onTriggered: () => {
-                                                let location =
-                                                    this.appState
-                                                        .stripeLoginLink;
-                                                window.open(location, "_blank");
-                                            },
-                                        }
-                                    )
-                                );
-                                // this.setState({
-                                //     loadingStripeLoginLink: true,
-                                // });
-                                // void fetchWithAuth(
-                                //     this._context,
-                                //     "https://api.payment.com/dashboard-login",
-                                //     {}
-                                // )
-                                //     .then(async (result) => {
-                                //         let json = await result.json();
-                                //         let { location } = json;
-                                //         window.open(location, "_blank");
-                                //     })
-                                //     .finally(() => {
-                                //         this.setState({
-                                //             loadingStripeLoginLink: false,
-                                //         });
-                                //     });
-                            }}
+                            sx={{ mt: 2 }}
                         >
                             Sign in Stripe
                         </Button>
