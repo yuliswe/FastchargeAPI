@@ -252,13 +252,6 @@ class _TopUp extends React.Component<_Props, _State> {
     render() {
         return (
             <React.Fragment>
-                <Helmet>
-                    <script
-                        src="https://accounts.google.com/gsi/client"
-                        async
-                        defer
-                    ></script>
-                </Helmet>
                 <Grid container sx={{ height: "100vh" }}>
                     <Grid
                         item
@@ -271,8 +264,6 @@ class _TopUp extends React.Component<_Props, _State> {
                         sx={{
                             backgroundImage:
                                 "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
-                            // "linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%)",
-                            // "linear-gradient(to top, #e6b980 0%, #eacda3 100%)",
                         }}
                     >
                         <Container maxWidth="md">

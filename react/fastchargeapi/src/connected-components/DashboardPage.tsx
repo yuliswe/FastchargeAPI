@@ -404,16 +404,16 @@ class _DashboardPage extends React.Component<Props, State> {
                                     horizontal: "right",
                                 }}
                                 open={Boolean(this.state.moveMoneyMenuAnchorEl)}
-                                onClick={() => {
-                                    openDocumentationDialog(this, () =>
-                                        this.renderTopUpDocumentation()
-                                    );
-                                    this.handleClose();
-                                }}
+                                onClick={this.handleClose}
                             >
                                 <MenuItem
-                                    onClick={this.handleClose}
                                     LinkComponent={Button}
+                                    onClick={() => {
+                                        openDocumentationDialog(this, () =>
+                                            this.renderTopUpDocumentation()
+                                        );
+                                        this.handleClose();
+                                    }}
                                 >
                                     Add funds
                                 </MenuItem>

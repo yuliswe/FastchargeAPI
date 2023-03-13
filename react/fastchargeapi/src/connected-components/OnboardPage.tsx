@@ -149,7 +149,9 @@ class _Onboard extends React.Component<_Props, _State> {
                     Onboarding your account with Stripe. This could take up to a
                     minute. Please wait.
                 </Typography>
-                <CircularProgress />
+                <Typography variant="body1" sx={{ ml: 7.3 }}>
+                    This could take up to a minute. Please wait...
+                </Typography>
             </React.Fragment>
         );
     }
