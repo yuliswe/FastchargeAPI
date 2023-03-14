@@ -3,7 +3,7 @@ import { StripeTransferPK, createDefaultContextBatched } from "graphql-service";
 import { Chalk } from "chalk";
 import { GQLStripeTransferIndex } from "../__generated__/gql-operations";
 import { Decimal } from "decimal.js-light";
-import { getStripeClient } from "../stripe-client";
+import { getStripeClient } from "../lib/stripe-client";
 const chalk = new Chalk({ level: 3 });
 
 type EventDetail = {

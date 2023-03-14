@@ -1,6 +1,6 @@
 from gql import Client
 from gql.transport.requests import RequestsHTTPTransport
-from . import signing
+# from . import signing
 import os
 
 from aws_requests_auth.boto_utils import BotoAWSRequestsAuth
@@ -22,7 +22,7 @@ def get_graphql_client() -> Client:
     transport = RequestsHTTPTransport(
         url=graphql_service,
         headers={
-            "Authorization": signing.get_payment_service_idtoken(),
+            # "Authorization": signing.get_payment_service_idtoken(),
             "X-User-Email": "payment-service@fastcharge-api.com",
             "Content-Type": "application/json",
             "X-Service-Name": "payment",

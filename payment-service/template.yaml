@@ -9,14 +9,17 @@ Parameters:
   Stage:
     Type: String
     Default: DEV
-  HostName: 
+  GatewayHostName: 
     Type: String
     Default: "api.payment.fastchargeapi.com"
+  GatewayHostNameV2: 
+    Type: String
+    Default: "api.v2.payment.fastchargeapi.com"
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
   Function:
-    Timeout: 3
+    Timeout: 10
     MemorySize: 128
     Tracing: Active
   Api:
@@ -26,17 +29,26 @@ Resources:
   GenerateCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain 
     Type: AWS::CertificateManager::Certificate
     Properties: 
-      DomainName: !Ref HostName
+      DomainName: !Ref GatewayHostName
       ValidationMethod: DNS
       DomainValidationOptions:
-      - DomainName: !Ref HostName
+      - DomainName: !Ref GatewayHostName
+        HostedZoneId: Z0358815GI2I8U5CTHXW
+
+  GenerateCertificateV2: # Creates a valid certificate for the HTTP API endpoint under the custom domain 
+    Type: AWS::CertificateManager::Certificate
+    Properties: 
+      DomainName: !Ref GatewayHostNameV2
+      ValidationMethod: DNS
+      DomainValidationOptions:
+      - DomainName: !Ref GatewayHostNameV2
         HostedZoneId: Z0358815GI2I8U5CTHXW
 
   APIGateway:
     Type: AWS::Serverless::Api
     Properties:
       Domain:
-        DomainName: !Ref HostName
+        DomainName: !Ref GatewayHostName
         CertificateArn: !Ref GenerateCertificate
         Route53:
           HostedZoneId: Z0358815GI2I8U5CTHXW
@@ -69,6 +81,68 @@ Resources:
               Access-Control-Allow-Headers: "'*'"
               Access-Control-Allow-Origin: "'*'"
 
+  APIGatewayV2:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Domain:
+        DomainName: !Ref GatewayHostNameV2
+        CertificateArn: !Ref GenerateCertificateV2
+        Route53:
+          HostedZoneId: Z0358815GI2I8U5CTHXW
+      # AccessLogSettings:
+      #   DestinationArn: !GetAtt APIGatewayV2AccessLogs.Arn
+      #   Format: $context.requestId $context.httpMethod $context.path $context.error.responseType $context.error.messageString $context.authorizer.error $context.integrationErrorMessage
+      Auth: # Uses the FirebaseTokenAuthorizer to identify the session user. 
+        DefaultAuthorizer: FirebaseTokenAuthorizer
+        Authorizers:
+          FirebaseTokenAuthorizer:
+            AuthorizerPayloadFormatVersion: 2.0
+            FunctionArn: arn:aws:lambda:us-east-1:887279901853:function:FirebaseTokenAuthorizer
+            FunctionInvokeRole: !GetAtt APIGatewayV2Role.Arn
+            Identity:
+              ReauthorizeEvery: 300
+              Headers: [ "Authorization" ]
+      CorsConfiguration:
+        AllowMethods: ["*"]
+        AllowHeaders: ["*"]
+        AllowOrigins: 
+          - "http://localhost"
+          - "http://localhost:8000"
+          - "https://fastchargeapi.com"
+      DisableExecuteApiEndpoint: True
+  
+  # APIGatewayV2AccessLogs:
+  #   Type: AWS::Logs::LogGroup
+
+  APIGatewayV2Role:
+     Type: AWS::IAM::Role
+     Properties:
+       AssumeRolePolicyDocument:
+         Version: "2012-10-17"
+         Statement:
+           - Action:
+               - sts:AssumeRole
+             Effect: Allow
+             Principal:
+               Service:
+                 - apigateway.amazonaws.com
+       Tags:
+         - Key: lambda:createdBy
+           Value: SAM
+
+  LambdaInvocationPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: LambdaInvocationPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: lambda:InvokeFunction
+            Resource: arn:aws:lambda:us-east-1:887279901853:function:FirebaseTokenAuthorizer
+      Roles:
+        - !Ref APIGatewayV2Role
+
   StripeCheckoutSession:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -91,27 +165,6 @@ Resources:
             Method: post
             Auth: 
               Authorizer: NONE
-
-  StripeConnectOnboard:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-    Properties:
-      CodeUri: app/
-      Handler: onboard.lambda_handler
-      Runtime: python3.9
-      Architectures:
-        - arm64 # if you are using Apple M1
-      Timeout: 10
-      Policies:
-        - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
-        - AWSLambdaRole # This will allow this lambda to send http request to the graphql api
-        - AmazonSQSFullAccess # Allows sending billing to the graphql service
-      Events:
-        POST:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            RestApiId: !Ref APIGateway
-            Path: /onboard
-            Method: post
 
   StripeConnectOnboardAcceptWebhook:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -205,14 +258,13 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: ./cron-jobs
-      Handler: executeDailyStripeTransfer.lambdaHandler
+      Handler: ExecuteDailyStripeTransfer.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
         - arm64
       Policies:
         - AWSLambdaRole
         - AmazonDynamoDBFullAccess # Give the Lambda service access to poll your DynamoDB Stream
-        - AmazonSSMFullAccess # Allows getting private key from System Manager
       ReservedConcurrentExecutions: 1
       Timeout: 300
       Events:
@@ -235,8 +287,62 @@ Resources:
       BuildProperties:
         Target: "es2022"
         EntryPoints:
-          - executeDailyStripeTransfer.ts
+          - ExecuteDailyStripeTransfer.ts
 
+  SendStripeDashboardLink:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: handlers/
+      Handler: SendStripeDashboardLink.lambdaHandler
+      Runtime: nodejs18.x
+      Architectures:
+        - arm64 # if you are using Apple M1
+      MemorySize: 512
+      Timeout: 10
+      Policies:
+        - AWSLambdaRole 
+        - AmazonDynamoDBReadOnlyAccess # For looking up user's stripe id
+        - AmazonSESFullAccess # For ending email to user
+      Events:
+        POST:
+          Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            ApiId: !Ref APIGatewayV2
+            Path: /send-stripe-login-link
+            Method: post
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Target: "es2022"
+        EntryPoints:
+          - SendStripeDashboardLink.ts
+
+  GetOnBoardLink:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: handlers/
+      Handler: GetOnBoardLink.lambdaHandler
+      Runtime: nodejs18.x
+      Architectures:
+        - arm64 # if you are using Apple M1
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+        - AWSLambdaRole 
+        - AmazonDynamoDBReadOnlyAccess # For looking up user's stripe id
+      Events:
+        POST:
+          Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            ApiId: !Ref APIGatewayV2
+            Path: /get-onboard-link
+            Method: post
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Target: "es2022"
+        EntryPoints:
+          - GetOnBoardLink.ts
 Outputs:
   APIGateway:
     Description: API APIGateway endpoint URL for DEV stage for Hello World function

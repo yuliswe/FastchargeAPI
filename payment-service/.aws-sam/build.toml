@@ -8,23 +8,23 @@ architecture = "arm64"
 handler = "checkout.lambda_handler"
 manifest_hash = ""
 packagetype = "Zip"
-functions = ["StripeCheckoutSession", "StripeConnectOnboard", "StripeConnectOnboardAcceptWebhook", "AcceptPaymentWebhook", "GetDashboardLoginLink", "Payout"]
+functions = ["StripeCheckoutSession", "StripeConnectOnboardAcceptWebhook", "AcceptPaymentWebhook", "GetDashboardLoginLink", "Payout"]
 
-[function_build_definitions.a067f16f-468c-4cff-b95a-c8c9ff2b6867]
+[function_build_definitions.3a53b7f2-d9d9-49bc-8051-59deed0db72f]
 codeuri = "/Users/yu/lab/FastchargeAPI/payment-service/cron-jobs"
 runtime = "nodejs18.x"
 architecture = "arm64"
-handler = "executeDailyStripeTransfer.lambdaHandler"
+handler = "ExecuteDailyStripeTransfer.lambdaHandler"
 manifest_hash = ""
 packagetype = "Zip"
 functions = ["ExecuteDailyStripeTransferCronJob"]
 
-[function_build_definitions.a067f16f-468c-4cff-b95a-c8c9ff2b6867.metadata]
+[function_build_definitions.3a53b7f2-d9d9-49bc-8051-59deed0db72f.metadata]
 BuildMethod = "esbuild"
 
-[function_build_definitions.a067f16f-468c-4cff-b95a-c8c9ff2b6867.metadata.BuildProperties]
+[function_build_definitions.3a53b7f2-d9d9-49bc-8051-59deed0db72f.metadata.BuildProperties]
 Target = "es2022"
-EntryPoints = ["executeDailyStripeTransfer.ts"]
+EntryPoints = ["ExecuteDailyStripeTransfer.ts"]
 
 
 
@@ -39,6 +39,150 @@ EntryPoints = ["executeDailyStripeTransfer.ts"]
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[function_build_definitions.f2d3af8b-5cf3-422a-9217-0ef40f978361]
+codeuri = "/Users/yu/lab/FastchargeAPI/payment-service/handlers"
+runtime = "nodejs18.x"
+architecture = "arm64"
+handler = "SendStripeDashboardLink.lambdaHandler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["SendStripeDashboardLink"]
+
+[function_build_definitions.f2d3af8b-5cf3-422a-9217-0ef40f978361.metadata]
+BuildMethod = "esbuild"
+
+[function_build_definitions.f2d3af8b-5cf3-422a-9217-0ef40f978361.metadata.BuildProperties]
+Target = "es2022"
+EntryPoints = ["SendStripeDashboardLink.ts"]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[function_build_definitions.8fe569a5-19b2-46f9-9eee-9bf247b28245]
+codeuri = "/Users/yu/lab/FastchargeAPI/payment-service/handlers"
+runtime = "nodejs18.x"
+architecture = "arm64"
+handler = "GetOnBoardLink.lambdaHandler"
+manifest_hash = ""
+packagetype = "Zip"
+functions = ["GetOnBoardLink"]
+
+[function_build_definitions.8fe569a5-19b2-46f9-9eee-9bf247b28245.metadata]
+BuildMethod = "esbuild"
+
+[function_build_definitions.8fe569a5-19b2-46f9-9eee-9bf247b28245.metadata.BuildProperties]
+Target = "es2022"
+EntryPoints = ["GetOnBoardLink.ts"]
 
 
 [layer_build_definitions]

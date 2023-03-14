@@ -1,0 +1,41 @@
+{
+    "version": "2.0",
+    "routeKey": "POST /send-stripe-login-link",
+    "rawPath": "/send-stripe-login-link",
+    "rawQueryString": "",
+    "headers": {
+        "accept": "*/*",
+        "accept-encoding": "gzip, deflate, br",
+        "authorization": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjU4ODI0YTI2ZjFlY2Q1NjEyN2U4OWY1YzkwYTg4MDYxMTJhYmU5OWMiLCJ0eXAiOiJKV1QifQ.eyJuYW1lIjoiWXUgTGkiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUdObXl4WnV4TVE5a2ptaDNnN0czY2lQbmFSSms3cFRSSnVjMU43NnVxREM9czk2LWMiLCJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vZmFzdGNoYXJnZWFwaSIsImF1ZCI6ImZhc3RjaGFyZ2VhcGkiLCJhdXRoX3RpbWUiOjE2Nzg2MTg0NTQsInVzZXJfaWQiOiJKdEZHMndsR2QwUGdyc2xmZ3JpaDN0SVJGYXkyIiwic3ViIjoiSnRGRzJ3bEdkMFBncnNsZmdyaWgzdElSRmF5MiIsImlhdCI6MTY3ODY4NDg3MCwiZXhwIjoxNjc4Njg4NDcwLCJlbWFpbCI6InlsaWxhcnJ5QGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJmaXJlYmFzZSI6eyJpZGVudGl0aWVzIjp7Imdvb2dsZS5jb20iOlsiMTA4NjcxOTU2NzIwMzc2MDQyNDU0Il0sImdpdGh1Yi5jb20iOlsiODE3NzI5NSJdLCJlbWFpbCI6WyJ5bGlsYXJyeUBnbWFpbC5jb20iXX0sInNpZ25faW5fcHJvdmlkZXIiOiJnaXRodWIuY29tIn19.oywHDyOw6uFRwLT3wODB4qb0oJsnTTzyo5lfIF3fNwZQnWkRRxq7Ycy7q0SF0_KrBBEAGxF6AdfSSO3pdDPE95oHHRYUoGMOCx_Em0E2CSbKpj1VCiuqzjAks3DyZqMaJH8oZHcnTRIBLwAWMXarUP6R4LXPGrULryHjyNwNRJmkKITG5DAyA-ll7JqMdCT4wCHyynYzUFEGxQ5XcfkrB_Zrnkq4_TaqLLhy05Cg67Z9Mby16TuFXwoGcUuE5XVTMIWOQoYelva8N9HlPhTatQ8Y2nEm_hfbwt388BIcyNMZhCQt0xeI1uZ4jJq4L2IIDnUBszZ9CJnk9iItnY0Cjg",
+        "content-length": "58",
+        "content-type": "application/json",
+        "host": "api.v2.payment.fastchargeapi.com",
+        "postman-token": "1fe4b5c3-ee8d-4c5a-978d-5100f8226db1",
+        "user-agent": "PostmanRuntime/7.31.1",
+        "x-amzn-trace-id": "Root=1-640eb3e9-36c40e7b602b47ff29a7575d",
+        "x-forwarded-for": "72.136.80.113",
+        "x-forwarded-port": "443",
+        "x-forwarded-proto": "https",
+        "x-user-email": "testuser1.fastchargeapi@gmail.com"
+    },
+    "requestContext": {
+        "accountId": "887279901853",
+        "apiId": "e6t0kyifod",
+        "domainName": "api.v2.payment.fastchargeapi.com",
+        "domainPrefix": "api",
+        "http": {
+            "method": "POST",
+            "path": "/send-stripe-login-link",
+            "protocol": "HTTP/1.1",
+            "sourceIp": "72.136.80.113",
+            "userAgent": "PostmanRuntime/7.31.1"
+        },
+        "requestId": "BtEMhinDoAMEaHw=",
+        "routeKey": "POST /send-stripe-login-link",
+        "stage": "$default",
+        "time": "13/Mar/2023:05:26:01 +0000",
+        "timeEpoch": 1678685161408
+    },
+    "body": "{\"query\":\"query {\\n    users {\\n        author\\n    }\\n}\"}",
+    "isBase64Encoded": false
+}
