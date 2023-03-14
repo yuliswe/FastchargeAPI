@@ -10,7 +10,6 @@ import {
 } from "../__generated__/resolvers-types";
 import { BadInput, Denied } from "../errors";
 import { Can } from "../permissions";
-import { UserPK } from "../pks/UserPK";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { settleAccountActivities } from "../functions/account";
 import { GQLStripePaymentAcceptStatus } from "../__generated__/operation-types";

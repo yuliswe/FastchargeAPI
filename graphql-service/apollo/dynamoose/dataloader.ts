@@ -274,7 +274,8 @@ function stripNullKeys<T extends object>(
 ): Partial<T> | undefined {
     let data: Partial<T> = {};
     for (let [key, val] of Object.entries(object)) {
-        if (typeof val === "object" && options?.deep) {
+        if (val !== null && typeof val === "object" && options?.deep) {
+            // typeof null is "object"
             val = stripNullKeys(val, options);
         }
         if (val !== undefined && val !== null) {

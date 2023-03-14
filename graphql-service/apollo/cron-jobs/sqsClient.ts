@@ -3,6 +3,7 @@ import { ApolloClient } from "@apollo/client/core/ApolloClient";
 import { HttpLink } from "@apollo/client/link/http/HttpLink";
 import { v4 as uuidv4 } from "uuid";
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
+import { RequestInit, Response } from "node-fetch";
 
 const cache = new InMemoryCache();
 
@@ -12,6 +13,7 @@ export enum SQSQueueUrl {
 }
 
 const sqsClient = new SQSClient({ region: "us-east-1" });
+
 export function sqsGQLClient({
     queueUrl,
     dedupId,
@@ -22,32 +24,36 @@ export function sqsGQLClient({
     groupId?: string;
 }) {
     return new ApolloClient({
-        // Provide required constructor fields
         cache: cache,
+        // Disabling cache will prevent error because we can't return a response
+        defaultOptions: {
+            watchQuery: {
+                fetchPolicy: "no-cache",
+            },
+            query: {
+                fetchPolicy: "no-cache",
+            },
+        },
         link: new HttpLink({
-            fetch: (uri: string, options: { body: string }) => {
+            fetch: async (uri: string, options: RequestInit) => {
                 let body = options.body;
                 if (queueUrl == SQSQueueUrl.BillingFifoQueue) {
                     groupId = "main";
                 }
-                let resp = sqsClient.send(
+                await sqsClient.send(
                     new SendMessageCommand({
-                        MessageBody: body,
+                        MessageBody: body?.toString(),
                         MessageGroupId: groupId,
                         QueueUrl: queueUrl,
                         MessageDeduplicationId: dedupId || uuidv4(),
                     })
                 );
+                return new Response(
+                    JSON.stringify({
+                        data: {},
+                    })
+                );
             },
         }),
-        // Provide some optional constructor fields
-        //   name: 'react-web-client',
-        // version: "1.3",
-        // queryDeduplication: false,
-        // defaultOptions: {
-        //     watchQuery: {
-        //         fetchPolicy: "cache-and-network",
-        //     },
-        // },
     });
 }

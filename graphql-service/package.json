@@ -11,5 +11,8 @@
     "deploy": "npm run build && sam deploy"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "node-fetch": "^3.3.1"
+  }
 }

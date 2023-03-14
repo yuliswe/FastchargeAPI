@@ -31,25 +31,25 @@ Resources:
       CompatibleRuntimes:
         - nodejs18.x
     Metadata:
-      BuildMethod: makefile              # Required to have AWS SAM build this layer
+      BuildMethod: makefile # Required to have AWS SAM build this layer
 
-  GenerateCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain 
+  GenerateCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain
     Type: AWS::CertificateManager::Certificate
-    Properties: 
+    Properties:
       DomainName: "api.graphql.fastchargeapi.com"
       ValidationMethod: DNS
       DomainValidationOptions:
-      - DomainName: "api.graphql.fastchargeapi.com"
-        HostedZoneId: Z0358815GI2I8U5CTHXW
-        
-  GenerateIAMCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain 
+        - DomainName: "api.graphql.fastchargeapi.com"
+          HostedZoneId: Z0358815GI2I8U5CTHXW
+
+  GenerateIAMCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain
     Type: AWS::CertificateManager::Certificate
-    Properties: 
+    Properties:
       DomainName: "api.iam.graphql.fastchargeapi.com"
       ValidationMethod: DNS
       DomainValidationOptions:
-      - DomainName: "api.iam.graphql.fastchargeapi.com"
-        HostedZoneId: Z0358815GI2I8U5CTHXW
+        - DomainName: "api.iam.graphql.fastchargeapi.com"
+          HostedZoneId: Z0358815GI2I8U5CTHXW
 
   APIGateway:
     Type: AWS::Serverless::Api
@@ -65,7 +65,7 @@ Resources:
           MetricsEnabled: True
           ResourcePath: "/*" # allows for logging on any resource
           HttpMethod: "*" # allows for logging on any method
-      Auth: # Uses the FirebaseTokenAuthorizer to identify the session user. 
+      Auth: # Uses the FirebaseTokenAuthorizer to identify the session user.
         ApiKeyRequired: false
         DefaultAuthorizer: FirebaseTokenAuthorizer
         Authorizers:
@@ -74,13 +74,13 @@ Resources:
             FunctionArn: arn:aws:lambda:us-east-1:887279901853:function:FirebaseTokenAuthorizer
             Identity:
               ReauthorizeEvery: 300
-              Headers: [ "Authorization" ]
+              Headers: ["Authorization"]
       Cors:
         AllowMethods: "'*'"
         AllowHeaders: "'*'"
         AllowOrigin: "'*'"
       GatewayResponses:
-        UNAUTHORIZED: # This is hacky but right now the only way to handle an OPTION request without failing 
+        UNAUTHORIZED: # This is hacky but right now the only way to handle an OPTION request without failing
           StatusCode: 200
           ResponseParameters:
             Headers:
@@ -89,7 +89,6 @@ Resources:
               Access-Control-Allow-Origin: "'*'"
       Tags:
         service-name: graphql-service
-
 
   # Create another gateway with IAM based authentication
   APIGatewayIAM:
@@ -106,7 +105,7 @@ Resources:
           MetricsEnabled: True
           ResourcePath: "/*" # allows for logging on any resource
           HttpMethod: "*" # allows for logging on any method
-      Auth: 
+      Auth:
         DefaultAuthorizer: AWS_IAM
 
   ApolloServer:
@@ -120,7 +119,7 @@ Resources:
       Policies:
         - AWSLambdaRole
         - AmazonDynamoDBFullAccess # Give the Lambda service access to poll your DynamoDB Stream
-        - AmazonSSMFullAccess # Allows getting private key from System Manager
+        - AmazonSSMReadOnlyAccess # Allows getting private key from System Manager
       Events:
         Get:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -156,7 +155,7 @@ Resources:
       Policies:
         - AWSLambdaRole
         - AmazonDynamoDBFullAccess # Give the Lambda service access to poll your DynamoDB Stream
-        - AmazonSSMFullAccess # Allows getting private key from System Manager
+        - AmazonSSMReadOnlyAccess # Allows getting private key from System Manager
       Events:
         PostIAM:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -182,7 +181,7 @@ Resources:
       Policies:
         - AWSLambdaRole
         - AmazonDynamoDBFullAccess # Give the Lambda service access to poll your DynamoDB Stream
-        - AmazonSSMFullAccess # Allows getting private key from System Manager
+        - AmazonSSMReadOnlyAccess # Allows getting private key from System Manager
       Timeout: 30
       Events:
         UsageLogQueueEvent:
@@ -191,14 +190,14 @@ Resources:
             Queue: !GetAtt UsageLogQueue.Arn
             BatchSize: 10
             MaximumBatchingWindowInSeconds: 10
-            FunctionResponseTypes: 
+            FunctionResponseTypes:
               - ReportBatchItemFailures
         BillingQueueEvent:
           Type: SQS
           Properties:
             Queue: !GetAtt BillingQueue.Arn
             BatchSize: 10
-            FunctionResponseTypes: 
+            FunctionResponseTypes:
               - ReportBatchItemFailures
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
@@ -261,7 +260,7 @@ Resources:
       Policies:
         - AWSLambdaRole
         - AmazonDynamoDBFullAccess # Give the Lambda service access to poll your DynamoDB Stream
-        - AmazonSSMFullAccess # Allows getting private key from System Manager
+        - AmazonSSMReadOnlyAccess # Allows getting private key from System Manager
       Timeout: 300
       Events:
         ScheduledTrigger:
