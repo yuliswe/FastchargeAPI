@@ -341,12 +341,13 @@ export type GQLStripePaymentAccept = {
     amount: Scalars["NonNegativeDecimal"];
     createdAt: Scalars["Timestamp"];
     currency: Scalars["String"];
-    settlePayment?: Maybe<GQLStripePaymentAccept>;
+    settlePayment: GQLStripePaymentAccept;
+    status: GQLStripePaymentAcceptStatus;
     stripePaymentIntent: Scalars["String"];
     stripePaymentStatus: Scalars["String"];
     stripeSessionId: Scalars["String"];
     stripeSessionObject: Scalars["String"];
-    updateStripePaymentAccept?: Maybe<GQLStripePaymentAccept>;
+    updateStripePaymentAccept: GQLStripePaymentAccept;
     user: GQLUser;
 };
 
@@ -358,6 +359,11 @@ export type GQLStripePaymentAcceptUpdateStripePaymentAcceptArgs = {
     stripePaymentStatus?: InputMaybe<Scalars["String"]>;
     stripeSessionObject?: InputMaybe<Scalars["String"]>;
 };
+
+export enum GQLStripePaymentAcceptStatus {
+    Pending = "pending",
+    Settled = "settled",
+}
 
 export type GQLStripeTransfer = {
     __typename?: "StripeTransfer";
@@ -435,6 +441,7 @@ export type GQLUser = {
     settleAccountActivities: Array<GQLAccountActivity>;
     stripeConnectAccountId?: Maybe<Scalars["String"]>;
     stripeCustomerId?: Maybe<Scalars["String"]>;
+    stripePaymentAccept: GQLStripePaymentAccept;
     subscriptions: Array<GQLSubscribe>;
     updateUser?: Maybe<GQLUser>;
     updatedAt: Scalars["Timestamp"];
@@ -458,6 +465,10 @@ export type GQLUserAppTokenArgs = {
 
 export type GQLUserCreateAppTokenArgs = {
     app: Scalars["ID"];
+};
+
+export type GQLUserStripePaymentAcceptArgs = {
+    stripeSessionId?: InputMaybe<Scalars["String"]>;
 };
 
 export type GQLUserUpdateUserArgs = {
@@ -586,6 +597,7 @@ export type GQLResolversTypes = ResolversObject<{
     SortDirection: GQLSortDirection;
     String: ResolverTypeWrapper<Scalars["String"]>;
     StripePaymentAccept: ResolverTypeWrapper<StripePaymentAcceptData>;
+    StripePaymentAcceptStatus: GQLStripePaymentAcceptStatus;
     StripeTransfer: ResolverTypeWrapper<StripeTransferData>;
     StripeTransferIndex: GQLStripeTransferIndex;
     StripeTransferStatus: GQLStripeTransferStatus;
@@ -866,17 +878,18 @@ export type GQLStripePaymentAcceptResolvers<
     createdAt?: Resolver<GQLResolversTypes["Timestamp"], ParentType, ContextType>;
     currency?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
     settlePayment?: Resolver<
-        Maybe<GQLResolversTypes["StripePaymentAccept"]>,
+        GQLResolversTypes["StripePaymentAccept"],
         ParentType,
         ContextType,
         RequireFields<GQLStripePaymentAcceptSettlePaymentArgs, "stripeSessionObject">
     >;
+    status?: Resolver<GQLResolversTypes["StripePaymentAcceptStatus"], ParentType, ContextType>;
     stripePaymentIntent?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
     stripePaymentStatus?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
     stripeSessionId?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
     stripeSessionObject?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
     updateStripePaymentAccept?: Resolver<
-        Maybe<GQLResolversTypes["StripePaymentAccept"]>,
+        GQLResolversTypes["StripePaymentAccept"],
         ParentType,
         ContextType,
         Partial<GQLStripePaymentAcceptUpdateStripePaymentAcceptArgs>
@@ -990,6 +1003,12 @@ export type GQLUserResolvers<
     settleAccountActivities?: Resolver<Array<GQLResolversTypes["AccountActivity"]>, ParentType, ContextType>;
     stripeConnectAccountId?: Resolver<Maybe<GQLResolversTypes["String"]>, ParentType, ContextType>;
     stripeCustomerId?: Resolver<Maybe<GQLResolversTypes["String"]>, ParentType, ContextType>;
+    stripePaymentAccept?: Resolver<
+        GQLResolversTypes["StripePaymentAccept"],
+        ParentType,
+        ContextType,
+        Partial<GQLUserStripePaymentAcceptArgs>
+    >;
     subscriptions?: Resolver<Array<GQLResolversTypes["Subscribe"]>, ParentType, ContextType>;
     updateUser?: Resolver<Maybe<GQLResolversTypes["User"]>, ParentType, ContextType, Partial<GQLUserUpdateUserArgs>>;
     updatedAt?: Resolver<GQLResolversTypes["Timestamp"], ParentType, ContextType>;

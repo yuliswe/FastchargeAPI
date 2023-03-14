@@ -89,8 +89,8 @@ const UserTableSchema = new dynamoose.Schema(
     {
         email: { type: String, hashKey: true },
         author: { type: String, default: "" },
-        stripeCustomerId: { type: String, default: "" }, // Available after the user first tops up their account
-        stripeConnectAccountId: { type: String, default: "" }, // Available after the user first onboards their Stripe account
+        stripeCustomerId: { type: String, required: false }, // Available after the user first tops up their account
+        stripeConnectAccountId: { type: String, required: false }, // Available after the user first onboards their Stripe account
     },
     {
         timestamps: true,
@@ -285,6 +285,7 @@ const AccountActivityTableSchema = new dynamoose.Schema(
         },
         usageSummary: { type: String, default: undefined },
         stripeTransfer: { type: String, default: undefined },
+        stripePaymentAccept: { type: String, default: undefined },
         description: { type: String, default: "" },
         billedApp: { type: String, required: false, default: undefined },
     },
@@ -320,19 +321,9 @@ const AccountHistoryTableSchema = new dynamoose.Schema(
 );
 const StripePaymentAcceptTableSchema = new dynamoose.Schema(
     {
-        user: {
-            hashKey: true,
-            ...String_Required_NotEmpty("user"),
-        },
-        stripeSessionId: {
-            index: true,
-            ...String_Required_NotEmpty("stripeSessionId"),
-        },
-        createdAt: {
-            type: Number,
-            rangeKey: true,
-            default: defaultCreatedAt,
-        },
+        user: { type: String, hashKey: true, required: true },
+        createdAt: { type: Number, rangeKey: true, default: defaultCreatedAt },
+        stripeSessionId: { type: String, required: true },
         amount: {
             type: String,
             required: true,
@@ -348,6 +339,7 @@ const StripePaymentAcceptTableSchema = new dynamoose.Schema(
         },
         stripeSessionObject: { type: Object, required: true },
         accountActivity: { type: String, required: false },
+        status: { type: String, enum: ["pending", "settled"], default: "pending" },
     },
     {
         timestamps: {
@@ -490,8 +482,8 @@ export class User extends Item {
     email: string;
     author: string;
     balance: string;
-    stripeCustomerId: string;
-    stripeConnectAccountId: string;
+    stripeCustomerId: string | null;
+    stripeConnectAccountId: string | null;
     appTokens: { [appName: string]: string };
     createdAt: number;
     updatedAt: number;
@@ -588,6 +580,7 @@ export class AccountActivity extends Item {
     createdAt: number;
     description: string;
     stripeTransfer: string | null; // ID of the StripeTransfer item or null if not related to Stripe
+    stripePaymentAccept: string | null; // ID of the StripePaymentAccept item or null if not related to Stripe
     billedApp: string | null; // ID of the App item if the activity is related to billing an app. This is the same as usageSummary.app
 }
 /// When creating a new Item class, remember to add it to codegen.yml mappers
@@ -617,6 +610,7 @@ export class StripePaymentAccept extends Item {
     amount: string;
     createdAt: number;
     currency: string;
+    status: "settled" | "pending";
     stripePaymentStatus: "unpaid" | "paid" | "no_payment_required"; // This is copied from stripe checkout session's payment_status, for debugging purpose
     stripeSessionObject: object; // The entire stripe checkout session object, for debugging purpose
     stripePaymentIntent: string; // The stripe payment intent ID, copied from stripe checkout session's payment_intent

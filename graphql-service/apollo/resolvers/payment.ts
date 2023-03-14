@@ -1,9 +1,5 @@
 import { GraphQLResolveInfo } from "graphql";
-import {
-    StripePaymentAccept,
-    StripePaymentAcceptModel,
-    User,
-} from "../dynamoose/models";
+import { StripePaymentAccept, StripePaymentAcceptModel, User } from "../dynamoose/models";
 import { RequestContext } from "../RequestContext";
 import {
     GQLMutationCreateStripePaymentAcceptArgs,
@@ -17,6 +13,8 @@ import { Can } from "../permissions";
 import { UserPK } from "../pks/UserPK";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { settleAccountActivities } from "../functions/account";
+import { GQLStripePaymentAcceptStatus } from "../__generated__/operation-types";
+import { StripePaymentAcceptPK } from "../pks/StripePaymentAccept";
 /**
  * Remember to add your resolver to the resolvers object in server.ts.
  *
@@ -37,9 +35,9 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
         stripePaymentIntent: (parent) => parent.stripePaymentIntent,
         stripeSessionId: (parent) => parent.stripeSessionId,
         stripePaymentStatus: (parent) => parent.stripePaymentStatus,
-        stripeSessionObject: (parent) =>
-            JSON.stringify(parent.stripeSessionObject),
+        stripeSessionObject: (parent) => JSON.stringify(parent.stripeSessionObject),
         createdAt: (parent) => parent.createdAt,
+        status: (parent) => parent.status as GQLStripePaymentAcceptStatus,
 
         /**
          * Important: This method must be idempotent. It must be safe to call
@@ -51,58 +49,41 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
          * @param info
          * @returns
          */
-        async settlePayment(
-            parent: StripePaymentAccept,
-            { stripeSessionObject },
-            context
-        ) {
-            let user = await context.batched.User.get({ email: parent.user });
+        async settlePayment(parent: StripePaymentAccept, { stripeSessionObject }, context) {
             let activity = await context.batched.AccountActivity.create({
-                user: UserPK.stringify(user),
+                user: parent.user,
                 amount: parent.amount,
                 type: "debit",
                 reason: "topup",
                 settleAt: Date.now(),
                 description: "Account top-up by you",
+                stripePaymentAccept: StripePaymentAcceptPK.stringify(parent),
             });
-            parent.stripeSessionObject = JSON.parse(stripeSessionObject);
-            parent.accountActivity = AccountActivityPK.stringify(activity);
-            await settleAccountActivities(context, UserPK.stringify(user), {
+            await settleAccountActivities(context, parent.user, {
                 consistentReadAccountActivities: true,
             });
-            await parent.save();
+            parent = await context.batched.StripePaymentAccept.update(parent, {
+                stripeSessionObject: JSON.parse(stripeSessionObject),
+                accountActivity: AccountActivityPK.stringify(activity),
+                status: "settled",
+            });
             return parent;
         },
 
         async updateStripePaymentAccept(
             parent: StripePaymentAccept,
-            {
-                stripePaymentStatus,
-                stripeSessionObject,
-            }: GQLStripePaymentAcceptUpdateStripePaymentAcceptArgs,
+            { stripePaymentStatus, stripeSessionObject }: GQLStripePaymentAcceptUpdateStripePaymentAcceptArgs,
             context: RequestContext
         ) {
-            let newPayment = await context.batched.StripePaymentAccept.update(
-                parent,
-                {
-                    stripePaymentStatus:
-                        (stripePaymentStatus as typeof parent.stripePaymentStatus) ||
-                        undefined,
-                    stripeSessionObject: stripeSessionObject
-                        ? JSON.parse(stripeSessionObject)
-                        : undefined,
-                }
-            );
+            let newPayment = await context.batched.StripePaymentAccept.update(parent, {
+                stripePaymentStatus: (stripePaymentStatus as typeof parent.stripePaymentStatus) || undefined,
+                stripeSessionObject: stripeSessionObject ? JSON.parse(stripeSessionObject) : undefined,
+            });
             return newPayment;
         },
     },
     Query: {
-        async stripePaymentAccept(
-            parent: User,
-            args: GQLQueryStripePaymentAcceptArgs,
-            context,
-            info
-        ) {
+        async stripePaymentAccept(parent: User, args: GQLQueryStripePaymentAcceptArgs, context, info) {
             if (!(await Can.readStripePaymentAccepts(parent, args, context))) {
                 throw new Denied();
             }

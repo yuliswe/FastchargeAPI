@@ -12,6 +12,7 @@ import {
     GQLUserAppToken,
     GQLUserCreateAppTokenArgs,
     GQLUserResolvers,
+    GQLUserStripePaymentAcceptArgs,
     GQLUserUpdateUserArgs,
     GQLUserUsageLogsArgs,
     GQLUserUsageSummariesArgs,
@@ -58,6 +59,9 @@ export const userResolvers: GQLResolvers & {
         stripeConnectAccountId: (parent) => parent.stripeConnectAccountId,
         async appToken(parent, { app }, context) {
             return await context.batched.UserAppToken.get({ subscriber: parent.email, app });
+        },
+        async stripePaymentAccept(parent, { stripeSessionId }: GQLUserStripePaymentAcceptArgs, context) {
+            return await context.batched.StripePaymentAccept.get({ user: parent.email, stripeSessionId });
         },
         async accountActivities(parent: User, { limit, dateRange }: GQLUserAccountActivitiesArgs, context) {
             let result = await context.batched.AccountActivity.many(

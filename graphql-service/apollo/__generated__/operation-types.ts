@@ -322,12 +322,13 @@ export type GQLStripePaymentAccept = {
     amount: Scalars["NonNegativeDecimal"];
     createdAt: Scalars["Timestamp"];
     currency: Scalars["String"];
-    settlePayment?: Maybe<GQLStripePaymentAccept>;
+    settlePayment: GQLStripePaymentAccept;
+    status: GQLStripePaymentAcceptStatus;
     stripePaymentIntent: Scalars["String"];
     stripePaymentStatus: Scalars["String"];
     stripeSessionId: Scalars["String"];
     stripeSessionObject: Scalars["String"];
-    updateStripePaymentAccept?: Maybe<GQLStripePaymentAccept>;
+    updateStripePaymentAccept: GQLStripePaymentAccept;
     user: GQLUser;
 };
 
@@ -339,6 +340,11 @@ export type GQLStripePaymentAcceptUpdateStripePaymentAcceptArgs = {
     stripePaymentStatus?: InputMaybe<Scalars["String"]>;
     stripeSessionObject?: InputMaybe<Scalars["String"]>;
 };
+
+export enum GQLStripePaymentAcceptStatus {
+    Pending = "pending",
+    Settled = "settled",
+}
 
 export type GQLStripeTransfer = {
     __typename?: "StripeTransfer";
@@ -416,6 +422,7 @@ export type GQLUser = {
     settleAccountActivities: Array<GQLAccountActivity>;
     stripeConnectAccountId?: Maybe<Scalars["String"]>;
     stripeCustomerId?: Maybe<Scalars["String"]>;
+    stripePaymentAccept: GQLStripePaymentAccept;
     subscriptions: Array<GQLSubscribe>;
     updateUser?: Maybe<GQLUser>;
     updatedAt: Scalars["Timestamp"];
@@ -439,6 +446,10 @@ export type GQLUserAppTokenArgs = {
 
 export type GQLUserCreateAppTokenArgs = {
     app: Scalars["ID"];
+};
+
+export type GQLUserStripePaymentAcceptArgs = {
+    stripeSessionId?: InputMaybe<Scalars["String"]>;
 };
 
 export type GQLUserUpdateUserArgs = {

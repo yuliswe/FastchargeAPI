@@ -144,6 +144,8 @@ type User {
     createAppToken(app: ID!): UserAppToken!
 
     appToken(app: ID!): UserAppToken!
+
+    stripePaymentAccept(stripeSessionId: String): StripePaymentAccept!
 }
 
 input DateRangeInput {
@@ -254,10 +256,16 @@ type StripePaymentAccept {
     stripePaymentIntent: String!
     stripeSessionId: String!
     createdAt: Timestamp!
+    status: StripePaymentAcceptStatus!
 
-    updateStripePaymentAccept(stripePaymentStatus: String, stripeSessionObject: String): StripePaymentAccept
+    updateStripePaymentAccept(stripePaymentStatus: String, stripeSessionObject: String): StripePaymentAccept!
 
-    settlePayment(stripeSessionObject: String!): StripePaymentAccept
+    settlePayment(stripeSessionObject: String!): StripePaymentAccept!
+}
+
+enum StripePaymentAcceptStatus {
+    pending
+    settled
 }
 
 enum GatewayMode {
