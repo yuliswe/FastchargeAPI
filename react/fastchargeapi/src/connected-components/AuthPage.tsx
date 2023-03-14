@@ -358,7 +358,6 @@ class _AuthPage extends React.Component<_Props, _State> {
                                     <Typography
                                         variant="h6"
                                         fontWeight={300}
-                                        pl={1}
                                     >
                                         FastchargeAPI will take care of metering
                                         and billing.

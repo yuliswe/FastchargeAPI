@@ -1,5 +1,4 @@
 import React from "react";
-import { Helmet } from "react-helmet-async";
 import { connect } from "react-redux";
 import { RootAppState } from "../states/RootAppState";
 import { TopUpAppState } from "../states/TopupAppState";
@@ -261,7 +260,7 @@ class _TopUp extends React.Component<_Props, _State> {
                                         transitionDuration: "2s",
                                     }}
                                 >
-                                    <Typography variant="h6" fontWeight={300} pl={1}>
+                                    <Typography variant="h6" fontWeight={300}>
                                         FastchargeAPI will take care of metering and billing.
                                     </Typography>
                                 </Fade>

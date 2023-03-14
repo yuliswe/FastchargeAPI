@@ -2,14 +2,7 @@ import React from "react";
 import { connect } from "react-redux";
 import { RootAppState } from "../states/RootAppState";
 import { OnboardAppState } from "../states/OnBoardAppState";
-import {
-    CircularProgress,
-    Container,
-    Fade,
-    Grid,
-    Stack,
-    Typography,
-} from "@mui/material";
+import { CircularProgress, Container, Fade, Grid, Stack, Typography } from "@mui/material";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { fetchWithAuth } from "../fetch";
 type _State = {};
@@ -40,16 +33,11 @@ class _Onboard extends React.Component<_Props, _State> {
 
     urlIsAllowed(url: string): boolean {
         let parsedUrl = new URL(url);
-        return (
-            parsedUrl.host === document.location.host ||
-            parsedUrl.host === "localhost"
-        );
+        return parsedUrl.host === document.location.host || parsedUrl.host === "localhost";
     }
 
     isSuccess(): boolean {
-        return (
-            new URLSearchParams(document.location.search).get("success") != null
-        );
+        return new URLSearchParams(document.location.search).get("success") != null;
     }
 
     /**
@@ -63,13 +51,8 @@ class _Onboard extends React.Component<_Props, _State> {
     }
 
     getBackendUrl(): string {
-        let url = new URL(
-            "https://api.v2.payment.fastchargeapi.com/get-onboard-link"
-        );
-        url.searchParams.append(
-            "return_url",
-            document.location.href + "?success=true"
-        );
+        let url = new URL("https://api.v2.payment.fastchargeapi.com/get-onboard-link");
+        url.searchParams.append("return_url", document.location.href + "?success=true");
         url.searchParams.append("refresh_url", document.location.href);
         return url.href;
     }
@@ -78,10 +61,7 @@ class _Onboard extends React.Component<_Props, _State> {
      * Used for interaction with the cli. Post the payment result to this url.
      */
     getPostResultUrl(): string {
-        return (
-            new URLSearchParams(document.location.search).get("post_result") ||
-            ""
-        );
+        return new URLSearchParams(document.location.search).get("post_result") || "";
     }
 
     /**
@@ -122,13 +102,9 @@ class _Onboard extends React.Component<_Props, _State> {
             }
         } else {
             // Otherwise start the onboarding process
-            const response = await fetchWithAuth(
-                this._context,
-                this.getBackendUrl(),
-                {
-                    method: "POST",
-                }
-            );
+            const response = await fetchWithAuth(this._context, this.getBackendUrl(), {
+                method: "POST",
+            });
             const { location } = await response.json();
             document.location.href = location;
         }
@@ -141,12 +117,9 @@ class _Onboard extends React.Component<_Props, _State> {
                     Welcome to FastchargeAPI!
                 </Typography>
                 <Typography variant="body1">
-                    Onboarding has completed. You can revisit this page any time
-                    to change the information.
+                    Onboarding has completed. You can revisit this page any time to change the information.
                 </Typography>
-                <Typography variant="body1">
-                    You can now close this page.
-                </Typography>
+                <Typography variant="body1">You can now close this page.</Typography>
             </Stack>
         );
     }
@@ -154,13 +127,7 @@ class _Onboard extends React.Component<_Props, _State> {
     renderLoadingPage() {
         return (
             <Stack justifyContent="center" display="flex" mb={30}>
-                <Typography
-                    variant="h5"
-                    fontWeight={500}
-                    gutterBottom
-                    display="flex"
-                    alignItems="center"
-                >
+                <Typography variant="h5" fontWeight={500} gutterBottom display="flex" alignItems="center">
                     <CircularProgress sx={{ mr: 2 }} />
                     Onboarding your account with Stripe.
                 </Typography>
@@ -172,9 +139,7 @@ class _Onboard extends React.Component<_Props, _State> {
     }
 
     renderOnboardingPage() {
-        return this.isSuccess()
-            ? this.renderSuccessPage()
-            : this.renderLoadingPage();
+        return this.isSuccess() ? this.renderSuccessPage() : this.renderLoadingPage();
     }
 
     render() {
@@ -190,8 +155,7 @@ class _Onboard extends React.Component<_Props, _State> {
                         bgcolor="primary.main"
                         height="100%"
                         sx={{
-                            backgroundImage:
-                                "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
+                            backgroundImage: "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
                         }}
                     >
                         <Container maxWidth="md">
@@ -202,11 +166,7 @@ class _Onboard extends React.Component<_Props, _State> {
                                         transitionDuration: "1s",
                                     }}
                                 >
-                                    <Typography
-                                        variant="h4"
-                                        lineHeight={1.5}
-                                        fontFamily="Ubuntu"
-                                    >
+                                    <Typography variant="h4" lineHeight={1.5} fontFamily="Ubuntu">
                                         Focus on solving what's important.
                                     </Typography>
                                 </Fade>
@@ -216,25 +176,14 @@ class _Onboard extends React.Component<_Props, _State> {
                                         transitionDuration: "2s",
                                     }}
                                 >
-                                    <Typography
-                                        variant="h6"
-                                        fontWeight={300}
-                                        pl={1}
-                                    >
-                                        FastchargeAPI will take care of metering
-                                        and billing.
+                                    <Typography variant="h6" fontWeight={300}>
+                                        FastchargeAPI will take care of metering and billing.
                                     </Typography>
                                 </Fade>
                             </Stack>
                         </Container>
                     </Grid>
-                    <Grid
-                        item
-                        xs={7}
-                        display="flex"
-                        justifyContent="center"
-                        alignItems="center"
-                    >
+                    <Grid item xs={7} display="flex" justifyContent="center" alignItems="center">
                         {this.renderOnboardingPage()}
                     </Grid>
                 </Grid>
@@ -243,8 +192,6 @@ class _Onboard extends React.Component<_Props, _State> {
     }
 }
 
-export const OnboardPage = connect<_Props, {}, {}, RootAppState>(
-    (rootAppState: RootAppState) => ({
-        onboardAppState: rootAppState.home,
-    })
-)(_Onboard);
+export const OnboardPage = connect<_Props, {}, {}, RootAppState>((rootAppState: RootAppState) => ({
+    onboardAppState: rootAppState.home,
+}))(_Onboard);
