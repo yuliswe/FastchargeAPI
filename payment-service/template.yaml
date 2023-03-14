@@ -166,50 +166,6 @@ Resources:
             Auth:
               Authorizer: NONE
 
-  AcceptPaymentWebhook:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-    Properties:
-      CodeUri: app/
-      Handler: accept.lambda_handler
-      Runtime: python3.9
-      Architectures:
-        - arm64 # if you are using Apple M1
-      Timeout: 10
-      Policies:
-        - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
-        - AWSLambdaRole # This will allow this lambda to send http request to the graphql api
-        - AmazonSQSFullAccess # Allows sending billing to the graphql service
-      Events:
-        POST:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            RestApiId: !Ref APIGateway
-            Path: /accept
-            Method: post
-            Auth:
-              Authorizer: NONE
-
-  Payout:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-    Properties:
-      CodeUri: app/
-      Handler: payout.lambda_handler
-      Runtime: python3.9
-      Architectures:
-        - arm64 # if you are using Apple M1
-      Timeout: 10
-      Policies:
-        - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
-        - AWSLambdaRole # This will allow this lambda to send http request to the graphql api
-        - AmazonSQSFullAccess # Allows sending billing to the graphql service
-      Events:
-        POST:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            RestApiId: !Ref APIGateway
-            Path: /payout
-            Method: post
-
   ExecuteDailyStripeTransferCronJob:
     Type: AWS::Serverless::Function
     Properties:
@@ -359,6 +315,35 @@ Resources:
         Target: "es2022"
         EntryPoints:
           - GetCheckoutLink.ts
+
+  CreateStripeTransfer:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: handlers/
+      Handler: CreateStripeTransfer.lambdaHandler
+      Runtime: nodejs18.x
+      Architectures:
+        - arm64 # if you are using Apple M1
+      MemorySize: 512
+      Timeout: 10
+      Policies:
+        - AWSLambdaRole
+        - AmazonDynamoDBFullAccess # Create and update order
+        - AmazonSSMReadOnlyAccess # Need to use the Stripe API
+        - AmazonSQSFullAccess # Need to send SQS billing request to settle stripePaymentAccept
+      Events:
+        POST:
+          Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            ApiId: !Ref APIGatewayV2
+            Path: /create-stripe-transfer
+            Method: post
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Target: "es2022"
+        EntryPoints:
+          - CreateStripeTransfer.ts
 
 Outputs:
   APIGateway:

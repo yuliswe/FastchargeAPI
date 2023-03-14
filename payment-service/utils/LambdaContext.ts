@@ -9,8 +9,7 @@ export type AuthorizerContext = {
     userEmail: string | undefined;
 };
 
-export type LambdaEventV2 =
-    APIGatewayProxyEventV2WithLambdaAuthorizer<AuthorizerContext>;
+export type LambdaEventV2 = APIGatewayProxyEventV2WithLambdaAuthorizer<AuthorizerContext>;
 
 export type LambdaHandlerV2 = APIGatewayProxyHandlerV2WithLambdaAuthorizer<
     AuthorizerContext,
@@ -19,9 +18,16 @@ export type LambdaHandlerV2 = APIGatewayProxyHandlerV2WithLambdaAuthorizer<
 
 export type LambdaResultV2 = APIGatewayProxyStructuredResultV2;
 
-export type LambdaCallbackV2 =
-    LmabdaCallback<APIGatewayProxyStructuredResultV2>;
+export type LambdaCallbackV2 = LmabdaCallback<APIGatewayProxyStructuredResultV2>;
 
 export function getAuthorizerContext(event: LambdaEventV2): AuthorizerContext {
     return event.requestContext.authorizer.lambda;
+}
+
+export function getUserEmailFromEvent(event: LambdaEventV2): string {
+    let email = event.requestContext.authorizer.lambda.userEmail;
+    if (!email) {
+        throw new Error("User email not found in authorizer context.");
+    }
+    return email;
 }

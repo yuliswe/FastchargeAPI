@@ -498,3 +498,17 @@ export type GQLFulfillUserStripePaymentAcceptQuery = {
         };
     };
 };
+
+export type GQLCreateStripeTransferMutationVariables = Exact<{
+    userEmail: Scalars["Email"];
+    withdrawAmount: Scalars["NonNegativeDecimal"];
+    receiveAmount: Scalars["NonNegativeDecimal"];
+}>;
+
+export type GQLCreateStripeTransferMutation = {
+    __typename?: "Mutation";
+    createStripeTransfer: {
+        __typename?: "StripeTransfer";
+        settleStripeTransfer: { __typename?: "StripeTransfer"; createdAt: number };
+    };
+};

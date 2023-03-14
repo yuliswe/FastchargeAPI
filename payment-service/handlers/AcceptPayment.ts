@@ -20,7 +20,7 @@ type StripeSessionObject = {
     id: string;
     object: "checkout.session";
     payment_status: "paid" | "unpaid";
-    customer_email: string;
+    customer_details: { email: string };
     payment_intent: string;
     customer: string; // Stripe customer ID
     amount_total: number; // In cents
@@ -38,11 +38,16 @@ export async function handle(
 ): Promise<APIGatewayProxyStructuredResultV2> {
     let stripeEvent = await stripeParser(event);
 
+    console.log(chalk.yellow("Stripe event: " + JSON.stringify(stripeEvent)));
+
     switch (stripeEvent.type) {
         case "checkout.session.completed": {
             let session = stripeEvent.data.object as StripeSessionObject;
             let amount = new Decimal(session.amount_total).div(100).toString();
-            let email = session.customer_email;
+            let email = session.customer_details.email;
+            if (!email) {
+                throw new Error("Email not found in Stripe session.");
+            }
             // Check if the order is already paid (for example, from a card
             // payment)
             //
