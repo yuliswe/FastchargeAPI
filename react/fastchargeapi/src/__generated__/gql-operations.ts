@@ -1,14 +1,8 @@
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
-export type Exact<T extends { [key: string]: unknown }> = {
-    [K in keyof T]: T[K];
-};
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
-    [SubKey in K]?: Maybe<T[SubKey]>;
-};
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
-    [SubKey in K]: Maybe<T[SubKey]>;
-};
+export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
     ID: string;
@@ -328,12 +322,13 @@ export type GQLStripePaymentAccept = {
     amount: Scalars["NonNegativeDecimal"];
     createdAt: Scalars["Timestamp"];
     currency: Scalars["String"];
-    settlePayment?: Maybe<GQLStripePaymentAccept>;
+    settlePayment: GQLStripePaymentAccept;
+    status: GQLStripePaymentAcceptStatus;
     stripePaymentIntent: Scalars["String"];
     stripePaymentStatus: Scalars["String"];
     stripeSessionId: Scalars["String"];
     stripeSessionObject: Scalars["String"];
-    updateStripePaymentAccept?: Maybe<GQLStripePaymentAccept>;
+    updateStripePaymentAccept: GQLStripePaymentAccept;
     user: GQLUser;
 };
 
@@ -345,6 +340,11 @@ export type GQLStripePaymentAcceptUpdateStripePaymentAcceptArgs = {
     stripePaymentStatus?: InputMaybe<Scalars["String"]>;
     stripeSessionObject?: InputMaybe<Scalars["String"]>;
 };
+
+export enum GQLStripePaymentAcceptStatus {
+    Pending = "pending",
+    Settled = "settled",
+}
 
 export type GQLStripeTransfer = {
     __typename?: "StripeTransfer";
@@ -422,6 +422,7 @@ export type GQLUser = {
     settleAccountActivities: Array<GQLAccountActivity>;
     stripeConnectAccountId?: Maybe<Scalars["String"]>;
     stripeCustomerId?: Maybe<Scalars["String"]>;
+    stripePaymentAccept: GQLStripePaymentAccept;
     subscriptions: Array<GQLSubscribe>;
     updateUser?: Maybe<GQLUser>;
     updatedAt: Scalars["Timestamp"];
@@ -445,6 +446,10 @@ export type GQLUserAppTokenArgs = {
 
 export type GQLUserCreateAppTokenArgs = {
     app: Scalars["ID"];
+};
+
+export type GQLUserStripePaymentAcceptArgs = {
+    stripeSessionId?: InputMaybe<Scalars["String"]>;
 };
 
 export type GQLUserUpdateUserArgs = {
@@ -548,10 +553,7 @@ export type GQLGetAccountBalanceQueryVariables = Exact<{
     email: Scalars["Email"];
 }>;
 
-export type GQLGetAccountBalanceQuery = {
-    __typename?: "Query";
-    user: { __typename?: "User"; balance: string };
-};
+export type GQLGetAccountBalanceQuery = { __typename?: "Query"; user: { __typename?: "User"; balance: string } };
 
 export type GQLGetAccountActivitiesQueryVariables = Exact<{
     email: Scalars["Email"];
@@ -572,10 +574,7 @@ export type GQLGetAccountActivitiesQuery = {
             status?: GQLAccountActivityStatus | null;
             settleAt: number;
             billedApp?: { __typename?: "App"; name: string } | null;
-            usageSummary?: {
-                __typename?: "UsageSummary";
-                volume: number;
-            } | null;
+            usageSummary?: { __typename?: "UsageSummary"; volume: number } | null;
             stripeTransfer?: {
                 __typename?: "StripeTransfer";
                 transferAt: number;
@@ -594,11 +593,7 @@ export type GQLGetAccountHistoriesQuery = {
     __typename?: "Query";
     user: {
         __typename?: "User";
-        accountHistories: Array<{
-            __typename?: "AccountHistory";
-            closingBalance: string;
-            closingTime: number;
-        }>;
+        accountHistories: Array<{ __typename?: "AccountHistory"; closingBalance: string; closingTime: number }>;
     };
 };
 
@@ -640,10 +635,7 @@ export type GQLGetUserAppsQueryVariables = Exact<{
 
 export type GQLGetUserAppsQuery = {
     __typename?: "Query";
-    user: {
-        __typename?: "User";
-        apps: Array<{ __typename?: "App"; name: string; description: string }>;
-    };
+    user: { __typename?: "User"; apps: Array<{ __typename?: "App"; name: string; description: string }> };
 };
 
 export type GQLGetAvailablePlansQueryVariables = Exact<{
@@ -673,10 +665,7 @@ export type GQLGetUserSubscriptionDetailQueryVariables = Exact<{
 
 export type GQLGetUserSubscriptionDetailQuery = {
     __typename?: "Query";
-    subscription: {
-        __typename?: "Subscribe";
-        pricing: { __typename?: "Pricing"; pk: string; name: string };
-    };
+    subscription: { __typename?: "Subscribe"; pricing: { __typename?: "Pricing"; pk: string; name: string } };
 };
 
 export type GQLGetSubscriptionDetailAppInfoQueryVariables = Exact<{
@@ -702,10 +691,7 @@ export type GQLGetUsageSummaryQuery = {
             __typename?: "UsageSummary";
             createdAt: number;
             volume: number;
-            billingAccountActivity?: {
-                __typename?: "AccountActivity";
-                amount: string;
-            } | null;
+            billingAccountActivity?: { __typename?: "AccountActivity"; amount: string } | null;
         }>;
     };
 };
@@ -722,11 +708,7 @@ export type GQLGetUserSubscriptionsQuery = {
             __typename?: "Subscribe";
             pk: string;
             pricing: { __typename?: "Pricing"; name: string };
-            app: {
-                __typename?: "App";
-                name: string;
-                owner: { __typename?: "User"; author: string };
-            };
+            app: { __typename?: "App"; name: string; owner: { __typename?: "User"; author: string } };
         }>;
     };
 };

@@ -3,16 +3,10 @@ import { Helmet } from "react-helmet-async";
 import { connect } from "react-redux";
 import { RootAppState } from "../states/RootAppState";
 import { TopUpAppState } from "../states/TopupAppState";
-import {
-    CircularProgress,
-    Container,
-    Fade,
-    Grid,
-    Stack,
-    Typography,
-} from "@mui/material";
+import { CircularProgress, Container, Fade, Grid, Stack, Typography } from "@mui/material";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { setRemoteSecret } from "../graphql-client";
+import { fetchWithAuth } from "../fetch";
 
 type _State = {};
 
@@ -61,10 +55,7 @@ class _TopUp extends React.Component<_Props, _State> {
 
     urlIsAllowed(url: string): boolean {
         let parsedUrl = new URL(url);
-        return (
-            parsedUrl.host === document.location.host ||
-            parsedUrl.host === "localhost"
-        );
+        return parsedUrl.host === document.location.host || parsedUrl.host === "localhost";
     }
 
     isSuccess(): boolean {
@@ -84,9 +75,7 @@ class _TopUp extends React.Component<_Props, _State> {
         if (!hexString) {
             throw new Error("jwt is missing from the url");
         }
-        const bytes = new Uint8Array(
-            hexString.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16))
-        );
+        const bytes = new Uint8Array(hexString.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)));
         return bytes;
     }
 
@@ -95,9 +84,7 @@ class _TopUp extends React.Component<_Props, _State> {
         if (!hexString) {
             throw new Error("jwe is missing from the url");
         }
-        const bytes = new Uint8Array(
-            hexString.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16))
-        );
+        const bytes = new Uint8Array(hexString.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)));
         return bytes;
     }
 
@@ -146,7 +133,7 @@ class _TopUp extends React.Component<_Props, _State> {
     }
 
     getBackendUrl(): string {
-        let url = new URL(`${this._context.paymentGatewayHost}/checkout`);
+        let url = new URL(`https://api.v2.payment.fastchargeapi.com/get-checkout-link`);
         return url.href;
     }
 
@@ -170,16 +157,16 @@ class _TopUp extends React.Component<_Props, _State> {
         } else {
             // Otherwise start the topuping process
             try {
-                const response = await fetch(this.getBackendUrl(), {
+                const response = await fetchWithAuth(this._context, this.getBackendUrl(), {
                     method: "POST",
                     mode: "cors",
                     headers: {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        amount_cents: this.getAmountCents(),
-                        success_url: this.getSuccessUrl(),
-                        cancel_url: this.getCancelUrl(),
+                        amountCents: this.getAmountCents(),
+                        successUrl: this.getSuccessUrl(),
+                        cancelUrl: this.getCancelUrl(),
                     }),
                 });
                 let { location } = await response.json();
@@ -196,12 +183,8 @@ class _TopUp extends React.Component<_Props, _State> {
                 <Typography variant="h5" fontWeight={500} gutterBottom>
                     Top-up succeeded. Thank you!
                 </Typography>
-                <Typography variant="body1">
-                    The fund may take up to a minute to appear in your account.
-                </Typography>
-                <Typography variant="body1">
-                    You can now close this page.
-                </Typography>
+                <Typography variant="body1">The fund may take up to a minute to appear in your account.</Typography>
+                <Typography variant="body1">You can now close this page.</Typography>
             </Stack>
         );
     }
@@ -212,9 +195,7 @@ class _TopUp extends React.Component<_Props, _State> {
                 <Typography variant="h5" fontWeight={500} gutterBottom>
                     Top-up was canceled.
                 </Typography>
-                <Typography variant="body1">
-                    You can close this page.
-                </Typography>
+                <Typography variant="body1">You can close this page.</Typography>
             </Stack>
         );
     }
@@ -222,17 +203,11 @@ class _TopUp extends React.Component<_Props, _State> {
     renderLoadingPage() {
         return (
             <Stack justifyContent="center" display="flex" mb={30}>
-                <Typography
-                    variant="h5"
-                    fontWeight={500}
-                    gutterBottom
-                    display="flex"
-                    alignItems="center"
-                >
+                <Typography variant="h5" fontWeight={500} gutterBottom display="flex" alignItems="center">
                     <CircularProgress sx={{ mr: 2 }} />
                     Creating an order with Stripe.
                 </Typography>
-                <Typography variant="body1" sx={{ ml: 7.5 }}>
+                <Typography variant="body1" sx={{ ml: 7.3 }}>
                     Please wait...
                 </Typography>
             </Stack>
@@ -262,8 +237,7 @@ class _TopUp extends React.Component<_Props, _State> {
                         bgcolor="primary.main"
                         height="100%"
                         sx={{
-                            backgroundImage:
-                                "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
+                            backgroundImage: "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
                         }}
                     >
                         <Container maxWidth="md">
@@ -277,11 +251,7 @@ class _TopUp extends React.Component<_Props, _State> {
                                         transitionDuration: "1s",
                                     }}
                                 >
-                                    <Typography
-                                        variant="h4"
-                                        lineHeight={1.5}
-                                        fontFamily="Ubuntu"
-                                    >
+                                    <Typography variant="h4" lineHeight={1.5} fontFamily="Ubuntu">
                                         Focus on solving what's important.
                                     </Typography>
                                 </Fade>
@@ -291,25 +261,14 @@ class _TopUp extends React.Component<_Props, _State> {
                                         transitionDuration: "2s",
                                     }}
                                 >
-                                    <Typography
-                                        variant="h6"
-                                        fontWeight={300}
-                                        pl={1}
-                                    >
-                                        FastchargeAPI will take care of metering
-                                        and billing.
+                                    <Typography variant="h6" fontWeight={300} pl={1}>
+                                        FastchargeAPI will take care of metering and billing.
                                     </Typography>
                                 </Fade>
                             </Stack>
                         </Container>
                     </Grid>
-                    <Grid
-                        item
-                        xs={7}
-                        display="flex"
-                        justifyContent="center"
-                        alignItems="center"
-                    >
+                    <Grid item xs={7} display="flex" justifyContent="center" alignItems="center">
                         {this.renderPaymentResult()}
                     </Grid>
                 </Grid>
@@ -318,8 +277,6 @@ class _TopUp extends React.Component<_Props, _State> {
     }
 }
 
-export const TopUpPage = connect<_Props, {}, {}, RootAppState>(
-    (rootAppState: RootAppState) => ({
-        topupAppState: rootAppState.home,
-    })
-)(_TopUp);
+export const TopUpPage = connect<_Props, {}, {}, RootAppState>((rootAppState: RootAppState) => ({
+    topupAppState: rootAppState.home,
+}))(_TopUp);
