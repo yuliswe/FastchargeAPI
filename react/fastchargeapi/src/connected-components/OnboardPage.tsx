@@ -1,9 +1,15 @@
 import React from "react";
-import { Helmet } from "react-helmet-async";
 import { connect } from "react-redux";
 import { RootAppState } from "../states/RootAppState";
 import { OnboardAppState } from "../states/OnBoardAppState";
-import { CircularProgress, Typography } from "@mui/material";
+import {
+    CircularProgress,
+    Container,
+    Fade,
+    Grid,
+    Stack,
+    Typography,
+} from "@mui/material";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { fetchWithAuth } from "../fetch";
 type _State = {};
@@ -30,13 +36,6 @@ class _Onboard extends React.Component<_Props, _State> {
      */
     getRedirectUrl(): string | null {
         return this._context.route.query.get("redirect_url");
-        // let url = new URLSearchParams(document.location.search).get(
-        //     "redirect_url"
-        // );
-        // if (url && !this.urlIsAllowed(url)) {
-        //     throw new Error("redirect_url must be the same domain.");
-        // }
-        // return url || "";
     }
 
     urlIsAllowed(url: string): boolean {
@@ -64,7 +63,9 @@ class _Onboard extends React.Component<_Props, _State> {
     }
 
     getBackendUrl(): string {
-        let url = new URL(`${this._context.paymentGatewayHost}/onboard`);
+        let url = new URL(
+            "https://api.v2.payment.fastchargeapi.com/get-onboard-link"
+        );
         url.searchParams.append(
             "return_url",
             document.location.href + "?success=true"
@@ -128,7 +129,6 @@ class _Onboard extends React.Component<_Props, _State> {
                     method: "POST",
                 }
             );
-
             const { location } = await response.json();
             document.location.href = location;
         }
@@ -136,39 +136,108 @@ class _Onboard extends React.Component<_Props, _State> {
 
     renderSuccessPage() {
         return (
-            <Typography>
-                Onboarding successful. You can close this page.
-            </Typography>
+            <Stack justifyContent="center" display="flex" mb={30}>
+                <Typography variant="h5" fontWeight={500} gutterBottom>
+                    Welcome to FastchargeAPI!
+                </Typography>
+                <Typography variant="body1">
+                    Onboarding has completed. You can revisit this page any time
+                    to change the information.
+                </Typography>
+                <Typography variant="body1">
+                    You can now close this page.
+                </Typography>
+            </Stack>
         );
     }
 
     renderLoadingPage() {
         return (
-            <React.Fragment>
-                <Typography>
-                    Onboarding your account with Stripe. This could take up to a
-                    minute. Please wait.
+            <Stack justifyContent="center" display="flex" mb={30}>
+                <Typography
+                    variant="h5"
+                    fontWeight={500}
+                    gutterBottom
+                    display="flex"
+                    alignItems="center"
+                >
+                    <CircularProgress sx={{ mr: 2 }} />
+                    Onboarding your account with Stripe.
                 </Typography>
                 <Typography variant="body1" sx={{ ml: 7.3 }}>
                     This could take up to a minute. Please wait...
                 </Typography>
-            </React.Fragment>
+            </Stack>
         );
+    }
+
+    renderOnboardingPage() {
+        return this.isSuccess()
+            ? this.renderSuccessPage()
+            : this.renderLoadingPage();
     }
 
     render() {
         return (
             <React.Fragment>
-                <Helmet>
-                    <script
-                        src="https://accounts.google.com/gsi/client"
-                        async
-                        defer
-                    ></script>
-                </Helmet>
-                {this.isSuccess()
-                    ? this.renderSuccessPage()
-                    : this.renderLoadingPage()}
+                <Grid container sx={{ height: "100vh" }}>
+                    <Grid
+                        item
+                        xs={5}
+                        display="flex"
+                        justifyContent="center"
+                        alignItems="center"
+                        bgcolor="primary.main"
+                        height="100%"
+                        sx={{
+                            backgroundImage:
+                                "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
+                        }}
+                    >
+                        <Container maxWidth="md">
+                            <Stack spacing={5} padding={10} mb={30}>
+                                <Fade
+                                    in={true}
+                                    style={{
+                                        transitionDuration: "1s",
+                                    }}
+                                >
+                                    <Typography
+                                        variant="h4"
+                                        lineHeight={1.5}
+                                        fontFamily="Ubuntu"
+                                    >
+                                        Focus on solving what's important.
+                                    </Typography>
+                                </Fade>
+                                <Fade
+                                    in={true}
+                                    style={{
+                                        transitionDuration: "2s",
+                                    }}
+                                >
+                                    <Typography
+                                        variant="h6"
+                                        fontWeight={300}
+                                        pl={1}
+                                    >
+                                        FastchargeAPI will take care of metering
+                                        and billing.
+                                    </Typography>
+                                </Fade>
+                            </Stack>
+                        </Container>
+                    </Grid>
+                    <Grid
+                        item
+                        xs={7}
+                        display="flex"
+                        justifyContent="center"
+                        alignItems="center"
+                    >
+                        {this.renderOnboardingPage()}
+                    </Grid>
+                </Grid>
             </React.Fragment>
         );
     }
