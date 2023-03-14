@@ -9,10 +9,10 @@ Parameters:
   Stage:
     Type: String
     Default: DEV
-  GatewayHostName: 
+  GatewayHostName:
     Type: String
     Default: "api.payment.fastchargeapi.com"
-  GatewayHostNameV2: 
+  GatewayHostNameV2:
     Type: String
     Default: "api.v2.payment.fastchargeapi.com"
 
@@ -26,23 +26,23 @@ Globals:
     TracingEnabled: true
 
 Resources:
-  GenerateCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain 
+  GenerateCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain
     Type: AWS::CertificateManager::Certificate
-    Properties: 
+    Properties:
       DomainName: !Ref GatewayHostName
       ValidationMethod: DNS
       DomainValidationOptions:
-      - DomainName: !Ref GatewayHostName
-        HostedZoneId: Z0358815GI2I8U5CTHXW
+        - DomainName: !Ref GatewayHostName
+          HostedZoneId: Z0358815GI2I8U5CTHXW
 
-  GenerateCertificateV2: # Creates a valid certificate for the HTTP API endpoint under the custom domain 
+  GenerateCertificateV2: # Creates a valid certificate for the HTTP API endpoint under the custom domain
     Type: AWS::CertificateManager::Certificate
-    Properties: 
+    Properties:
       DomainName: !Ref GatewayHostNameV2
       ValidationMethod: DNS
       DomainValidationOptions:
-      - DomainName: !Ref GatewayHostNameV2
-        HostedZoneId: Z0358815GI2I8U5CTHXW
+        - DomainName: !Ref GatewayHostNameV2
+          HostedZoneId: Z0358815GI2I8U5CTHXW
 
   APIGateway:
     Type: AWS::Serverless::Api
@@ -58,7 +58,7 @@ Resources:
           MetricsEnabled: True
           ResourcePath: "/*" # allows for logging on any resource
           HttpMethod: "*" # allows for logging on any method
-      Auth: # Uses the FirebaseTokenAuthorizer to identify the session user. 
+      Auth: # Uses the FirebaseTokenAuthorizer to identify the session user.
         ApiKeyRequired: false
         DefaultAuthorizer: FirebaseTokenAuthorizer
         Authorizers:
@@ -67,13 +67,13 @@ Resources:
             FunctionArn: arn:aws:lambda:us-east-1:887279901853:function:FirebaseTokenAuthorizer
             Identity:
               ReauthorizeEvery: 300
-              Headers: [ "Authorization" ]
+              Headers: ["Authorization"]
       Cors:
         AllowMethods: "'*'"
         AllowHeaders: "'*'"
         AllowOrigin: "'*'"
       GatewayResponses:
-        UNAUTHORIZED: # This is hacky but right now the only way to handle an OPTION request without failing 
+        UNAUTHORIZED: # This is hacky but right now the only way to handle an OPTION request without failing
           StatusCode: 200
           ResponseParameters:
             Headers:
@@ -92,7 +92,7 @@ Resources:
       # AccessLogSettings:
       #   DestinationArn: !GetAtt APIGatewayV2AccessLogs.Arn
       #   Format: $context.requestId $context.httpMethod $context.path $context.error.responseType $context.error.messageString $context.authorizer.error $context.integrationErrorMessage
-      Auth: # Uses the FirebaseTokenAuthorizer to identify the session user. 
+      Auth: # Uses the FirebaseTokenAuthorizer to identify the session user.
         DefaultAuthorizer: FirebaseTokenAuthorizer
         Authorizers:
           FirebaseTokenAuthorizer:
@@ -101,34 +101,34 @@ Resources:
             FunctionInvokeRole: !GetAtt APIGatewayV2Role.Arn
             Identity:
               ReauthorizeEvery: 300
-              Headers: [ "Authorization" ]
+              Headers: ["Authorization"]
       CorsConfiguration:
         AllowMethods: ["*"]
         AllowHeaders: ["*"]
-        AllowOrigins: 
+        AllowOrigins:
           - "http://localhost"
           - "http://localhost:8000"
           - "https://fastchargeapi.com"
       DisableExecuteApiEndpoint: True
-  
+
   # APIGatewayV2AccessLogs:
   #   Type: AWS::Logs::LogGroup
 
   APIGatewayV2Role:
-     Type: AWS::IAM::Role
-     Properties:
-       AssumeRolePolicyDocument:
-         Version: "2012-10-17"
-         Statement:
-           - Action:
-               - sts:AssumeRole
-             Effect: Allow
-             Principal:
-               Service:
-                 - apigateway.amazonaws.com
-       Tags:
-         - Key: lambda:createdBy
-           Value: SAM
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+      Tags:
+        - Key: lambda:createdBy
+          Value: SAM
 
   LambdaInvocationPolicy:
     Type: AWS::IAM::Policy
@@ -142,29 +142,6 @@ Resources:
             Resource: arn:aws:lambda:us-east-1:887279901853:function:FirebaseTokenAuthorizer
       Roles:
         - !Ref APIGatewayV2Role
-
-  StripeCheckoutSession:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-    Properties:
-      CodeUri: app/
-      Handler: checkout.lambda_handler
-      Runtime: python3.9
-      Architectures:
-        - arm64 # if you are using Apple M1
-      Timeout: 10
-      Policies:
-        - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
-        - AWSLambdaRole # This will allow this lambda to send http request to the graphql api
-        - AmazonSQSFullAccess # Allows sending billing to the graphql service
-      Events:
-        POST:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            RestApiId: !Ref APIGateway
-            Path: /checkout
-            Method: post
-            Auth: 
-              Authorizer: NONE
 
   StripeConnectOnboardAcceptWebhook:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -186,7 +163,7 @@ Resources:
             RestApiId: !Ref APIGateway
             Path: /onboard/accept
             Method: post
-            Auth: 
+            Auth:
               Authorizer: NONE
 
   AcceptPaymentWebhook:
@@ -209,29 +186,8 @@ Resources:
             RestApiId: !Ref APIGateway
             Path: /accept
             Method: post
-            Auth: 
+            Auth:
               Authorizer: NONE
-
-  GetDashboardLoginLink:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-    Properties:
-      CodeUri: app/
-      Handler: dashboard_login.lambda_handler
-      Runtime: python3.9
-      Architectures:
-        - arm64 # if you are using Apple M1
-      Timeout: 10
-      Policies:
-        - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
-        - AWSLambdaRole # This will allow this lambda to send http request to the graphql api
-        - AmazonSQSFullAccess # Allows sending billing to the graphql service
-      Events:
-        GET:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            RestApiId: !Ref APIGateway
-            Path: /dashboard-login
-            Method: get
 
   Payout:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -300,7 +256,7 @@ Resources:
       MemorySize: 512
       Timeout: 10
       Policies:
-        - AWSLambdaRole 
+        - AWSLambdaRole
         - AmazonDynamoDBReadOnlyAccess # For looking up user's stripe id
         - AmazonSESFullAccess # For ending email to user
       Events:
@@ -328,7 +284,7 @@ Resources:
       MemorySize: 128
       Timeout: 10
       Policies:
-        - AWSLambdaRole 
+        - AWSLambdaRole
         - AmazonDynamoDBReadOnlyAccess # For looking up user's stripe id
       Events:
         POST:
@@ -343,6 +299,67 @@ Resources:
         Target: "es2022"
         EntryPoints:
           - GetOnBoardLink.ts
+
+  AcceptPayment:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: handlers/
+      Handler: AcceptPayment.lambdaHandler
+      Runtime: nodejs18.x
+      Architectures:
+        - arm64 # if you are using Apple M1
+      MemorySize: 512
+      Timeout: 10
+      Policies:
+        - AWSLambdaRole
+        - AmazonDynamoDBFullAccess # Create and update order, user
+        - AmazonSSMReadOnlyAccess # Need to get credentials for the Stripe API
+        - AmazonSQSFullAccess # Need to send SQS billing request to settle stripePaymentAccept
+      Events:
+        POST:
+          Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Auth:
+              Authorizer: NONE
+            ApiId: !Ref APIGatewayV2
+            Path: /accept-payment
+            Method: post
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Target: "es2022"
+        EntryPoints:
+          - AcceptPayment.ts
+
+  GetCheckoutLink:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: handlers/
+      Handler: GetCheckoutLink.lambdaHandler
+      Runtime: nodejs18.x
+      Architectures:
+        - arm64 # if you are using Apple M1
+      MemorySize: 512
+      Timeout: 10
+      Policies:
+        - AWSLambdaRole
+        - AmazonDynamoDBFullAccess # Create and update order
+        - AmazonSSMReadOnlyAccess # Need to use the Stripe API
+        - AmazonSQSFullAccess # Need to send SQS billing request to settle stripePaymentAccept
+      Events:
+        POST:
+          Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            ApiId: !Ref APIGatewayV2
+            Path: /get-checkout-link
+            Method: post
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Target: "es2022"
+        EntryPoints:
+          - GetCheckoutLink.ts
+
 Outputs:
   APIGateway:
     Description: API APIGateway endpoint URL for DEV stage for Hello World function

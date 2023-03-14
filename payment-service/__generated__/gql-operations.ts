@@ -1,14 +1,8 @@
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
-export type Exact<T extends { [key: string]: unknown }> = {
-    [K in keyof T]: T[K];
-};
-export type MakeOptional<T, K extends keyof T> = Omit<T, K> & {
-    [SubKey in K]?: Maybe<T[SubKey]>;
-};
-export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & {
-    [SubKey in K]: Maybe<T[SubKey]>;
-};
+export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
+export type MakeOptional<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]?: Maybe<T[SubKey]> };
+export type MakeMaybe<T, K extends keyof T> = Omit<T, K> & { [SubKey in K]: Maybe<T[SubKey]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
     ID: string;
@@ -328,12 +322,13 @@ export type GQLStripePaymentAccept = {
     amount: Scalars["NonNegativeDecimal"];
     createdAt: Scalars["Timestamp"];
     currency: Scalars["String"];
-    settlePayment?: Maybe<GQLStripePaymentAccept>;
+    settlePayment: GQLStripePaymentAccept;
+    status: GQLStripePaymentAcceptStatus;
     stripePaymentIntent: Scalars["String"];
     stripePaymentStatus: Scalars["String"];
     stripeSessionId: Scalars["String"];
     stripeSessionObject: Scalars["String"];
-    updateStripePaymentAccept?: Maybe<GQLStripePaymentAccept>;
+    updateStripePaymentAccept: GQLStripePaymentAccept;
     user: GQLUser;
 };
 
@@ -345,6 +340,11 @@ export type GQLStripePaymentAcceptUpdateStripePaymentAcceptArgs = {
     stripePaymentStatus?: InputMaybe<Scalars["String"]>;
     stripeSessionObject?: InputMaybe<Scalars["String"]>;
 };
+
+export enum GQLStripePaymentAcceptStatus {
+    Pending = "pending",
+    Settled = "settled",
+}
 
 export type GQLStripeTransfer = {
     __typename?: "StripeTransfer";
@@ -422,6 +422,7 @@ export type GQLUser = {
     settleAccountActivities: Array<GQLAccountActivity>;
     stripeConnectAccountId?: Maybe<Scalars["String"]>;
     stripeCustomerId?: Maybe<Scalars["String"]>;
+    stripePaymentAccept: GQLStripePaymentAccept;
     subscriptions: Array<GQLSubscribe>;
     updateUser?: Maybe<GQLUser>;
     updatedAt: Scalars["Timestamp"];
@@ -445,6 +446,10 @@ export type GQLUserAppTokenArgs = {
 
 export type GQLUserCreateAppTokenArgs = {
     app: Scalars["ID"];
+};
+
+export type GQLUserStripePaymentAcceptArgs = {
+    stripeSessionId?: InputMaybe<Scalars["String"]>;
 };
 
 export type GQLUserUpdateUserArgs = {
@@ -475,4 +480,21 @@ export type GQLUserAppToken = {
     subscriber: GQLUser;
     token?: Maybe<Scalars["String"]>;
     updatedAt: Scalars["Timestamp"];
+};
+
+export type GQLFulfillUserStripePaymentAcceptQueryVariables = Exact<{
+    user: Scalars["Email"];
+    stripeSessionId: Scalars["String"];
+    stripeSessionObject: Scalars["String"];
+}>;
+
+export type GQLFulfillUserStripePaymentAcceptQuery = {
+    __typename?: "Query";
+    user: {
+        __typename?: "User";
+        stripePaymentAccept: {
+            __typename?: "StripePaymentAccept";
+            settlePayment: { __typename?: "StripePaymentAccept"; stripePaymentStatus: string };
+        };
+    };
 };
