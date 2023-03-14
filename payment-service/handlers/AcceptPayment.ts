@@ -20,14 +20,6 @@ type StripeSessionObject = {
     id: string;
     object: "checkout.session";
     payment_status: "paid" | "unpaid";
-    // customer_details: {
-    //     address: string | null;
-    //     email: string;
-    //     name: string | null;
-    //     phone: string | null;
-    //     tax_exempt: string | null;
-    //     tax_ids: string | null;
-    // };
     customer_email: string;
     payment_intent: string;
     customer: string; // Stripe customer ID
@@ -36,7 +28,11 @@ type StripeSessionObject = {
 
 export async function handle(
     event: LambdaEventV2,
-    { stripeParser }: { stripeParser: (event: LambdaEventV2) => Promise<Stripe.Event> } = {
+    {
+        stripeParser,
+    }: {
+        stripeParser: (event: LambdaEventV2) => Promise<Stripe.Event>; // Allows mocking in tests
+    } = {
         stripeParser: parseStripeWebhookEvent,
     }
 ): Promise<APIGatewayProxyStructuredResultV2> {
