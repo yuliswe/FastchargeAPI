@@ -8,6 +8,7 @@
     "test": "tests"
   },
   "scripts": {
+    "symlink": "mkdir -p .symlinks && ln -sFh \"$(realpath ${PWD}/../graphql-service/apollo)\" .symlinks/graphql-service",
     "gen": "graphql-codegen --config codegen.yml && prettier -w ./__generated__",
     "build": "npm run symlink && npm run gen && tsc --noEmit && sam build --cached --parallel",
     "deploy": "npm run build && sam deploy",
@@ -38,7 +39,6 @@
     "dynamoose-utils": "^3.1.0",
     "graphql": "^16.6.0",
     "graphql-scalars": "^1.20.1",
-    "graphql-service": "file:../graphql-service/apollo",
     "jsonwebtoken": "^9.0.0",
     "object-hash": "^3.0.0",
     "stripe": "^11.14.0",

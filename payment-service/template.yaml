@@ -98,7 +98,7 @@ Resources:
   ExecuteDailyStripeTransferCronJob:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./cron-jobs
+      CodeUri: ./
       Handler: ExecuteDailyStripeTransfer.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
@@ -129,12 +129,12 @@ Resources:
       BuildProperties:
         Target: "es2022"
         EntryPoints:
-          - ExecuteDailyStripeTransfer.ts
+          - cron-jobs/ExecuteDailyStripeTransfer.ts
 
   SendStripeDashboardLink:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      CodeUri: handlers/
+      CodeUri: ./
       Handler: SendStripeDashboardLink.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
@@ -157,12 +157,12 @@ Resources:
       BuildProperties:
         Target: "es2022"
         EntryPoints:
-          - SendStripeDashboardLink.ts
+          - handlers/SendStripeDashboardLink.ts
 
   GetOnBoardLink:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      CodeUri: handlers/
+      CodeUri: ./
       Handler: GetOnBoardLink.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
@@ -185,12 +185,12 @@ Resources:
       BuildProperties:
         Target: "es2022"
         EntryPoints:
-          - GetOnBoardLink.ts
+          - handlers/GetOnBoardLink.ts
 
   AcceptPayment:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      CodeUri: handlers/
+      CodeUri: ./
       Handler: AcceptPayment.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
@@ -216,12 +216,12 @@ Resources:
       BuildProperties:
         Target: "es2022"
         EntryPoints:
-          - AcceptPayment.ts
+          - handlers/AcceptPayment.ts
 
   GetCheckoutLink:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      CodeUri: handlers/
+      CodeUri: ./
       Handler: GetCheckoutLink.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
@@ -245,12 +245,12 @@ Resources:
       BuildProperties:
         Target: "es2022"
         EntryPoints:
-          - GetCheckoutLink.ts
+          - handlers/GetCheckoutLink.ts
 
   CreateStripeTransfer:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      CodeUri: handlers/
+      CodeUri: ./
       Handler: CreateStripeTransfer.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
@@ -274,12 +274,12 @@ Resources:
       BuildProperties:
         Target: "es2022"
         EntryPoints:
-          - CreateStripeTransfer.ts
+          - handlers/CreateStripeTransfer.ts
 
   FinishOnboard:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      CodeUri: handlers/
+      CodeUri: ./
       Handler: FinishOnboard.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
@@ -304,7 +304,7 @@ Resources:
       BuildProperties:
         Target: "es2022"
         EntryPoints:
-          - FinishOnboard.ts
+          - handlers/FinishOnboard.ts
 # Outputs:
 #   APIGateway:
 #     Description: API APIGateway endpoint URL for DEV stage for Hello World function

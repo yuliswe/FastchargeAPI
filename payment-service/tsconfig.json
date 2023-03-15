@@ -27,6 +27,15 @@
     "strictPropertyInitialization": false, // doesn't work with our Item type declarations in models.ts
     "allowJs": true,
     "strict": true,
+    "baseUrl": "./",
+    "paths": {
+      "graphql-service": [
+        ".symlinks/graphql-service"
+      ],
+      "graphql-service/*": [
+        ".symlinks/graphql-service/*"
+      ],
+    }
   },
   "exclude": [
     "node_modules",
