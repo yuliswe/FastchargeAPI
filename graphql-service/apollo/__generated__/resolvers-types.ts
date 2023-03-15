@@ -435,6 +435,7 @@ export type GQLUser = {
     apps: Array<GQLApp>;
     author: Scalars["String"];
     balance: Scalars["String"];
+    balanceLimit: Scalars["String"];
     createAppToken: GQLUserAppToken;
     createdAt: Scalars["Timestamp"];
     email: Scalars["Email"];
@@ -992,6 +993,7 @@ export type GQLUserResolvers<
     apps?: Resolver<Array<GQLResolversTypes["App"]>, ParentType, ContextType>;
     author?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
     balance?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
+    balanceLimit?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
     createAppToken?: Resolver<
         GQLResolversTypes["UserAppToken"],
         ParentType,

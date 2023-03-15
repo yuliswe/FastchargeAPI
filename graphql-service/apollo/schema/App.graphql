@@ -113,6 +113,7 @@ type User {
     createdAt: Timestamp!
     updatedAt: Timestamp!
     balance: String!
+    balanceLimit: String!
     stripeCustomerId: String
     stripeConnectAccountId: String
     apps: [App!]!

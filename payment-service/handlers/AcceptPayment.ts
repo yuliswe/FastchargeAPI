@@ -75,7 +75,7 @@ export async function handle(
         }
         case "checkout.session.async_payment_succeeded": {
             let session = stripeEvent.data.object as StripeSessionObject;
-            let email = session.customer_email;
+            let email = session.customer_details.email;
             let paymentAccept = await batched.StripePaymentAccept.get({
                 user: email,
             });

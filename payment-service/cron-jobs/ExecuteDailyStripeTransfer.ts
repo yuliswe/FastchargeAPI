@@ -19,11 +19,7 @@ type EventDetail = {
  * complete the transfer.
  * @returns
  */
-async function handle(
-    event: EventBridgeEvent<string, EventDetail>,
-    context: never,
-    callback: never
-) {
+async function handle(event: EventBridgeEvent<string, EventDetail>, context: never, callback: never) {
     let batched = createDefaultContextBatched();
     let isDryRun = true;
     let detail = event.detail;
@@ -42,17 +38,12 @@ async function handle(
             using: GQLStripeTransferIndex.IndexByStatusTransferAtOnlyPk,
         }
     );
-    console.log(
-        chalk.yellow(`Found ${pendingTransfers.length} pending transfers`)
-    );
+    console.log(chalk.yellow(`Found ${pendingTransfers.length} pending transfers`));
     let total = new Decimal(0);
     let failureCount = 0;
     let chunkSize = 10;
     for (let i = 0; i < pendingTransfers.length; i += chunkSize) {
-        let chunk = pendingTransfers.slice(
-            i,
-            Math.min(pendingTransfers.length, i + chunkSize)
-        );
+        let chunk = pendingTransfers.slice(i, Math.min(pendingTransfers.length, i + chunkSize));
 
         let promises = chunk.map(async (transfer) => {
             let receiver = await batched.User.get(transfer.receiver);
@@ -61,29 +52,19 @@ async function handle(
                 return;
             }
             if (isDryRun) {
-                console.log(
-                    chalk.yellow(
-                        `Dry run transfer to ${receiver.email} $${transfer.receiveAmount}`
-                    )
-                );
+                console.log(chalk.yellow(`Dry run transfer to ${receiver.email} $${transfer.receiveAmount}`));
                 total = total.plus(transfer.receiveAmount);
             } else {
-                console.log(
-                    chalk.yellow(
-                        `Transfer to ${receiver.email} $${transfer.receiveAmount}`
-                    )
-                );
+                console.log(chalk.yellow(`Transfer to ${receiver.email} $${transfer.receiveAmount}`));
 
                 // Save status right away to make sure we don't double transfer
                 await batched.StripeTransfer.update(transfer, {
                     status: "transferred",
                 });
                 try {
-                    await getStripeClient().transfers.create({
-                        amount: new Decimal(transfer.receiveAmount)
-                            .mul(100)
-                            .toInteger()
-                            .toNumber(),
+                    let stripeClient = await getStripeClient();
+                    await stripeClient.transfers.create({
+                        amount: new Decimal(transfer.receiveAmount).mul(100).toInteger().toNumber(),
                         currency: "usd",
                         destination: receiver.stripeConnectAccountId,
                         transfer_group: StripeTransferPK.stringify(transfer),
@@ -107,19 +88,11 @@ async function handle(
     }
 
     if (isDryRun) {
-        console.log(
-            chalk.yellow(`Total amount to be transferred: $${total.toString()}`)
-        );
+        console.log(chalk.yellow(`Total amount to be transferred: $${total.toString()}`));
     } else {
-        console.log(
-            chalk.yellow(`Total amount transferred: $${total.toString()}`)
-        );
+        console.log(chalk.yellow(`Total amount transferred: $${total.toString()}`));
         if (failureCount > 0) {
-            console.log(
-                chalk.red(
-                    `Failed to transfer ${failureCount} transfers. Please check the logs.`
-                )
-            );
+            console.log(chalk.red(`Failed to transfer ${failureCount} transfers. Please check the logs.`));
         }
     }
 

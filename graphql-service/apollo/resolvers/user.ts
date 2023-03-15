@@ -57,6 +57,7 @@ export const userResolvers: GQLResolvers & {
         updatedAt: (parent) => parent.updatedAt,
         stripeCustomerId: (parent) => parent.stripeCustomerId,
         stripeConnectAccountId: (parent) => parent.stripeConnectAccountId,
+        balanceLimit: (parent) => parent.balanceLimit,
         async appToken(parent, { app }, context) {
             return await context.batched.UserAppToken.get({ subscriber: parent.email, app });
         },

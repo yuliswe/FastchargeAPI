@@ -416,6 +416,7 @@ export type GQLUser = {
     apps: Array<GQLApp>;
     author: Scalars["String"];
     balance: Scalars["String"];
+    balanceLimit: Scalars["String"];
     createAppToken: GQLUserAppToken;
     createdAt: Scalars["Timestamp"];
     email: Scalars["Email"];

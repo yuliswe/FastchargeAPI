@@ -91,6 +91,7 @@ const UserTableSchema = new dynamoose.Schema(
         author: { type: String, default: "" },
         stripeCustomerId: { type: String, required: false }, // Available after the user first tops up their account
         stripeConnectAccountId: { type: String, required: false }, // Available after the user first onboards their Stripe account
+        balanceLimit: { type: String, default: "100", validate: validateStringDecimal("accountLimit") },
     },
     {
         timestamps: true,
@@ -482,6 +483,7 @@ export class User extends Item {
     email: string;
     author: string;
     balance: string;
+    balanceLimit: string;
     stripeCustomerId: string | null;
     stripeConnectAccountId: string | null;
     appTokens: { [appName: string]: string };
