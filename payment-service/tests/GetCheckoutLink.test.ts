@@ -49,17 +49,46 @@ let lambdaEvent: LambdaEventV2 = {
     body: JSON.stringify({
         successUrl: "https://fastchargeapi.com/topup?success=true",
         cancelUrl: "https://fastchargeapi.com/topup?cancel=true",
-        amountCents: "1000",
+        amount: "1000",
     }),
     isBase64Encoded: false,
 };
 
 describe("Create a Stripe checkout session", () => {
-    test("Call handle", async () => {
-        let response = await Checkout(lambdaEvent);
+    test("A successful topup", async () => {
+        let response = await Checkout(lambdaEvent, { skipBalanceCheck: true });
+        console.log(response);
         expect(response.statusCode).toBe(200);
         let body = JSON.parse(response.body!);
         expect(body).toHaveProperty("location");
         expect(body.location).toMatch(/^https:\/\/checkout.stripe.com/);
+    });
+
+    test("A topup with less than $1", async () => {
+        let response = await Checkout({
+            ...lambdaEvent,
+            body: JSON.stringify({
+                successUrl: "https://fastchargeapi.com/topup?success=true",
+                cancelUrl: "https://fastchargeapi.com/topup?cancel=true",
+                amount: "0.99",
+            }),
+        });
+        expect(response.statusCode).toBe(400);
+        let body = JSON.parse(response.body!);
+        expect(body.error).toMatch(/.*at least \$1.*/);
+    });
+
+    test("A topup with more than $100", async () => {
+        let response = await Checkout({
+            ...lambdaEvent,
+            body: JSON.stringify({
+                successUrl: "https://fastchargeapi.com/topup?success=true",
+                cancelUrl: "https://fastchargeapi.com/topup?cancel=true",
+                amount: "100.01",
+            }),
+        });
+        expect(response.statusCode).toBe(400);
+        let body = JSON.parse(response.body!);
+        expect(body.error).toMatch(/.*exceed.+limit.*/);
     });
 });

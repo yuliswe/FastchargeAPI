@@ -2,21 +2,58 @@ import { Context as LambdaContext, APIGatewayProxyStructuredResultV2 } from "aws
 import { Chalk } from "chalk";
 import { LambdaCallbackV2, LambdaEventV2, LambdaHandlerV2, getAuthorizerContext } from "../utils/LambdaContext";
 import { getStripeClient } from "../utils/stripe-client";
-import { createDefaultContextBatched } from "graphql-service";
+import { RequestContext, UserPK, createDefaultContextBatched, getUserBalance } from "graphql-service";
+import { Decimal } from "decimal.js-light";
 
 const chalk = new Chalk({ level: 3 });
 const batched = createDefaultContextBatched();
 
-export async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredResultV2> {
+function createRequestContext(): RequestContext {
+    return {
+        isServiceRequest: true,
+        batched,
+        service: "payment",
+        isSQSMessage: false,
+    };
+}
+
+export async function handle(
+    event: LambdaEventV2,
+    { skipBalanceCheck }: { skipBalanceCheck: boolean } = {
+        skipBalanceCheck: false,
+    }
+): Promise<APIGatewayProxyStructuredResultV2> {
     let { params, error } = parseParams(event);
     if (error) {
         return error;
     }
-    let { amountCents, successUrl, cancelUrl } = params!;
+    let { amount, successUrl, cancelUrl } = params!;
+    let topUpAmount = new Decimal(amount);
+    if (!skipBalanceCheck && topUpAmount.lessThan(1)) {
+        return {
+            statusCode: 400,
+            body: JSON.stringify({
+                error: "The amount must be at least $1.",
+            }),
+        };
+    }
     let userEmail = getAuthorizerContext(event).userEmail;
     if (!userEmail) {
         throw new Error("User email is not set");
     }
+    // Check if the account balance is too high
+    let user = await batched.User.get({ email: userEmail });
+    let curentBalance = new Decimal(await getUserBalance(createRequestContext(), UserPK.stringify(user)));
+    let newBalance = curentBalance.plus(amount);
+    if (!skipBalanceCheck && newBalance.greaterThan(user.balanceLimit)) {
+        return {
+            statusCode: 400,
+            body: JSON.stringify({
+                error: "This top up would exceed your balance limit.",
+            }),
+        };
+    }
+
     let stripeClient = await getStripeClient();
     let existingCustomerId = await identifyExistingCustomerId(userEmail);
     let session = await stripeClient.checkout.sessions.create({
@@ -27,7 +64,7 @@ export async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStruc
                     product_data: {
                         name: `Top up your FastchargeAPI account: ${userEmail}`,
                     },
-                    unit_amount: Number.parseInt(amountCents),
+                    unit_amount: topUpAmount.mul(100).toInteger().toNumber(), // Stripe expects the amount in cents
                     tax_behavior: "exclusive",
                 },
                 quantity: 1,
@@ -61,7 +98,7 @@ export async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStruc
 }
 
 type BodyInput = {
-    amountCents: string;
+    amount: string;
     successUrl: string;
     cancelUrl: string;
 };
@@ -114,13 +151,13 @@ function parseParams(event: LambdaEventV2): { params?: BodyInput; error?: APIGat
         };
     }
 
-    let amountCents = body.amountCents;
-    if (!amountCents) {
+    let amount = body.amount;
+    if (!amount) {
         return {
             error: {
                 statusCode: 400,
                 body: JSON.stringify({
-                    error: "amountCents is required",
+                    error: "amount is required",
                 }),
             },
         };
@@ -152,7 +189,7 @@ function parseParams(event: LambdaEventV2): { params?: BodyInput; error?: APIGat
 
     return {
         params: {
-            amountCents,
+            amount,
             successUrl,
             cancelUrl,
         },
