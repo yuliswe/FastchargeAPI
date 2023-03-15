@@ -333,9 +333,12 @@ func createUserUsageToken(app string, user string) (string, error) {
 
 func billUsage(user string, app string, path string, pricing string) {
 	//fmt.Println(color.Yellow, "Billing usage for", user, app, path, color.Reset)
+
+	// Creating usage log can be done synchronously. This ensures that when
+	// calling TriggerBilling, the usage log is already created.
 	if _, err := CreateUsageLog(
 		context.Background(),
-		getSQSGraphQLClient(SQSGraphQLClientConfig{QueueUrl: UsageLogQueueUrl}),
+		getGraphQLClient(),
 		user,
 		app,
 		path,
@@ -343,6 +346,7 @@ func billUsage(user string, app string, path string, pricing string) {
 	); err != nil {
 		fmt.Println(color.Red, "Error creating UsageLog: ", err, color.Reset)
 	}
+	// Trigger billing must be done on the billing queue.
 	if _, err := TriggerBilling(
 		context.Background(),
 		getSQSGraphQLClient(SQSGraphQLClientConfig{
