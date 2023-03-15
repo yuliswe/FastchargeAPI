@@ -46,5 +46,6 @@
     ".zsh_history": true
   },
   "python.analysis.importFormat": "relative",
-  "explorerExclude.backup": {}
+  "explorerExclude.backup": {},
+  "python.formatting.provider": "black"
 }

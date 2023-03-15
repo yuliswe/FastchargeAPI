@@ -11,7 +11,7 @@
     "gen": "graphql-codegen --config codegen.yml && prettier -w ./__generated__",
     "build": "npm run gen && sam build",
     "deploy": "npm run build && sam deploy",
-    "stripe": "stripe listen --forward-to https://api.v2.payment.fastchargeapi.com/accept-payment -e 'checkout.session.completed,checkout.session.expired,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed' & stripe listen --forward-to https://api.v2.payment.fastchargeapi.com/onboard/accept -e 'account.updated'",
+    "stripe": "stripe listen --forward-to https://api.v2.payment.fastchargeapi.com/accept-payment -e 'checkout.session.completed,checkout.session.expired,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed' & stripe listen --forward-to https://api.v2.payment.fastchargeapi.com/finish-onboard -e 'account.updated'",
     "logs": "sam logs --stack-name payment-service --tail",
     "start": "npm run build && sam local start-api -p 3000 --warm-containers lazy",
     "watch": "nodemon -e ts,graphql,yml,yaml -i __generated__ --signal SIGINT -x 'npm run start || exit 1'",
