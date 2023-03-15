@@ -7,7 +7,8 @@ module.exports = {
     ],
     parser: "@typescript-eslint/parser",
     parserOptions: {
-        tsconfigRootDir: __dirname,
+        // tsconfigRootDir: __dirname, // Disabled because the Amplify build
+        // will fail when not all projects are npm installed.
         project: ["./tsconfig.json", "./**/tsconfig.json"],
     },
     plugins: ["@typescript-eslint", "unused-imports"],
