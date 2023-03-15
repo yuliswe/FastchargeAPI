@@ -1,7 +1,3 @@
-from ast import alias
-import jwt
-import requests
-
 from .exceptions import NotFound, TooManyResources
 from .graphql import get_client_info
 from gql import gql

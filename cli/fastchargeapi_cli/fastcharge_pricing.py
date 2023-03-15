@@ -1,5 +1,4 @@
-from typing import Optional
-from .fastcharge_app import AppInfo, get_app, get_app_or_prompt_exit
+from .fastcharge_app import get_app_or_prompt_exit
 from .graphql import get_client_info
 from .groups import fastcharge
 import click

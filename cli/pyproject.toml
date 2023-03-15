@@ -1,9 +1,11 @@
 [tool.poetry]
 name = "fastchargeapi-cli"
-version = "0.1.0"
-description = ""
-authors = ["Yu Li <ylilarry@gmail.com>"]
-readme = "README.md"
+version = "0.0.1"
+description = "Official CLI for managing apps and account on FastchargeAPI.com"
+authors = ["FastchargeAPI <fastchargeapi@gmail.com>"]
+license = "GNU v3.0"
+homepage = "https://fastchargeapi.com"
+repository = "https://github.com/FastchargeAPI/fastchargeapi-cli"
 packages = [{include = "fastchargeapi_cli"}]
 
 [tool.poetry.dependencies]

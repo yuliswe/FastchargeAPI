@@ -1,4 +1,3 @@
-from contextlib import contextmanager
 from dataclasses import dataclass
 import json
 import os
@@ -9,7 +8,6 @@ from botocore import UNSIGNED
 from botocore.client import Config
 import boto3
 import botocore.exceptions
-from click import echo
 from jose import jws
 from jose import jwe
 from gql import gql

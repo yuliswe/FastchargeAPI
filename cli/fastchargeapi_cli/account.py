@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import TypedDict
+import textwrap
 from .remote_secret import interact_with_react
 
 from .graphql import get_client_info
@@ -84,3 +84,70 @@ def get_account_balance() -> GetUserAccountResult:
         variable_values={"user_email": user_email},
     )["user"]
     return GetUserAccountResult(**user)
+
+
+def do_account_info():
+    client, user_email = get_client_info()
+    echo(f"Account: {user_email}")
+    user = client.execute(
+        gql(
+            """
+            query GetUserAccount($user_email: Email!) {
+                user(email: $user_email) {
+                    balance
+                    stripeConnectAccountId
+                }
+            }
+            """
+        ),
+        variable_values={"user_email": user_email},
+    )["user"]
+    # login_link = "https://connect.stripe.com/app/express"
+    login_link = "https://connect.stripe.com/express_login"
+    if user["stripeConnectAccountId"]:
+        echo(
+            terminal.green
+            + terminal.bold
+            + f"Stripe account is active."
+            + terminal.normal
+        )
+        echo(f" Login to Stripe to view your account:")
+        echo(terminal.cyan + f"  {login_link}" + terminal.normal)
+    echo()
+    echo(
+        terminal.yellow
+        + terminal.bold
+        + f"Your Fastchage account balance is: ${float(user['balance']):.2f}"
+        + terminal.normal
+    )
+    echo(
+        "\n".join(
+            textwrap.wrap(
+                f"You can either use the balance to pay for API calls that are made by other developers, or withdraw it to your Stripe account.",
+                initial_indent=" ",
+                subsequent_indent=" ",
+            )
+        )
+    )
+    echo()
+
+
+def do_account_update(author: str):
+    client, user_email = get_client_info()
+    user = client.execute(
+        gql(
+            """
+            query UpdateUserInfo($email: Email!, $author: String!) {
+                user(email: $email) {
+                    updateUser(author: $author) {
+                        updatedAt
+                    }
+                }
+            }
+            """
+        ),
+        variable_values={
+            "email": user_email,
+            "author": author,
+        },
+    )
