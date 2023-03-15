@@ -5,7 +5,6 @@ from blessings import Terminal
 
 from .local_server import LocalServerResponse, start_local_server
 
-from .http import HttpClient
 from .fastcharge_app import get_app, get_app_or_prompt_exit
 from .graphql import get_client_info
 from .groups import fastcharge
@@ -38,12 +37,6 @@ def fastcharge_dev_stripe_connect():
 @click.help_option("-h", "--help")
 def fastcharge_dev_stripe_dashboard():
     """Open your Stripe dashboard."""
-    location = get_dashboard_login_link()
+    location = "https://connect.stripe.com/express_login"
     echo(terminal.blue + " " + location + terminal.normal)
     webbrowser.open_new(location)
-
-
-def get_dashboard_login_link() -> str:
-    response = HttpClient().get("/dashboard-login")
-    dashboard_url = response.json()["location"]
-    return dashboard_url
