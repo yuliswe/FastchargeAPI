@@ -106,7 +106,7 @@ type BodyInput = {
 export const lambdaHandler: LambdaHandlerV2 = async (
     event: LambdaEventV2,
     context: LambdaContext,
-    callbac: LambdaCallbackV2
+    callback: LambdaCallbackV2
 ): Promise<APIGatewayProxyStructuredResultV2> => {
     try {
         console.log("event", chalk.blue(JSON.stringify(event)));
