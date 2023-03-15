@@ -65,8 +65,8 @@ class _TopUp extends React.Component<_Props, _State> {
         return this._context.route.query.get("cancel") != null;
     }
 
-    getAmountCents(): number {
-        return parseInt(this._context.route.query.get("amount_cents") || "0");
+    getAmount(): string {
+        return this._context.route.query.get("amount") || "0";
     }
 
     getJWTSecret(): Uint8Array {
@@ -163,13 +163,16 @@ class _TopUp extends React.Component<_Props, _State> {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        amountCents: this.getAmountCents(),
+                        amount: this.getAmount(),
                         successUrl: this.getSuccessUrl(),
                         cancelUrl: this.getCancelUrl(),
                     }),
                 });
                 let { location } = await response.json();
                 document.location.href = location;
+                if (!location) {
+                    throw new Error("location is missing from the response");
+                }
             } catch (error) {
                 console.error("Error posting to", this.getBackendUrl(), error);
             }

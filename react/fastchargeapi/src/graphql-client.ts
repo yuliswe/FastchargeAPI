@@ -1,18 +1,13 @@
 import { HttpLink } from "@apollo/client/link/http/HttpLink";
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 import { v4 as uuidv4 } from "uuid";
-import {
-    ApolloClient,
-    createHttpLink,
-    InMemoryCache,
-    gql,
-} from "@apollo/client";
+import { ApolloClient, createHttpLink, InMemoryCache, gql } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
 import { AppContext } from "./AppContext";
 import * as jose from "jose";
 
 // debug
-const DEBUG_USE_LOCAL_GRAPHQL = false;
+const DEBUG_USE_LOCAL_GRAPHQL = true;
 
 const sqsClient = new SQSClient({ region: "us-east-1" });
 const cache = new InMemoryCache();
@@ -28,9 +23,7 @@ if (DEBUG_USE_LOCAL_GRAPHQL) {
  * @param param0
  * @returns
  */
-export async function getGQLClient(
-    context: AppContext
-): Promise<{ client: ApolloClient<any>; currentUser: string }> {
+export async function getGQLClient(context: AppContext): Promise<{ client: ApolloClient<any>; currentUser: string }> {
     const httpLink = createHttpLink({
         uri: graphql_url,
     });
@@ -46,9 +39,7 @@ export async function getGQLClient(
             headers: {
                 ...headers,
                 authorization: idToken,
-                "x-user-email": DEBUG_USE_LOCAL_GRAPHQL
-                    ? user?.email ?? undefined
-                    : undefined,
+                "x-user-email": DEBUG_USE_LOCAL_GRAPHQL ? user?.email ?? undefined : undefined,
             },
         };
     });
@@ -176,18 +167,8 @@ export async function setRemoteSecret(
     const { client } = await getGQLClient(context);
     const response = client.mutate({
         mutation: gql`
-            mutation PutSecret(
-                $key: String!
-                $value: String!
-                $description: String
-                $expireAt: Timestamp
-            ) {
-                createSecret(
-                    key: $key
-                    value: $value
-                    description: $description
-                    expireAt: $expireAt
-                ) {
+            mutation PutSecret($key: String!, $value: String!, $description: String, $expireAt: Timestamp) {
+                createSecret(key: $key, value: $value, description: $description, expireAt: $expireAt) {
                     createdAt
                 }
             }
