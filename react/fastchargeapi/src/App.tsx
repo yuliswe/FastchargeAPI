@@ -1,13 +1,6 @@
-import { Helmet } from "react-helmet-async";
 import { useMediaQuery, CssBaseline } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
-import {
-    RouterProvider,
-    useLocation,
-    useNavigate,
-    useParams,
-    useSearchParams,
-} from "react-router-dom";
+import { RouterProvider, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { AppContextProvider, defaulAppContext } from "./AppContext";
 import React, { useEffect, useState } from "react";
 import { initializeFirebase } from "./firebase";
@@ -49,31 +42,6 @@ function WithContext(props: React.PropsWithChildren) {
 
     return (
         <React.Fragment>
-            <Helmet>
-                <link
-                    rel="stylesheet"
-                    href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
-                />
-                <link
-                    rel="stylesheet"
-                    href="https://fonts.googleapis.com/icon?family=Material+Icons"
-                />
-                <script
-                    src="https://accounts.google.com/gsi/client"
-                    async
-                    defer
-                ></script>
-                <link rel="preconnect" href="https://fonts.googleapis.com" />
-                <link
-                    rel="preconnect"
-                    href="https://fonts.gstatic.com"
-                    crossOrigin=""
-                />
-                <link
-                    href="https://fonts.googleapis.com/css2?family=Coda&family=Finger+Paint&family=Ubuntu&display=swap"
-                    rel="stylesheet"
-                />
-            </Helmet>
             <AppContextProvider
                 value={{
                     ...defaulAppContext,
@@ -89,17 +57,14 @@ function WithContext(props: React.PropsWithChildren) {
                     isLoggedIn: firebaseUser != null,
                     route: {
                         location,
-                        locationHref:
-                            location.pathname + location.search + location.hash,
+                        locationHref: location.pathname + location.search + location.hash,
                         navigate,
                         params,
                         query: query[0],
                         setQuery: query[1],
                         updateQuery: (newQuery) => {
                             let current = query[0];
-                            let search = new URLSearchParams(
-                                current?.toString()
-                            );
+                            let search = new URLSearchParams(current?.toString());
                             for (let key of Object.keys(newQuery)) {
                                 if (newQuery[key] == null) {
                                     search.delete(key);
@@ -115,12 +80,6 @@ function WithContext(props: React.PropsWithChildren) {
             >
                 <ThemeProvider theme={theme}>
                     <CssBaseline />
-                    <Helmet>
-                        <link
-                            rel="stylesheet"
-                            href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
-                        />
-                    </Helmet>
                     {props.children}
                 </ThemeProvider>
             </AppContextProvider>

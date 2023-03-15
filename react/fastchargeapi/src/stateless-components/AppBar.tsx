@@ -87,23 +87,15 @@ export class AppBar extends React.Component<Props, State> {
                                     flexGrow: 1,
                                 }}
                             >
-                                <Typography variant="body1">
-                                    Enpowering developers
-                                </Typography>
+                                <Typography variant="body1">Enpowering developers</Typography>
                             </Link>
-                            <Stack direction="row" spacing={5} mx={5}>
+                            <Stack direction="row" spacing={5} ml={5}>
                                 <Link href="/#tag-pricing">
-                                    <Typography
-                                        variant="body1"
-                                        color="primary.contrastText"
-                                    >
+                                    <Typography variant="body1" color="primary.contrastText">
                                         Pricing
                                     </Typography>
                                 </Link>
-                                <Link
-                                    href="https://doc.fastchargeapi.com"
-                                    target="_blank"
-                                >
+                                <Link href="https://doc.fastchargeapi.com" target="_blank">
                                     <Typography variant="body1" sx={{}}>
                                         Documentation
                                     </Typography>
@@ -112,18 +104,11 @@ export class AppBar extends React.Component<Props, State> {
                         </Toolbar>
                     </Container>
                 </MUIAppBar>
-                <MUIAppBar
-                    position="static"
-                    sx={{ bgcolor: "background.default" }}
-                >
+                <MUIAppBar position="static" sx={{ bgcolor: "background.default" }}>
                     <Container maxWidth="xl">
                         <Toolbar>
                             <Button href="/" sx={{ p: 2 }}>
-                                <Stack
-                                    direction="row"
-                                    spacing={1}
-                                    alignItems="center"
-                                >
+                                <Stack direction="row" spacing={1} alignItems="center">
                                     <Icon component="img" src="/logo2.png" />
                                     <Typography
                                         variant="h6"
@@ -137,15 +122,7 @@ export class AppBar extends React.Component<Props, State> {
                                     </Typography>
                                 </Stack>
                             </Button>
-                            <Stack
-                                direction="row"
-                                display="flex"
-                                my={1}
-                                ml={4}
-                                mr={4}
-                                flexGrow={1}
-                                height={50}
-                            >
+                            <Stack direction="row" display="flex" my={1} ml={4} mr={4} flexGrow={1} height={50}>
                                 <Paper
                                     sx={{
                                         pl: 1,
@@ -159,10 +136,7 @@ export class AppBar extends React.Component<Props, State> {
                                         flexGrow: 1,
                                     }}
                                 >
-                                    <IconButton
-                                        type="button"
-                                        aria-label="search"
-                                    >
+                                    <IconButton type="button" aria-label="search">
                                         <SearchIcon />
                                     </IconButton>
                                     <InputBase
@@ -171,14 +145,11 @@ export class AppBar extends React.Component<Props, State> {
                                         value={this.state.searchText}
                                         onKeyDown={(event) => {
                                             if (event.key === "Enter") {
-                                                this.props.onSearch?.(
-                                                    this.state.searchText
-                                                );
+                                                this.props.onSearch?.(this.state.searchText);
                                                 this._context.route?.navigate({
                                                     pathname: "/search",
                                                     search: createSearchParams({
-                                                        q: this.state
-                                                            .searchText,
+                                                        q: this.state.searchText,
                                                     }).toString(),
                                                 });
                                             }
@@ -208,9 +179,7 @@ export class AppBar extends React.Component<Props, State> {
                                         }}
                                         href={`/search?q=${this.state.searchText}`}
                                         onClick={() => {
-                                            this.props.onSearch?.(
-                                                this.state.searchText
-                                            );
+                                            this.props.onSearch?.(this.state.searchText);
                                         }}
                                     >
                                         <Typography>Search</Typography>
@@ -250,10 +219,7 @@ export class AppBar extends React.Component<Props, State> {
                                                 sx={{
                                                     boxShadow: 1,
                                                 }}
-                                                src={
-                                                    this._context.firebase.user
-                                                        ?.photoURL || ""
-                                                }
+                                                src={this._context.firebase.user?.photoURL || ""}
                                             />
                                         </Button>
                                         <Menu
@@ -278,21 +244,12 @@ export class AppBar extends React.Component<Props, State> {
                                             open={Boolean(this.state.anchorEl)}
                                             onClose={this.handleClose}
                                         >
-                                            <MenuItem
-                                                onClick={this.handleClose}
-                                            >
-                                                <Link
-                                                    href="/account"
-                                                    underline="none"
-                                                >
+                                            <MenuItem onClick={this.handleClose}>
+                                                <Link href="/account" underline="none">
                                                     My account
                                                 </Link>
                                             </MenuItem>
-                                            <MenuItem
-                                                onClick={this.handleLogout}
-                                            >
-                                                Sign out
-                                            </MenuItem>
+                                            <MenuItem onClick={this.handleLogout}>Sign out</MenuItem>
                                         </Menu>
                                     </React.Fragment>
                                 )}

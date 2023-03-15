@@ -4,6 +4,10 @@ import { LinkProps as RouterLinkProps } from "react-router-dom";
 import { LinkProps } from "@mui/material/Link";
 import { HashLink } from "react-router-hash-link";
 import "./App.scss";
+import "@fontsource/roboto/300.css";
+import "@fontsource/roboto/400.css";
+import "@fontsource/roboto/500.css";
+import "@fontsource/roboto/700.css";
 
 export function getTheme() {
     const blue = "#3772FF";
@@ -89,7 +93,7 @@ export function getTheme() {
             MuiTypography: {
                 styleOverrides: {
                     h1: {
-                        fontFamily: "Finger Paint",
+                        fontFamily: "FingerPaint",
                         fontSize: 50,
                     },
                     h2: {
@@ -98,7 +102,7 @@ export function getTheme() {
                         fontSize: 40,
                     },
                     h3: {
-                        fontFamily: "Finger Paint",
+                        fontFamily: "FingerPaint",
                         fontSize: 30,
                     },
                     body1: {

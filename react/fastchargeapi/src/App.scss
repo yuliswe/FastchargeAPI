@@ -1,3 +1,18 @@
+@font-face {
+    font-family: "Roboto";
+    src: url(../fonts/Roboto/Roboto-Regular.ttf);
+}
+
+@font-face {
+    font-family: "Ubuntu";
+    src: url(../fonts/Ubuntu/Ubuntu-Regular.ttf);
+}
+
+@font-face {
+    font-family: "FingerPaint";
+    src: url(../fonts/FingerPaint/FingerPaint-Regular.ttf);
+}
+
 .terminal {
     overflow: hidden;
     .react-terminal-wrapper {
