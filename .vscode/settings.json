@@ -43,7 +43,8 @@
     ".nodevenv": true,
     ".venv": true,
     ".zcompdump": true,
-    ".zsh_history": true
+    ".zsh_history": true,
+    ".symlinks": true,
   },
   "python.analysis.importFormat": "relative",
   "explorerExclude.backup": {},
