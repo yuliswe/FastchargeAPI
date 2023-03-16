@@ -11,6 +11,7 @@ import {
     GQLResolvers,
 } from "../__generated__/resolvers-types";
 import { EndpointPK } from "../pks/EndpointPK";
+import { AppPK } from "../pks/AppPK";
 
 export const endpointResolvers: GQLResolvers & {
     Endpoint: Required<GQLEndpointResolvers>;
@@ -27,12 +28,7 @@ export const endpointResolvers: GQLResolvers & {
 
         async updateEndpoint(
             parent: Endpoint,
-            {
-                method,
-                path,
-                description,
-                destination,
-            }: GQLEndpointUpdateEndpointArgs,
+            { method, path, description, destination }: GQLEndpointUpdateEndpointArgs,
             context: RequestContext
         ) {
             if (!(await Can.updateEndpoint(parent, context))) {
@@ -54,17 +50,10 @@ export const endpointResolvers: GQLResolvers & {
         },
     },
     Query: {
-        async endpoint(
-            parent: {},
-            { pk, app, path, ...newVals }: GQLQueryEndpointArgs,
-            context,
-            info
-        ) {
+        async endpoint(parent: {}, { pk, app, path, ...newVals }: GQLQueryEndpointArgs, context, info) {
             let endpoint: Endpoint;
             if (pk) {
-                endpoint = await context.batched.Endpoint.get(
-                    EndpointPK.parse(pk)
-                );
+                endpoint = await context.batched.Endpoint.get(EndpointPK.parse(pk));
             } else {
                 endpoint = await context.batched.Endpoint.get({ app, path });
             }
@@ -77,23 +66,12 @@ export const endpointResolvers: GQLResolvers & {
     Mutation: {
         async createEndpoint(
             parent: {},
-            {
-                app,
-                path,
-                method,
-                description,
-                destination,
-            }: GQLMutationCreateEndpointArgs,
+            { app, path, method, description, destination }: GQLMutationCreateEndpointArgs,
             context,
             info
         ) {
-            await context.batched.App.get(app); // checks if app exists
-            if (
-                !(await Can.createEndpoint(
-                    { app, path, method, description, destination },
-                    context
-                ))
-            ) {
+            await context.batched.App.get(AppPK.parse(app)); // checks if app exists
+            if (!(await Can.createEndpoint({ app, path, method, description, destination }, context))) {
                 throw new Denied();
             }
             let endpoint = await context.batched.Endpoint.create({

@@ -14,6 +14,7 @@ import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { settleAccountActivities } from "../functions/account";
 import { GQLStripePaymentAcceptStatus } from "../__generated__/operation-types";
 import { StripePaymentAcceptPK } from "../pks/StripePaymentAccept";
+import { UserPK } from "../pks/UserPK";
 /**
  * Remember to add your resolver to the resolvers object in server.ts.
  *
@@ -26,7 +27,7 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
     StripePaymentAccept: {
         __isTypeOf: (parent) => parent instanceof StripePaymentAcceptModel,
         async user(parent: StripePaymentAccept, args, context, info) {
-            let user = await context.batched.User.get(parent.user);
+            let user = await context.batched.User.get(UserPK.parse(parent.user));
             return user;
         },
         amount: (parent) => parent.amount,

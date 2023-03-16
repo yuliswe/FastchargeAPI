@@ -12,6 +12,8 @@ import {
     GQLResolvers,
 } from "../__generated__/resolvers-types";
 import { isValidAppName } from "../functions/app";
+import { AppPK } from "../pks/AppPK";
+import { UserPK } from "../pks/UserPK";
 
 export const appResolvers: GQLResolvers & {
     App: GQLAppResolvers;
@@ -30,7 +32,7 @@ export const appResolvers: GQLResolvers & {
             return endpoints;
         },
         async owner(parent, args, context, info) {
-            let user = await context.batched.User.get(parent.owner);
+            let user = await context.batched.User.get(UserPK.parse(parent.owner));
             if (!(await Can.viewUser(user, context))) {
                 throw new Denied();
             }
@@ -47,7 +49,7 @@ export const appResolvers: GQLResolvers & {
             context: RequestContext,
             info: GraphQLResolveInfo
         ): Promise<App> {
-            let app = await context.batched.App.get(name);
+            let app = await context.batched.App.get(AppPK.parse(name));
             if (!(await Can.updateApp(app, context))) {
                 throw new Denied();
             }

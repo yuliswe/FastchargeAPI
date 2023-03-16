@@ -10,6 +10,8 @@ import {
 } from "../__generated__/resolvers-types";
 import { PricingPK } from "../pks/PricingPK";
 import { SubscriptionPK } from "../pks/SubscriptionPK";
+import { UserPK } from "../pks/UserPK";
+import { AppPK } from "../pks/AppPK";
 
 export const subscribeResolvers: GQLResolvers = {
     Subscribe: {
@@ -17,15 +19,13 @@ export const subscribeResolvers: GQLResolvers = {
         updatedAt: (parent) => parent.updatedAt,
         createdAt: (parent) => parent.createdAt,
         async pricing(parent: Subscription, args: {}, context: RequestContext) {
-            return await context.batched.Pricing.get(
-                PricingPK.parse(parent.pricing)
-            );
+            return await context.batched.Pricing.get(PricingPK.parse(parent.pricing));
         },
         async subscriber(parent, args, context: RequestContext, info) {
-            return await context.batched.User.get(parent.subscriber);
+            return await context.batched.User.get(UserPK.parse(parent.subscriber));
         },
         async app(parent, args, context: RequestContext, info) {
-            return await context.batched.App.get(parent.app);
+            return await context.batched.App.get(AppPK.parse(parent.app));
         },
         async deleteSubscription(parent: Subscription, args: {}, context) {
             if (!(await Can.deleteSubscribe(parent, args, context))) {
@@ -46,42 +46,25 @@ export const subscribeResolvers: GQLResolvers = {
         },
     },
     Query: {
-        async subscription(
-            parent: {},
-            { pk, subscriber, app }: GQLQuerySubscriptionArgs,
-            context: RequestContext
-        ) {
+        async subscription(parent: {}, { pk, subscriber, app }: GQLQuerySubscriptionArgs, context: RequestContext) {
             let subscribe: Subscription;
             if (pk) {
-                subscribe = await context.batched.Subscription.get(
-                    SubscriptionPK.parse(pk)
-                );
+                subscribe = await context.batched.Subscription.get(SubscriptionPK.parse(pk));
             } else {
                 subscribe = await context.batched.Subscription.get({
                     subscriber,
                     app,
                 });
             }
-            if (
-                !(await Can.viewSubscribe(parent, { subscriber, app }, context))
-            ) {
+            if (!(await Can.viewSubscribe(parent, { subscriber, app }, context))) {
                 throw new Denied();
             }
             return subscribe;
         },
     },
     Mutation: {
-        async createSubscription(
-            parent: {},
-            { app, pricing, subscriber }: GQLMutationCreateSubscriptionArgs,
-            context
-        ) {
-            if (
-                !(await Can.createSubscribe(
-                    { app, pricing, subscriber },
-                    context
-                ))
-            ) {
+        async createSubscription(parent: {}, { app, pricing, subscriber }: GQLMutationCreateSubscriptionArgs, context) {
+            if (!(await Can.createSubscribe({ app, pricing, subscriber }, context))) {
                 throw new Denied();
             }
             await context.batched.Pricing.get(PricingPK.parse(pricing)); // Checks if the pricing plan exists

@@ -8,21 +8,16 @@ import {
     GQLQueryStripePaymentAcceptArgs,
     GQLQuerySubscriptionArgs,
 } from "./__generated__/resolvers-types";
+import { AppPK } from "./pks/AppPK";
 
 export const Can = {
-    async viewUser(
-        { email }: { email: string },
-        context: RequestContext
-    ): Promise<boolean> {
+    async viewUser({ email }: { email: string }, context: RequestContext): Promise<boolean> {
         return await Promise.resolve(true);
     },
     async listUsers(context: RequestContext): Promise<boolean> {
         return await Promise.resolve(true);
     },
-    async viewApp(
-        { owner }: { owner: string },
-        context: RequestContext
-    ): Promise<boolean> {
+    async viewApp({ owner }: { owner: string }, context: RequestContext): Promise<boolean> {
         return await Promise.resolve(true);
     },
     async createUser({ email }: { email: string }, context: RequestContext) {
@@ -32,117 +27,62 @@ export const Can = {
     async updateUser({ email }: { email: string }, context: RequestContext) {
         return await Promise.resolve(true);
     },
-    async createApp(
-        { owner }: { owner: string },
-        context: RequestContext
-    ): Promise<boolean> {
+    async createApp({ owner }: { owner: string }, context: RequestContext): Promise<boolean> {
         // Is the current user the claimed owner of the app?
         // return await Promise.resolve(args.owner === context.currentUser)
         return await Promise.resolve(true);
     },
-    async updateApp(
-        { owner }: { owner: string },
-        context: RequestContext
-    ): Promise<boolean> {
+    async updateApp({ owner }: { owner: string }, context: RequestContext): Promise<boolean> {
         return await Promise.resolve(true);
     },
-    async deleteApp(
-        { name }: { name: string },
-        context: RequestContext
-    ): Promise<boolean> {
+    async deleteApp({ name }: { name: string }, context: RequestContext): Promise<boolean> {
         return await Promise.resolve(true);
     },
-    async createAppUserToken(
-        parent: App,
-        context: RequestContext
-    ): Promise<boolean> {
+    async createAppUserToken(parent: App, context: RequestContext): Promise<boolean> {
         return await Promise.resolve(true);
     },
-    async revokeAppUserToken(
-        parent: App,
-        context: RequestContext
-    ): Promise<boolean> {
+    async revokeAppUserToken(parent: App, context: RequestContext): Promise<boolean> {
         return await Promise.resolve(true);
     },
-    async createEndpoint(
-        { app }: GQLMutationCreateEndpointArgs,
-        context: RequestContext
-    ): Promise<boolean> {
-        let appObj = await context.batched.App.get(app);
+    async createEndpoint({ app }: GQLMutationCreateEndpointArgs, context: RequestContext): Promise<boolean> {
+        let appObj = await context.batched.App.get(AppPK.parse(app));
         return await Promise.resolve(true);
     },
-    async createPricing(
-        { app }: { app: string },
-        context: RequestContext
-    ): Promise<boolean> {
+    async createPricing({ app }: { app: string }, context: RequestContext): Promise<boolean> {
         return await Promise.resolve(true);
     },
-    async deletePricing(
-        parent: Pricing,
-        args: never,
-        context: RequestContext
-    ): Promise<boolean> {
+    async deletePricing(parent: Pricing, args: never, context: RequestContext): Promise<boolean> {
         return await Promise.resolve(true);
     },
-    async createSubscribe(
-        args: GQLMutationCreateSubscriptionArgs,
-        context: RequestContext
-    ): Promise<boolean> {
+    async createSubscribe(args: GQLMutationCreateSubscriptionArgs, context: RequestContext): Promise<boolean> {
         return await Promise.resolve(true);
     },
-    async deleteSubscribe(
-        parent: Subscription,
-        args: {},
-        context: RequestContext
-    ): Promise<boolean> {
+    async deleteSubscribe(parent: Subscription, args: {}, context: RequestContext): Promise<boolean> {
         return await Promise.resolve(true);
     },
-    async viewSubscribe(
-        parent: {},
-        args: GQLQuerySubscriptionArgs,
-        context: RequestContext
-    ): Promise<boolean> {
+    async viewSubscribe(parent: {}, args: GQLQuerySubscriptionArgs, context: RequestContext): Promise<boolean> {
         return await Promise.resolve(true);
     },
-    async updateEndpoint(
-        parent: Endpoint,
-        context: RequestContext
-    ): Promise<boolean> {
+    async updateEndpoint(parent: Endpoint, context: RequestContext): Promise<boolean> {
         return await Promise.resolve(true);
     },
-    async viewEndpoint(
-        args: GQLQueryEndpointArgs,
-        context: RequestContext
-    ): Promise<boolean> {
+    async viewEndpoint(args: GQLQueryEndpointArgs, context: RequestContext): Promise<boolean> {
         return await Promise.resolve(true);
     },
-    async deleteEndpoint(
-        parent: Endpoint,
-        args: never,
-        context: RequestContext
-    ): Promise<boolean> {
+    async deleteEndpoint(parent: Endpoint, args: never, context: RequestContext): Promise<boolean> {
         return await Promise.resolve(true);
     },
-    async createUsageLog(
-        args: GQLMutationCreateUsageLogArgs,
-        context: RequestContext
-    ) {
+    async createUsageLog(args: GQLMutationCreateUsageLogArgs, context: RequestContext) {
         return await Promise.resolve(true);
     },
-    async readStripePaymentAccepts(
-        parent: User,
-        args: GQLQueryStripePaymentAcceptArgs,
-        context: RequestContext
-    ) {
+    async readStripePaymentAccepts(parent: User, args: GQLQueryStripePaymentAcceptArgs, context: RequestContext) {
         return await Promise.resolve(true);
     },
     async *viewAppIter<App extends { owner: string }>(
         arr: App[],
         context: RequestContext
     ): AsyncIterable<[boolean, App]> {
-        let results = await Promise.allSettled(
-            arr.map((item) => Can.viewApp(item, context))
-        );
+        let results = await Promise.allSettled(arr.map((item) => Can.viewApp(item, context)));
         for (let [index, result] of results.entries()) {
             if (result.status === "fulfilled") {
                 yield [true, arr[index]];
@@ -151,10 +91,7 @@ export const Can = {
             }
         }
     },
-    async viewAppFilter<App extends { owner: string }>(
-        arr: App[],
-        context: RequestContext
-    ): Promise<App[]> {
+    async viewAppFilter<App extends { owner: string }>(arr: App[], context: RequestContext): Promise<App[]> {
         let results: any[] = [];
         for await (let [canView, item] of Can.viewAppIter(arr, context)) {
             if (canView) {

@@ -1,18 +1,16 @@
 import { Pricing } from "../dynamoose/models";
 import { Denied } from "../errors";
 import { Can } from "../permissions";
-import {
-    GQLMutationCreatePricingArgs,
-    GQLResolvers,
-} from "../__generated__/resolvers-types";
+import { GQLMutationCreatePricingArgs, GQLResolvers } from "../__generated__/resolvers-types";
 import "../pks/PricingPK";
 import { PricingPK } from "../pks/PricingPK";
+import { AppPK } from "../pks/AppPK";
 
 export const pricingResolvers: GQLResolvers = {
     Pricing: {
         pk: (parent) => PricingPK.stringify(parent),
         async app(parent, args, context, info) {
-            let app = await context.batched.App.get(parent.app);
+            let app = await context.batched.App.get(AppPK.parse(parent.app));
             return app;
         },
         name: (parent) => parent.name,
@@ -33,17 +31,11 @@ export const pricingResolvers: GQLResolvers = {
     Mutation: {
         async createPricing(
             parent: {},
-            {
-                app,
-                callToAction,
-                chargePerRequest,
-                minMonthlyCharge,
-                name,
-            }: GQLMutationCreatePricingArgs,
+            { app, callToAction, chargePerRequest, minMonthlyCharge, name }: GQLMutationCreatePricingArgs,
             context,
             info
         ) {
-            await context.batched.App.get(app); // checks if app exists
+            await context.batched.App.get(AppPK.parse(app)); // checks if app exists
             let existingCount = await context.batched.Pricing.count({
                 app,
             });

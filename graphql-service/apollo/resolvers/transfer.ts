@@ -22,14 +22,13 @@ export const stripeTransferResolvers: GQLResolvers & {
     StripeTransfer: {
         __isTypeOf: (parent) => parent instanceof StripeTransferModel,
         async receiver(parent, args, context, info) {
-            let user = await context.batched.User.get(parent.receiver);
+            let user = await context.batched.User.get(UserPK.parse(parent.receiver));
             return user;
         },
         withdrawAmount: (parent) => parent.withdrawAmount,
         receiveAmount: (parent) => parent.receiveAmount,
         stripeTransferId: (parent) => parent.stripeTransferId,
-        stripeTransferObject: (parent) =>
-            JSON.stringify(parent.stripeTransferObject),
+        stripeTransferObject: (parent) => JSON.stringify(parent.stripeTransferObject),
         createdAt: (parent) => parent.createdAt,
         currency: (parent) => parent.currency,
         transferAt: (parent) => parent.transferAt,
@@ -46,10 +45,8 @@ export const stripeTransferResolvers: GQLResolvers & {
          * @param context
          * @param info
          */
-        async settleStripeTransfer(parent, args: never, context, info) {
-            let user = await context.batched.User.get({
-                email: parent.receiver,
-            });
+        async settleStripeTransfer(parent, args: {}, context, info) {
+            let user = await context.batched.User.get(UserPK.parse(parent.receiver));
             await createAccountActivitiesForTransfer(context, {
                 transfer: parent,
                 userPK: UserPK.stringify(user),
@@ -78,8 +75,7 @@ export const stripeTransferResolvers: GQLResolvers & {
                 receiveAmount,
                 stripeTransferId,
                 currency,
-                stripeTransferObject:
-                    stripeTransferObject && JSON.parse(stripeTransferObject),
+                stripeTransferObject: stripeTransferObject && JSON.parse(stripeTransferObject),
                 transferAt: Date.now() + 1000 * 60 * 60 * 24, // Transfer after 24 hours
                 status: "pending",
             });

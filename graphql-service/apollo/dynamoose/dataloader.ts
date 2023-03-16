@@ -347,7 +347,7 @@ export class Batched<I extends Item> {
      * dynamoose.Model.query().
      * @returns An object of the model type.
      */
-    async get(key: string | Query<I>, options?: BatchOptions): Promise<I> {
+    async get(key: Query<I>, options?: BatchOptions): Promise<I> {
         let result = await this.many(key, options);
         if (result.length === 0) {
             throw new NotFound(this.model.name, JSON.stringify(key));
@@ -358,7 +358,7 @@ export class Batched<I extends Item> {
         }
     }
 
-    async getOrNull(key: string | Query<I>, options?: BatchOptions): Promise<I | null> {
+    async getOrNull(key: Query<I>, options?: BatchOptions): Promise<I | null> {
         try {
             return await this.get(key, options);
         } catch (e) {
@@ -370,7 +370,7 @@ export class Batched<I extends Item> {
         }
     }
 
-    async assertExists(key: string | Query<I>): Promise<void> {
+    async assertExists(key: Query<I>): Promise<void> {
         await this.get(key);
     }
 
@@ -394,7 +394,7 @@ export class Batched<I extends Item> {
      *          than the actual number of items matching the query.
      * @returns An array of objects of the model type.
      */
-    async many(key: string | Query<I>, options?: BatchOptions): Promise<I[]> {
+    async many(key: Query<I>, options?: BatchOptions): Promise<I[]> {
         if (typeof key === "object") {
             key = stripNullKeys(key)!;
         }
@@ -426,7 +426,7 @@ export class Batched<I extends Item> {
         }
     }
 
-    async count(key: string | Query<I>, options?: BatchOptions): Promise<number> {
+    async count(key: Query<I>, options?: BatchOptions): Promise<number> {
         if (typeof key === "object") {
             key = stripNullKeys(key)!;
         }
@@ -444,7 +444,7 @@ export class Batched<I extends Item> {
         return result.count;
     }
 
-    async exists(key: string | Partial<I>): Promise<boolean> {
+    async exists(key: Partial<I>): Promise<boolean> {
         let result = await this.many(key);
         return result.length > 0;
     }

@@ -4,6 +4,8 @@ import { Denied } from "../errors";
 import { Can } from "../permissions";
 import { RequestContext } from "../RequestContext";
 import { GQLMutationCreateUsageLogArgs, GQLResolvers, GQLUsageLogResolvers } from "../__generated__/resolvers-types";
+import { AppPK } from "../pks/AppPK";
+import { UserPK } from "../pks/UserPK";
 
 /**
  * Remember to add your resolver to the resolvers object in server.ts.
@@ -16,11 +18,11 @@ export const usageLogResolvers: GQLResolvers & {
 } = {
     UsageLog: {
         async app(parent: UsageLog, args, context, info) {
-            let app = await context.batched.App.get(parent.app);
+            let app = await context.batched.App.get(AppPK.parse(parent.app));
             return app;
         },
         async subscriber(parent: UsageLog, args, context, info) {
-            let subscriber = await context.batched.User.get(parent.subscriber);
+            let subscriber = await context.batched.User.get(UserPK.parse(parent.subscriber));
             return subscriber;
         },
         async endpoint(parent: UsageLog, args, context, info) {
@@ -47,7 +49,7 @@ export const usageLogResolvers: GQLResolvers & {
             if (!(await Can.createUsageLog({ app, path, subscriber, volume, pricing }, context))) {
                 throw new Denied();
             }
-            await context.batched.App.assertExists(app);
+            await context.batched.App.assertExists(AppPK.parse(app));
             const log = await context.batched.UsageLog.create({
                 app,
                 path,

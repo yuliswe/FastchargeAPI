@@ -1,5 +1,5 @@
 import { EventBridgeEvent, EventBridgeHandler } from "aws-lambda";
-import { StripeTransferPK, createDefaultContextBatched } from "graphql-service";
+import { StripeTransferPK, UserPK, createDefaultContextBatched } from "graphql-service";
 import { Chalk } from "chalk";
 import { GQLStripeTransferIndex } from "../__generated__/gql-operations";
 import { Decimal } from "decimal.js-light";
@@ -46,7 +46,7 @@ async function handle(event: EventBridgeEvent<string, EventDetail>, context: nev
         let chunk = pendingTransfers.slice(i, Math.min(pendingTransfers.length, i + chunkSize));
 
         let promises = chunk.map(async (transfer) => {
-            let receiver = await batched.User.get(transfer.receiver);
+            let receiver = await batched.User.get(UserPK.parse(transfer.receiver));
             if (!receiver.stripeConnectAccountId) {
                 // User did not connect their Stripe account yet
                 return;

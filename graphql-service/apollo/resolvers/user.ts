@@ -28,11 +28,10 @@ export const userResolvers: GQLResolvers & {
     User: {
         __isTypeOf: (parent) => parent instanceof UserModel,
         async email(parent, args, context, info) {
-            let user = await context.batched.User.get(parent.email);
-            if (!(await Can.viewUser(user, context))) {
+            if (!(await Can.viewUser(parent, context))) {
                 throw new Denied();
             }
-            return user.email;
+            return parent.email;
         },
         async apps(parent: User, args: {}, context: RequestContext, info: GraphQLResolveInfo) {
             let apps = await context.batched.App.many(
