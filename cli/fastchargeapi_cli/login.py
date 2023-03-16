@@ -29,7 +29,8 @@ def fastcharge_dev_login():
 
 def do_login():
     if token := get_or_refresh_id_token_from_auth_file():
-        echo(token)
+        if os.environ.get("SHOW_AUTH") == "1":
+            echo(token)
         return token
 
     key = uuid4().hex
@@ -51,7 +52,8 @@ def do_login():
             continue
     write_to_auth_file(id_token, refresh_token)
     token = get_token_or_refresh(id_token, refresh_token)
-    echo(token)
+    if os.environ.get("SHOW_AUTH") == "1":
+        echo(token)
 
 
 @fastapi.command("logout")
