@@ -85,7 +85,6 @@ class AppInfo:
     name: str
     author: str
     gatewayMode: str
-    owned_by_you: bool
     description: str
 
     def pretty_print(self):
@@ -126,7 +125,6 @@ def list_apps() -> list[AppInfo]:
             name=app["name"],
             gatewayMode=app["gatewayMode"],
             author=app["owner"]["author"],
-            owned_by_you=app["ownedByYou"],
             description=app["description"],
         )
         for app in apps
@@ -158,7 +156,6 @@ def get_app(name: str) -> Optional[AppInfo]:
             name=app["name"],
             gatewayMode=app["gatewayMode"],
             author=app["owner"]["author"],
-            owned_by_you=app["ownedByYou"],
             description=app["description"],
         )
     except NotFound:
