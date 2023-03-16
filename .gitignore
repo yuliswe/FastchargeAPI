@@ -8,3 +8,4 @@ build
 *.pyc
 .docker
 .aws-sam
+.pytest_cache

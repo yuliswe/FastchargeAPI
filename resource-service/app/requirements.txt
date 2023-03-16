@@ -1,6 +1,0 @@
-requests
-pyjwt
-cryptography
-lambda-cache
-joblib
-diskcache
