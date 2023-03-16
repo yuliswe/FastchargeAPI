@@ -33,6 +33,8 @@ const corsMiddleware: LambdaRequest<APIGatewayProxyEvent, APIGatewayProxyResult>
     };
 };
 
+const batched = createDefaultContextBatched();
+
 let handle = startServerAndCreateLambdaHandler(
     server,
     createRequestHandler<APIGatewayProxyEvent, APIGatewayProxyResult>(
@@ -99,7 +101,7 @@ let handle = startServerAndCreateLambdaHandler(
         }
     ),
     {
-        context({ event }: { event: APIGatewayProxyEvent }): Promise<RequestContext> {
+        async context({ event }: { event: APIGatewayProxyEvent }): Promise<RequestContext> {
             let userEmail: string | undefined = undefined;
             let domain = event.requestContext.domainName || "";
             let serviceName: RequestService | undefined = undefined;
@@ -126,6 +128,8 @@ let handle = startServerAndCreateLambdaHandler(
                     throw new BadInput(chalk.red("X-User-Email header is missing."));
                 }
                 isServiceRequest = false;
+            } else if (event.requestContext.authorizer?.["isAnonymousUser"] === "true") {
+                userEmail = undefined;
             } else {
                 userEmail = event.requestContext.authorizer?.["userEmail"];
                 if (!userEmail) {
@@ -133,6 +137,9 @@ let handle = startServerAndCreateLambdaHandler(
                     throw new Unauthorized();
                 }
                 isServiceRequest = false;
+            }
+            if (userEmail) {
+                await createUserIfNotExists(userEmail);
             }
             return Promise.resolve({
                 currentUser: userEmail,
@@ -146,6 +153,14 @@ let handle = startServerAndCreateLambdaHandler(
         middleware: [corsMiddleware],
     }
 );
+
+async function createUserIfNotExists(email: string) {
+    if (!(await batched.User.exists({ email }))) {
+        await batched.User.create({
+            email,
+        });
+    }
+}
 
 export const lambdaHandler = async (event: APIGatewayProxyEvent, context: never, callback: never) => {
     try {
