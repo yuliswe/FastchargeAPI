@@ -9,3 +9,5 @@ build
 .docker
 .aws-sam
 .pytest_cache
+**/.symlinks/
+**/.aws-sam/
