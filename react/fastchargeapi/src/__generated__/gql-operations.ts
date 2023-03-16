@@ -63,21 +63,23 @@ export type GQLAccountHistory = {
 export type GQLApp = {
     __typename?: "App";
     deleteApp: GQLApp;
-    description: Scalars["String"];
+    description?: Maybe<Scalars["String"]>;
     endpoints: Array<GQLEndpoint>;
     gatewayMode: GQLGatewayMode;
     homepage?: Maybe<Scalars["String"]>;
     name: Scalars["String"];
-    ownedByYou: Scalars["Boolean"];
     owner: GQLUser;
     pricingPlans: Array<GQLPricing>;
     repository?: Maybe<Scalars["String"]>;
+    title?: Maybe<Scalars["String"]>;
     updateApp: GQLApp;
 };
 
 export type GQLAppUpdateAppArgs = {
     description?: InputMaybe<Scalars["String"]>;
-    gatewayMode?: InputMaybe<GQLGatewayMode>;
+    homepage?: InputMaybe<Scalars["String"]>;
+    repository?: InputMaybe<Scalars["String"]>;
+    title?: InputMaybe<Scalars["String"]>;
 };
 
 export enum GQLAppIndex {
@@ -160,6 +162,7 @@ export type GQLMutationCreateAppArgs = {
     name: Scalars["String"];
     owner: Scalars["String"];
     repository?: InputMaybe<Scalars["String"]>;
+    title?: InputMaybe<Scalars["String"]>;
 };
 
 export type GQLMutationCreateEndpointArgs = {
@@ -492,7 +495,7 @@ export type GQLAppDetailLoadAppInfoQuery = {
     app: {
         __typename?: "App";
         name: string;
-        description: string;
+        description?: string | null;
         repository?: string | null;
         homepage?: string | null;
         owner: { __typename?: "User"; author: string };
@@ -545,7 +548,7 @@ export type GQLAppFullTextSearchQuery = {
     appFullTextSearch: Array<{
         __typename?: "App";
         name: string;
-        description: string;
+        description?: string | null;
         owner: { __typename?: "User"; author: string };
     }>;
 };
@@ -607,7 +610,7 @@ export type GQLMyAppGetDetailQuery = {
     app: {
         __typename?: "App";
         name: string;
-        description: string;
+        description?: string | null;
         repository?: string | null;
         homepage?: string | null;
         pricingPlans: Array<{
@@ -636,7 +639,7 @@ export type GQLGetUserAppsQueryVariables = Exact<{
 
 export type GQLGetUserAppsQuery = {
     __typename?: "Query";
-    user: { __typename?: "User"; apps: Array<{ __typename?: "App"; name: string; description: string }> };
+    user: { __typename?: "User"; apps: Array<{ __typename?: "App"; name: string; description?: string | null }> };
 };
 
 export type GQLGetAvailablePlansQueryVariables = Exact<{
@@ -675,7 +678,7 @@ export type GQLGetSubscriptionDetailAppInfoQueryVariables = Exact<{
 
 export type GQLGetSubscriptionDetailAppInfoQuery = {
     __typename?: "Query";
-    app: { __typename?: "App"; name: string; description: string };
+    app: { __typename?: "App"; name: string; description?: string | null };
 };
 
 export type GQLGetUsageSummaryQueryVariables = Exact<{
