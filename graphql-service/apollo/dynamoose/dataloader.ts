@@ -24,7 +24,7 @@ type ConditionQuery<V> = {
 };
 type GQLPartial<T> = { [K in keyof T]?: Optional<T[K]> };
 type Query<T> = {
-    [K in keyof T]?: Optional<T[K] | ConditionQuery<T[K]>>;
+    [K in keyof T & string]?: Optional<T[K] | ConditionQuery<T[K]>>;
 };
 type UpdateQuery<T> = NormalUpdateQuery<T> | AdvancedUpdateQuery<T>;
 type NormalUpdateQuery<T> = {
@@ -160,7 +160,7 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
                 Object.keys(bk.query)[0] === hashKeyName &&
                 (!bk.options || Object.keys(bk.options).length == 0)
             ) {
-                batch1.push((bk.query as any)[hashKeyName as PrimaryKey]);
+                batch1.push(bk.query[hashKeyName] as PrimaryKey);
                 bkType.push(1);
             } else if (
                 hashKeyName &&
@@ -444,8 +444,8 @@ export class Batched<I extends Item> {
         return result.count;
     }
 
-    async exists(key: Partial<I>): Promise<boolean> {
-        let result = await this.many(key);
+    async exists(key: Partial<I>, options?: BatchOptions): Promise<boolean> {
+        let result = await this.many(key, options);
         return result.length > 0;
     }
 
@@ -578,7 +578,7 @@ export class Batched<I extends Item> {
 
         let result: I;
         try {
-            result = await (this.model.update(query as any, newVals as any) as any);
+            result = await this.model.update(query as unknown as Partial<I>, newVals as unknown as Partial<I>);
         } catch (e) {
             await this.get(query); // Check if the item exists, throws NotFound if not
             throw e;

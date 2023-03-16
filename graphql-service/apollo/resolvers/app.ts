@@ -1,5 +1,5 @@
 import { GraphQLResolveInfo } from "graphql";
-import { App, GatewayMode } from "../dynamoose/models";
+import { App } from "../dynamoose/models";
 import { BadInput, Denied } from "../errors";
 import { Can } from "../permissions";
 import { RequestContext } from "../RequestContext";

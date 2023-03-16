@@ -11,6 +11,8 @@ import { PricingPK } from "../pks/PricingPK";
 import { settleAccountActivities } from "../functions/account";
 import { UserPK } from "../pks/UserPK";
 import Decimal from "decimal.js-light";
+import { createUserWithEmail } from "../functions/user";
+import { GQLUserIndex } from "../__generated__/resolvers-types";
 
 let context: RequestContext = {
     batched: createDefaultContextBatched(),
@@ -23,14 +25,13 @@ describe("Test when making a request the monthly subscription fee is charged.", 
     let user: User;
     test("Preparation: create a User", async () => {
         try {
-            user = await context.batched.User.create({
-                email: "testuser1.fastchargeapi@gmail.com",
-            });
+            user = await createUserWithEmail(context, "testuser1.fastchargeapi@gmail.com");
         } catch (e) {
             if (e instanceof AlreadyExists) {
-                user = await context.batched.User.get({
-                    email: "testuser1.fastchargeapi@gmail.com",
-                });
+                user = await context.batched.User.get(
+                    { email: "testuser1.fastchargeapi@gmail.com" },
+                    { using: GQLUserIndex.IndexByEmailOnlyPk }
+                );
             } else {
                 throw e;
             }
@@ -42,7 +43,7 @@ describe("Test when making a request the monthly subscription fee is charged.", 
         try {
             let app = await context.batched.App.create({
                 name: "myapp",
-                owner: user.email,
+                owner: UserPK.stringify(user),
             });
         } catch (e) {
             if (e instanceof AlreadyExists) {
@@ -73,15 +74,14 @@ describe("Test when making a request the monthly subscription fee is charged.", 
         let sub = await context.batched.Subscription.getOrNull({
             subscriber: UserPK.stringify(user),
         });
-        if (subscription === null) {
+        if (sub === null) {
             subscription = await context.batched.Subscription.create({
+                app: "myapp",
                 subscriber: UserPK.stringify(user),
                 pricing: pricingPK,
             });
         } else {
-            subscription = sub!;
-            subscription.pricing = pricingPK;
-            await subscription.save();
+            subscription = await context.batched.Subscription.update(sub, { pricing: pricingPK });
         }
     });
 
@@ -91,7 +91,7 @@ describe("Test when making a request the monthly subscription fee is charged.", 
             let usageLog = (await usageLogResolvers.Mutation!.createUsageLog!(
                 {},
                 {
-                    subscriber: "testuser1.fastchargeapi@gmail.com",
+                    subscriber: UserPK.stringify(user),
                     app: "myapp",
                     path: "/google",
                     volume: 1,
@@ -109,7 +109,7 @@ describe("Test when making a request the monthly subscription fee is charged.", 
     let usageSummaryPK: string;
     test("Create a UsageSummary", async () => {
         let { affectedUsageSummaries } = await collectUsageSummary(context, {
-            user: "testuser1.fastchargeapi@gmail.com",
+            user: UserPK.stringify(user),
             app: "myapp",
         });
         let usageSummary = affectedUsageSummaries[0];
@@ -132,8 +132,8 @@ describe("Test when making a request the monthly subscription fee is charged.", 
         let usageSummary = await UsageSummaryModel.get(UsageSummaryPK.parse(usageSummaryPK));
         let result = await generateAccountActivities(context, {
             usageSummary,
-            subscriber: "testuser1.fastchargeapi@gmail.com",
-            appAuthor: "testuser1.fastchargeapi@gmail.com",
+            subscriber: UserPK.stringify(user),
+            appAuthor: UserPK.stringify(user),
             forceMonthlyCharge: true,
         });
         expect(result).not.toBeNull();
@@ -169,7 +169,7 @@ describe("Test when making a request the monthly subscription fee is charged.", 
      * AccountActivity is in the future in the previous step.
      */
     test("Create AccountHistory", async () => {
-        let result = await settleAccountActivities(context, "testuser1.fastchargeapi@gmail.com");
+        let result = await settleAccountActivities(context, UserPK.stringify(user));
         expect(result).not.toBeNull();
         let { newAccountHistory, affectedAccountActivities, previousAccountHistory } = result!;
         expect(affectedAccountActivities.length).toEqual(4);

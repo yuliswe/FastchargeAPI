@@ -9,12 +9,12 @@ type Query {
     appFullTextSearch(query: String!): [App!]!
     ### User API
     users(pk: [ID!]): [User!]! # Get all users in the system
-    user(email: Email): User!
+    user(pk: ID, email: Email): User!
     ### Endpoint API
     endpoint(pk: ID, app: String, path: String): Endpoint!
     endpoints: [Endpoint] # Get all endpoints in the system
     ### Subscriptions API
-    subscription(pk: ID, subscriber: Email, app: String): Subscribe!
+    subscription(pk: ID, subscriber: ID, app: String): Subscribe!
 
     accountActivities(
         status: AccountActivityStatus
@@ -46,7 +46,7 @@ type Mutation {
 
     createApp(
         name: String!
-        owner: String!
+        owner: ID!
         title: String
         gatewayMode: GatewayMode = proxy
         description: String
@@ -70,12 +70,13 @@ type Mutation {
         chargePerRequest: String!
     ): Pricing!
 
-    createSubscription(app: String!, pricing: ID!, subscriber: Email!): Subscribe!
+    createSubscription(app: ID!, pricing: ID!, subscriber: ID!): Subscribe!
 
-    createUsageLog(app: String!, path: String!, subscriber: Email!, volume: Int! = 1, pricing: ID!): UsageLog!
+    createUsageLog(app: ID!, path: String!, subscriber: ID!, volume: Int! = 1, pricing: ID!): UsageLog!
 
+    # TODO: remove this
     createStripePaymentAccept(
-        user: String!
+        user: ID!
         amount: NonNegativeDecimal!
         currency: String!
         stripePaymentStatus: String!
@@ -84,8 +85,9 @@ type Mutation {
         stripeSessionObject: String!
     ): StripePaymentAccept!
 
+    # TODO: remove this
     createStripeTransfer(
-        receiver: Email!
+        receiver: ID!
         withdrawAmount: NonNegativeDecimal!
         receiveAmount: NonNegativeDecimal!
         currency: String!
@@ -108,6 +110,7 @@ type Secret {
 }
 
 type User {
+    pk: ID!
     email: Email!
     author: String!
     subscriptions: [Subscribe!]!
@@ -148,6 +151,10 @@ type User {
     appToken(app: ID!): UserAppToken!
 
     stripePaymentAccept(stripeSessionId: String): StripePaymentAccept!
+}
+
+enum UserIndex {
+    indexByEmail__onlyPK
 }
 
 input DateRangeInput {

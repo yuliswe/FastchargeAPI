@@ -1,7 +1,7 @@
 import { startStandaloneServer } from "@apollo/server/standalone";
-import { NotFound } from "./errors";
 import { server } from "./server";
 import { RequestContext, createDefaultContextBatched } from "./RequestContext";
+import { createUserIDFromEmail } from "./functions/user";
 
 let { url } = await startStandaloneServer<RequestContext>(server, {
     listen: {
@@ -14,10 +14,14 @@ let { url } = await startStandaloneServer<RequestContext>(server, {
         // The batcher must be created for every request in order for it to
         // function properly.
         let batched = createDefaultContextBatched();
-        if (email && !(await batched.User.exists({ email }))) {
-            await batched.User.create({
-                email: email,
-            });
+        if (email) {
+            let userID = createUserIDFromEmail(email);
+            if (!(await batched.User.exists({ id: userID }))) {
+                await batched.User.create({
+                    id: userID,
+                    email: email,
+                });
+            }
         }
         return Promise.resolve({
             currentUser: email,

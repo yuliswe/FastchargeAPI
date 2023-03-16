@@ -1,13 +1,13 @@
 import { User } from "../dynamoose/models";
 
 export class UserPK {
-    static parse(pk: string): { email: string } {
+    static parse(pk: string): { id: string } {
         return {
-            email: pk,
+            id: pk,
         };
     }
 
     static stringify(item: User): string {
-        return item.email;
+        return item.id;
     }
 }

@@ -160,7 +160,7 @@ export type GQLMutationCreateAppArgs = {
     gatewayMode?: InputMaybe<GQLGatewayMode>;
     homepage?: InputMaybe<Scalars["String"]>;
     name: Scalars["String"];
-    owner: Scalars["String"];
+    owner: Scalars["ID"];
     repository?: InputMaybe<Scalars["String"]>;
     title?: InputMaybe<Scalars["String"]>;
 };
@@ -195,29 +195,29 @@ export type GQLMutationCreateStripePaymentAcceptArgs = {
     stripePaymentStatus: Scalars["String"];
     stripeSessionId: Scalars["String"];
     stripeSessionObject: Scalars["String"];
-    user: Scalars["String"];
+    user: Scalars["ID"];
 };
 
 export type GQLMutationCreateStripeTransferArgs = {
     currency: Scalars["String"];
     receiveAmount: Scalars["NonNegativeDecimal"];
-    receiver: Scalars["Email"];
+    receiver: Scalars["ID"];
     stripeTransferId?: InputMaybe<Scalars["String"]>;
     stripeTransferObject?: InputMaybe<Scalars["String"]>;
     withdrawAmount: Scalars["NonNegativeDecimal"];
 };
 
 export type GQLMutationCreateSubscriptionArgs = {
-    app: Scalars["String"];
+    app: Scalars["ID"];
     pricing: Scalars["ID"];
-    subscriber: Scalars["Email"];
+    subscriber: Scalars["ID"];
 };
 
 export type GQLMutationCreateUsageLogArgs = {
-    app: Scalars["String"];
+    app: Scalars["ID"];
     path: Scalars["String"];
     pricing: Scalars["ID"];
-    subscriber: Scalars["Email"];
+    subscriber: Scalars["ID"];
     volume?: Scalars["Int"];
 };
 
@@ -295,11 +295,12 @@ export type GQLQueryStripePaymentAcceptArgs = {
 export type GQLQuerySubscriptionArgs = {
     app?: InputMaybe<Scalars["String"]>;
     pk?: InputMaybe<Scalars["ID"]>;
-    subscriber?: InputMaybe<Scalars["Email"]>;
+    subscriber?: InputMaybe<Scalars["ID"]>;
 };
 
 export type GQLQueryUserArgs = {
     email?: InputMaybe<Scalars["Email"]>;
+    pk?: InputMaybe<Scalars["ID"]>;
 };
 
 export type GQLQueryUsersArgs = {
@@ -423,6 +424,7 @@ export type GQLUser = {
     createAppToken: GQLUserAppToken;
     createdAt: Scalars["Timestamp"];
     email: Scalars["Email"];
+    pk: Scalars["ID"];
     settleAccountActivities: Array<GQLAccountActivity>;
     stripeConnectAccountId?: Maybe<Scalars["String"]>;
     stripeCustomerId?: Maybe<Scalars["String"]>;
@@ -485,6 +487,10 @@ export type GQLUserAppToken = {
     token?: Maybe<Scalars["String"]>;
     updatedAt: Scalars["Timestamp"];
 };
+
+export enum GQLUserIndex {
+    IndexByEmailOnlyPk = "indexByEmail__onlyPK",
+}
 
 export type GQLTriggerSettleAccountActivitiesForUsersQueryVariables = Exact<{
     email: Scalars["Email"];

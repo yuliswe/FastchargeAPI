@@ -1,6 +1,6 @@
 import { GraphQLResolveInfo } from "graphql";
 import { AccountActivity, User, UserAppToken, UserModel } from "../dynamoose/models";
-import { AlreadyExists, Denied, TooManyResources } from "../errors";
+import { BadInput, Denied, TooManyResources } from "../errors";
 import { Can } from "../permissions";
 import { RequestContext } from "../RequestContext";
 import {
@@ -9,8 +9,8 @@ import {
     GQLQueryUserArgs,
     GQLResolvers,
     GQLUserAccountActivitiesArgs,
-    GQLUserAppToken,
     GQLUserCreateAppTokenArgs,
+    GQLUserIndex,
     GQLUserResolvers,
     GQLUserStripePaymentAcceptArgs,
     GQLUserUpdateUserArgs,
@@ -21,12 +21,14 @@ import { UserPK } from "../pks/UserPK";
 import { getUserBalance, settleAccountActivities } from "../functions/account";
 import { makeAppTokenForUser } from "../functions/token";
 import { AppPK } from "../pks/AppPK";
+import { createUserWithEmail } from "../functions/user";
 
 export const userResolvers: GQLResolvers & {
     User: Required<GQLUserResolvers>;
 } = {
     User: {
         __isTypeOf: (parent) => parent instanceof UserModel,
+        pk: (parent) => UserPK.stringify(parent),
         async email(parent, args, context, info) {
             if (!(await Can.viewUser(parent, context))) {
                 throw new Denied();
@@ -35,7 +37,7 @@ export const userResolvers: GQLResolvers & {
         },
         async apps(parent: User, args: {}, context: RequestContext, info: GraphQLResolveInfo) {
             let apps = await context.batched.App.many(
-                { owner: parent.email },
+                { owner: UserPK.stringify(parent) },
                 {
                     using: GQLAppIndex.IndexByOwnerOnlyPk,
                 }
@@ -45,7 +47,7 @@ export const userResolvers: GQLResolvers & {
         },
         async subscriptions(parent: User, args: {}, context: RequestContext, info: GraphQLResolveInfo) {
             return await context.batched.Subscription.many({
-                subscriber: parent.email,
+                subscriber: UserPK.stringify(parent),
             });
         },
         author: (parent) => parent.author || "",
@@ -58,10 +60,10 @@ export const userResolvers: GQLResolvers & {
         stripeConnectAccountId: (parent) => parent.stripeConnectAccountId,
         balanceLimit: (parent) => parent.balanceLimit,
         async appToken(parent, { app }, context) {
-            return await context.batched.UserAppToken.get({ subscriber: parent.email, app });
+            return await context.batched.UserAppToken.get({ subscriber: UserPK.stringify(parent), app });
         },
         async stripePaymentAccept(parent, { stripeSessionId }: GQLUserStripePaymentAcceptArgs, context) {
-            return await context.batched.StripePaymentAccept.get({ user: parent.email, stripeSessionId });
+            return await context.batched.StripePaymentAccept.get({ user: UserPK.stringify(parent), stripeSessionId });
         },
         async accountActivities(parent: User, { limit, dateRange }: GQLUserAccountActivitiesArgs, context) {
             let result = await context.batched.AccountActivity.many(
@@ -120,7 +122,7 @@ export const userResolvers: GQLResolvers & {
             let { app, path, limit, dateRange } = args;
             let usage = await context.batched.UsageLog.many(
                 {
-                    subscriber: parent.email,
+                    subscriber: UserPK.stringify(parent),
                     app: app,
                     path,
                     createdAt: dateRange
@@ -140,7 +142,7 @@ export const userResolvers: GQLResolvers & {
         async usageSummaries(parent: User, { limit, app, dateRange }: GQLUserUsageSummariesArgs, context, info) {
             let usageSummaries = await context.batched.UsageSummary.many(
                 {
-                    subscriber: parent.email,
+                    subscriber: UserPK.stringify(parent),
                     app,
                     createdAt: dateRange
                         ? {
@@ -202,8 +204,21 @@ export const userResolvers: GQLResolvers & {
             let users = await context.batched.User.scan();
             return users;
         },
-        async user(parent: {}, { email }: GQLQueryUserArgs, context: RequestContext, info: GraphQLResolveInfo) {
-            let user = await context.batched.User.get({ email });
+        async user(parent: {}, { pk, email }: GQLQueryUserArgs, context: RequestContext) {
+            let user;
+            if (email) {
+                user = await context.batched.User.get(
+                    { email },
+                    {
+                        using: GQLUserIndex.IndexByEmailOnlyPk,
+                    }
+                );
+            } else if (pk) {
+                user = await context.batched.User.get(UserPK.parse(pk));
+            }
+            if (!user) {
+                throw new BadInput("id or email required");
+            }
             if (!(await Can.viewUser(user, context))) {
                 throw new Denied();
             }
@@ -220,9 +235,7 @@ export const userResolvers: GQLResolvers & {
             if (!(await Can.createUser({ email }, context))) {
                 throw new Denied();
             }
-            let user = await context.batched.User.create({
-                email,
-            });
+            let user = await createUserWithEmail(context, email);
             return user;
         },
     },

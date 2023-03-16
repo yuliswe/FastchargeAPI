@@ -92,7 +92,7 @@ export const Can = {
         }
     },
     async viewAppFilter<App extends { owner: string }>(arr: App[], context: RequestContext): Promise<App[]> {
-        let results: any[] = [];
+        let results: App[] = [];
         for await (let [canView, item] of Can.viewAppIter(arr, context)) {
             if (canView) {
                 results.push(item);

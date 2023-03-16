@@ -68,7 +68,7 @@ export const subscribeResolvers: GQLResolvers = {
                 throw new Denied();
             }
             await context.batched.Pricing.get(PricingPK.parse(pricing)); // Checks if the pricing plan exists
-            await context.batched.User.get({ email: subscriber }); // Checks if the user exists
+            await context.batched.User.get(UserPK.parse(subscriber)); // Checks if the user exists
             let Subscribe = await context.batched.Subscription.create({
                 app,
                 pricing,

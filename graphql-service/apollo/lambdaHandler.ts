@@ -7,6 +7,7 @@ import { BadInput, Unauthorized } from "./errors";
 import { RequestContext, RequestService, createDefaultContextBatched } from "./RequestContext";
 import { Chalk } from "chalk";
 import { LambdaRequest, LambdaResponse } from "@as-integrations/aws-lambda/dist/middleware";
+import { createUserIDFromEmail } from "./functions/user";
 
 const chalk = new Chalk({ level: 3 });
 
@@ -155,10 +156,9 @@ let handle = startServerAndCreateLambdaHandler(
 );
 
 async function createUserIfNotExists(email: string) {
-    if (!(await batched.User.exists({ email }))) {
-        await batched.User.create({
-            email,
-        });
+    let id = createUserIDFromEmail(email);
+    if (!(await batched.User.exists({ id }))) {
+        await batched.User.create({ id, email });
     }
 }
 

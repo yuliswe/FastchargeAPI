@@ -114,7 +114,7 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
                 user,
                 amount,
                 currency,
-                stripePaymentStatus: stripePaymentStatus as any,
+                stripePaymentStatus,
                 stripeSessionId,
                 stripePaymentIntent,
                 stripeSessionObject: JSON.parse(stripeSessionObject),

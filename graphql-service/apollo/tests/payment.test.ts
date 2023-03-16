@@ -6,6 +6,9 @@ import { stripePaymentAcceptResolvers } from "../resolvers/payment";
 import { getUserBalance } from "../functions/account";
 import Decimal from "decimal.js-light";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
+import { createUserWithEmail } from "../functions/user";
+import { GQLUserIndex } from "../__generated__/resolvers-types";
+import { UserPK } from "../pks/UserPK";
 
 let context: RequestContext = {
     batched: createDefaultContextBatched(),
@@ -18,14 +21,13 @@ describe("Payment API", () => {
     let user: User;
     test("create a User", async () => {
         try {
-            user = await context.batched.User.create({
-                email: "testuser1.fastchargeapi@gmail.com",
-            });
+            user = await createUserWithEmail(context, "testuser1.fastchargeapi@gmail.com");
         } catch (e) {
             if (e instanceof AlreadyExists) {
-                user = await context.batched.User.get({
-                    email: "testuser1.fastchargeapi@gmail.com",
-                });
+                user = await context.batched.User.get(
+                    { email: "testuser1.fastchargeapi@gmail.com" },
+                    { using: GQLUserIndex.IndexByEmailOnlyPk }
+                );
             } else {
                 throw e;
             }
@@ -35,37 +37,32 @@ describe("Payment API", () => {
 
     let stripePaymentAccept: StripePaymentAccept;
     test("Create a StripePayment", async () => {
-        stripePaymentAccept = (await stripePaymentAcceptResolvers.Mutation!.createStripePaymentAccept!(
-            {},
-            {
-                user: user.email,
-                amount: "1",
-                currency: "usd",
-                stripePaymentStatus: "paid",
-                stripeSessionId: "test",
-                stripePaymentIntent: "test",
-                stripeSessionObject: "{}",
-            },
-            context,
-            {} as any
-        ))!;
+        stripePaymentAccept = await context.batched.StripePaymentAccept.create({
+            user: UserPK.stringify(user),
+            amount: "1",
+            currency: "usd",
+            stripePaymentStatus: "paid",
+            stripeSessionId: "test",
+            stripePaymentIntent: "test",
+            stripeSessionObject: {},
+        });
         expect(stripePaymentAccept).not.toBe(null);
     });
 
     test("Settle the payment", async () => {
-        let oldBalance = new Decimal(await getUserBalance(context, user!.email));
+        let oldBalance = new Decimal(await getUserBalance(context, UserPK.stringify(user!)));
         stripePaymentAccept = (await stripePaymentAcceptResolvers.StripePaymentAccept.settlePayment(
             stripePaymentAccept,
             { stripeSessionObject: "{}" },
             context,
-            {} as any
+            {} as never
         ))!;
         expect(stripePaymentAccept).not.toBe(null);
         expect(stripePaymentAccept.accountActivity).not.toBe(null);
         expect(stripePaymentAccept.accountActivity.length).not.toBe(0);
 
         context.batched.AccountHistory.clearCache();
-        let newBalance = new Decimal(await getUserBalance(context, user!.email));
+        let newBalance = new Decimal(await getUserBalance(context, UserPK.stringify(user!)));
         expect(newBalance).toEqual(oldBalance.plus(1));
 
         // Examine the account activity

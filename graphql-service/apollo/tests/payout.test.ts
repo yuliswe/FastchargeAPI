@@ -8,6 +8,9 @@ import Decimal from "decimal.js-light";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { stripeTransferResolvers } from "../resolvers/transfer";
 import { GraphQLResolveInfo } from "graphql";
+import { createUserWithEmail } from "../functions/user";
+import { GQLUserIndex } from "../__generated__/resolvers-types";
+import { UserPK } from "../pks/UserPK";
 
 let context: RequestContext = {
     batched: createDefaultContextBatched(),
@@ -18,16 +21,15 @@ let context: RequestContext = {
 // jest.retryTimes(2);
 describe("Payout API", () => {
     let user: User;
-    test("create a User", async () => {
+    test("Prepration: create a User", async () => {
         try {
-            user = await context.batched.User.create({
-                email: "testuser1.fastchargeapi@gmail.com",
-            });
+            user = await createUserWithEmail(context, "testuser1.fastchargeapi@gmail.com");
         } catch (e) {
             if (e instanceof AlreadyExists) {
-                user = await context.batched.User.get({
-                    email: "testuser1.fastchargeapi@gmail.com",
-                });
+                user = await context.batched.User.get(
+                    { email: "testuser1.fastchargeapi@gmail.com" },
+                    { using: GQLUserIndex.IndexByEmailOnlyPk }
+                );
             } else {
                 throw e;
             }
@@ -35,21 +37,16 @@ describe("Payout API", () => {
         expect(user).not.toBe(null);
     });
 
-    test("Add monty to the account", async () => {
-        let stripePaymentAccept = (await stripePaymentAcceptResolvers.Mutation!.createStripePaymentAccept!(
-            {},
-            {
-                user: user.email,
-                amount: "100",
-                currency: "usd",
-                stripePaymentStatus: "paid",
-                stripeSessionId: "test",
-                stripePaymentIntent: "test",
-                stripeSessionObject: "{}",
-            },
-            context,
-            {} as GraphQLResolveInfo
-        ))!;
+    test("Prepration: Add monty to the account", async () => {
+        let stripePaymentAccept = await context.batched.StripePaymentAccept.create({
+            user: UserPK.stringify(user),
+            amount: "100",
+            currency: "usd",
+            stripePaymentStatus: "paid",
+            stripeSessionId: "test",
+            stripePaymentIntent: "test",
+            stripeSessionObject: {},
+        });
 
         await stripePaymentAcceptResolvers.StripePaymentAccept.settlePayment(
             stripePaymentAccept,
@@ -59,12 +56,12 @@ describe("Payout API", () => {
         );
     });
 
-    test("Withdraw the money", async () => {
-        let balanceBefore = new Decimal(await getUserBalance(context, user.email));
+    test("Test: Withdraw the money", async () => {
+        let balanceBefore = new Decimal(await getUserBalance(context, UserPK.stringify(user)));
         let transfer = await stripeTransferResolvers.Mutation?.createStripeTransfer!(
             {},
             {
-                receiver: user.email,
+                receiver: UserPK.stringify(user),
                 withdrawAmount: "100",
                 receiveAmount: "75",
                 currency: "usd",
@@ -98,7 +95,7 @@ describe("Payout API", () => {
 
         // Examine new balance
         let balanceAfter = new Decimal(
-            await getUserBalance(context, user.email, {
+            await getUserBalance(context, UserPK.stringify(user), {
                 refresh: true,
                 // consistent: true,
             })

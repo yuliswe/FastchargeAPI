@@ -6,7 +6,7 @@ import { Chalk } from "chalk";
 
 const chalk = new Chalk({ level: 3 });
 
-export function handleError(formattedError: GraphQLFormattedError, error: any): GraphQLFormattedError {
+export function handleError(formattedError: GraphQLFormattedError, error: unknown): GraphQLFormattedError {
     let originalError = unwrapResolverError(error);
     console.error(chalk.red(JSON.stringify(originalError)));
     console.error(originalError);

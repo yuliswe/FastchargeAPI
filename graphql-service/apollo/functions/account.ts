@@ -140,11 +140,11 @@ export async function settleAccountActivities(
 
 /**
  * The balance is the closing balance of the most recent account history.
- * @param user
+ * @param userPK
  */
 export async function getUserBalance(
     context: RequestContext,
-    user: string,
+    userPK: string,
     {
         refresh,
         consistent,
@@ -158,7 +158,7 @@ export async function getUserBalance(
     }
     let accountHistory = await context.batched.AccountHistory.getOrNull(
         {
-            user: user,
+            user: userPK,
         },
         {
             sort: "descending",

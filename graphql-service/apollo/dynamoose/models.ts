@@ -64,7 +64,7 @@ class ValidationError {
 const defaultCreatedAt = (async () => {
     await new Promise((resolve) => setTimeout(resolve, 1));
     return Date.now();
-}) as any;
+}) as unknown as () => number;
 
 function String_Required_NotEmpty(fieldName: string) {
     return {
@@ -88,7 +88,16 @@ const validateStringDecimal = (fieldName: string) => (str: string) => {
 
 const UserTableSchema = new dynamoose.Schema(
     {
-        email: { type: String, hashKey: true },
+        id: { type: String, hashKey: true },
+        email: {
+            type: String,
+            required: true,
+            index: {
+                type: "global",
+                name: "indexByEmail__onlyPK",
+                project: ["id"],
+            },
+        },
         author: { type: String, default: "" },
         stripeCustomerId: { type: String, required: false }, // Available after the user first tops up their account
         stripeConnectAccountId: { type: String, required: false }, // Available after the user first onboards their Stripe account
@@ -483,6 +492,7 @@ export class Endpoint extends Item {
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
 export class User extends Item {
+    id: string;
     email: string;
     author: string;
     balance: string;
@@ -525,7 +535,7 @@ export class Subscription extends Item {
  * The server periodically collects the queue and creates UsageSummary items.
  */
 export class UsageLog extends Item {
-    subscriber: string; // Email of the user who made the API request
+    subscriber: string; // User who made the API request
     app: string;
     path: string;
     createdAt: number;
