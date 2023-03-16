@@ -15,6 +15,7 @@ let context: RequestContext = {
     batched: createDefaultContextBatched(),
     isServiceRequest: false,
     isSQSMessage: true,
+    isAnonymousUser: false,
 };
 // jest.retryTimes(2);
 describe("Usage API", () => {

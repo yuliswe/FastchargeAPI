@@ -5,10 +5,11 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "sam build",
+    "build": "npm run typecheck && sam build",
     "start": "npm run build && sam local start-api -p 4000 --warm-containers lazy --env-vars ./devenv.json",
     "logs": "sam logs --stack-name graphql-service --tail",
-    "deploy": "npm run build && sam deploy"
+    "deploy": "npm run build && sam deploy",
+    "typecheck": "cd ../payment-service && tsc --noEmit && cd ../auth-service && tsc --noEmit"
   },
   "author": "",
   "license": "ISC",

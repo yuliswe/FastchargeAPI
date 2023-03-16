@@ -8,6 +8,7 @@ let context: RequestContext = {
     batched: createDefaultContextBatched(),
     isServiceRequest: false,
     isSQSMessage: false,
+    isAnonymousUser: false,
 };
 // jest.retryTimes(2);
 describe("APP API", () => {

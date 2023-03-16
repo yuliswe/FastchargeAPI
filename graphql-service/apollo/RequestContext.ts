@@ -21,6 +21,7 @@ import {
 export type RequestService = "payment" | "gateway" | "internal";
 export interface RequestContext extends BaseContext {
     currentUser?: string;
+    isAnonymousUser?: boolean;
     service?: RequestService;
     isServiceRequest: boolean;
     batched: ReturnType<typeof createDefaultContextBatched>;

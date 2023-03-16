@@ -14,24 +14,17 @@ let { url } = await startStandaloneServer<RequestContext>(server, {
         // The batcher must be created for every request in order for it to
         // function properly.
         let batched = createDefaultContextBatched();
-        if (email) {
-            try {
-                let user = await batched.User.get(email);
-            } catch (e) {
-                if (e instanceof NotFound) {
-                    await batched.User.create({
-                        email: email,
-                    });
-                } else {
-                    throw e;
-                }
-            }
+        if (email && !(await batched.User.exists({ email }))) {
+            await batched.User.create({
+                email: email,
+            });
         }
         return Promise.resolve({
             currentUser: email,
             batched,
             isServiceRequest: false,
             isSQSMessage: false,
+            isAnonymousUser: email == undefined,
         });
     },
 });

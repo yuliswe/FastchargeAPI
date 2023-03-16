@@ -4,7 +4,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { createRequestHandler } from "@as-integrations/aws-lambda/dist/request-handlers/_create";
 import { HeaderMap } from "@apollo/server";
 import { BadInput, Unauthorized } from "./errors";
-import { RequestService, createDefaultContextBatched } from "./RequestContext";
+import { RequestContext, RequestService, createDefaultContextBatched } from "./RequestContext";
 import { Chalk } from "chalk";
 import { LambdaRequest, LambdaResponse } from "@as-integrations/aws-lambda/dist/middleware";
 
@@ -99,7 +99,7 @@ let handle = startServerAndCreateLambdaHandler(
         }
     ),
     {
-        context({ event }: { event: APIGatewayProxyEvent }) {
+        context({ event }: { event: APIGatewayProxyEvent }): Promise<RequestContext> {
             let userEmail: string | undefined = undefined;
             let domain = event.requestContext.domainName || "";
             let serviceName: RequestService | undefined = undefined;
@@ -140,6 +140,7 @@ let handle = startServerAndCreateLambdaHandler(
                 isServiceRequest,
                 batched: createDefaultContextBatched(),
                 isSQSMessage: false,
+                isAnonymousUser: userEmail == undefined,
             });
         },
         middleware: [corsMiddleware],

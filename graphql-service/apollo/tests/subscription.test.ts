@@ -16,6 +16,7 @@ let context: RequestContext = {
     batched: createDefaultContextBatched(),
     isSQSMessage: true,
     isServiceRequest: false,
+    isAnonymousUser: false,
 };
 // jest.retryTimes(2);
 describe("Test when making a request the monthly subscription fee is charged.", () => {
