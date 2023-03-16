@@ -44,6 +44,10 @@ func lambdaHandler(request events.APIGatewayV2CustomAuthorizerV2Request) (*event
 		return allowed(user), nil
 	}
 
+	if os.Getenv("AllowAnonymousUser") == "1" {
+		return allowedAnonymousUser(), nil
+	}
+
 	return denied(), nil
 }
 
@@ -61,7 +65,7 @@ func allowPreflight() *events.APIGatewayV2CustomAuthorizerIAMPolicyResponse {
 			},
 		},
 		Context: map[string]interface{}{
-			"anonymousUser": "true",
+			"isAnonymousUser": "true",
 		},
 	}
 }
@@ -80,9 +84,28 @@ func allowed(user *UserClaims) *events.APIGatewayV2CustomAuthorizerIAMPolicyResp
 			},
 		},
 		Context: map[string]interface{}{
-			"anonymousUser":  "false",
-			"userEmail":      user.Email,
-			"firebaseUserId": user.Sub,
+			"isAnonymousUser": "false",
+			"userEmail":       user.Email,
+			"firebaseUserId":  user.Sub,
+		},
+	}
+}
+
+func allowedAnonymousUser() *events.APIGatewayV2CustomAuthorizerIAMPolicyResponse {
+	return &events.APIGatewayV2CustomAuthorizerIAMPolicyResponse{
+		PrincipalID: "ANONYMOUS_USER",
+		PolicyDocument: events.APIGatewayCustomAuthorizerPolicy{
+			Version: "2012-10-17",
+			Statement: []events.IAMPolicyStatement{
+				{
+					Action:   []string{"execute-api:Invoke"},
+					Effect:   "Allow",
+					Resource: []string{"arn:aws:execute-api:*:*:*"},
+				},
+			},
+		},
+		Context: map[string]interface{}{
+			"isAnonymousUser": "true",
 		},
 	}
 }
