@@ -61,12 +61,11 @@ fastcharge app create [NAME]
 ```
 
 Replace the `[NAME]` with a name you desire for the app. The name is
-**case-insensitive**, unique (not registered by someone else), and must satisfy:
+**case-insensitive**, unique (not registered by someone else), and must:
 
-* Have a length no greater than 30.
-* Must begin and end with an alpha-numeric (i.e. letters [A-Za-z] or digits
-[0-9]).
-* May contain hyphens (dashes), but may not begin or end with a hyphen.
+* Have a length between 2 and 63 characters.
+* Contain only lower case letters [a-z], digits [0-9], or hyphens [-].
+* Not begin or end with a hyphen.
 
 For example, we use `myapp` as the app name:
 
