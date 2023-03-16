@@ -18,7 +18,8 @@
     "start": "npm run build && sam local start-api -p 7000",
     "watch": "nodemon -e go,graphql,yaml.json,ts -i generated__graphql.go -i __generated__ --signal SIGINT -x 'npm run start || exit 1'",
     "test": "jest --runInBand",
-    "fix": "eslint --fix ./"
+    "fix": "eslint --fix ./",
+    "typecheck": "npm run gen && tsc --noEmit"
   },
   "author": "",
   "license": "ISC",
