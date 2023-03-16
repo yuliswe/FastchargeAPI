@@ -17,12 +17,12 @@ function WithContext(props: React.PropsWithChildren) {
         let auth = getAuth(firebaseApp);
         if (auth.currentUser) {
             resolve(auth.currentUser);
-        } else {
-            void signInAnonymously(auth);
         }
         useEffect(() => {
             auth.onAuthStateChanged((user) => {
-                if (user != null) {
+                if (user == null) {
+                    void signInAnonymously(auth);
+                } else {
                     resolve(user);
                     setFirebaseUser(user);
                     setIsAnonymousUser(user.isAnonymous);

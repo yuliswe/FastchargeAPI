@@ -30,15 +30,14 @@ class _SearchResultPage extends React.Component<Props, {}> {
     get _context(): AppContext {
         return this.context as AppContext;
     }
-    
+
     componentDidMount(): void {
-        console.log("SearchResultPage.componentDidMount");
-        appStore.dispatch(new AppSearchResultEvent.SearchResultEvent(this._context, this._context.route.query.get("q")!));
+        appStore.dispatch(
+            new AppSearchResultEvent.SearchResultEvent(this._context, this._context.route.query.get("q")!)
+        );
     }
 
-    searchResultPageChangeHandler: PaginatedListOnPageChangeHandler = ({
-        page,
-    }) => {
+    searchResultPageChangeHandler: PaginatedListOnPageChangeHandler = ({ page }) => {
         appStore.dispatch(
             new AppSearchResultEvent.SearchResultEvent(this._context, this._context.route.query.get("q")!)
         );
@@ -56,9 +55,7 @@ class _SearchResultPage extends React.Component<Props, {}> {
                         <Grid item xs={3} pl={5}>
                             <Typography variant="h6" my={5}>
                                 {this.props.searchResultState.searchResults.length} result
-                                {this.props.searchResultState.searchResults.length > 1 &&
-                                    "s"}{" "}
-                                found
+                                {this.props.searchResultState.searchResults.length > 1 && "s"} found
                             </Typography>
                             <Typography variant="body1" my={1}>
                                 Sort results
@@ -80,11 +77,7 @@ class _SearchResultPage extends React.Component<Props, {}> {
                                         // });
                                     }}
                                 >
-                                    <FormControlLabel
-                                        value="exact-match"
-                                        control={<Radio />}
-                                        label="Exact match"
-                                    />
+                                    <FormControlLabel value="exact-match" control={<Radio />} label="Exact match" />
                                     <FormControlLabel
                                         value="github-popularity"
                                         control={<Radio />}
@@ -112,11 +105,10 @@ class _SearchResultPage extends React.Component<Props, {}> {
     }
 }
 
-const generateAppSearchResultComponents = (
-    searchResults: SearchResult[]
-): JSX.Element[] => {
-    return searchResults.map((result) => (
+const generateAppSearchResultComponents = (searchResults: SearchResult[]): JSX.Element[] => {
+    return searchResults.map((result, index) => (
         <Paper
+            key={index}
             sx={{
                 py: 3,
                 borderBottom: 1,
@@ -124,10 +116,7 @@ const generateAppSearchResultComponents = (
                 bgcolor: "transparent",
             }}
         >
-            <Link
-                href={`/apis/appname`}
-                underline="hover"
-            >
+            <Link href={`/apis/appname`} underline="hover">
                 <Typography variant="h6" my={2}>
                     {result.name}
                 </Typography>
@@ -135,25 +124,16 @@ const generateAppSearchResultComponents = (
             <Typography variant="body1" my={2}>
                 {result.description}
             </Typography>
-            <Stack
-                direction="row"
-                spacing={1}
-                alignItems="center"
-            >
+            <Stack direction="row" spacing={1} alignItems="center">
                 <Avatar src="./logo192.png" />
-                <Typography
-                    variant="body1"
-                    fontWeight={500}
-                >
+                <Typography variant="body1" fontWeight={500}>
                     {result.owner.author}
                 </Typography>
             </Stack>
         </Paper>
     ));
-}
+};
 
-export const SearchResultPage = connect<Props, {}, {}, RootAppState>(
-    (rootAppState: RootAppState) => ({
-        searchResultState: rootAppState.search,
-    })
-)(_SearchResultPage);
+export const SearchResultPage = connect<Props, {}, {}, RootAppState>((rootAppState: RootAppState) => ({
+    searchResultState: rootAppState.search,
+}))(_SearchResultPage);
