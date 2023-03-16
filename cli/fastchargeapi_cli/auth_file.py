@@ -80,7 +80,6 @@ class RefreshIdTokenResult:
 def refresh_id_token(
     refresh_token: str,
 ) -> RefreshIdTokenResult:
-    print("refresh_id_token")
     resp = requests.post(
         f"{config.auth_service_host}/refresh-idtoken",
         json={"refreshToken": refresh_token},
@@ -122,14 +121,25 @@ def verify_id_token(id_token: str):
         return None
 
 
-def get_token_or_refresh(id_token: str, refresh_token: str):
+@dataclass
+class GetOrRefreshIdTokenResult:
+    id_token: str
+    refresh_token: str
+
+
+def get_or_refresh_token(
+    id_token: str, refresh_token: str
+) -> GetOrRefreshIdTokenResult:
     """Verifies the id token. Refresh the id token if necessary."""
     if verify_id_token(id_token) is None:
-        new_id_token = refresh_id_token(refresh_token)
-        write_to_auth_file(new_id_token, refresh_token)
-        return new_id_token
+        result = refresh_id_token(refresh_token)
+        write_to_auth_file(result.id_token, result.refresh_token)
+        return GetOrRefreshIdTokenResult(
+            id_token=result.id_token,
+            refresh_token=result.refresh_token,
+        )
     else:
-        return id_token
+        return GetOrRefreshIdTokenResult(id_token=id_token, refresh_token=refresh_token)
 
 
 def get_or_refresh_id_token_from_auth_file() -> Optional[str]:
@@ -137,6 +147,6 @@ def get_or_refresh_id_token_from_auth_file() -> Optional[str]:
     None. If the id token is invalid, refresh it and return the new id token. If
     unable to refresh, return None."""
     if auth := read_auth_file():
-        if token := get_token_or_refresh(auth["id_token"], auth["refresh_token"]):
-            return token
+        if token := get_or_refresh_token(auth["id_token"], auth["refresh_token"]):
+            return token.id_token
     return None

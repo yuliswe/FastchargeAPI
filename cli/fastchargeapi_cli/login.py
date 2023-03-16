@@ -8,7 +8,7 @@ from .groups import fastcharge, fastapi
 from . import config
 from click import echo
 from .auth_file import (
-    get_token_or_refresh,
+    get_or_refresh_token,
     get_or_refresh_id_token_from_auth_file,
     write_to_auth_file,
     auth_file_path,
@@ -51,7 +51,7 @@ def do_login():
             input("Timed out. Press enter to retry.")
             continue
     write_to_auth_file(id_token, refresh_token)
-    token = get_token_or_refresh(id_token, refresh_token)
+    token = get_or_refresh_token(id_token, refresh_token)
     if os.environ.get("SHOW_AUTH") == "1":
         echo(token)
 
