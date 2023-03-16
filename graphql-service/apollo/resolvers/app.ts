@@ -1,29 +1,34 @@
 import { GraphQLResolveInfo } from "graphql";
 import { App, GatewayMode } from "../dynamoose/models";
-import { Denied } from "../errors";
+import { BadInput, Denied } from "../errors";
 import { Can } from "../permissions";
 import { RequestContext } from "../RequestContext";
 import {
+    GQLAppResolvers,
     GQLAppUpdateAppArgs,
     GQLMutationCreateAppArgs,
     GQLQueryAppArgs,
     GQLQueryAppFullTextSearchArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
+import { isValidAppName } from "../functions/app";
 
-export const appResolvers: GQLResolvers = {
+export const appResolvers: GQLResolvers & {
+    App: GQLAppResolvers;
+} = {
     App: {
-        async name(parent, args, context, info) {
-            let app = await context.batched.App.get(parent.name);
-            return app.name;
-        },
+        name: (parent) => parent.name,
+        title: (parent) => parent.title,
+        description: (parent) => parent.description,
+        repository: (parent) => parent.repository,
+        homepage: (parent) => parent.homepage,
+        gatewayMode: (parent) => parent.gatewayMode,
         async endpoints(parent, args, context) {
             let endpoints = await context.batched.Endpoint.many({
                 app: parent.name,
             });
             return endpoints;
         },
-        gatewayMode: (parent) => parent.gatewayMode || GatewayMode.proxy,
         async owner(parent, args, context, info) {
             let user = await context.batched.User.get(parent.owner);
             if (!(await Can.viewUser(user, context))) {
@@ -36,14 +41,9 @@ export const appResolvers: GQLResolvers = {
                 app: parent.name,
             });
         },
-        async description(parent, args, context, info) {
-            let app = await context.batched.App.get(parent.name);
-            return app.description || "";
-        },
-        ownedByYou: (parent, args, { currentUser }) => parent.owner === currentUser,
         async updateApp(
             { name }: App,
-            args: GQLAppUpdateAppArgs,
+            { title, description, homepage, repository }: GQLAppUpdateAppArgs,
             context: RequestContext,
             info: GraphQLResolveInfo
         ): Promise<App> {
@@ -51,7 +51,7 @@ export const appResolvers: GQLResolvers = {
             if (!(await Can.updateApp(app, context))) {
                 throw new Denied();
             }
-            return await context.batched.App.update({ name }, args);
+            return await context.batched.App.update({ name }, { title, description, homepage, repository });
         },
         async deleteApp(parent, args: never, context, info) {
             if (!(await Can.deleteApp(parent, context))) {
@@ -98,17 +98,21 @@ export const appResolvers: GQLResolvers = {
     Mutation: {
         async createApp(
             parent: {},
-            { description, gatewayMode, homepage, name, owner, repository }: GQLMutationCreateAppArgs,
+            { owner, name, title, description, gatewayMode, homepage, repository }: GQLMutationCreateAppArgs,
             context: RequestContext
         ): Promise<App> {
             if (!(await Can.createApp({ owner }, context))) {
                 throw new Denied();
             }
+            if (!isValidAppName(name)) {
+                throw new BadInput("Invalid app name: " + name);
+            }
             return await context.batched.App.create({
+                name,
+                title,
                 description,
                 gatewayMode,
                 homepage,
-                name,
                 owner,
                 repository,
             });

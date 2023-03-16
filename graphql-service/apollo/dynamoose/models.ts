@@ -1,6 +1,7 @@
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
 import { TableClass } from "dynamoose/dist/Table/types";
+import { isValidAppName } from "../functions/app";
 
 let MAKE_TABLE = false;
 
@@ -100,7 +101,7 @@ const UserTableSchema = new dynamoose.Schema(
 
 const AppTableSchema = new dynamoose.Schema(
     {
-        name: { hashKey: true, type: String, required: true },
+        name: { hashKey: true, type: String, required: true, validate: isValidAppName },
         owner: {
             type: String,
             required: true,
@@ -110,6 +111,7 @@ const AppTableSchema = new dynamoose.Schema(
                 project: ["name", "owner"],
             },
         },
+        title: { type: String, required: false },
         gatewayMode: { type: String, default: "proxy", enum: ["proxy", "redirect"] },
         description: { default: "", type: String },
         repository: { default: "", type: String },
@@ -461,6 +463,7 @@ const UserAppTokenTableSchema = new dynamoose.Schema(
 export class App extends Item {
     name: string;
     owner: string;
+    title: string;
     description: string;
     gatewayMode: GatewayMode;
     repository: string;

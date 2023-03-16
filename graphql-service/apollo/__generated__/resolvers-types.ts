@@ -85,21 +85,23 @@ export type GQLAccountHistory = {
 export type GQLApp = {
     __typename?: "App";
     deleteApp: GQLApp;
-    description: Scalars["String"];
+    description?: Maybe<Scalars["String"]>;
     endpoints: Array<GQLEndpoint>;
     gatewayMode: GatewayMode;
     homepage?: Maybe<Scalars["String"]>;
     name: Scalars["String"];
-    ownedByYou: Scalars["Boolean"];
     owner: GQLUser;
     pricingPlans: Array<GQLPricing>;
     repository?: Maybe<Scalars["String"]>;
+    title?: Maybe<Scalars["String"]>;
     updateApp: GQLApp;
 };
 
 export type GQLAppUpdateAppArgs = {
     description?: InputMaybe<Scalars["String"]>;
-    gatewayMode?: InputMaybe<GatewayMode>;
+    homepage?: InputMaybe<Scalars["String"]>;
+    repository?: InputMaybe<Scalars["String"]>;
+    title?: InputMaybe<Scalars["String"]>;
 };
 
 export enum GQLAppIndex {
@@ -179,6 +181,7 @@ export type GQLMutationCreateAppArgs = {
     name: Scalars["String"];
     owner: Scalars["String"];
     repository?: InputMaybe<Scalars["String"]>;
+    title?: InputMaybe<Scalars["String"]>;
 };
 
 export type GQLMutationCreateEndpointArgs = {
@@ -670,15 +673,15 @@ export type GQLAppResolvers<
     ParentType extends GQLResolversParentTypes["App"] = GQLResolversParentTypes["App"]
 > = ResolversObject<{
     deleteApp?: Resolver<GQLResolversTypes["App"], ParentType, ContextType>;
-    description?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
+    description?: Resolver<Maybe<GQLResolversTypes["String"]>, ParentType, ContextType>;
     endpoints?: Resolver<Array<GQLResolversTypes["Endpoint"]>, ParentType, ContextType>;
     gatewayMode?: Resolver<GQLResolversTypes["GatewayMode"], ParentType, ContextType>;
     homepage?: Resolver<Maybe<GQLResolversTypes["String"]>, ParentType, ContextType>;
     name?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
-    ownedByYou?: Resolver<GQLResolversTypes["Boolean"], ParentType, ContextType>;
     owner?: Resolver<GQLResolversTypes["User"], ParentType, ContextType>;
     pricingPlans?: Resolver<Array<GQLResolversTypes["Pricing"]>, ParentType, ContextType>;
     repository?: Resolver<Maybe<GQLResolversTypes["String"]>, ParentType, ContextType>;
+    title?: Resolver<Maybe<GQLResolversTypes["String"]>, ParentType, ContextType>;
     updateApp?: Resolver<GQLResolversTypes["App"], ParentType, ContextType, Partial<GQLAppUpdateAppArgs>>;
     __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;

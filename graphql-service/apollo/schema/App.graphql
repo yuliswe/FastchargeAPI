@@ -47,6 +47,7 @@ type Mutation {
     createApp(
         name: String!
         owner: String!
+        title: String
         gatewayMode: GatewayMode = proxy
         description: String
         repository: String
@@ -161,17 +162,17 @@ enum SortDirection {
 
 type App {
     name: String!
-    description: String!
     owner: User!
+    title: String
+    description: String
     gatewayMode: GatewayMode!
     repository: String
     homepage: String
 
     endpoints: [Endpoint!]!
-    ownedByYou: Boolean!
     pricingPlans: [Pricing!]!
 
-    updateApp(description: String, gatewayMode: GatewayMode): App!
+    updateApp(title: String, description: String, homepage: String, repository: String): App!
     deleteApp: App!
 }
 

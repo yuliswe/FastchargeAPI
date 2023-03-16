@@ -63,21 +63,23 @@ export type GQLAccountHistory = {
 export type GQLApp = {
     __typename?: "App";
     deleteApp: GQLApp;
-    description: Scalars["String"];
+    description?: Maybe<Scalars["String"]>;
     endpoints: Array<GQLEndpoint>;
     gatewayMode: GQLGatewayMode;
     homepage?: Maybe<Scalars["String"]>;
     name: Scalars["String"];
-    ownedByYou: Scalars["Boolean"];
     owner: GQLUser;
     pricingPlans: Array<GQLPricing>;
     repository?: Maybe<Scalars["String"]>;
+    title?: Maybe<Scalars["String"]>;
     updateApp: GQLApp;
 };
 
 export type GQLAppUpdateAppArgs = {
     description?: InputMaybe<Scalars["String"]>;
-    gatewayMode?: InputMaybe<GQLGatewayMode>;
+    homepage?: InputMaybe<Scalars["String"]>;
+    repository?: InputMaybe<Scalars["String"]>;
+    title?: InputMaybe<Scalars["String"]>;
 };
 
 export enum GQLAppIndex {
@@ -160,6 +162,7 @@ export type GQLMutationCreateAppArgs = {
     name: Scalars["String"];
     owner: Scalars["String"];
     repository?: InputMaybe<Scalars["String"]>;
+    title?: InputMaybe<Scalars["String"]>;
 };
 
 export type GQLMutationCreateEndpointArgs = {

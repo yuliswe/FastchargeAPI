@@ -34,7 +34,7 @@ describe("APP API", () => {
         // delete the app if it already exists
         try {
             await context.batched.App.delete({
-                name: "Test App",
+                name: "test-app",
             });
         } catch (e) {
             //
@@ -42,8 +42,9 @@ describe("APP API", () => {
         let app = await appResolvers.Mutation?.createApp?.(
             {},
             {
-                name: "Test App",
-                description: "Test App Description",
+                name: "test-app",
+                title: "Test App",
+                description: "TestApp Description",
                 owner: user.email,
                 homepage: "https://fastchargeapi.com",
                 repository: "",
@@ -53,8 +54,8 @@ describe("APP API", () => {
             {} as any
         );
         expect(app).not.toBe(null);
-        expect(app?.name).toBe("Test App");
-        expect(app?.description).toBe("Test App Description");
+        expect(app?.name).toBe("test-app");
+        expect(app?.description).toBe("TestApp Description");
         expect(app?.owner).toBe(user.email);
         expect(app?.homepage).toBe("https://fastchargeapi.com");
         expect(app?.repository).toBe("");
