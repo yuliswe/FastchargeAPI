@@ -63,11 +63,7 @@ export class AppBar extends React.Component<Props, State> {
     handleLogout = (event: React.MouseEvent<HTMLElement>) => {
         void (async () => {
             await getAuth().signOut();
-            this._context.route?.navigate({
-                pathname: "/",
-            });
-            this.handleClose();
-            window.location.reload();
+            document.location.href = "/";
         })();
     };
 
@@ -187,7 +183,7 @@ export class AppBar extends React.Component<Props, State> {
                                 </Paper>
                             </Stack>
                             <Stack>
-                                {!this._context.isLoggedIn && (
+                                {this._context.firebase.isAnonymousUser && (
                                     <Button
                                         sx={{
                                             color: "black",
@@ -199,7 +195,7 @@ export class AppBar extends React.Component<Props, State> {
                                         <Typography>Sign In</Typography>
                                     </Button>
                                 )}
-                                {this._context.isLoggedIn && (
+                                {!this._context.firebase.isAnonymousUser && (
                                     <React.Fragment>
                                         <Button
                                             size="small"

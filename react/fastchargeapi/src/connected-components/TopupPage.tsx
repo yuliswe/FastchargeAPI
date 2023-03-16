@@ -117,8 +117,7 @@ class _TopUp extends React.Component<_Props, _State> {
     }
 
     async isLoggedIn() {
-        console.log((await this._context.firebase.userPromise) != null);
-        return (await this._context.firebase.userPromise) != null;
+        return !(await this._context.firebase.isAnonymousUserPromise);
     }
 
     /**

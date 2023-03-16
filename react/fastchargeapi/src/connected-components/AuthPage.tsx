@@ -3,14 +3,7 @@ import { connect } from "react-redux";
 import { RootAppState } from "../states/RootAppState";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { encryptAndSign } from "../graphql-client";
-import {
-    Button,
-    Container,
-    Fade,
-    Grid,
-    Stack,
-    Typography,
-} from "@mui/material";
+import { Button, Container, Fade, Grid, Stack, Typography } from "@mui/material";
 import {
     AuthProvider,
     GithubAuthProvider,
@@ -65,9 +58,7 @@ class _AuthPage extends React.Component<_Props, _State> {
         if (!hexString) {
             throw new Error("jwt is missing from the url");
         }
-        const bytes = new Uint8Array(
-            hexString.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16))
-        );
+        const bytes = new Uint8Array(hexString.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)));
         return bytes;
     }
 
@@ -76,9 +67,7 @@ class _AuthPage extends React.Component<_Props, _State> {
         if (!hexString) {
             throw new Error("jwe is missing from the url");
         }
-        const bytes = new Uint8Array(
-            hexString.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16))
-        );
+        const bytes = new Uint8Array(hexString.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)));
         return bytes;
     }
 
@@ -87,10 +76,7 @@ class _AuthPage extends React.Component<_Props, _State> {
     }
 
     reloginNeeded() {
-        return (
-            new URLSearchParams(document.location.search).get("relogin") ===
-            "true"
-        );
+        return new URLSearchParams(document.location.search).get("relogin") === "true";
     }
 
     getSignInSuccessUrl(): string {
@@ -104,10 +90,7 @@ class _AuthPage extends React.Component<_Props, _State> {
     }
 
     async onLoginSucceed(user: FirebaseUser) {
-        if (
-            this.pendingLinkAccount &&
-            this.pendingLinkAccount.email === user.email
-        ) {
+        if (this.pendingLinkAccount && this.pendingLinkAccount.email === user.email) {
             // User could be logging in with a different email
             await this.linkAccounts(user, this.pendingLinkAccount.credential);
         }
@@ -169,7 +152,7 @@ class _AuthPage extends React.Component<_Props, _State> {
         }
 
         let user = await this._context.firebase.userPromise;
-        if (user) {
+        if (!user.isAnonymous) {
             await this.onLoginSucceed(user);
         }
     }
@@ -212,14 +195,10 @@ class _AuthPage extends React.Component<_Props, _State> {
             result = await signInWithPopup(auth, provider);
         } catch (e) {
             if (e instanceof FirebaseError) {
-                if (
-                    e.code === "auth/account-exists-with-different-credential"
-                ) {
+                if (e.code === "auth/account-exists-with-different-credential") {
                     let email = e.customData?.email as string | undefined;
                     if (!email) {
-                        throw new Error(
-                            "auth/account-exists-with-different-credential error does not have an email"
-                        );
+                        throw new Error("auth/account-exists-with-different-credential error does not have an email");
                     }
                     let credential = this.credentialFromError(provider, e);
                     if (!credential) {
@@ -228,10 +207,7 @@ class _AuthPage extends React.Component<_Props, _State> {
                         );
                     }
                     this.pendingLinkAccount = { credential, email };
-                    const previousProviders = await fetchSignInMethodsForEmail(
-                        auth,
-                        email
-                    );
+                    const previousProviders = await fetchSignInMethodsForEmail(auth, email);
                     switch (previousProviders[0]) {
                         case "google.com":
                             this.setState({
@@ -244,9 +220,7 @@ class _AuthPage extends React.Component<_Props, _State> {
                             });
                             break;
                         default:
-                            throw new Error(
-                                `Unsupported provider ${previousProviders[0]}`
-                            );
+                            throw new Error(`Unsupported provider ${previousProviders[0]}`);
                     }
                 }
                 return;
@@ -302,11 +276,7 @@ class _AuthPage extends React.Component<_Props, _State> {
                         Sign in with Github
                     </Button>
                     {this.state.errorMessage && (
-                        <Typography
-                            variant="body1"
-                            color="error"
-                            maxWidth={300}
-                        >
+                        <Typography variant="body1" color="error" maxWidth={300}>
                             {this.state.errorMessage}
                         </Typography>
                     )}
@@ -328,8 +298,7 @@ class _AuthPage extends React.Component<_Props, _State> {
                         bgcolor="primary.main"
                         height="100%"
                         sx={{
-                            backgroundImage:
-                                "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
+                            backgroundImage: "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
                         }}
                     >
                         <Container maxWidth="md">
@@ -340,11 +309,7 @@ class _AuthPage extends React.Component<_Props, _State> {
                                         transitionDuration: "1s",
                                     }}
                                 >
-                                    <Typography
-                                        variant="h4"
-                                        lineHeight={1.5}
-                                        fontFamily="Ubuntu"
-                                    >
+                                    <Typography variant="h4" lineHeight={1.5} fontFamily="Ubuntu">
                                         Focus on solving what's important.
                                     </Typography>
                                 </Fade>
@@ -354,27 +319,15 @@ class _AuthPage extends React.Component<_Props, _State> {
                                         transitionDuration: "2s",
                                     }}
                                 >
-                                    <Typography
-                                        variant="h6"
-                                        fontWeight={300}
-                                    >
-                                        FastchargeAPI will take care of metering
-                                        and billing.
+                                    <Typography variant="h6" fontWeight={300}>
+                                        FastchargeAPI will take care of metering and billing.
                                     </Typography>
                                 </Fade>
                             </Stack>
                         </Container>
                     </Grid>
-                    <Grid
-                        item
-                        xs={5}
-                        display="flex"
-                        justifyContent="center"
-                        alignItems="center"
-                    >
-                        {this._context.firebase.user
-                            ? this.renderSuccessPage()
-                            : this.renderLoginPage()}
+                    <Grid item xs={5} display="flex" justifyContent="center" alignItems="center">
+                        {this._context.firebase.isAnonymousUser ? this.renderLoginPage() : this.renderSuccessPage()}
                     </Grid>
                 </Grid>
             </React.Fragment>
@@ -382,8 +335,6 @@ class _AuthPage extends React.Component<_Props, _State> {
     }
 }
 
-export const AuthPage = connect<_Props, {}, {}, RootAppState>(
-    (rootAppState: RootAppState) => ({
-        homeAppState: rootAppState.home,
-    })
-)(_AuthPage);
+export const AuthPage = connect<_Props, {}, {}, RootAppState>((rootAppState: RootAppState) => ({
+    homeAppState: rootAppState.home,
+}))(_AuthPage);

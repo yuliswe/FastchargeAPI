@@ -6,26 +6,32 @@ import React, { useEffect, useState } from "react";
 import { initializeFirebase } from "./firebase";
 import { getTheme } from "./theme";
 import { createRouter } from "./routes";
-import { User as FirebaseUser, getAuth } from "firebase/auth";
+import { User as FirebaseUser, getAuth, signInAnonymously } from "firebase/auth";
+
+let firebaseApp = initializeFirebase();
 
 function WithContext(props: React.PropsWithChildren) {
-    let firebaseApp = initializeFirebase();
-    const [firebaseUser, setFirebaseUser] = useState<null | FirebaseUser>(null);
-
-    let userPromise = new Promise<FirebaseUser | null>((resolve) => {
+    const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+    const [isAnonymousUser, setIsAnonymousUser] = useState<boolean>(true);
+    let userPromise = new Promise<FirebaseUser>((resolve) => {
         let auth = getAuth(firebaseApp);
         if (auth.currentUser) {
             resolve(auth.currentUser);
+        } else {
+            void signInAnonymously(auth);
         }
         useEffect(() => {
             auth.onAuthStateChanged((user) => {
-                resolve(user);
-                setFirebaseUser(user);
+                if (user != null) {
+                    resolve(user);
+                    setFirebaseUser(user);
+                    setIsAnonymousUser(user.isAnonymous);
+                }
             });
             return () => {
                 // do nothing
             };
-        }, [firebaseUser]);
+        });
     });
 
     const defaultTheme = createTheme();
@@ -53,8 +59,9 @@ function WithContext(props: React.PropsWithChildren) {
                     firebase: {
                         user: firebaseUser,
                         userPromise,
+                        isAnonymousUser,
+                        isAnonymousUserPromise: userPromise.then((user) => user.isAnonymous),
                     },
-                    isLoggedIn: firebaseUser != null,
                     route: {
                         location,
                         locationHref: location.pathname + location.search + location.hash,

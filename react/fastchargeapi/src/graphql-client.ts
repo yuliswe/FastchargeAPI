@@ -23,7 +23,9 @@ if (DEBUG_USE_LOCAL_GRAPHQL) {
  * @param param0
  * @returns
  */
-export async function getGQLClient(context: AppContext): Promise<{ client: ApolloClient<any>; currentUser: string }> {
+export async function getGQLClient(
+    context: AppContext
+): Promise<{ client: ApolloClient<unknown>; currentUser: string }> {
     const httpLink = createHttpLink({
         uri: graphql_url,
     });
@@ -146,7 +148,7 @@ export async function setRemoteSecret(
         expireAt,
     }: {
         key: string;
-        value: any;
+        value: jose.JWTPayload;
         description?: string;
         expireAt?: number;
     },
@@ -158,24 +160,20 @@ export async function setRemoteSecret(
         jwtSecret: Uint8Array;
     }
 ) {
-    value = await encryptAndSign(value, {
-        jweSecret,
-        jwtSecret,
-    });
-
-    console.log("encrypted & signed:", value);
+    let signedValue = await encryptAndSign(value, { jweSecret, jwtSecret });
+    console.log("encrypted & signed:", signedValue);
     const { client } = await getGQLClient(context);
     const response = client.mutate({
         mutation: gql`
-            mutation PutSecret($key: String!, $value: String!, $description: String, $expireAt: Timestamp) {
-                createSecret(key: $key, value: $value, description: $description, expireAt: $expireAt) {
+            mutation PutSecret($key: String!, $signedValue: String!, $description: String, $expireAt: Timestamp) {
+                createSecret(key: $key, value: $signedValue, description: $description, expireAt: $expireAt) {
                     createdAt
                 }
             }
         `,
         variables: {
             key,
-            value,
+            signedValue,
             description,
             expireAt,
         },

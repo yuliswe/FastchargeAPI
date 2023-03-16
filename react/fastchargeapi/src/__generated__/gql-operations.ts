@@ -716,7 +716,7 @@ export type GQLGetUserSubscriptionsQuery = {
 
 export type GQLPutSecretMutationVariables = Exact<{
     key: Scalars["String"];
-    value: Scalars["String"];
+    signedValue: Scalars["String"];
     description?: InputMaybe<Scalars["String"]>;
     expireAt?: InputMaybe<Scalars["Timestamp"]>;
 }>;
