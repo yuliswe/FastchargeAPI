@@ -1,9 +1,17 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
   auth-service
 
   Sample SAM Template for auth-service
+
+Parameters:
+  Stage:
+    Type: String
+    Default: DEV
+  GatewayHostNameV2:
+    Type: String
+    Default: "api.v2.auth.fastchargeapi.com"
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -49,16 +57,16 @@ Resources:
       CorsConfiguration:
         CorsRules:
           - AllowedHeaders:
-              - '*'
+              - "*"
             AllowedMethods:
-              - 'GET'
-              - 'PUT'
-              - 'POST'
-              - 'DELETE'
-              - 'HEAD'
+              - "GET"
+              - "PUT"
+              - "POST"
+              - "DELETE"
+              - "HEAD"
             AllowedOrigins:
-              - 'https://fastchargeapi.com'
-              - 'http://localhost:8000'
+              - "https://fastchargeapi.com"
+              - "http://localhost:8000"
             MaxAge: 3000
 
   CliAuthBucketPolicy:
@@ -69,20 +77,122 @@ Resources:
         Version: 2012-10-17
         Statement:
           - Effect: Allow
-            Principal: '*'
+            Principal: "*"
             Action:
-              - 's3:PutObject'
-            Resource: !Join ['', ['arn:aws:s3:::', !Ref CliAuthBucket, '/*']]
+              - "s3:PutObject"
+            Resource: !Join ["", ["arn:aws:s3:::", !Ref CliAuthBucket, "/*"]]
             Condition:
               StringEquals:
-                's3:x-amz-acl': 'public-read-write'
+                "s3:x-amz-acl": "public-read-write"
           - Effect: Allow
-            Principal: '*'
+            Principal: "*"
             Action:
-              - 's3:GetObject'
-              - 's3:DeleteObject'
-            Resource: !Join ['', ['arn:aws:s3:::', !Ref CliAuthBucket, '/*']]
-        
+              - "s3:GetObject"
+              - "s3:DeleteObject"
+            Resource: !Join ["", ["arn:aws:s3:::", !Ref CliAuthBucket, "/*"]]
+
+  # V2 API Gateway
+
+  GenerateCertificateV2: # Creates a valid certificate for the HTTP API endpoint under the custom domain
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref GatewayHostNameV2
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: !Ref GatewayHostNameV2
+          HostedZoneId: Z0358815GI2I8U5CTHXW
+
+  APIGatewayV2:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Domain:
+        DomainName: !Ref GatewayHostNameV2
+        CertificateArn: !Ref GenerateCertificateV2
+        Route53:
+          HostedZoneId: Z0358815GI2I8U5CTHXW
+      # AccessLogSettings:
+      #   DestinationArn: !GetAtt APIGatewayV2AccessLogs.Arn
+      #   Format: $context.requestId $context.httpMethod $context.path $context.error.responseType $context.error.messageString $context.authorizer.error $context.integrationErrorMessage
+      Auth: # Uses the FirebaseTokenAuthorizer to identify the session user.
+        DefaultAuthorizer: FirebaseTokenAuthorizer
+        Authorizers:
+          FirebaseTokenAuthorizer:
+            AuthorizerPayloadFormatVersion: 2.0
+            FunctionArn: arn:aws:lambda:us-east-1:887279901853:function:FirebaseTokenAuthorizer
+            FunctionInvokeRole: !GetAtt APIGatewayV2Role.Arn
+            Identity:
+              ReauthorizeEvery: 300
+              Headers: ["Authorization"]
+      CorsConfiguration:
+        AllowMethods: ["*"]
+        AllowHeaders: ["*"]
+        AllowOrigins:
+          - "http://localhost"
+          - "http://localhost:8000"
+          - "https://fastchargeapi.com"
+      DisableExecuteApiEndpoint: True
+
+  # APIGatewayV2AccessLogs:
+  #   Type: AWS::Logs::LogGroup
+
+  APIGatewayV2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+      Tags:
+        - Key: lambda:createdBy
+          Value: SAM
+
+  LambdaInvocationPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: LambdaInvocationPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: lambda:InvokeFunction
+            Resource: arn:aws:lambda:us-east-1:887279901853:function:FirebaseTokenAuthorizer
+      Roles:
+        - !Ref APIGatewayV2Role
+
+  RefreshIDToken:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: ./
+      Handler: RefreshIDToken.lambdaHandler
+      Runtime: nodejs18.x
+      Architectures:
+        - arm64 # if you are using Apple M1
+      MemorySize: 256
+      Timeout: 10
+      Policies:
+        - AWSLambdaRole
+        - AmazonDynamoDBFullAccess # Update user for connect account id
+        - AmazonSSMReadOnlyAccess # Need to get credentials for the Stripe API
+      Events:
+        POST:
+          Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Auth:
+              Authorizer: NONE
+            ApiId: !Ref APIGatewayV2
+            Path: /refresh-idtoken
+            Method: post
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Target: "es2022"
+        EntryPoints:
+          - node/RefreshIDToken.ts
 
 Outputs:
   FirebaseTokenAuthorizer:
