@@ -34,6 +34,12 @@ func lambdaHandler(request events.APIGatewayV2CustomAuthorizerV2Request) (*event
 		return denied(), nil
 	}
 
+	if os.Getenv("AllowAnonymousUser") == "1" {
+		if isAnonymous, _ := isAnonymousUser(auth); isAnonymous {
+			return allowedAnonymousUser(), nil
+		}
+	}
+
 	if os.Getenv("AllowUserAppToken") == "1" {
 		if user, err := verifyUserAppToken(auth); err == nil {
 			return allowed(user), nil
@@ -42,10 +48,6 @@ func lambdaHandler(request events.APIGatewayV2CustomAuthorizerV2Request) (*event
 
 	if user, err := verifyFirebaseIdToken(auth); err == nil {
 		return allowed(user), nil
-	}
-
-	if os.Getenv("AllowAnonymousUser") == "1" {
-		return allowedAnonymousUser(), nil
 	}
 
 	return denied(), nil
@@ -184,9 +186,45 @@ func getGoogleCert(kid string) (*GoogleCert, error) {
 	}
 }
 
+func isAnonymousUser(idToken string) (bool, error) {
+	provider, err := getSignInProvider(idToken)
+	if err != nil {
+		return false, err
+	}
+	if provider == "anonymous" {
+		return true, nil
+	}
+	return false, nil
+}
+
+func getSignInProvider(idToken string) (string, error) {
+	tokenUnchecked, _, err := jwt.NewParser().ParseUnverified(idToken, jwt.MapClaims{})
+	if err != nil {
+		fmt.Println(color.Red + "Error parsing id token: " + err.Error() + color.Reset)
+		return "", err
+	}
+
+	claims, ok := tokenUnchecked.Claims.(jwt.MapClaims)
+	if !ok {
+		fmt.Println(color.Yellow + "Parsing id token:  claims is not a map." + color.Reset)
+		return "", errors.New("Parsing id token: claims is not a map.")
+	}
+	firebase, ok := claims["firebase"].(map[string]interface{})
+	if !ok {
+		fmt.Println(color.Yellow+"Parsing id token: firebase is not a map."+color.Reset, claims["firebase"])
+		return "", errors.New("Parsing id token: firebase is not a map.")
+	}
+	provider, ok := firebase["sign_in_provider"].(string)
+	if !ok {
+		fmt.Println(color.Yellow+"Parsing id token: sign_in_provider is not a string."+color.Reset, firebase["sign_in_provider"])
+		return "", errors.New("Parsing id token: sign_in_provider is not a string.")
+	}
+	return provider, nil
+}
+
 type UserClaims struct {
-	Email string `json:"email"`
-	Sub   string `json:"sub"`
+	Email string `json:"email,omitempty"`
+	Sub   string `json:"sub,omitempty"`
 }
 
 func verifyFirebaseIdToken(idToken string) (*UserClaims, error) {
@@ -202,13 +240,16 @@ func verifyFirebaseIdToken(idToken string) (*UserClaims, error) {
 		fmt.Println(color.Red + "Error parsing id token: " + "kid is nil" + color.Reset)
 		return nil, errors.New("kid is nil")
 	}
-	kid := tokenUnchecked.Header["kid"].(string)
+	kid, ok := tokenUnchecked.Header["kid"].(string)
+	if !ok {
+		fmt.Println(color.Red + "Error parsing id token: " + "kid is not a string" + color.Reset)
+		return nil, errors.New("kid is not a string")
+	}
 	googleCert, err := getGoogleCert(kid)
 	if googleCert == nil {
 		fmt.Println(color.Red + "Error getting google cert (not found kid): " + kid + " " + err.Error() + color.Reset)
 		return nil, err
 	}
-
 	token, err := jwt.NewParser(
 		jwt.WithAudience("fastchargeapi"),
 		jwt.WithIssuedAt(),
@@ -228,10 +269,20 @@ func verifyFirebaseIdToken(idToken string) (*UserClaims, error) {
 		fmt.Println(color.Red + "Invalid token" + color.Reset)
 		return nil, errors.New("Invalid token")
 	}
-	claims := token.Claims
+	claims := token.Claims.(jwt.MapClaims)
+	email, ok := claims["email"].(string)
+	if !ok {
+		fmt.Println(color.Red + "Error parsing id token: email is not a string" + color.Reset)
+		return nil, errors.New("Error parsing id token: email is not a string")
+	}
+	sub, ok := claims["sub"].(string)
+	if !ok {
+		fmt.Println(color.Red + "Error parsing id token: sub is not a string" + color.Reset)
+		return nil, errors.New("Error parsing id token: sub is not a string")
+	}
 	firebaseClaim := UserClaims{
-		Email: claims.(jwt.MapClaims)["email"].(string),
-		Sub:   claims.(jwt.MapClaims)["sub"].(string),
+		Email: email,
+		Sub:   sub,
 	}
 	return &firebaseClaim, nil
 }
