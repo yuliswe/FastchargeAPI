@@ -1,7 +1,8 @@
+from functools import cache
 from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
 from gql.transport.exceptions import TransportQueryError
-from .auth_file import read_auth_file, read_valid_user_from_auth_file
+from .auth_file import read_auth_file, get_or_refresh_user_from_auth_file
 from .exceptions import AlreadyExists, NotFound, TooManyResources
 from click import echo
 from .config import graphql_host
@@ -39,6 +40,7 @@ class GQLClient:
                 raise e
 
 
+@cache
 def get_client_info() -> tuple[Client, str]:
     """This function returns a tuple of (client, user_email). Is it root
     function that identifies the user for the cli."""
@@ -46,7 +48,7 @@ def get_client_info() -> tuple[Client, str]:
         email = os.environ.get("USER")
         return GQLClient("", email), email
 
-    user = read_valid_user_from_auth_file()
+    user = get_or_refresh_user_from_auth_file()
     if user is None:
         echo("You must be logged in.")
         exit(1)

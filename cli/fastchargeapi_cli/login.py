@@ -9,7 +9,7 @@ from . import config
 from click import echo
 from .auth_file import (
     get_token_or_refresh,
-    read_valid_id_token_from_auth_file,
+    get_or_refresh_id_token_from_auth_file,
     write_to_auth_file,
     auth_file_path,
 )
@@ -28,7 +28,7 @@ def fastcharge_dev_login():
 
 
 def do_login():
-    if token := read_valid_id_token_from_auth_file():
+    if token := get_or_refresh_id_token_from_auth_file():
         echo(token)
         return token
 

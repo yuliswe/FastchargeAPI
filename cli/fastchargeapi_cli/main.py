@@ -1,0 +1,16 @@
+from .groups import fastcharge, fastapi
+
+from fastchargeapi_cli.groups import fastcharge
+import fastchargeapi_cli.login
+import fastchargeapi_cli.fastcharge_app
+import fastchargeapi_cli.fastcharge_api
+import fastchargeapi_cli.fastcharge_account
+import fastchargeapi_cli.fastcharge_stripe
+import fastchargeapi_cli.fastcharge_pricing
+
+from fastchargeapi_cli.groups import fastapi
+import fastchargeapi_cli.login
+import fastchargeapi_cli.fastapi_account
+import fastchargeapi_cli.fastapi_subscription
+import fastchargeapi_cli.token
+import fastchargeapi_cli.fastapi_api

@@ -21,6 +21,9 @@ aws-requests-auth = "^0.4.3"
 flask-cors = "^3.0.10"
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 
+[tool.poetry.scripts]
+fastcharge = 'fastchargeapi_cli.main:fastcharge'
+fastapi = 'fastchargeapi_cli.main:fastapi'
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"

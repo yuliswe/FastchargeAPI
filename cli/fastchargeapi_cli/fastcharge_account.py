@@ -12,6 +12,7 @@ import click
 from gql import gql
 from click import echo
 from click_aliases import ClickAliasedGroup
+from . import config
 
 terminal = Terminal()
 
@@ -127,7 +128,7 @@ def fastcharge_account_withdraw(amount: str):
     echo()
     if input("Continue? (y/N)").strip().lower() == "y":
         response = HttpClient().post(
-            "https://api.v2.payment.fastchargeapi.com/create-stripe-transfer",
+            f"{config.payment_service_host}/create-stripe-transfer",
             json={"withdrawCents": withdraw_cents},
         )
         if response.status_code != 200:

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Optional
 import requests
 from pathlib import Path
@@ -5,12 +6,11 @@ import json
 import jwt
 from cryptography.x509 import load_pem_x509_certificate
 
-import diskcache
+from . import config
+from functools import cache
 
-cache = diskcache.Cache("/tmp")
 
-
-@cache.memoize(expire=3600)
+@cache
 def get_google_cert() -> dict:
     google_cert = requests.get(
         "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com"
@@ -40,37 +40,55 @@ def read_auth_file() -> Optional[dict[str, str]]:
         return None
 
 
-def read_valid_user_from_auth_file() -> Optional[dict[str, str]]:
+def get_or_refresh_user_from_auth_file(force_refresh=False) -> Optional[dict[str, str]]:
     """Get the id token from the auth file. If the file doesn't exist, return
     None. If the id token is invalid, refresh it and return the new id token. If
     unable to refresh, return None."""
     if auth := read_auth_file():
-        if user := get_user_or_refresh(auth["id_token"], auth["refresh_token"]):
+        if user := get_or_refresh_user(
+            auth["id_token"], auth["refresh_token"], force_refresh
+        ):
             return user
     return None
 
 
-def get_user_or_refresh(id_token: str, refresh_token: str):
+def get_or_refresh_user(id_token: str, refresh_token: str, force_refresh=False):
     """Get user object from the id token. Refresh the id token if necessary."""
-    if user := verify_id_token(id_token):
+    if force_refresh:
+        result = refresh_id_token(refresh_token)
+        if user := verify_id_token(result.id_token):
+            write_to_auth_file(result.id_token, result.refresh_token)
+            return user
+        else:
+            return None
+    elif user := verify_id_token(id_token):
         return user
-    new_id_token = refresh_id_token(refresh_token)
-    user = verify_id_token(new_id_token)
-    assert user is not None, "Unable to refresh id token."
-    write_to_auth_file(new_id_token, refresh_token)
-    return user
+    else:
+        result = refresh_id_token(refresh_token)
+        user = verify_id_token(result.id_token)
+        assert user is not None, "Unable to refresh id token."
+        write_to_auth_file(result.id_token, result.refresh_token)
+        return user
 
 
-def refresh_id_token(refresh_token: str) -> str:
-    API_KEY = "AIzaSyAtSOzX-i3gzBYULHltD4Xkz-H9_9U6tD8"
+@dataclass
+class RefreshIdTokenResult:
+    id_token: str
+    refresh_token: str
+
+
+def refresh_id_token(
+    refresh_token: str,
+) -> RefreshIdTokenResult:
+    print("refresh_id_token")
     resp = requests.post(
-        f"https://securetoken.googleapis.com/v1/token?key={API_KEY}",
-        data={
-            "grant_type": "refresh_token",
-            "refresh_token": refresh_token,
-        },
+        f"{config.auth_service_host}/refresh-idtoken",
+        json={"refreshToken": refresh_token},
     )
-    return resp.json()["id_token"]
+    data = resp.json()
+    return RefreshIdTokenResult(
+        id_token=data["idToken"], refresh_token=data["refreshToken"]
+    )
 
 
 def verify_id_token(id_token: str):
@@ -106,15 +124,15 @@ def verify_id_token(id_token: str):
 
 def get_token_or_refresh(id_token: str, refresh_token: str):
     """Verifies the id token. Refresh the id token if necessary."""
-    if user := verify_id_token(id_token):
-        return id_token
-    else:
+    if verify_id_token(id_token) is None:
         new_id_token = refresh_id_token(refresh_token)
         write_to_auth_file(new_id_token, refresh_token)
         return new_id_token
+    else:
+        return id_token
 
 
-def read_valid_id_token_from_auth_file() -> Optional[str]:
+def get_or_refresh_id_token_from_auth_file() -> Optional[str]:
     """Get the id token from the auth file. If the file doesn't exist, return
     None. If the id token is invalid, refresh it and return the new id token. If
     unable to refresh, return None."""
