@@ -9,18 +9,8 @@ query GetAppRoutes($app: String) {
     }
 }
 
-mutation CreateUsageLog(
-    $userEmail: Email!
-    $app_name: String!
-    $path: String!
-    $pricing: ID!
-) {
-    createUsageLog(
-        subscriber: $userEmail
-        app: $app_name
-        path: $path
-        pricing: $pricing
-    ) {
+mutation CreateUsageLog($user: ID!, $app: ID!, $path: String!, $pricing: ID!) {
+    createUsageLog(subscriber: $user, app: $app, path: $path, pricing: $pricing) {
         createdAt
     }
 }
@@ -28,30 +18,6 @@ mutation CreateUsageLog(
 mutation TriggerBilling($user: ID!, $app: ID!) {
     triggerBilling(user: $user, app: $app) {
         createdAt
-    }
-}
-
-query GetUserSubscriptionPlan($userEmail: Email!, $app: String!) {
-    subscription(subscriber: $userEmail, app: $app) {
-        pricing {
-            name
-            minMonthlyCharge
-            chargePerRequest
-        }
-    }
-}
-
-query GetUserBalance($userEmail: Email!) {
-    user(email: $userEmail) {
-        balance
-    }
-}
-
-query GetPreviousCallTimestamp($userEmail: Email!, $app: String!) {
-    user(email: $userEmail) {
-        usageLogs(app: $app, limit: 1) {
-            createdAt
-        }
     }
 }
 

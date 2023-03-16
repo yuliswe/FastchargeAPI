@@ -20,7 +20,6 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	lru "github.com/hashicorp/golang-lru/v2"
-	"github.com/shopspring/decimal"
 )
 
 func main() {
@@ -132,24 +131,24 @@ func parseAppName(request events.APIGatewayProxyRequest) (string, *events.APIGat
 }
 
 func parseUser(request events.APIGatewayProxyRequest) (string, *events.APIGatewayProxyResponse) {
-	var userEmail string
-	if os.Getenv("TRUST_X_USER_EMAIL_HEADER") == "1" {
-		fmt.Println(color.Red, "TRUST_X_USER_EMAIL_HEADER enabled. Reading user from the X-User-Email header.", color.Reset)
-		userEmail = request.Headers["X-User-Email"]
+	var userPK string
+	if os.Getenv("TRUST_X_USER_PK_HEADER") == "1" {
+		fmt.Println(color.Red, "TRUST_X_USER_PK_HEADER enabled. Reading user from the X-User-PK header.", color.Reset)
+		userPK = request.Headers["X-User-PK"]
 	}
-	if user, found := request.RequestContext.Authorizer["userEmail"]; found {
-		userEmail = user.(string)
+	if user, found := request.RequestContext.Authorizer["userPK"]; found {
+		userPK = user.(string)
 	}
-	if userEmail == "" {
-		if os.Getenv("TRUST_X_USER_EMAIL_HEADER") == "1" {
-			response := apiGatewayErrorResponse(401, "UNAUTHORIZED", "TRUST_X_USER_EMAIL_HEADER enabled. You must provide the X-User-Email header.")
+	if userPK == "" {
+		if os.Getenv("TRUST_X_USER_PK_HEADER") == "1" {
+			response := apiGatewayErrorResponse(401, "UNAUTHORIZED", "TRUST_X_USER_PK_HEADER enabled. You must provide the X-User-PK header.")
 			return "", response
 		} else {
 			response := apiGatewayErrorResponse(401, "UNAUTHORIZED", "You must be logged in to access this resource.")
 			return "", response
 		}
 	} else {
-		return userEmail, nil
+		return userPK, nil
 	}
 }
 
@@ -411,53 +410,6 @@ func getGatewayRequestDecision(user string, app string, path string) (decision *
 
 	errorResponse = apiGatewayErrorResponse(401, "UNKNOWN_REASON", "You are not allowed to access this endpoint.")
 	return decision, errorResponse
-}
-
-func getUserBalance(user string) decimal.Decimal {
-	if result, err := GetUserBalance(context.Background(), getGraphQLClient(), user); err != nil {
-		fmt.Println(color.Red, "Error getting balance for", user, "Error:", err, color.Reset)
-		return decimal.NewFromInt(0)
-	} else {
-		if balance, err := decimal.NewFromString(result.User.Balance); err != nil {
-			fmt.Println(color.Red, "Error parsing balance:", err, color.Reset)
-			return decimal.NewFromInt(0)
-		} else {
-			return balance
-		}
-	}
-}
-
-func getEndpointCost(subscription GetUserSubscriptionPlanSubscriptionSubscribe, user string, app string, path string) decimal.Decimal {
-	// The endpoint cost is the monthly initial cost (if this is the first call
-	// in 30 days) plus the cost per call.
-	cost := decimal.NewFromInt(0) // in dollars
-	const oneMonthMili int64 = 30 * 24 * 60 * 60 * 1000
-	if getPrivousCallTime(user, app) < time.Now().UnixMilli()-oneMonthMili {
-		montly, err := decimal.NewFromString(subscription.Pricing.MinMonthlyCharge) // in dollars
-		if err != nil {
-			fmt.Println(color.Red, "Error parsing min monthly charge:", err.Error(), color.Reset)
-			montly = decimal.NewFromInt(0)
-		}
-		cost = cost.Add(montly)
-	}
-	perCall, err := decimal.NewFromString(subscription.Pricing.ChargePerRequest) // in dollars
-	if err != nil {
-		fmt.Println(color.Red, "Error parsing charge per request:", err.Error(), color.Reset)
-		perCall = decimal.NewFromInt(0)
-	}
-	cost = cost.Add(perCall)
-	return cost
-}
-
-func getPrivousCallTime(user string, app string) int64 {
-	if result, err := GetPreviousCallTimestamp(context.Background(), getGraphQLClient(), user, app); err != nil {
-		fmt.Println(color.Red, "Error getting previous call timestamp:", err.Error(), color.Reset)
-		return 0
-	} else if len(result.User.UsageLogs) == 0 {
-		return 0
-	} else {
-		return result.User.UsageLogs[0].CreatedAt
-	}
 }
 
 func getPrivateKey() *ecdsa.PrivateKey {

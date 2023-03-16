@@ -103,88 +103,6 @@ type GetAppRoutesResponse struct {
 // GetApp returns GetAppRoutesResponse.App, and is useful for accessing the field via an interface.
 func (v *GetAppRoutesResponse) GetApp() GetAppRoutesApp { return v.App }
 
-// GetPreviousCallTimestampResponse is returned by GetPreviousCallTimestamp on success.
-type GetPreviousCallTimestampResponse struct {
-	User GetPreviousCallTimestampUser `json:"user"`
-}
-
-// GetUser returns GetPreviousCallTimestampResponse.User, and is useful for accessing the field via an interface.
-func (v *GetPreviousCallTimestampResponse) GetUser() GetPreviousCallTimestampUser { return v.User }
-
-// GetPreviousCallTimestampUser includes the requested fields of the GraphQL type User.
-type GetPreviousCallTimestampUser struct {
-	UsageLogs []GetPreviousCallTimestampUserUsageLogsUsageLog `json:"usageLogs"`
-}
-
-// GetUsageLogs returns GetPreviousCallTimestampUser.UsageLogs, and is useful for accessing the field via an interface.
-func (v *GetPreviousCallTimestampUser) GetUsageLogs() []GetPreviousCallTimestampUserUsageLogsUsageLog {
-	return v.UsageLogs
-}
-
-// GetPreviousCallTimestampUserUsageLogsUsageLog includes the requested fields of the GraphQL type UsageLog.
-type GetPreviousCallTimestampUserUsageLogsUsageLog struct {
-	CreatedAt int64 `json:"createdAt"`
-}
-
-// GetCreatedAt returns GetPreviousCallTimestampUserUsageLogsUsageLog.CreatedAt, and is useful for accessing the field via an interface.
-func (v *GetPreviousCallTimestampUserUsageLogsUsageLog) GetCreatedAt() int64 { return v.CreatedAt }
-
-// GetUserBalanceResponse is returned by GetUserBalance on success.
-type GetUserBalanceResponse struct {
-	User GetUserBalanceUser `json:"user"`
-}
-
-// GetUser returns GetUserBalanceResponse.User, and is useful for accessing the field via an interface.
-func (v *GetUserBalanceResponse) GetUser() GetUserBalanceUser { return v.User }
-
-// GetUserBalanceUser includes the requested fields of the GraphQL type User.
-type GetUserBalanceUser struct {
-	Balance string `json:"balance"`
-}
-
-// GetBalance returns GetUserBalanceUser.Balance, and is useful for accessing the field via an interface.
-func (v *GetUserBalanceUser) GetBalance() string { return v.Balance }
-
-// GetUserSubscriptionPlanResponse is returned by GetUserSubscriptionPlan on success.
-type GetUserSubscriptionPlanResponse struct {
-	Subscription GetUserSubscriptionPlanSubscriptionSubscribe `json:"subscription"`
-}
-
-// GetSubscription returns GetUserSubscriptionPlanResponse.Subscription, and is useful for accessing the field via an interface.
-func (v *GetUserSubscriptionPlanResponse) GetSubscription() GetUserSubscriptionPlanSubscriptionSubscribe {
-	return v.Subscription
-}
-
-// GetUserSubscriptionPlanSubscriptionSubscribe includes the requested fields of the GraphQL type Subscribe.
-type GetUserSubscriptionPlanSubscriptionSubscribe struct {
-	Pricing GetUserSubscriptionPlanSubscriptionSubscribePricing `json:"pricing"`
-}
-
-// GetPricing returns GetUserSubscriptionPlanSubscriptionSubscribe.Pricing, and is useful for accessing the field via an interface.
-func (v *GetUserSubscriptionPlanSubscriptionSubscribe) GetPricing() GetUserSubscriptionPlanSubscriptionSubscribePricing {
-	return v.Pricing
-}
-
-// GetUserSubscriptionPlanSubscriptionSubscribePricing includes the requested fields of the GraphQL type Pricing.
-type GetUserSubscriptionPlanSubscriptionSubscribePricing struct {
-	Name             string `json:"name"`
-	MinMonthlyCharge string `json:"minMonthlyCharge"`
-	ChargePerRequest string `json:"chargePerRequest"`
-}
-
-// GetName returns GetUserSubscriptionPlanSubscriptionSubscribePricing.Name, and is useful for accessing the field via an interface.
-func (v *GetUserSubscriptionPlanSubscriptionSubscribePricing) GetName() string { return v.Name }
-
-// GetMinMonthlyCharge returns GetUserSubscriptionPlanSubscriptionSubscribePricing.MinMonthlyCharge, and is useful for accessing the field via an interface.
-func (v *GetUserSubscriptionPlanSubscriptionSubscribePricing) GetMinMonthlyCharge() string {
-	return v.MinMonthlyCharge
-}
-
-// GetChargePerRequest returns GetUserSubscriptionPlanSubscriptionSubscribePricing.ChargePerRequest, and is useful for accessing the field via an interface.
-func (v *GetUserSubscriptionPlanSubscriptionSubscribePricing) GetChargePerRequest() string {
-	return v.ChargePerRequest
-}
-
 // TriggerBillingResponse is returned by TriggerBilling on success.
 type TriggerBillingResponse struct {
 	TriggerBilling []TriggerBillingTriggerBillingUsageSummary `json:"triggerBilling"`
@@ -217,17 +135,17 @@ func (v *__CheckUserIsAllowedToCallEndpointInput) GetApp() string { return v.App
 
 // __CreateUsageLogInput is used internally by genqlient
 type __CreateUsageLogInput struct {
-	UserEmail string `json:"userEmail"`
-	App_name  string `json:"app_name"`
-	Path      string `json:"path"`
-	Pricing   string `json:"pricing"`
+	User    string `json:"user"`
+	App     string `json:"app"`
+	Path    string `json:"path"`
+	Pricing string `json:"pricing"`
 }
 
-// GetUserEmail returns __CreateUsageLogInput.UserEmail, and is useful for accessing the field via an interface.
-func (v *__CreateUsageLogInput) GetUserEmail() string { return v.UserEmail }
+// GetUser returns __CreateUsageLogInput.User, and is useful for accessing the field via an interface.
+func (v *__CreateUsageLogInput) GetUser() string { return v.User }
 
-// GetApp_name returns __CreateUsageLogInput.App_name, and is useful for accessing the field via an interface.
-func (v *__CreateUsageLogInput) GetApp_name() string { return v.App_name }
+// GetApp returns __CreateUsageLogInput.App, and is useful for accessing the field via an interface.
+func (v *__CreateUsageLogInput) GetApp() string { return v.App }
 
 // GetPath returns __CreateUsageLogInput.Path, and is useful for accessing the field via an interface.
 func (v *__CreateUsageLogInput) GetPath() string { return v.Path }
@@ -242,38 +160,6 @@ type __GetAppRoutesInput struct {
 
 // GetApp returns __GetAppRoutesInput.App, and is useful for accessing the field via an interface.
 func (v *__GetAppRoutesInput) GetApp() string { return v.App }
-
-// __GetPreviousCallTimestampInput is used internally by genqlient
-type __GetPreviousCallTimestampInput struct {
-	UserEmail string `json:"userEmail"`
-	App       string `json:"app"`
-}
-
-// GetUserEmail returns __GetPreviousCallTimestampInput.UserEmail, and is useful for accessing the field via an interface.
-func (v *__GetPreviousCallTimestampInput) GetUserEmail() string { return v.UserEmail }
-
-// GetApp returns __GetPreviousCallTimestampInput.App, and is useful for accessing the field via an interface.
-func (v *__GetPreviousCallTimestampInput) GetApp() string { return v.App }
-
-// __GetUserBalanceInput is used internally by genqlient
-type __GetUserBalanceInput struct {
-	UserEmail string `json:"userEmail"`
-}
-
-// GetUserEmail returns __GetUserBalanceInput.UserEmail, and is useful for accessing the field via an interface.
-func (v *__GetUserBalanceInput) GetUserEmail() string { return v.UserEmail }
-
-// __GetUserSubscriptionPlanInput is used internally by genqlient
-type __GetUserSubscriptionPlanInput struct {
-	UserEmail string `json:"userEmail"`
-	App       string `json:"app"`
-}
-
-// GetUserEmail returns __GetUserSubscriptionPlanInput.UserEmail, and is useful for accessing the field via an interface.
-func (v *__GetUserSubscriptionPlanInput) GetUserEmail() string { return v.UserEmail }
-
-// GetApp returns __GetUserSubscriptionPlanInput.App, and is useful for accessing the field via an interface.
-func (v *__GetUserSubscriptionPlanInput) GetApp() string { return v.App }
 
 // __TriggerBillingInput is used internally by genqlient
 type __TriggerBillingInput struct {
@@ -326,25 +212,25 @@ query CheckUserIsAllowedToCallEndpoint ($user: ID!, $app: ID!) {
 func CreateUsageLog(
 	ctx context.Context,
 	client graphql.Client,
-	userEmail string,
-	app_name string,
+	user string,
+	app string,
 	path string,
 	pricing string,
 ) (*CreateUsageLogResponse, error) {
 	req := &graphql.Request{
 		OpName: "CreateUsageLog",
 		Query: `
-mutation CreateUsageLog ($userEmail: Email!, $app_name: String!, $path: String!, $pricing: ID!) {
-	createUsageLog(subscriber: $userEmail, app: $app_name, path: $path, pricing: $pricing) {
+mutation CreateUsageLog ($user: ID!, $app: ID!, $path: String!, $pricing: ID!) {
+	createUsageLog(subscriber: $user, app: $app, path: $path, pricing: $pricing) {
 		createdAt
 	}
 }
 `,
 		Variables: &__CreateUsageLogInput{
-			UserEmail: userEmail,
-			App_name:  app_name,
-			Path:      path,
-			Pricing:   pricing,
+			User:    user,
+			App:     app,
+			Path:    path,
+			Pricing: pricing,
 		},
 	}
 	var err error
@@ -387,112 +273,6 @@ query GetAppRoutes ($app: String) {
 	var err error
 
 	var data GetAppRoutesResponse
-	resp := &graphql.Response{Data: &data}
-
-	err = client.MakeRequest(
-		ctx,
-		req,
-		resp,
-	)
-
-	return &data, err
-}
-
-func GetPreviousCallTimestamp(
-	ctx context.Context,
-	client graphql.Client,
-	userEmail string,
-	app string,
-) (*GetPreviousCallTimestampResponse, error) {
-	req := &graphql.Request{
-		OpName: "GetPreviousCallTimestamp",
-		Query: `
-query GetPreviousCallTimestamp ($userEmail: Email!, $app: String!) {
-	user(email: $userEmail) {
-		usageLogs(app: $app, limit: 1) {
-			createdAt
-		}
-	}
-}
-`,
-		Variables: &__GetPreviousCallTimestampInput{
-			UserEmail: userEmail,
-			App:       app,
-		},
-	}
-	var err error
-
-	var data GetPreviousCallTimestampResponse
-	resp := &graphql.Response{Data: &data}
-
-	err = client.MakeRequest(
-		ctx,
-		req,
-		resp,
-	)
-
-	return &data, err
-}
-
-func GetUserBalance(
-	ctx context.Context,
-	client graphql.Client,
-	userEmail string,
-) (*GetUserBalanceResponse, error) {
-	req := &graphql.Request{
-		OpName: "GetUserBalance",
-		Query: `
-query GetUserBalance ($userEmail: Email!) {
-	user(email: $userEmail) {
-		balance
-	}
-}
-`,
-		Variables: &__GetUserBalanceInput{
-			UserEmail: userEmail,
-		},
-	}
-	var err error
-
-	var data GetUserBalanceResponse
-	resp := &graphql.Response{Data: &data}
-
-	err = client.MakeRequest(
-		ctx,
-		req,
-		resp,
-	)
-
-	return &data, err
-}
-
-func GetUserSubscriptionPlan(
-	ctx context.Context,
-	client graphql.Client,
-	userEmail string,
-	app string,
-) (*GetUserSubscriptionPlanResponse, error) {
-	req := &graphql.Request{
-		OpName: "GetUserSubscriptionPlan",
-		Query: `
-query GetUserSubscriptionPlan ($userEmail: Email!, $app: String!) {
-	subscription(subscriber: $userEmail, app: $app) {
-		pricing {
-			name
-			minMonthlyCharge
-			chargePerRequest
-		}
-	}
-}
-`,
-		Variables: &__GetUserSubscriptionPlanInput{
-			UserEmail: userEmail,
-			App:       app,
-		},
-	}
-	var err error
-
-	var data GetUserSubscriptionPlanResponse
 	resp := &graphql.Response{Data: &data}
 
 	err = client.MakeRequest(
