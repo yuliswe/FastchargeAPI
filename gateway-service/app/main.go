@@ -52,20 +52,22 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 	}
 
 	//fmt.Println("Identifying user")
-	user, errResp := parseUser(request)
+	userEmail, errResp := parseUserEmail(request)
 	if errResp != nil {
 		return errResp, nil
 	}
 
-	setGraphqlClientUser(user)
+	setGraphqlClientUser(userEmail)
 
 	//fmt.Println("Checking is user is allowed to access app", app, "user:", user)
 	startTimer := time.Now()
-	decision, errorResponse := getGatewayRequestDecision(user, app, path)
+	decision, errorResponse := getGatewayRequestDecision(userEmail, app, path)
 	if errorResponse != nil {
 		//fmt.Println(color.Red, "User ", user, " is not allowed to access ", app, path, color.Reset)
 		return errorResponse, nil
 	}
+
+	userPK := decision.UserPK
 
 	stopTimer := time.Now()
 	fmt.Println(color.Purple, "getGatewayRequestDecision took", stopTimer.Sub(startTimer), color.Reset)
@@ -89,7 +91,7 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 			fmt.Println(color.Red, "Error making a redirect response", err, color.Reset)
 			return &response, err
 		} else {
-			go billUsage(user, app, path, decision.PricingPK)
+			go billUsage(userPK, app, path, decision.PricingPK)
 			return &response, nil
 		}
 	default:
@@ -100,7 +102,7 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 		} else {
 			stopTimer := time.Now()
 			fmt.Println(color.Purple, "makeForwardResponse took", stopTimer.Sub(startTimer), color.Reset)
-			go billUsage(user, app, path, decision.PricingPK)
+			go billUsage(userPK, app, path, decision.PricingPK)
 			return response, nil
 		}
 	}
@@ -130,25 +132,28 @@ func parseAppName(request events.APIGatewayProxyRequest) (string, *events.APIGat
 	return app, nil
 }
 
-func parseUser(request events.APIGatewayProxyRequest) (string, *events.APIGatewayProxyResponse) {
-	var userPK string
-	if os.Getenv("TRUST_X_USER_PK_HEADER") == "1" {
-		fmt.Println(color.Red, "TRUST_X_USER_PK_HEADER enabled. Reading user from the X-User-PK header.", color.Reset)
-		userPK = request.Headers["X-User-PK"]
-	}
-	if user, found := request.RequestContext.Authorizer["userPK"]; found {
-		userPK = user.(string)
-	}
-	if userPK == "" {
-		if os.Getenv("TRUST_X_USER_PK_HEADER") == "1" {
-			response := apiGatewayErrorResponse(401, "UNAUTHORIZED", "TRUST_X_USER_PK_HEADER enabled. You must provide the X-User-PK header.")
-			return "", response
-		} else {
-			response := apiGatewayErrorResponse(401, "UNAUTHORIZED", "You must be logged in to access this resource.")
-			return "", response
+func parseUserEmail(request events.APIGatewayProxyRequest) (string, *events.APIGatewayProxyResponse) {
+	var userEmail string
+	if os.Getenv("TRUST_X_USER_EMAIL_HEADER") == "1" {
+		fmt.Println(color.Red, "TRUST_X_USER_EMAIL_HEADER enabled. Reading user from the X-User-Email header.", color.Reset)
+		userEmail = request.Headers["X-User-Email"]
+		if userEmail == "" {
+			userEmail = request.Headers["x-user-email"]
 		}
+		if userEmail == "" {
+			fmt.Println(color.Red, "TRUST_X_USER_EMAIL_HEADER enabled. But the X-User-Email header is not set.", color.Reset)
+		} else {
+			fmt.Println(color.Blue, "X-User-Email header: ", userEmail, color.Reset)
+		}
+	}
+	if user, found := request.RequestContext.Authorizer["userEmail"]; found {
+		userEmail = user.(string)
+	}
+	if userEmail == "" {
+		response := apiGatewayErrorResponse(401, "UNAUTHORIZED", "You must be logged in to access this resource.")
+		return "", response
 	} else {
-		return userPK, nil
+		return userEmail, nil
 	}
 }
 
@@ -248,7 +253,7 @@ func makeForwardResponse(destination string, request events.APIGatewayProxyReque
 			}
 		}
 		headers := map[string]string{}
-		for key, _ := range response.Header {
+		for key := range response.Header {
 			headers[key] = response.Header.Get(key)
 		}
 		headers["Content-Encoding"] = "identity"
@@ -299,7 +304,7 @@ func getRoute(app string, path string) (destination string, gatewayMode GatewayM
 		}
 	}
 	fmt.Println(color.Yellow, "Getting route for", app, path, color.Reset)
-	if routes, err := GetAppRoutes(context.Background(), getGraphQLClient(), app); err != nil {
+	if routes, err := GetAppRoutes(context.Background(), *getGraphQLClient(), app); err != nil {
 		fmt.Println(color.Red, "Error getting routes for", app, err, color.Reset)
 	} else {
 		// fmt.Println(color.Yellow, "Got routes for", app, routes, color.Reset)
@@ -337,7 +342,7 @@ func billUsage(user string, app string, path string, pricing string) {
 	// calling TriggerBilling, the usage log is already created.
 	if _, err := CreateUsageLog(
 		context.Background(),
-		getGraphQLClient(),
+		*getGraphQLClient(),
 		user,
 		app,
 		path,
@@ -348,7 +353,7 @@ func billUsage(user string, app string, path string, pricing string) {
 	// Trigger billing must be done on the billing queue.
 	if _, err := TriggerBilling(
 		context.Background(),
-		getSQSGraphQLClient(SQSGraphQLClientConfig{
+		*getSQSGraphQLClient(SQSGraphQLClientConfig{
 			MessageDeduplicationId: fmt.Sprintf("trigger-billing-%s-%d", user, time.Now().Unix()),
 			MessageGroupId:         "main",
 			QueueUrl:               BillingFifoQueueUrl,
@@ -380,8 +385,8 @@ type GatewayDecisionResponse struct {
 // Checks if the user is allowed to access the endpoint. Caches the result if
 // the user is allowed to access. Otherwise, send queries to the graphql backend
 // to find out if the user is allowed to access.
-func getGatewayRequestDecision(user string, app string, path string) (decision *CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse, errorResponse *events.APIGatewayProxyResponse) {
-	result, err := CheckUserIsAllowedToCallEndpoint(context.Background(), getGraphQLClient(), user, app)
+func getGatewayRequestDecision(userEmail string, app string, path string) (decision *CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse, errorResponse *events.APIGatewayProxyResponse) {
+	result, err := CheckUserIsAllowedToCallEndpoint(context.Background(), *getGraphQLClient(), userEmail, app)
 	decision = &result.CheckUserIsAllowedForGatewayRequest
 	if err != nil {
 		fmt.Println(color.Red, "Error checking if user is allowed to call endpoint:", err, color.Reset)

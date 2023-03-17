@@ -53,20 +53,22 @@ func initGraphQLClient() {
 	baseClient := http.Client{
 		Transport: globalGraphQLClientTransport,
 	}
-	var awsClient, _ = aws_signing_client.New(signer, &baseClient, "execute-api", "us-east-1")
 	if os.Getenv("LOCAL_GRAPHQL") == "1" {
-		globalGqlClient = graphql.NewClient(graphqlService, http.DefaultClient)
+		gqlClient := graphql.NewClient(graphqlService, &baseClient)
+		globalGqlClient = &gqlClient
 	} else {
-		globalGqlClient = graphql.NewClient(graphqlService, awsClient)
+		awsClient, _ := aws_signing_client.New(signer, &baseClient, "execute-api", "us-east-1")
+		gqlClient := graphql.NewClient(graphqlService, awsClient)
+		globalGqlClient = &gqlClient
 	}
 }
 
-var globalGqlClient graphql.Client
+var globalGqlClient *graphql.Client
 
-func getGraphQLClient() graphql.Client {
+func getGraphQLClient() *graphql.Client {
 	return globalGqlClient
 }
 
-func setGraphqlClientUser(user string) {
-	globalGraphQLClientTransport.Headers["X-User-Email"] = user
+func setGraphqlClientUser(userEmail string) {
+	globalGraphQLClientTransport.Headers["X-User-Email"] = userEmail
 }

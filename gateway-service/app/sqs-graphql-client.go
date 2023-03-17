@@ -81,7 +81,7 @@ type SQSGraphQLClientConfig struct {
 //
 // Effectively, MessageDeduplicationId deduplicates messages with the same ID.
 // Messages with the same MessageGroupId are processed in FIFO order.
-func getSQSGraphQLClient(config SQSGraphQLClientConfig) graphql.Client {
+func getSQSGraphQLClient(config SQSGraphQLClientConfig) *graphql.Client {
 	if os.Getenv("LOCAL_GRAPHQL") == "1" {
 		fmt.Println(color.Red, "Using local GraphQL in place of SQS", color.Reset)
 		return getGraphQLClient() // Use normal GraphQL client (local in this case)
@@ -105,5 +105,6 @@ func getSQSGraphQLClient(config SQSGraphQLClientConfig) graphql.Client {
 			QueueUrl:               config.QueueUrl,
 		},
 	}
-	return graphql.NewClient("", &baseClient)
+	client := graphql.NewClient("", &baseClient)
+	return &client
 }

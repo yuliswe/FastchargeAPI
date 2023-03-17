@@ -13,6 +13,7 @@ type CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayD
 	Allowed   bool                          `json:"allowed"`
 	Reason    GatewayDecisionResponseReason `json:"reason"`
 	PricingPK string                        `json:"pricingPK"`
+	UserPK    string                        `json:"userPK"`
 }
 
 // GetAllowed returns CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse.Allowed, and is useful for accessing the field via an interface.
@@ -28,6 +29,11 @@ func (v *CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGate
 // GetPricingPK returns CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse.PricingPK, and is useful for accessing the field via an interface.
 func (v *CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse) GetPricingPK() string {
 	return v.PricingPK
+}
+
+// GetUserPK returns CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse.UserPK, and is useful for accessing the field via an interface.
+func (v *CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse) GetUserPK() string {
+	return v.UserPK
 }
 
 // CheckUserIsAllowedToCallEndpointResponse is returned by CheckUserIsAllowedToCallEndpoint on success.
@@ -123,12 +129,12 @@ func (v *TriggerBillingTriggerBillingUsageSummary) GetCreatedAt() int64 { return
 
 // __CheckUserIsAllowedToCallEndpointInput is used internally by genqlient
 type __CheckUserIsAllowedToCallEndpointInput struct {
-	User string `json:"user"`
-	App  string `json:"app"`
+	UserEmail string `json:"userEmail"`
+	App       string `json:"app"`
 }
 
-// GetUser returns __CheckUserIsAllowedToCallEndpointInput.User, and is useful for accessing the field via an interface.
-func (v *__CheckUserIsAllowedToCallEndpointInput) GetUser() string { return v.User }
+// GetUserEmail returns __CheckUserIsAllowedToCallEndpointInput.UserEmail, and is useful for accessing the field via an interface.
+func (v *__CheckUserIsAllowedToCallEndpointInput) GetUserEmail() string { return v.UserEmail }
 
 // GetApp returns __CheckUserIsAllowedToCallEndpointInput.App, and is useful for accessing the field via an interface.
 func (v *__CheckUserIsAllowedToCallEndpointInput) GetApp() string { return v.App }
@@ -176,23 +182,24 @@ func (v *__TriggerBillingInput) GetApp() string { return v.App }
 func CheckUserIsAllowedToCallEndpoint(
 	ctx context.Context,
 	client graphql.Client,
-	user string,
+	userEmail string,
 	app string,
 ) (*CheckUserIsAllowedToCallEndpointResponse, error) {
 	req := &graphql.Request{
 		OpName: "CheckUserIsAllowedToCallEndpoint",
 		Query: `
-query CheckUserIsAllowedToCallEndpoint ($user: ID!, $app: ID!) {
-	checkUserIsAllowedForGatewayRequest(user: $user, app: $app) {
+query CheckUserIsAllowedToCallEndpoint ($userEmail: Email!, $app: ID!) {
+	checkUserIsAllowedForGatewayRequest(userEmail: $userEmail, app: $app) {
 		allowed
 		reason
 		pricingPK
+		userPK
 	}
 }
 `,
 		Variables: &__CheckUserIsAllowedToCallEndpointInput{
-			User: user,
-			App:  app,
+			UserEmail: userEmail,
+			App:       app,
 		},
 	}
 	var err error
