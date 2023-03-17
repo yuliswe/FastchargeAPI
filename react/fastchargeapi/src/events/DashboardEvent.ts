@@ -29,19 +29,16 @@ class LoadAccontBalance extends AppEvent<RootAppState> {
     public response: GQLGetAccountBalanceQuery | null = null;
     async *run(state: RootAppState): AppEventStream<RootAppState> {
         let { client, currentUser } = await getGQLClient(this.context);
-        let result = await client.query<
-            GQLGetAccountBalanceQuery,
-            GQLGetAccountBalanceQueryVariables
-        >({
+        let result = await client.query<GQLGetAccountBalanceQuery, GQLGetAccountBalanceQueryVariables>({
             query: gql`
-                query GetAccountBalance($email: Email!) {
-                    user(email: $email) {
+                query GetAccountBalance($user: ID!) {
+                    user(pk: $user) {
                         balance
                     }
                 }
             `,
             variables: {
-                email: currentUser,
+                user: currentUser,
             },
         });
         this.response = result.data;
@@ -57,13 +54,9 @@ class LoadAccontBalance extends AppEvent<RootAppState> {
     }
 }
 
-export type AccountActivity =
-    GQLGetAccountActivitiesQuery["user"]["accountActivities"][0];
+export type AccountActivity = GQLGetAccountActivitiesQuery["user"]["accountActivities"][0];
 class LoadActivities extends AppEvent<RootAppState> {
-    constructor(
-        public context: AppContext,
-        public options: { beforeDate: number }
-    ) {
+    constructor(public context: AppContext, public options: { beforeDate: number }) {
         super();
     }
 
@@ -79,16 +72,10 @@ class LoadActivities extends AppEvent<RootAppState> {
 
     async *run(state: RootAppState): AppEventStream<RootAppState> {
         let { client, currentUser } = await getGQLClient(this.context);
-        let result = await client.query<
-            GQLGetAccountActivitiesQuery,
-            GQLGetAccountActivitiesQueryVariables
-        >({
+        let result = await client.query<GQLGetAccountActivitiesQuery, GQLGetAccountActivitiesQueryVariables>({
             query: gql`
-                query GetAccountActivities(
-                    $email: Email!
-                    $dateRange: DateRangeInput!
-                ) {
-                    user(email: $email) {
+                query GetAccountActivities($user: ID!, $dateRange: DateRangeInput!) {
+                    user(pk: $user) {
                         accountActivities(dateRange: $dateRange, limit: 1000) {
                             createdAt
                             type
@@ -112,7 +99,7 @@ class LoadActivities extends AppEvent<RootAppState> {
                 }
             `,
             variables: {
-                email: currentUser,
+                user: currentUser,
                 dateRange: {
                     end: this.options.beforeDate,
                 },
@@ -131,14 +118,10 @@ class LoadActivities extends AppEvent<RootAppState> {
     }
 }
 
-export type AccountHistory =
-    GQLGetAccountHistoriesQuery["user"]["accountHistories"][0];
+export type AccountHistory = GQLGetAccountHistoriesQuery["user"]["accountHistories"][0];
 
 class LoadAccountHistory extends AppEvent<RootAppState> {
-    constructor(
-        public context: AppContext,
-        public options: { beforeDate: number }
-    ) {
+    constructor(public context: AppContext, public options: { beforeDate: number }) {
         super();
     }
 
@@ -153,16 +136,10 @@ class LoadAccountHistory extends AppEvent<RootAppState> {
     accountHistories: AccountHistory[] = [];
     async *run(state: RootAppState): AppEventStream<RootAppState> {
         let { client, currentUser } = await getGQLClient(this.context);
-        let result = await client.query<
-            GQLGetAccountHistoriesQuery,
-            GQLGetAccountHistoriesQueryVariables
-        >({
+        let result = await client.query<GQLGetAccountHistoriesQuery, GQLGetAccountHistoriesQueryVariables>({
             query: gql`
-                query GetAccountHistories(
-                    $email: Email!
-                    $dateRange: DateRangeInput!
-                ) {
-                    user(email: $email) {
+                query GetAccountHistories($user: ID!, $dateRange: DateRangeInput!) {
+                    user(pk: $user) {
                         accountHistories(dateRange: $dateRange, limit: 1000) {
                             closingBalance
                             closingTime
@@ -171,7 +148,7 @@ class LoadAccountHistory extends AppEvent<RootAppState> {
                 }
             `,
             variables: {
-                email: currentUser,
+                user: currentUser,
                 dateRange: {
                     end: this.options.beforeDate,
                 },

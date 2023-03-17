@@ -23,6 +23,7 @@ function WithContext(props: React.PropsWithChildren) {
                 if (user == null) {
                     void signInAnonymously(auth);
                 } else {
+                    console.log(user);
                     resolve(user);
                     setFirebaseUser(user);
                     setIsAnonymousUser(user.isAnonymous);

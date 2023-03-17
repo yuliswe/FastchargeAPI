@@ -3,13 +3,9 @@ import { RootAppState } from "../states/RootAppState";
 import { AppContext } from "../AppContext";
 import { getGQLClient } from "../graphql-client";
 import { gql } from "@apollo/client";
-import {
-    GQLGetUserSubscriptionsQuery,
-    GQLGetUserSubscriptionsQueryVariables,
-} from "../__generated__/gql-operations";
+import { GQLGetUserSubscriptionsQuery, GQLGetUserSubscriptionsQueryVariables } from "../__generated__/gql-operations";
 
-export type UserSubscription =
-    GQLGetUserSubscriptionsQuery["user"]["subscriptions"][0];
+export type UserSubscription = GQLGetUserSubscriptionsQuery["user"]["subscriptions"][0];
 
 class LoadSubscriptions extends AppEvent<RootAppState> {
     constructor(public context: AppContext) {
@@ -23,13 +19,10 @@ class LoadSubscriptions extends AppEvent<RootAppState> {
     subscriptions: UserSubscription[] = [];
     async *run(state: RootAppState): AppEventStream<RootAppState> {
         let { client, currentUser } = await getGQLClient(this.context);
-        let result = await client.query<
-            GQLGetUserSubscriptionsQuery,
-            GQLGetUserSubscriptionsQueryVariables
-        >({
+        let result = await client.query<GQLGetUserSubscriptionsQuery, GQLGetUserSubscriptionsQueryVariables>({
             query: gql`
-                query GetUserSubscriptions($email: Email!) {
-                    user(email: $email) {
+                query GetUserSubscriptions($user: ID!) {
+                    user(pk: $user) {
                         subscriptions {
                             pk
                             pricing {
@@ -46,7 +39,7 @@ class LoadSubscriptions extends AppEvent<RootAppState> {
                 }
             `,
             variables: {
-                email: currentUser,
+                user: currentUser,
             },
         });
         this.subscriptions = result.data.user.subscriptions;

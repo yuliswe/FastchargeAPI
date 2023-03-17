@@ -3,10 +3,7 @@ import { RootAppState } from "../states/RootAppState";
 import { getGQLClient } from "../graphql-client";
 import { AppContext } from "../AppContext";
 import { gql } from "@apollo/client";
-import {
-    GQLGetUserAppsQuery,
-    GQLGetUserAppsQueryVariables,
-} from "../__generated__/gql-operations";
+import { GQLGetUserAppsQuery, GQLGetUserAppsQueryVariables } from "../__generated__/gql-operations";
 
 export type UserApp = GQLGetUserAppsQuery["user"]["apps"][0];
 class LoadMyApps extends AppEvent<RootAppState> {
@@ -25,13 +22,10 @@ class LoadMyApps extends AppEvent<RootAppState> {
     apps: UserApp[] = [];
     async *run(state: RootAppState): AppEventStream<RootAppState> {
         let { client, currentUser } = await getGQLClient(this.context);
-        let result = await client.query<
-            GQLGetUserAppsQuery,
-            GQLGetUserAppsQueryVariables
-        >({
+        let result = await client.query<GQLGetUserAppsQuery, GQLGetUserAppsQueryVariables>({
             query: gql`
-                query GetUserApps($email: Email!) {
-                    user(email: $email) {
+                query GetUserApps($user: ID!) {
+                    user(pk: $user) {
                         apps {
                             name
                             description
@@ -40,7 +34,7 @@ class LoadMyApps extends AppEvent<RootAppState> {
                 }
             `,
             variables: {
-                email: currentUser,
+                user: currentUser,
             },
         });
         this.apps = result.data.user.apps;

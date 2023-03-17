@@ -5,9 +5,10 @@ import { ApolloClient, createHttpLink, InMemoryCache, gql } from "@apollo/client
 import { setContext } from "@apollo/client/link/context";
 import { AppContext } from "./AppContext";
 import * as jose from "jose";
+import md5 from "md5";
 
 // debug
-const DEBUG_USE_LOCAL_GRAPHQL = false;
+const DEBUG_USE_LOCAL_GRAPHQL = true;
 
 const sqsClient = new SQSClient({ region: "us-east-1" });
 const cache = new InMemoryCache();
@@ -51,8 +52,20 @@ export async function getGQLClient(
         cache: new InMemoryCache(),
     });
 
-    let currentUser = user.email!;
-    return { client, currentUser };
+    let response = await client.query({
+        query: gql`
+            query GetUserPKByEmail($email: Email!) {
+                user(email: $email) {
+                    pk
+                }
+            }
+        `,
+        variables: {
+            email: user.email,
+        },
+    });
+
+    return { client, currentUser: response.data.user.pk };
 }
 
 /**
