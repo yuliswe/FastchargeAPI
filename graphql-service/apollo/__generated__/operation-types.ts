@@ -116,6 +116,7 @@ export type GQLGatewayDecisionResponse = {
     allowed: Scalars["Boolean"];
     pricingPK?: Maybe<Scalars["String"]>;
     reason?: Maybe<GQLGatewayDecisionResponseReason>;
+    userPK?: Maybe<Scalars["String"]>;
 };
 
 export enum GQLGatewayDecisionResponseReason {
@@ -274,8 +275,9 @@ export type GQLQueryAppFullTextSearchArgs = {
 
 export type GQLQueryCheckUserIsAllowedForGatewayRequestArgs = {
     app: Scalars["ID"];
+    forceAwait?: InputMaybe<Scalars["Boolean"]>;
     forceBalanceCheck?: InputMaybe<Scalars["Boolean"]>;
-    user: Scalars["ID"];
+    userEmail: Scalars["Email"];
 };
 
 export type GQLQueryEndpointArgs = {

@@ -235,7 +235,7 @@ export const userResolvers: GQLResolvers & {
             if (!(await Can.createUser({ email }, context))) {
                 throw new Denied();
             }
-            let user = await createUserWithEmail(context, email);
+            let user = await createUserWithEmail(context.batched, email);
             return user;
         },
     },

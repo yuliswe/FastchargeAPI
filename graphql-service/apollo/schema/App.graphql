@@ -25,7 +25,12 @@ type Query {
 
     secret(key: String!): Secret!
 
-    checkUserIsAllowedForGatewayRequest(user: ID!, app: ID!, forceBalanceCheck: Boolean): GatewayDecisionResponse!
+    checkUserIsAllowedForGatewayRequest(
+        userEmail: Email!
+        app: ID!
+        forceBalanceCheck: Boolean = false
+        forceAwait: Boolean = false
+    ): GatewayDecisionResponse!
 }
 
 enum GatewayDecisionResponseReason {
@@ -39,6 +44,7 @@ type GatewayDecisionResponse {
     allowed: Boolean!
     reason: GatewayDecisionResponseReason
     pricingPK: String
+    userPK: String
 }
 
 type Mutation {

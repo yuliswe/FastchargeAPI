@@ -138,6 +138,7 @@ export type GQLGatewayDecisionResponse = {
     allowed: Scalars["Boolean"];
     pricingPK?: Maybe<Scalars["String"]>;
     reason?: Maybe<GQLGatewayDecisionResponseReason>;
+    userPK?: Maybe<Scalars["String"]>;
 };
 
 export enum GQLGatewayDecisionResponseReason {
@@ -293,8 +294,9 @@ export type GQLQueryAppFullTextSearchArgs = {
 
 export type GQLQueryCheckUserIsAllowedForGatewayRequestArgs = {
     app: Scalars["ID"];
+    forceAwait?: InputMaybe<Scalars["Boolean"]>;
     forceBalanceCheck?: InputMaybe<Scalars["Boolean"]>;
-    user: Scalars["ID"];
+    userEmail: Scalars["Email"];
 };
 
 export type GQLQueryEndpointArgs = {
@@ -725,6 +727,7 @@ export type GQLGatewayDecisionResponseResolvers<
     allowed?: Resolver<GQLResolversTypes["Boolean"], ParentType, ContextType>;
     pricingPK?: Resolver<Maybe<GQLResolversTypes["String"]>, ParentType, ContextType>;
     reason?: Resolver<Maybe<GQLResolversTypes["GatewayDecisionResponseReason"]>, ParentType, ContextType>;
+    userPK?: Resolver<Maybe<GQLResolversTypes["String"]>, ParentType, ContextType>;
     __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -853,7 +856,10 @@ export type GQLQueryResolvers<
         GQLResolversTypes["GatewayDecisionResponse"],
         ParentType,
         ContextType,
-        RequireFields<GQLQueryCheckUserIsAllowedForGatewayRequestArgs, "app" | "user">
+        RequireFields<
+            GQLQueryCheckUserIsAllowedForGatewayRequestArgs,
+            "app" | "forceAwait" | "forceBalanceCheck" | "userEmail"
+        >
     >;
     endpoint?: Resolver<GQLResolversTypes["Endpoint"], ParentType, ContextType, Partial<GQLQueryEndpointArgs>>;
     endpoints?: Resolver<Maybe<Array<Maybe<GQLResolversTypes["Endpoint"]>>>, ParentType, ContextType>;

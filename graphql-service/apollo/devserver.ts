@@ -1,7 +1,8 @@
 import { startStandaloneServer } from "@apollo/server/standalone";
 import { server } from "./server";
 import { RequestContext, createDefaultContextBatched } from "./RequestContext";
-import { createUserIDFromEmail } from "./functions/user";
+import { GQLUserIndex } from "./__generated__/resolvers-types";
+import { createUserWithEmail } from "./functions/user";
 
 let { url } = await startStandaloneServer<RequestContext>(server, {
     listen: {
@@ -10,21 +11,26 @@ let { url } = await startStandaloneServer<RequestContext>(server, {
     context: async ({ req }) => {
         // Note: You must not trust the header in production. This is just for
         // development.
-        let email = req.headers["x-user-email"] as string;
+        let email = (req.headers["X-User-Email"] || req.headers["x-user-email"]) as string | undefined;
         // The batcher must be created for every request in order for it to
         // function properly.
         let batched = createDefaultContextBatched();
-        if (email) {
-            let userID = createUserIDFromEmail(email);
-            if (!(await batched.User.exists({ id: userID }))) {
-                await batched.User.create({
-                    id: userID,
-                    email: email,
-                });
+        if (!email) {
+            throw new Error("X-User-Email header is missing.");
+        }
+        let currentUser = await batched.User.getOrNull(
+            {
+                email: email,
+            },
+            {
+                using: GQLUserIndex.IndexByEmailOnlyPk,
             }
+        );
+        if (currentUser === null) {
+            currentUser = await createUserWithEmail(batched, email);
         }
         return Promise.resolve({
-            currentUser: email,
+            currentUser,
             batched,
             isServiceRequest: false,
             isSQSMessage: false,

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "@jest/globals";
+import { describe, expect, jest, test } from "@jest/globals";
 import { RequestContext, createDefaultContextBatched } from "../RequestContext";
 import { usageLogResolvers } from "../resolvers/usage";
 import { collectUsageLogs as collectUsageSummary } from "../functions/usage";
@@ -10,7 +10,6 @@ import { UsageLogPK } from "../pks/UsageLogPK";
 import { PricingPK } from "../pks/PricingPK";
 import { settleAccountActivities } from "../functions/account";
 import Decimal from "decimal.js-light";
-import { createUserWithEmail } from "../functions/user";
 import { GQLUserIndex } from "../__generated__/resolvers-types";
 import { UserPK } from "../pks/UserPK";
 
@@ -20,22 +19,14 @@ let context: RequestContext = {
     isSQSMessage: true,
     isAnonymousUser: false,
 };
-// jest.retryTimes(2);
+
 describe("Usage API", () => {
     let user: User;
-    test("Preparation: create a User", async () => {
-        try {
-            user = await createUserWithEmail(context, "testuser1.fastchargeapi@gmail.com");
-        } catch (e) {
-            if (e instanceof AlreadyExists) {
-                user = await context.batched.User.get(
-                    { email: "testuser1.fastchargeapi@gmail.com" },
-                    { using: GQLUserIndex.IndexByEmailOnlyPk }
-                );
-            } else {
-                throw e;
-            }
-        }
+    test("Preparation: get test user 1", async () => {
+        user = await context.batched.User.get(
+            { email: "testuser1.fastchargeapi@gmail.com" },
+            { using: GQLUserIndex.IndexByEmailOnlyPk }
+        );
         expect(user).not.toBe(null);
     });
 

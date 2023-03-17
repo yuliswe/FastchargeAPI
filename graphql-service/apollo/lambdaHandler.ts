@@ -7,7 +7,8 @@ import { BadInput, Unauthorized } from "./errors";
 import { RequestContext, RequestService, createDefaultContextBatched } from "./RequestContext";
 import { Chalk } from "chalk";
 import { LambdaRequest, LambdaResponse } from "@as-integrations/aws-lambda/dist/middleware";
-import { createUserIDFromEmail } from "./functions/user";
+import { createUserWithEmail } from "./functions/user";
+import { GQLUserIndex } from "./__generated__/resolvers-types";
 
 const chalk = new Chalk({ level: 3 });
 
@@ -123,10 +124,10 @@ let handle = startServerAndCreateLambdaHandler(
                 isServiceRequest = true;
             } else if (process.env.TRUST_X_USER_EMAIL_HEADER) {
                 console.warn(chalk.yellow("TRUST_X_USER_EMAIL_HEADER is enabled. Do not use this in production!"));
-                userEmail = event.headers["X-User-Email"] || "";
+                userEmail = event.headers["X-User-ID"] || event.headers["x-user-id"] || "";
                 if (!userEmail) {
-                    console.error(chalk.red("X-User-Email header is missing."));
-                    throw new BadInput(chalk.red("X-User-Email header is missing."));
+                    console.error(chalk.red("X-User-ID header is missing."));
+                    throw new BadInput(chalk.red("X-User-ID header is missing."));
                 }
                 isServiceRequest = false;
             } else if (event.requestContext.authorizer?.["isAnonymousUser"] === "true") {
@@ -139,11 +140,9 @@ let handle = startServerAndCreateLambdaHandler(
                 }
                 isServiceRequest = false;
             }
-            if (userEmail) {
-                await createUserIfNotExists(userEmail);
-            }
+            let currentUser = await getOrCreateUserFromEmail(userEmail!);
             return Promise.resolve({
-                currentUser: userEmail,
+                currentUser,
                 service: serviceName,
                 isServiceRequest,
                 batched: createDefaultContextBatched(),
@@ -155,11 +154,19 @@ let handle = startServerAndCreateLambdaHandler(
     }
 );
 
-async function createUserIfNotExists(email: string) {
-    let id = createUserIDFromEmail(email);
-    if (!(await batched.User.exists({ id }))) {
-        await batched.User.create({ id, email });
+async function getOrCreateUserFromEmail(email: string) {
+    let currentUser = await batched.User.getOrNull(
+        {
+            email,
+        },
+        {
+            using: GQLUserIndex.IndexByEmailOnlyPk,
+        }
+    );
+    if (currentUser === null) {
+        currentUser = await createUserWithEmail(batched, email);
     }
+    return currentUser;
 }
 
 export const lambdaHandler = async (event: APIGatewayProxyEvent, context: never, callback: never) => {

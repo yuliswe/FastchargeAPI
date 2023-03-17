@@ -1,6 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
 import { RequestContext, createDefaultContextBatched } from "../RequestContext";
-import { AlreadyExists } from "../errors";
 import { User } from "../dynamoose/models";
 import { stripePaymentAcceptResolvers } from "../resolvers/payment";
 import { getUserBalance } from "../functions/account";
@@ -8,9 +7,9 @@ import Decimal from "decimal.js-light";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { stripeTransferResolvers } from "../resolvers/transfer";
 import { GraphQLResolveInfo } from "graphql";
-import { createUserWithEmail } from "../functions/user";
 import { GQLUserIndex } from "../__generated__/resolvers-types";
 import { UserPK } from "../pks/UserPK";
+import { addMoneyForUser } from "./test-utils/account";
 
 let context: RequestContext = {
     batched: createDefaultContextBatched(),
@@ -21,39 +20,16 @@ let context: RequestContext = {
 // jest.retryTimes(2);
 describe("Payout API", () => {
     let user: User;
-    test("Prepration: create a User", async () => {
-        try {
-            user = await createUserWithEmail(context, "testuser1.fastchargeapi@gmail.com");
-        } catch (e) {
-            if (e instanceof AlreadyExists) {
-                user = await context.batched.User.get(
-                    { email: "testuser1.fastchargeapi@gmail.com" },
-                    { using: GQLUserIndex.IndexByEmailOnlyPk }
-                );
-            } else {
-                throw e;
-            }
-        }
+    test("Preparation: get test user 1", async () => {
+        user = await context.batched.User.get(
+            { email: "testuser1.fastchargeapi@gmail.com" },
+            { using: GQLUserIndex.IndexByEmailOnlyPk }
+        );
         expect(user).not.toBe(null);
     });
 
     test("Prepration: Add monty to the account", async () => {
-        let stripePaymentAccept = await context.batched.StripePaymentAccept.create({
-            user: UserPK.stringify(user),
-            amount: "100",
-            currency: "usd",
-            stripePaymentStatus: "paid",
-            stripeSessionId: "test",
-            stripePaymentIntent: "test",
-            stripeSessionObject: {},
-        });
-
-        await stripePaymentAcceptResolvers.StripePaymentAccept.settlePayment(
-            stripePaymentAccept,
-            { stripeSessionObject: "{}" },
-            context,
-            {} as GraphQLResolveInfo
-        );
+        await addMoneyForUser(context, { user: UserPK.stringify(user), amount: "100" });
     });
 
     test("Test: Withdraw the money", async () => {
@@ -94,12 +70,7 @@ describe("Payout API", () => {
         expect(feeActivity.status).toEqual("settled");
 
         // Examine new balance
-        let balanceAfter = new Decimal(
-            await getUserBalance(context, UserPK.stringify(user), {
-                refresh: true,
-                // consistent: true,
-            })
-        );
+        let balanceAfter = new Decimal(await getUserBalance(context, UserPK.stringify(user)));
 
         expect(balanceAfter.toString()).toEqual(balanceBefore.minus(100).toString());
     });

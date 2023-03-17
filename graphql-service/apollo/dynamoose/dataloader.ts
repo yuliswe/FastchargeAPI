@@ -1,10 +1,11 @@
 import DataLoader from "dataloader";
-import { InputKey, ModelType } from "dynamoose/dist/General";
+import { InputKey, KeyObject, ModelType } from "dynamoose/dist/General";
 import { Item } from "dynamoose/dist/Item";
 import { AlreadyExists, NotFound, UpdateContainsPrimaryKey } from "../errors";
 import hash from "object-hash";
 import { ConditionalCheckFailedException } from "@aws-sdk/client-dynamodb";
 import { Query as DynamogooseQuery } from "dynamoose/dist/ItemRetriever";
+import { QueryOptions } from "@apollo/client";
 
 type Optional<T> = T | undefined | null;
 type ConditionQuery<V> = {
@@ -521,6 +522,25 @@ export class Batched<I extends Item> {
         this.clearCache();
         await item.delete();
         return item;
+    }
+
+    async deleteMany(query: Partial<I>, options?: BatchOptions): Promise<I[]> {
+        let items = await this.many(query, options);
+        const deleteChunk = async (batch: I[]) => {
+            let pks = batch.map((x) => extractKeysFromItems(this.model, x));
+            await this.model.batchDelete(pks as KeyObject[]);
+        };
+
+        // Split the batch into chunks, and call batchGet100Max on each chunk
+        let promises: Promise<void>[] = [];
+        const batchSize = 25;
+        for (let i = 0; i < items.length; i += batchSize) {
+            let batch = items.slice(i, Math.min(i + batchSize, items.length));
+            promises.push(deleteChunk(batch));
+        }
+        await Promise.all(promises);
+        this.clearCache();
+        return items;
     }
 
     /**

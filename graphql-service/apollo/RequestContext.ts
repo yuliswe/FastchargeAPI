@@ -16,11 +16,12 @@ import {
     GatewayRequestCounterModel,
     GatewayRequestDecisionCacheModel,
     UserAppTokenModel,
+    User,
 } from "./dynamoose/models";
 
 export type RequestService = "payment" | "gateway" | "internal";
 export interface RequestContext extends BaseContext {
-    currentUser?: string;
+    currentUser?: User;
     isAnonymousUser?: boolean;
     service?: RequestService;
     isServiceRequest: boolean;

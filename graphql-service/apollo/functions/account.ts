@@ -145,32 +145,25 @@ export async function settleAccountActivities(
 export async function getUserBalance(
     context: RequestContext,
     userPK: string,
-    {
-        refresh,
-        consistent,
-    }: {
-        refresh?: boolean;
-        consistent?: boolean;
-    } = {}
+    { consistent }: { consistent?: boolean } = {}
 ): Promise<string> {
-    if (refresh) {
-        context.batched.AccountActivity.clearCache();
-    }
-    let accountHistory = await context.batched.AccountHistory.getOrNull(
-        {
-            user: userPK,
-        },
-        {
-            sort: "descending",
-            limit: 1,
-            consistent,
-        }
-    );
+    let accountHistory = await getUserAccountHistoryRepresentingBalance(context, userPK, { consistent });
     if (accountHistory) {
         return accountHistory.closingBalance;
     } else {
         return "0";
     }
+}
+
+/**
+ * Returns the most recent account history for the user.
+ */
+export async function getUserAccountHistoryRepresentingBalance(
+    context: RequestContext,
+    userPK: string,
+    { consistent }: { consistent?: boolean } = {}
+): Promise<AccountHistory | null> {
+    return context.batched.AccountHistory.getOrNull({ user: userPK }, { sort: "descending", limit: 1, consistent });
 }
 
 export function getAccountActivityByPK(context: RequestContext, pk: string): Promise<AccountActivity> {

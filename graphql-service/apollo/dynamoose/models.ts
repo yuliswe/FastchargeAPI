@@ -88,14 +88,14 @@ const validateStringDecimal = (fieldName: string) => (str: string) => {
 
 const UserTableSchema = new dynamoose.Schema(
     {
-        id: { type: String, hashKey: true },
+        uid: { type: String, hashKey: true },
         email: {
             type: String,
             required: true,
             index: {
                 type: "global",
                 name: "indexByEmail__onlyPK",
-                project: ["id"],
+                project: ["uid"],
             },
         },
         author: { type: String, default: "" },
@@ -492,7 +492,7 @@ export class Endpoint extends Item {
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
 export class User extends Item {
-    id: string;
+    uid: string;
     email: string;
     author: string;
     balance: string;

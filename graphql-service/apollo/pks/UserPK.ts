@@ -1,13 +1,16 @@
-import { User } from "../dynamoose/models";
+export type UserPKContent = {
+    uid: string;
+};
 
 export class UserPK {
-    static parse(pk: string): { id: string } {
+    static parse(pk: string): UserPKContent {
+        let uid = pk.replace(/^user_/, "");
         return {
-            id: pk,
+            uid,
         };
     }
 
-    static stringify(item: User): string {
-        return item.id;
+    static stringify(item: UserPKContent): string {
+        return "user_" + item.uid;
     }
 }

@@ -212,7 +212,7 @@ export async function shouldCollectMonthlyCharge(
         return {
             shouldBill: true,
             amount: diff.toString(),
-            isUpgrade: true,
+            isUpgrade: allBillsThisMonth.length > 0,
         };
     } else {
         return {

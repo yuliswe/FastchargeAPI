@@ -1,12 +1,10 @@
 import { describe, expect, test } from "@jest/globals";
 import { RequestContext, createDefaultContextBatched } from "../RequestContext";
-import { AlreadyExists } from "../errors";
 import { StripePaymentAccept, User } from "../dynamoose/models";
 import { stripePaymentAcceptResolvers } from "../resolvers/payment";
 import { getUserBalance } from "../functions/account";
 import Decimal from "decimal.js-light";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
-import { createUserWithEmail } from "../functions/user";
 import { GQLUserIndex } from "../__generated__/resolvers-types";
 import { UserPK } from "../pks/UserPK";
 
@@ -19,19 +17,11 @@ let context: RequestContext = {
 // jest.retryTimes(2);
 describe("Payment API", () => {
     let user: User;
-    test("create a User", async () => {
-        try {
-            user = await createUserWithEmail(context, "testuser1.fastchargeapi@gmail.com");
-        } catch (e) {
-            if (e instanceof AlreadyExists) {
-                user = await context.batched.User.get(
-                    { email: "testuser1.fastchargeapi@gmail.com" },
-                    { using: GQLUserIndex.IndexByEmailOnlyPk }
-                );
-            } else {
-                throw e;
-            }
-        }
+    test("Preparation: get test user 1", async () => {
+        user = await context.batched.User.get(
+            { email: "testuser1.fastchargeapi@gmail.com" },
+            { using: GQLUserIndex.IndexByEmailOnlyPk }
+        );
         expect(user).not.toBe(null);
     });
 

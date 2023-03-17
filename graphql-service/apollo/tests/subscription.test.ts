@@ -11,7 +11,6 @@ import { PricingPK } from "../pks/PricingPK";
 import { settleAccountActivities } from "../functions/account";
 import { UserPK } from "../pks/UserPK";
 import Decimal from "decimal.js-light";
-import { createUserWithEmail } from "../functions/user";
 import { GQLUserIndex } from "../__generated__/resolvers-types";
 
 let context: RequestContext = {
@@ -23,19 +22,12 @@ let context: RequestContext = {
 // jest.retryTimes(2);
 describe("Test when making a request the monthly subscription fee is charged.", () => {
     let user: User;
-    test("Preparation: create a User", async () => {
-        try {
-            user = await createUserWithEmail(context, "testuser1.fastchargeapi@gmail.com");
-        } catch (e) {
-            if (e instanceof AlreadyExists) {
-                user = await context.batched.User.get(
-                    { email: "testuser1.fastchargeapi@gmail.com" },
-                    { using: GQLUserIndex.IndexByEmailOnlyPk }
-                );
-            } else {
-                throw e;
-            }
-        }
+
+    test("Preparation: get test user 1", async () => {
+        user = await context.batched.User.get(
+            { email: "testuser1.fastchargeapi@gmail.com" },
+            { using: GQLUserIndex.IndexByEmailOnlyPk }
+        );
         expect(user).not.toBe(null);
     });
 
@@ -102,7 +94,6 @@ describe("Test when making a request the monthly subscription fee is charged.", 
             ))!;
             expect(usageLog).not.toBeNull();
             usageLogPK = UsageLogPK.stringify(usageLog);
-            // console.log(usageLog);
         }
     });
 
