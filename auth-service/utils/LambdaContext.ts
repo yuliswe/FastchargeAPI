@@ -7,6 +7,7 @@ import {
 
 export type AuthorizerContext = {
     userEmail: string | undefined;
+    userPK: string | undefined;
 };
 
 export type LambdaEventV2 = APIGatewayProxyEventV2WithLambdaAuthorizer<AuthorizerContext>;

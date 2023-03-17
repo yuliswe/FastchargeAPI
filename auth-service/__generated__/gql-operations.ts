@@ -116,6 +116,7 @@ export type GQLGatewayDecisionResponse = {
     allowed: Scalars["Boolean"];
     pricingPK?: Maybe<Scalars["String"]>;
     reason?: Maybe<GQLGatewayDecisionResponseReason>;
+    userPK?: Maybe<Scalars["String"]>;
 };
 
 export enum GQLGatewayDecisionResponseReason {
@@ -160,7 +161,7 @@ export type GQLMutationCreateAppArgs = {
     gatewayMode?: InputMaybe<GQLGatewayMode>;
     homepage?: InputMaybe<Scalars["String"]>;
     name: Scalars["String"];
-    owner: Scalars["String"];
+    owner: Scalars["ID"];
     repository?: InputMaybe<Scalars["String"]>;
     title?: InputMaybe<Scalars["String"]>;
 };
@@ -195,7 +196,7 @@ export type GQLMutationCreateStripePaymentAcceptArgs = {
     stripePaymentStatus: Scalars["String"];
     stripeSessionId: Scalars["String"];
     stripeSessionObject: Scalars["String"];
-    user: Scalars["String"];
+    user: Scalars["ID"];
 };
 
 export type GQLMutationCreateStripeTransferArgs = {
@@ -274,8 +275,9 @@ export type GQLQueryAppFullTextSearchArgs = {
 
 export type GQLQueryCheckUserIsAllowedForGatewayRequestArgs = {
     app: Scalars["ID"];
+    forceAwait?: InputMaybe<Scalars["Boolean"]>;
     forceBalanceCheck?: InputMaybe<Scalars["Boolean"]>;
-    user: Scalars["ID"];
+    userEmail: Scalars["Email"];
 };
 
 export type GQLQueryEndpointArgs = {

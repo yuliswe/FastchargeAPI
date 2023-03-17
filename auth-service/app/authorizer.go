@@ -1,9 +1,7 @@
 package main
 
 import (
-	"crypto/md5"
 	"crypto/rsa"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -90,7 +88,6 @@ func allowed(user *UserClaims) *events.APIGatewayV2CustomAuthorizerIAMPolicyResp
 		Context: map[string]interface{}{
 			"isAnonymousUser": "false",
 			"userEmail":       user.Email,
-			"userPK":          GetUserPKFromEmail(user.Email),
 			"firebaseUserId":  user.Sub,
 		},
 	}
@@ -328,14 +325,4 @@ func verifyUserAppToken(idToken string) (*UserClaims, error) {
 
 func getUserAppTokenPublicKey() string {
 	return "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE9CR7SW0cTqQBG1vxWnkjk5dO7zfv\nUeueXgubjSD6i6vcmHdetZ25/ItESQDBmX0LL2qYaPzqTJHbWKxqL+6CtA==\n-----END PUBLIC KEY-----\n"
-}
-
-func GetMD5Hash(text string) string {
-	hasher := md5.New()
-	hasher.Write([]byte(text))
-	return hex.EncodeToString(hasher.Sum(nil))
-}
-
-func GetUserPKFromEmail(email string) string {
-	return "user_" + GetMD5Hash(email)
 }
