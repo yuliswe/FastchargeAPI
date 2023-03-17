@@ -94,13 +94,13 @@ export type GQLDateRangeInput = {
 export type GQLEndpoint = {
     __typename?: "Endpoint";
     createdAt: Scalars["Timestamp"];
-    deleteEndpoint?: Maybe<GQLEndpoint>;
+    deleteEndpoint: GQLEndpoint;
     description?: Maybe<Scalars["String"]>;
     destination?: Maybe<Scalars["String"]>;
     method: GQLHttpMethod;
     path: Scalars["String"];
     pk: Scalars["String"];
-    updateEndpoint?: Maybe<GQLEndpoint>;
+    updateEndpoint: GQLEndpoint;
     updatedAt: Scalars["Timestamp"];
 };
 

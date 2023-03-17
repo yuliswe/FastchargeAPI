@@ -1,17 +1,17 @@
 from click import echo
 import requests
 
-from .login import get_or_refresh_id_token_from_auth_file
+from .login import read_or_refresh_auth_file
 
 
 class HttpClient:
     def __init__(self):
         self.session = requests.Session()
-        id_token = get_or_refresh_id_token_from_auth_file()
-        if id_token is None:
+        auth = read_or_refresh_auth_file()
+        if auth is None:
             echo("You must be logged in.")
             exit(1)
-        self.session.headers["Authorization"] = id_token
+        self.session.headers["Authorization"] = auth.id_token
 
     def get(self, url: str, **kwargs):
         return self.session.get(url, **kwargs)

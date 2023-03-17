@@ -5,11 +5,11 @@ from .fastcharge_app import get_app_or_prompt_exit
 from .graphql import get_client_info
 from .groups import fastcharge
 import click
-from gql import gql
 from click_aliases import ClickAliasedGroup
 from .exceptions import AlreadyExists, NotFound
 from click import echo
 import re
+from .__generated__ import gql_operations as GQL
 
 terminal = Terminal()
 
@@ -72,39 +72,27 @@ def validate_path_or_exit(path: str):
 @click.option(
     "--description", "descr", help="Add a description that is visble to customers."
 )
-def api_add(app_name: str, method: str, path: str, dest: str, descr: str):
+def api_add(app_name: str, method: GQL.HTTPMethod, path: str, dest: str, descr: str):
     """Add an API endpoint to an app.
 
     The API will start forwarding user requests:
 
     \thttps://[APP_NAME].fastchargeapi.com/[PATH] ~> [DESTINATION]
     """
-    client, email = get_client_info()
+    client, auth = get_client_info()
     app = get_app_or_prompt_exit(app_name)
     if dest is not None:
         validate_dest_or_exit(dest)
     if path is not None:
         validate_path_or_exit(path)
     try:
-        result = client.execute(
-            gql(
-                """
-                mutation CreateEndpoint($app: String!, $path: String!, $method: HTTPMethod!, $destination: String!, $description: String) {
-                    createEndpoint(app:$app, path:$path, method:$method, destination:$destination, description:$description) {
-                        path
-                        description
-                        destination
-                    }
-                }
-                """
-            ),
-            variable_values={
-                "app": app.name,
-                "method": method,
-                "path": path,
-                "destination": dest,
-                "description": descr or "",
-            },
+        GQL.create_endpoint(
+            client,
+            app=app_name,
+            path=path,
+            method=method,
+            destination=dest,
+            description=descr or "",
         )
     except AlreadyExists:
         echo(
@@ -141,7 +129,7 @@ def api_update(api_id: str, path: str, dest: str, descr: str):
 
     To find the API_IDs, see `fastcharge api list`.
     """
-    client, email = get_client_info()
+    client, auth = get_client_info()
     try:
         variable_values = {
             "api_id": api_id,
@@ -150,31 +138,7 @@ def api_update(api_id: str, path: str, dest: str, descr: str):
             "description": descr,
         }
         variable_values = {k: v for k, v in variable_values.items() if v}
-        endpoint = client.execute(
-            gql(
-                """
-                query GetEnpointAndUpdate (
-                    $api_id: ID!,
-                    $path: String, $destination: String, $description: String
-                ) {
-                    endpoint(ref: $api_id) {
-                        path
-                        updateEndpoint(
-                            path: $path, 
-                            destination: $destination, 
-                            description: $description
-                        ) {
-                            ref,
-                            path,
-                            description,
-                            destination,
-                        }
-                    }
-                }
-                """
-            ),
-            variable_values,
-        )["endpoint"]
+        endpoint = GQL.update_endpoint(client, api_id, **variable_values).updateEndpoint
     except (NotFound, AlreadyExists) as e:
         if isinstance(e, AlreadyExists):
             echo(
@@ -197,7 +161,7 @@ def api_update(api_id: str, path: str, dest: str, descr: str):
     else:
         echo(
             terminal.green
-            + f"Updated the API endpoint '{endpoint['path']}'."
+            + f"Updated the API endpoint '{endpoint.path}'."
             + terminal.normal
         )
 
@@ -212,28 +176,12 @@ def api_delete(api_id: str):
 
     To find the api_ids, see `fastcharge api list`.
     """
-    client, email = get_client_info()
+    client, auth = get_client_info()
     try:
-        result = client.execute(
-            gql(
-                """
-                query GetEnpointAndDelete ($pk: ID!) {
-                    endpoint(pk: $pk) {
-                        path
-                        deleteEndpoint {
-                            path,
-                        }
-                    }
-                }
-                """
-            ),
-            variable_values={
-                "pk": api_id,
-            },
-        )
+        result = GQL.delete_enpoint(client, api_id).deleteEndpoint
         echo(
             terminal.green
-            + f"Deleted the API endpoint '{result['endpoint']['path']}'."
+            + f"Deleted the API endpoint '{result.path}'."
             + terminal.normal
         )
     except NotFound:

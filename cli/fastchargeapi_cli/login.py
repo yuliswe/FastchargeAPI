@@ -8,8 +8,9 @@ from .groups import fastcharge, fastapi
 from . import config
 from click import echo
 from .auth_file import (
-    get_or_refresh_token,
-    get_or_refresh_id_token_from_auth_file,
+    query_user_pk,
+    read_or_refresh_auth_file,
+    verify_id_token,
     write_to_auth_file,
     auth_file_path,
 )
@@ -28,10 +29,11 @@ def fastcharge_dev_login():
 
 
 def do_login():
-    if token := get_or_refresh_id_token_from_auth_file():
+    if auth := read_or_refresh_auth_file():
+        echo("Login successful.")
         if os.environ.get("SHOW_AUTH") == "1":
-            echo(token)
-        return token
+            echo(auth)
+        return auth
 
     key = uuid4().hex
     jwe_secret = os.urandom(64)  # 512 bits
@@ -50,10 +52,19 @@ def do_login():
         if tries >= 3:
             input("Timed out. Press enter to retry.")
             continue
-    write_to_auth_file(id_token, refresh_token)
-    token = get_or_refresh_token(id_token, refresh_token)
+    user_email = verify_id_token(id_token)
+    assert user_email is not None, "ID token is invalid. Login failed."
+    user_pk = query_user_pk(id_token, user_email.email)
+    write_to_auth_file(
+        id_token=id_token,
+        refresh_token=refresh_token,
+        user_pk=user_pk,
+        email=user_email.email,
+    )
+    auth = read_or_refresh_auth_file()  # poluates user pk and email
+    echo("Login successful.")
     if os.environ.get("SHOW_AUTH") == "1":
-        echo(token)
+        echo(auth)
 
 
 @fastapi.command("logout")

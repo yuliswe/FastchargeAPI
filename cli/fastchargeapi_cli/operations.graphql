@@ -1,0 +1,209 @@
+query GetCurrentSubscription($user: ID, $app_name: String) {
+    subscription(subscriber: $user, app: $app_name) {
+        pk
+        pricing {
+            name
+        }
+    }
+}
+
+query ListAppPricingPks($app_name: String) {
+    app(name: $app_name) {
+        pricingPlans {
+            pk
+            name
+        }
+    }
+}
+
+query ListAllSubscriptionsForUser($user: ID!) {
+    user(pk: $user) {
+        subscriptions {
+            app {
+                name
+            }
+            pricing {
+                name
+                minMonthlyCharge
+                chargePerRequest
+            }
+        }
+    }
+}
+
+mutation SubscribeToApp($subscriber: ID!, $app: ID!, $pricing: ID!) {
+    createSubscription(subscriber: $subscriber, app: $app, pricing: $pricing) {
+        pk
+        createdAt
+    }
+}
+
+query ChangeSubscription($subPK: ID!, $newPricing: ID!) {
+    subscription(pk: $subPK) {
+        updateSubscription(pricing: $newPricing) {
+            updatedAt
+        }
+    }
+}
+query UnsubscribeFromApp($subscriber: ID!, $app: String!) {
+    subscription(subscriber: $subscriber, app: $app) {
+        deleteSubscription {
+            pricing {
+                name
+            }
+        }
+    }
+}
+
+query GetUserByEmail($email: Email!) {
+    user(email: $email) {
+        pk
+    }
+}
+
+mutation CreateEndpoint(
+    $app: String!
+    $path: String!
+    $method: HTTPMethod!
+    $destination: String!
+    $description: String
+) {
+    createEndpoint(app: $app, path: $path, method: $method, destination: $destination, description: $description) {
+        path
+        description
+        destination
+    }
+}
+
+query GetSecret($key: String!) {
+    secret(key: $key) {
+        value
+        deleteSecret {
+            key
+        }
+    }
+}
+
+query CreateUserAppToken($user: ID!, $app: ID!) {
+    user(pk: $user) {
+        createAppToken(app: $app) {
+            token
+        }
+    }
+}
+
+query DeleteUserAppTpken($user: ID!, $app: ID!) {
+    user(pk: $user) {
+        appToken(app: $app) {
+            deleteUserAppToken {
+                token
+            }
+        }
+    }
+}
+
+query GetUserAccountBalance($user: ID!) {
+    user(pk: $user) {
+        balance
+        stripeConnectAccountId
+    }
+}
+
+query UpdateEndpoint($endpoint: ID!, $path: String, $destination: String, $description: String) {
+    endpoint(pk: $endpoint) {
+        path
+        updateEndpoint(path: $path, destination: $destination, description: $description) {
+            pk
+            path
+            description
+            destination
+        }
+    }
+}
+
+query DeleteEnpoint($pk: ID!) {
+    endpoint(pk: $pk) {
+        path
+        deleteEndpoint {
+            path
+        }
+    }
+}
+
+mutation CreateApp($name: String!, $owner: ID!) {
+    createApp(name: $name, owner: $owner) {
+        name
+    }
+}
+
+query ListAppsOwnedByUser($user: ID!) {
+    user(pk: $user) {
+        apps {
+            name
+            gatewayMode
+            description
+            owner {
+                author
+            }
+        }
+    }
+}
+
+query GetAppDetail($name: String!) {
+    app(name: $name) {
+        name
+        description
+        gatewayMode
+        owner {
+            author
+        }
+    }
+}
+
+query DeleteApp($name: String!) {
+    app(name: $name) {
+        deleteApp {
+            name
+        }
+    }
+}
+
+query UpdateApp($app_name: String!, $description: String, $repository: String, $homepage: String) {
+    app(name: $app_name) {
+        updateApp(description: $description, repository: $repository, homepage: $homepage) {
+            name
+        }
+    }
+}
+
+query ListAppPricingDetails($app_name: String!) {
+    app(name: $app_name) {
+        name
+        description
+        pricingPlans {
+            pk
+            name
+            callToAction
+            minMonthlyCharge
+            chargePerRequest
+        }
+    }
+}
+
+mutation CreateAppPricingPlan(
+    $app: String!
+    $name: String!
+    $callToAction: String!
+    $minMonthlyCharge: String!
+    $chargePerRequest: String!
+) {
+    createPricing(
+        app: $app
+        name: $name
+        callToAction: $callToAction
+        minMonthlyCharge: $minMonthlyCharge
+        chargePerRequest: $chargePerRequest
+    ) {
+        name
+    }
+}

@@ -9,7 +9,7 @@ terminal = Terminal()
 
 
 def validate_app_exists(name: str):
-    client, email = get_client_info()
+    client, auth = get_client_info()
     try:
         app = client.execute(
             gql(

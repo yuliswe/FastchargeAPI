@@ -213,9 +213,9 @@ type Endpoint {
     createdAt: Timestamp!
     updatedAt: Timestamp!
 
-    updateEndpoint(method: HTTPMethod, path: String, destination: String, description: String): Endpoint
+    updateEndpoint(method: HTTPMethod, path: String, destination: String, description: String): Endpoint!
 
-    deleteEndpoint: Endpoint
+    deleteEndpoint: Endpoint!
 }
 
 type Pricing {

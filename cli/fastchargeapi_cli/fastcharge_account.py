@@ -9,10 +9,10 @@ from .http import HttpClient
 from .graphql import get_client_info
 from .groups import fastcharge
 import click
-from gql import gql
 from click import echo
 from click_aliases import ClickAliasedGroup
 from . import config
+from .__generated__ import gql_operations as GQL
 
 terminal = Terminal()
 
@@ -46,21 +46,9 @@ def fastcharge_account_withdraw(amount: str):
 
     Amount in USD.
     """
-    client, user_email = get_client_info()
-    user = client.execute(
-        gql(
-            """
-            query GetUserAccount($user_email: Email!) {
-                user(email: $user_email) {
-                    balance
-                    stripeConnectAccountId
-                }
-            }
-            """
-        ),
-        variable_values={"user_email": user_email},
-    )["user"]
-    balance = float(user["balance"])
+    client, auth = get_client_info()
+    user = GQL.get_user_account_balance(client, user=auth.user_pk)
+    balance = float(user.balance)
     withdraw = float(amount)
     withdraw_cents = int(withdraw * 100)
     if withdraw > balance:

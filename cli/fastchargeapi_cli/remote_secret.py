@@ -2,24 +2,23 @@ from dataclasses import dataclass
 import json
 import os
 import time
-from typing import Optional
+from typing import Any, Optional
 from uuid import uuid4
 from botocore import UNSIGNED
 from botocore.client import Config
 import boto3
-import botocore.exceptions
 from jose import jws
 from jose import jwe
-from gql import gql
 
 from .exceptions import NotFound
-
+from botocore.exceptions import ClientError as BotoClientError
 from .graphql import get_client_info
+from .__generated__ import gql_operations as GQL
 
 
 def get_remote_secret_from_s3(
     key: str, jwe_secret: bytes, jwt_secret: bytes
-) -> Optional[str]:
+) -> Optional[Any]:
     """Get the secret from the remote server. If decode_secret is provided,
     expect the value retrieved to be a JWT token and decode it using the
     provided secret."""
@@ -30,19 +29,21 @@ def get_remote_secret_from_s3(
     try:
         response = s3.get_object(Bucket="cli-auth-bucket", Key=key)
         s3.delete_object(Bucket="cli-auth-bucket", Key=key)
-    except botocore.exceptions.ClientError as e:
+    except BotoClientError as e:
         if e.response["Error"]["Code"] == "404":
             return None
         elif e.response["Error"]["Code"] == "AccessDenied":
             return None
         else:
             print(f"Error getting S3 object: {e}")
+            return None
 
     value = response["Body"].read().decode("utf-8")
     jwt_verified = jws.verify(value, jwt_secret, algorithms=["HS512"])
 
     encrypted = json.loads(jwt_verified)["encrypted"]
     jwe_decrypted = jwe.decrypt(encrypted, jwe_secret)
+    assert jwe_decrypted is not None
     return json.loads(jwe_decrypted)
 
 
@@ -55,35 +56,16 @@ def get_remote_secret(key: str, jwe_secret: bytes, jwt_secret: bytes) -> Optiona
     if not client or not user:
         raise Exception("Client or user not found.")
 
-    result = client.execute(
-        gql(
-            """
-                query GetSecret(
-                    $key: String!
-                ) {
-                    secret(
-                        key: $key
-                    ) {
-                        value,
-                        deleteSecret {
-                            key
-                        }
-                    }
-                }
-            """,
-        ),
-        variable_values={"key": key},
-    )
+    secret = GQL.get_secret(client, key=key)
 
-    if result["secret"] is None:
+    if secret is None:
         return None
 
-    value = result["secret"]["value"]
-    jwt_verified = jws.verify(value, jwt_secret, algorithms=["HS512"])
+    jwt_verified = jws.verify(secret.value, jwt_secret, algorithms=["HS512"])
 
     encrypted = json.loads(jwt_verified)["encrypted"]
     jwe_decrypted = jwe.decrypt(encrypted, jwe_secret)
-
+    assert jwe_decrypted is not None
     return json.loads(jwe_decrypted)
 
 
@@ -124,7 +106,7 @@ class InteractWithReactResult:
             else get_remote_secret
         )
 
-    def read(self) -> object:
+    def read(self) -> Any:
         tries = 0
         while True:
             time.sleep(self.poll_interval_seconds)

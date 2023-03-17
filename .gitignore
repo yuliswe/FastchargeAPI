@@ -11,3 +11,4 @@ build
 .pytest_cache
 **/.symlinks/
 **/.aws-sam/
+**/__pycache__/

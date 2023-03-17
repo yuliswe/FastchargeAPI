@@ -1,11 +1,11 @@
 from .exceptions import NotFound, TooManyResources
 from .graphql import get_client_info
-from gql import gql
 from .groups import fastapi
 from blessings import Terminal
 from click import echo
 from click_aliases import ClickAliasedGroup
 import click
+from .__generated__ import gql_operations as GQL
 
 terminal = Terminal()
 
@@ -22,26 +22,12 @@ def fastcharge_token():
 def create_app_user_token(app_name):
     """Create an API token for the specified app."""
 
-    client, email = get_client_info()
+    client, auth = get_client_info()
     try:
-        result = client.execute(
-            gql(
-                """
-                query CreateUserAppTpken($user: Email!, $app: ID!) {
-                    user(email: $user) {
-                        createAppToken(app: $app) {
-                            token
-                        }
-                    }
-                }
-                """
-            ),
-            {"app": app_name, "user": email},
-        )
-        token = result["user"]["createAppToken"]["token"]
+        response = GQL.create_user_app_token(client, user=auth.user_pk, app=app_name)
         echo(terminal.green("Token created successfully."))
         echo(terminal.yellow("Save this token! You will not be able to see it again."))
-        echo(token)
+        echo(response.createAppToken.token)
     except NotFound:
         echo(terminal.red + f'App "{app_name}" not found.' + terminal.normal)
         exit(1)
@@ -60,24 +46,9 @@ def create_app_user_token(app_name):
 @click.argument("app_name", required=True)
 def revoke_app_user_token(app_name):
     """Revoke the API token for the specified app."""
-    client, email = get_client_info()
+    client, auth = get_client_info()
     try:
-        result = client.execute(
-            gql(
-                """
-                query CreateUserAppTpken($user: Email!, $app: ID!) {
-                    user(email: $user) {
-                        appToken(app: $app) {
-                            deleteUserAppToken {
-                                token
-                            }
-                        }
-                    }
-                }
-                """
-            ),
-            {"app": app_name, "user": email},
-        )
+        response = GQL.delete_user_app_tpken(client, user=auth.user_pk, app=app_name)
         echo(
             terminal.green
             + f'Successfully revoked user token for app "{app_name}".'

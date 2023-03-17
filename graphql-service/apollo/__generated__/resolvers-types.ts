@@ -116,13 +116,13 @@ export type GQLDateRangeInput = {
 export type GQLEndpoint = {
     __typename?: "Endpoint";
     createdAt: Scalars["Timestamp"];
-    deleteEndpoint?: Maybe<GQLEndpoint>;
+    deleteEndpoint: GQLEndpoint;
     description?: Maybe<Scalars["String"]>;
     destination?: Maybe<Scalars["String"]>;
     method: GQLHttpMethod;
     path: Scalars["String"];
     pk: Scalars["String"];
-    updateEndpoint?: Maybe<GQLEndpoint>;
+    updateEndpoint: GQLEndpoint;
     updatedAt: Scalars["Timestamp"];
 };
 
@@ -704,14 +704,14 @@ export type GQLEndpointResolvers<
     ParentType extends GQLResolversParentTypes["Endpoint"] = GQLResolversParentTypes["Endpoint"]
 > = ResolversObject<{
     createdAt?: Resolver<GQLResolversTypes["Timestamp"], ParentType, ContextType>;
-    deleteEndpoint?: Resolver<Maybe<GQLResolversTypes["Endpoint"]>, ParentType, ContextType>;
+    deleteEndpoint?: Resolver<GQLResolversTypes["Endpoint"], ParentType, ContextType>;
     description?: Resolver<Maybe<GQLResolversTypes["String"]>, ParentType, ContextType>;
     destination?: Resolver<Maybe<GQLResolversTypes["String"]>, ParentType, ContextType>;
     method?: Resolver<GQLResolversTypes["HTTPMethod"], ParentType, ContextType>;
     path?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
     pk?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
     updateEndpoint?: Resolver<
-        Maybe<GQLResolversTypes["Endpoint"]>,
+        GQLResolversTypes["Endpoint"],
         ParentType,
         ContextType,
         Partial<GQLEndpointUpdateEndpointArgs>

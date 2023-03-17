@@ -7,11 +7,11 @@ from .validate import validate_app_exists
 from .graphql import get_client_info
 from .groups import fastapi
 import click
-from gql import gql
 import colorama
 from click_aliases import ClickAliasedGroup
 from click import echo
 from .exceptions import NotFound
+from .__generated__ import gql_operations as GQL
 
 terminal = Terminal()
 
@@ -26,45 +26,27 @@ def fastapi_subscribe():
 @fastapi_subscribe.command("list", aliases=["ls"])
 def subscribe_list():
     """List your subscriptions."""
-    client, email = get_client_info()
-    subscriptions = client.execute(
-        gql(
-            """
-            query GetSubscriptions($email: Email) {
-                user(email: $email) {
-                    subscriptions {
-                        app {
-                            name
-                        }
-                        pricing {
-                            name
-                            minMonthlyCharge
-                            chargePerRequest
-                        }
-                    }
-                }
-            }
-            """
-        ),
-        {"email": email},
-    )["user"]["subscriptions"]
+    client, auth = get_client_info()
+    subscriptions = GQL.list_all_subscriptions_for_user(
+        client, user=auth.user_pk
+    ).subscriptions
     echo(terminal.yellow("All apps that you are currently subscribed to:\n"))
     for sub in subscriptions:
-        app = sub["app"]
-        pricing = sub["pricing"]
+        app = sub.app
+        pricing = sub.pricing
         echo(
             terminal.blue
             + terminal.bold
-            + f'App "{app["name"]}": \n Current pricing plan "{pricing["name"]}":'
+            + f'App "{app.name}": \n Current pricing plan "{pricing.name}":'
             + terminal.normal
         )
         echo(
-            f"  ${float(pricing['minMonthlyCharge']):.2f} monthly subscription",
+            f"  ${float(pricing.minMonthlyCharge):.2f} monthly subscription",
             nl=False,
         )
         echo(
             f" + additional "
-            + f"${float(pricing['chargePerRequest']):.2f}".rstrip("0").rstrip(".")
+            + f"${float(pricing.chargePerRequest):.2f}".rstrip("0").rstrip(".")
             + " per request"
         )
         echo("  First 1000 requests are free of charge.")
@@ -76,25 +58,13 @@ def subscribe_list():
 @click.option("-p", "--plan", help="Name of the plan to subscribe to.")
 def subscription_add(app_name: str, plan: Optional[str] = None):
     """Subscribe to an app."""
-    client, email = get_client_info()
+    client, auth = get_client_info()
     validate_app_exists(app_name)
     # Get the pricing plan the user is currently subscribed to, to provide a better output.
     try:
-        current_sub = client.execute(
-            gql(
-                """
-                    query GetCurrentSubscription($user_email: Email, $app_name: String) {
-                        subscription(subscriber: $user_email, app: $app_name) {
-                            pk
-                            pricing {
-                                name
-                            }
-                        }
-                    }
-                    """
-            ),
-            variable_values={"app_name": app_name, "user_email": email},
-        )["subscription"]
+        current_sub = GQL.get_current_subscription(
+            client, user=auth.user_pk, app_name=app_name
+        )
     except NotFound:
         current_sub = None
     # If no plan is specified, print out the available plans and exit.
@@ -106,44 +76,16 @@ def subscription_add(app_name: str, plan: Optional[str] = None):
         )
         # List all the pricing plans for the app, and get the one the user wants to
         # subscribe to, saved as `subscribing_pricing`.
-        available_plans = client.execute(
-            gql(
-                """
-                query ListAppPricing($app_name: String) {
-                    app(name: $app_name) {
-                        pricingPlans {
-                            name
-                        }
-                    }
-                }
-                """
-            ),
-            variable_values={"app_name": app_name},
-        )["app"]["pricingPlans"]
-        available_plans = [p["name"] for p in available_plans]
+        available_plans = GQL.list_app_pricing_pks(client, app_name).pricingPlans
+        available_plans = [p.name for p in available_plans]
         echo(f"Available plans: {available_plans}")
         exit(1)
     # List all the pricing plans for the app, and get the one the user wants to
     # subscribe to, saved as `subscribing_pricing`.
-    result = client.execute(
-        gql(
-            """
-            query ListAppPricing($app_name: String) {
-                app(name: $app_name) {
-                    pricingPlans {
-                        name
-                        pk
-                    }
-                }
-            }
-            """
-        ),
-        variable_values={"app_name": app_name},
-    )
-    pricing_plans = result["app"]["pricingPlans"]
-    subscribing_pricing: str = None
+    pricing_plans = GQL.list_app_pricing_pks(client, app_name).pricingPlans
+    subscribing_pricing = None
     for p in pricing_plans:
-        if p["name"] == plan:
+        if p.name == plan:
             subscribing_pricing = p
             break
     if subscribing_pricing is None:
@@ -152,28 +94,18 @@ def subscription_add(app_name: str, plan: Optional[str] = None):
             + f'Pricing plan with the name "{plan}" does not exist.'
             + colorama.Fore.RESET
         )
-        available_plans = [p["name"] for p in pricing_plans]
+        available_plans = [p.name for p in pricing_plans]
         echo(f"Available plans: {available_plans}")
         exit(1)
     if current_sub is None:
         # Subscribe to new plan
-        client.execute(
-            gql(
-                """
-                mutation CreateSubscribe($subscriber: Email!, $app: String!, $pricing: ID!) {
-                    createSubscription(subscriber: $subscriber, app: $app, pricing: $pricing) {
-                        createdAt
-                    }
-                }
-                """
-            ),
-            {
-                "subscriber": email,
-                "app": app_name,
-                "pricing": subscribing_pricing["pk"],
-            },
+        GQL.subscribe_to_app(
+            client,
+            subscriber=auth.user_pk,
+            app=app_name,
+            pricing=subscribing_pricing.pk,
         )
-    elif current_sub["pricing"]["name"] == plan:
+    elif current_sub.pricing.name == plan:
         echo(
             colorama.Fore.YELLOW
             + f'You are already subscribed to the plan "{plan}".'
@@ -181,30 +113,15 @@ def subscription_add(app_name: str, plan: Optional[str] = None):
         )
         exit(1)
     else:
-        client.execute(
-            gql(
-                """
-                query UpdateSubscribe($subPK: ID!, $newPricing: ID!) {
-                    subscription(pk: $subPK) {
-                        updateSubscription(pricing: $newPricing) {
-                            updatedAt
-                        }
-                    }
-                }
-                """
-            ),
-            {
-                "subPK": current_sub["pk"],
-                "newPricing": subscribing_pricing["pk"],
-            },
+        GQL.change_subscription(
+            client, subPK=current_sub.pk, newPricing=subscribing_pricing.pk
         )
     echo(
         terminal.green
-        + terminal.bold
         + (
-            f"Switching to a new plan: \"{subscribing_pricing['name']}\"."
+            f'Switching to a new plan: "{subscribing_pricing.name}".'
             if current_sub
-            else f"Subscribed to: \"{subscribing_pricing['name']}\"."
+            else f'Subscribed to: "{subscribing_pricing.name}".'
         )
         + terminal.normal
     )
@@ -215,7 +132,8 @@ def subscription_add(app_name: str, plan: Optional[str] = None):
 def subscription_remove(app_name: str):
     """Unsubscribe from an app."""
     try:
-        subscription = unsubscribe(app_name)
+        client, auth = get_client_info()
+        GQL.unsubscribe_from_app(client, subscriber=auth.user_pk, app=app_name)
     except NotFound:
         echo(
             terminal.red
@@ -234,24 +152,3 @@ def subscription_remove(app_name: str):
             + 'Unsubscribed from app: "{app_name}"'
             + terminal.normal
         )
-
-
-def unsubscribe(app_name: str):
-    client, email = get_client_info()
-    subscription = client.execute(
-        gql(
-            """
-            query Unsubscribe($subscriber: Email!, $app: String!) {
-                subscription(subscriber: $subscriber, app: $app) {
-                    deleteSubscription {
-                        pricing {
-                            name
-                        }
-                    }
-                }
-            }
-            """
-        ),
-        {"subscriber": email, "app": app_name},
-    )["subscription"]
-    return subscription

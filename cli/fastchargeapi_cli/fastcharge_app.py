@@ -5,11 +5,11 @@ from .groups import fastcharge
 import click
 from .exceptions import NotFound
 from .graphql import get_client_info
-from gql import gql
 from dataclasses import dataclass
 import colorama
 from click_aliases import ClickAliasedGroup
 from click import echo
+from .__generated__ import gql_operations as GQL
 
 terminal = Terminal()
 
@@ -33,26 +33,8 @@ def fastcharge_app_create(name: str):
             "Please use a different name." + terminal.normal
         )
         return
-    client, email = get_client_info()
-    result = client.execute(
-        gql(
-            """
-                mutation ($name: String!, $owner: String!) {
-                    createApp(name: $name, owner: $owner) {
-                        name
-                    }
-                }
-            """
-        ),
-        variable_values={
-            k: v
-            for k, v in {
-                "name": name,
-                "owner": email,
-            }.items()
-            if v
-        },
-    )
+    client, auth = get_client_info()
+    GQL.create_app(client, name=name, owner=auth.user_pk)
     echo(
         terminal.green
         + terminal.bold
@@ -64,8 +46,17 @@ def fastcharge_app_create(name: str):
 @fastcharge_dev_app.command("list", aliases=["ls"])
 def fastcharge_app_list():
     """List your apps."""
-    for app in list_apps():
-        app.pretty_print()
+    client, auth = get_client_info()
+    apps = GQL.list_apps_owned_by_user(client, user=auth.user_pk).apps
+    for app in apps:
+        echo(terminal.blue + terminal.bold + f"{app.name}:" + terminal.normal)
+        echo(
+            terminal.dim
+            + " "
+            + (app.description or "No description.")
+            + terminal.no_dim
+        )
+        echo()
 
 
 @fastcharge_dev_app.command("delete", aliases=["del"])
@@ -76,8 +67,7 @@ def fastcharge_app_delete(name: str):
         echo(f'An app with the name "{name}" does not exist.')
         return
     delete_app(name)
-    echo(colorama.Fore.CYAN + name, end="")
-    echo(colorama.Style.RESET_ALL + " deleted.")
+    echo(f"App {name} deleted.")
 
 
 @dataclass
@@ -98,87 +88,21 @@ class AppInfo:
         echo()
 
 
-def list_apps() -> list[AppInfo]:
-    client, email = get_client_info()
-    apps = client.execute(
-        gql(
-            """
-            query GetUserAndApps($email: Email!) {
-                user(email: $email) {
-                    apps {
-                        name,
-                        gatewayMode,
-                        description,
-                        owner {
-                            author
-                        },
-                        ownedByYou
-                    }
-                }
-            }
-            """
-        ),
-        variable_values={"email": email},
-    )["user"]["apps"]
-    return [
-        AppInfo(
-            name=app["name"],
-            gatewayMode=app["gatewayMode"],
-            author=app["owner"]["author"],
-            description=app["description"],
-        )
-        for app in apps
-    ]
-
-
-def get_app(name: str) -> Optional[AppInfo]:
-    client, email = get_client_info()
+def get_app(name: str) -> Optional[GQL.GetAppDetailApp]:
+    client, auth = get_client_info()
     try:
-        app = client.execute(
-            gql(
-                """
-                query GetApp($name: String!) {
-                    app(name: $name) {
-                        name,
-                        description,
-                        gatewayMode,
-                        owner {
-                            author
-                        },
-                        ownedByYou
-                    }
-                }
-                """
-            ),
-            {"name": name},
-        )["app"]
-        return AppInfo(
-            name=app["name"],
-            gatewayMode=app["gatewayMode"],
-            author=app["owner"]["author"],
-            description=app["description"],
-        )
+        app = GQL.get_app_detail(client, name=name)
+        return app
     except NotFound:
         return None
 
 
 def delete_app(name: str):
-    client, email = get_client_info()
-    result = client.execute(
-        gql(
-            """
-            mutation DeleteApp($name: String!) {
-                deleteApp(name: $name) {
-                    name
-                }
-            }
-            """
-        ),
-        {"name": name},
-    )
+    client, auth = get_client_info()
+    result = GQL.delete_app(client, name=name)
 
 
-def get_app_or_prompt_exit(app_name: str) -> Optional[AppInfo]:
+def get_app_or_prompt_exit(app_name: str) -> Optional[GQL.GetAppDetailApp]:
     """Get an app by name, or prompt the user it doesn't exist."""
     if (app := get_app(app_name)) is None:
         echo(colorama.Fore.RED + f'An app with the name "{app_name}" does not exist.')
@@ -209,31 +133,9 @@ def fastcharge_app_update(
     app_name: str, description: str, repository: str, homepage: str
 ):
     """Update information for an existing app."""
-    client, email = get_client_info()
+    client, auth = get_client_info()
     try:
-        result = client.execute(
-            gql(
-                """
-                query GetAppAndUpdate($app_name: String!, $description: String, $gateway_mode: GatewayMode, $repository: String, $homepage: String) {
-                    app(name: $app_name) {
-                        updateApp(description: $description, gatewayMode: $gateway_mode, repository: $repository, homepage: $homepage) {
-                            name
-                        }
-                    }
-                }
-                """
-            ),
-            {
-                k: v
-                for k, v in {
-                    "app_name": app_name,
-                    "description": description,
-                    "repository": repository,
-                    "homepage": homepage,
-                }.items()
-                if v is not None
-            },
-        )["app"]
+        GQL.update_app(client, app_name, description, repository, homepage)
     except NotFound:
         echo(
             terminal.red

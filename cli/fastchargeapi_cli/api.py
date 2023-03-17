@@ -19,7 +19,7 @@ class APIInfo:
 
 
 def do_api_list(app_name: str):
-    client, email = get_client_info()
+    client, auth = get_client_info()
     app = get_app_or_prompt_exit(app_name)
     result = [
         client.execute(

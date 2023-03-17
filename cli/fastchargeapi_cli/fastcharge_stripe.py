@@ -1,16 +1,10 @@
-import textwrap
 import webbrowser
 
 from blessings import Terminal
 
-from .local_server import LocalServerResponse, start_local_server
 
-from .fastcharge_app import get_app, get_app_or_prompt_exit
-from .graphql import get_client_info
 from .groups import fastcharge
 import click
-from gql import gql
-from dataclasses import dataclass
 from click import echo
 from . import config
 

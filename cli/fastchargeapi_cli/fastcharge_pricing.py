@@ -2,13 +2,13 @@ from .fastcharge_app import get_app_or_prompt_exit
 from .graphql import get_client_info
 from .groups import fastcharge
 import click
-from gql import gql
 import colorama
 from dataclasses import dataclass
 from click_aliases import ClickAliasedGroup
-from .exceptions import AlreadyExists
+from .exceptions import AlreadyExists, NotFound
 from blessings import Terminal
 from click import echo
+from .__generated__ import gql_operations as GQL
 
 terminal = Terminal()
 
@@ -29,83 +29,26 @@ def fastcharge_dev_pricing():
 
 
 @fastcharge_dev_pricing.command("list", aliases=["ls"])
-@click.option("-a", "--app", "app_name", help="Show pricing for a specific app.")
+@click.argument("app_name", required=True)
 @click.help_option("-h", "--help")
 def pricing_list(app_name: str):
-    """List pricing plans for each app."""
-    client, email = get_client_info()
-    if app_name:
-        if get_app_or_prompt_exit(app_name) is None:
-            return
-        apps = [
-            client.execute(
-                gql(
-                    """
-                    query($app_name: String!) {
-                        app(name: $app_name) {
-                            name
-                            description
-                            pricingPlans {
-                                pk
-                                name
-                                callToAction
-                                minMonthlyCharge
-                                chargePerRequest
-                            }
-                        }
-                    }
-                    """
-                ),
-                {
-                    "email": email,
-                    "app_name": app_name,
-                },
-            )["app"]
-        ]
-    else:
-        apps = client.execute(
-            gql(
-                """
-                query($email:Email) {
-                    user(email: $email) {
-                        apps {
-                            name
-                            description
-                            pricingPlans {
-                                pk
-                                name
-                                callToAction
-                                minMonthlyCharge
-                                chargePerRequest
-                            }
-                        }
-                    }
-                }
-                """
-            ),
-            {
-                "email": email,
-                "app": app_name,
-            },
-        )["user"]["apps"]
-    for app in apps:
-        pretty_print_app_pricing(app)
-        echo()
-
-
-def pretty_print_app_pricing(app_info: dict):
-    plans = [PricingInfo(**p) for p in app_info["pricingPlans"]]
-    echo(terminal.blue + terminal.bold + f"app: {app_info['name']}" + terminal.normal)
+    """List pricing plans for [APP]."""
+    client, auth = get_client_info()
+    if get_app_or_prompt_exit(app_name) is None:
+        return
+    app = GQL.list_app_pricing_details(client, app_name=app_name)
+    echo(terminal.blue + terminal.bold + f"app: {app.name}" + terminal.normal)
     # echo(
     #     colorama.Style.DIM
     #     + f"\n  {app['description'] or 'No description.'}"
     #     + colorama.Style.RESET_ALL
     # )
-    if plans:
+    if app.pricingPlans:
         echo(terminal.bold + " Available plans:" + terminal.normal)
     else:
         echo(colorama.Style.RESET_ALL + " No pricing plans available.")
-    for plan in plans:
+        exit(0)
+    for plan in app.pricingPlans:
         echo(colorama.Style.RESET_ALL, nl=False)
         echo(terminal.green + terminal.bold + f"  name: {plan.name}" + terminal.normal)
         echo(terminal.bold + f"  id: {plan.pk}" + terminal.normal)
@@ -147,40 +90,18 @@ def pricing_add(
     charge_per_request: str,
 ):
     """Add a pricing plan to an existing app."""
-    client, email = get_client_info()
+    client, auth = get_client_info()
     app = get_app_or_prompt_exit(app_name)
     try:
-        result = client.execute(
-            gql(
-                """
-                mutation(
-                    $app: String!,
-                    $name: String!,
-                    $callToAction: String!,
-                    $minMonthlyCharge: String!,
-                    $chargePerRequest: String!
-                ) {
-                    createPricing(
-                        app: $app,
-                        name: $name,
-                        callToAction: $callToAction,
-                        minMonthlyCharge: $minMonthlyCharge,
-                        chargePerRequest: $chargePerRequest
-                    ) {
-                        name
-                    }
-                }
-                """
-            ),
-            variable_values={
-                "app": app_name,
-                "name": name,
-                "callToAction": call_to_action or "",
-                "minMonthlyCharge": str(min_monthly_charge),
-                "chargePerRequest": str(charge_per_request),
-            },
+        result = GQL.create_app_pricing_plan(
+            client,
+            app=app_name,
+            name=name,
+            callToAction=call_to_action,
+            minMonthlyCharge=str(min_monthly_charge),
+            chargePerRequest=str(charge_per_request),
         )
-        echo(result)
+        echo(terminal.green + "Pricing plan added successfully." + terminal.normal)
     except AlreadyExists:
         echo(
             colorama.Fore.RED

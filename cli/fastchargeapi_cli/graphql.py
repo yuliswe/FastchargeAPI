@@ -1,28 +1,28 @@
+from dataclasses import dataclass
 from functools import cache
+from hashlib import md5
+from typing import Optional
 from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
 from gql.transport.exceptions import TransportQueryError
-from .auth_file import read_auth_file, get_or_refresh_user_from_auth_file
+from .auth_file import AuthFileContent, read_or_refresh_auth_file
 from .exceptions import AlreadyExists, NotFound, TooManyResources
 from click import echo
 from .config import graphql_host
-import os
-
-
-def make_client(id_token: str, user_email: str) -> Client:
-    transport = AIOHTTPTransport(
-        graphql_host,
-        headers={
-            "Authorization": id_token,
-            "X-User-Email": user_email,
-        },
-    )
-    return Client(transport=transport, fetch_schema_from_transport=True)
 
 
 class GQLClient:
-    def __init__(self, id_token: str, user_email: str):
-        self.client = make_client(id_token, user_email)
+    def __init__(
+        self, *, id_token: Optional[str] = None, user_email: Optional[str] = None
+    ):
+        transport = AIOHTTPTransport(
+            graphql_host,
+            headers={
+                "Authorization": id_token or "",
+                "X-User-Email": user_email or "",
+            },
+        )
+        self.client = Client(transport=transport, fetch_schema_from_transport=False)
         self.user_email = user_email
 
     def execute(self, *args, **kwargs) -> dict:
@@ -40,18 +40,25 @@ class GQLClient:
                 raise e
 
 
+def gql_execute(client, model, variables):
+    result = client.execute(gql(model.Meta.document), variable_values=variables)
+    return model(**result)
+
+
+@dataclass
+class User:
+    email: str
+    pk: str
+
+
 @cache
-def get_client_info() -> tuple[Client, str]:
+def get_client_info() -> tuple[GQLClient, AuthFileContent]:
     """This function returns a tuple of (client, user_email). Is it root
     function that identifies the user for the cli."""
-    if os.environ.get("TEST") == "1":
-        email = os.environ.get("USER")
-        return GQLClient("", email), email
+    auth = read_or_refresh_auth_file()
 
-    user = get_or_refresh_user_from_auth_file()
-    if user is None:
+    if auth is None:
         echo("You must be logged in.")
         exit(1)
 
-    auth = read_auth_file()
-    return GQLClient(auth["id_token"], user["email"]), user["email"]
+    return GQLClient(id_token=auth.id_token, user_email=auth.email), auth
