@@ -4,6 +4,7 @@ import { Chalk } from "chalk";
 import { getStripeClient } from "../utils/stripe-client";
 import { LambdaEventV2, LambdaHandlerV2, getAuthorizerContext } from "../utils/LambdaContext";
 import { SES } from "aws-sdk";
+import { GQLUserIndex } from "__generated__/gql-operations";
 
 const chalk = new Chalk({ level: 3 });
 let ses = new SES({ region: "us-east-1" });
@@ -19,7 +20,7 @@ async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredRe
     if (!userEmail) {
         throw new Error("User email is not set");
     }
-    let user = await batched.User.get({ email: userEmail });
+    let user = await batched.User.get({ email: userEmail }, { using: GQLUserIndex.IndexByEmailOnlyPk });
     if (!user.stripeConnectAccountId) {
         throw new Error("User stripeConnectAccountId not found");
     }

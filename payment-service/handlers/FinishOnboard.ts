@@ -8,6 +8,7 @@ import { LambdaCallbackV2, LambdaEventV2, LambdaHandlerV2 } from "../utils/Lambd
 import { parseStripeWebhookEvent } from "../utils/stripe-client";
 import Stripe from "stripe";
 import { createDefaultContextBatched } from "graphql-service";
+import { GQLUserIndex } from "__generated__/gql-operations";
 
 const chalk = new Chalk({ level: 3 });
 const batched = createDefaultContextBatched();
@@ -24,12 +25,10 @@ async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredRe
                 throw new Error("No email on stripeEvent.data.object.email");
             }
 
-            await batched.User.update(
-                { email: userEmail },
-                {
-                    stripeConnectAccountId: accountUpdatedObject.id,
-                }
-            );
+            let user = await batched.User.get({ email: userEmail }, { using: GQLUserIndex.IndexByEmailOnlyPk });
+            await batched.User.update(user, {
+                stripeConnectAccountId: accountUpdatedObject.id,
+            });
 
             return {
                 statusCode: 200,

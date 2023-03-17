@@ -4,6 +4,7 @@ import { LambdaCallbackV2, LambdaEventV2, LambdaHandlerV2, getAuthorizerContext 
 import { getStripeClient } from "../utils/stripe-client";
 import { RequestContext, UserPK, createDefaultContextBatched, getUserBalance } from "graphql-service";
 import { Decimal } from "decimal.js-light";
+import { GQLUserIndex } from "__generated__/gql-operations";
 
 const chalk = new Chalk({ level: 3 });
 const batched = createDefaultContextBatched();
@@ -42,7 +43,7 @@ export async function handle(
         throw new Error("User email is not set");
     }
     // Check if the account balance is too high
-    let user = await batched.User.get({ email: userEmail });
+    let user = await batched.User.get({ email: userEmail }, { using: GQLUserIndex.IndexByEmailOnlyPk });
     let curentBalance = new Decimal(await getUserBalance(createRequestContext(), UserPK.stringify(user)));
     let newBalance = curentBalance.plus(amount);
     if (!skipBalanceCheck && newBalance.greaterThan(user.balanceLimit)) {
@@ -82,12 +83,9 @@ export async function handle(
         customer_creation: existingCustomerId ? undefined : "always",
     });
 
-    await batched.User.update(
-        { email: userEmail },
-        {
-            stripeCustomerId: session.customer as string,
-        }
-    );
+    await batched.User.update(user, {
+        stripeCustomerId: session.customer as string,
+    });
 
     return {
         statusCode: 200,

@@ -1,15 +1,16 @@
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { Chalk } from "chalk";
 import { LambdaEventV2, LambdaHandlerV2 } from "../utils/LambdaContext";
-import { createDefaultContextBatched, sqsGQLClient } from "graphql-service";
+import { UserPK, createDefaultContextBatched, sqsGQLClient } from "graphql-service";
 import { parseStripeWebhookEvent } from "../utils/stripe-client";
-import { StripePaymentAccept } from "graphql-service/dynamoose/models";
+import { StripePaymentAccept, User } from "graphql-service/dynamoose/models";
 import { SQSQueueUrl } from "graphql-service/cron-jobs/sqsClient";
 import { gql } from "@apollo/client";
 import Decimal from "decimal.js-light";
 import {
     GQLFulfillUserStripePaymentAcceptQuery,
     GQLFulfillUserStripePaymentAcceptQueryVariables,
+    GQLUserIndex,
 } from "../__generated__/gql-operations";
 import { Stripe } from "stripe";
 
@@ -48,6 +49,7 @@ export async function handle(
             if (!email) {
                 throw new Error("Email not found in Stripe session.");
             }
+            let user = await batched.User.get({ email }, { using: GQLUserIndex.IndexByEmailOnlyPk });
             // Check if the order is already paid (for example, from a card
             // payment)
             //
@@ -56,7 +58,7 @@ export async function handle(
             // customer's account.
             if (session.payment_status === "paid") {
                 // Save an order in your database, marked as 'awaiting payment'
-                await createAndFufillOrder({ session, email, amount });
+                await createAndFufillOrder({ session, user, amount });
                 return {
                     statusCode: 200,
                     body: JSON.stringify({
@@ -64,7 +66,7 @@ export async function handle(
                     }),
                 };
             } else {
-                await createOrder({ session, email, amount });
+                await createOrder({ session, user, amount });
                 return {
                     statusCode: 200,
                     body: JSON.stringify({
@@ -76,8 +78,9 @@ export async function handle(
         case "checkout.session.async_payment_succeeded": {
             let session = stripeEvent.data.object as StripeSessionObject;
             let email = session.customer_details.email;
+            let user = await batched.User.get({ email }, { using: GQLUserIndex.IndexByEmailOnlyPk });
             let paymentAccept = await batched.StripePaymentAccept.get({
-                user: email,
+                user: UserPK.stringify(user),
             });
             await fulfillOrder(paymentAccept, session);
             return {
@@ -129,30 +132,30 @@ export const lambdaHandler: LambdaHandlerV2 = async (
 
 async function createAndFufillOrder({
     session,
-    email,
+    user,
     amount,
 }: {
     session: StripeSessionObject;
-    email: string;
+    user: User;
     amount: string;
 }): Promise<StripePaymentAccept> {
-    let paymentAccept = await createOrder({ session, email, amount });
+    let paymentAccept = await createOrder({ session, user, amount });
     await fulfillOrder(paymentAccept, session);
     return paymentAccept;
 }
 
 async function createOrder({
     session,
-    email,
+    user,
     amount,
 }: {
     session: StripeSessionObject;
-    email: string;
+    user: User;
     amount: string;
 }): Promise<StripePaymentAccept> {
     // console.log(chalk.yellow("Creating order"), email, amount, session);
     return batched.StripePaymentAccept.create({
-        user: email,
+        user: UserPK.stringify(user),
         amount,
         currency: "usd",
         stripePaymentStatus: session.payment_status as StripePaymentAccept["stripePaymentStatus"],
@@ -177,8 +180,8 @@ async function fulfillOrder(paymentAccept: StripePaymentAccept, session: StripeS
         GQLFulfillUserStripePaymentAcceptQueryVariables
     >({
         query: gql(`
-            query FulfillUserStripePaymentAccept($user: Email!, $stripeSessionId: String!, $stripeSessionObject: String!) {
-                user(email: $user) {
+            query FulfillUserStripePaymentAccept($user: ID!, $stripeSessionId: String!, $stripeSessionObject: String!) {
+                user(pk: $user) {
                     stripePaymentAccept(stripeSessionId: $stripeSessionId) {
                         settlePayment(stripeSessionObject: $stripeSessionObject) {
                             stripePaymentStatus

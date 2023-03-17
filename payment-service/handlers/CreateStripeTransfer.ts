@@ -5,19 +5,19 @@ import {
     LambdaEventV2,
     LambdaHandlerV2,
     LambdaResultV2,
-    getUserEmailFromEvent,
+    getUserPKFromEvent,
 } from "../utils/LambdaContext";
-import { createDefaultContextBatched, getUserBalance, sqsGQLClient } from "graphql-service";
+import { UserPK, createDefaultContextBatched, getUserBalance, sqsGQLClient } from "graphql-service";
 import { RequestContext } from "graphql-service/RequestContext";
 import Decimal from "decimal.js-light";
 import { SQSQueueUrl } from "graphql-service/cron-jobs/sqsClient";
 import { gql } from "@apollo/client";
+import { GQLUserIndex } from "__generated__/gql-operations";
 
 const chalk = new Chalk({ level: 3 });
 
-function createRequestContext({ userEmail }: { userEmail: string }): RequestContext {
+function createRequestContext(): RequestContext {
     return {
-        currentUser: userEmail,
         service: "payment",
         isServiceRequest: true,
         isSQSMessage: false,
@@ -56,7 +56,7 @@ function createRequestContext({ userEmail }: { userEmail: string }): RequestCont
  *      substract the amount from the API publisher's FastchargeAPI account.
  */
 async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredResultV2> {
-    let userEmail = getUserEmailFromEvent(event);
+    let userEmail = getUserPKFromEvent(event);
     let { bodyData, errorResponse } = parseBody(event);
     if (errorResponse) {
         return errorResponse;
@@ -75,8 +75,9 @@ async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredRe
         };
     }
 
-    const context = createRequestContext({ userEmail });
-    let userAccountBalance = new Decimal(await getUserBalance(context, userEmail));
+    const context = createRequestContext();
+    let user = await context.batched.User.get({ email: userEmail }, { using: GQLUserIndex.IndexByEmailOnlyPk });
+    let userAccountBalance = new Decimal(await getUserBalance(context, UserPK.stringify(user)));
     if (userAccountBalance.lessThan(withdraw)) {
         return {
             statusCode: 400,
@@ -86,18 +87,28 @@ async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredRe
         };
     }
 
+    // TODO: Use synchronous creating
+    // let stripeTransfer = await context.batched.StripeTransfer.create({
+    //     receiver: UserPK.stringify(user),
+    //     withdrawAmount: withdraw.toString(),
+    //     receiveAmount: receivable.toString(),
+    //     currency: "usd",
+    //     transferAt: Date.now() + 1000 * 60 * 60 * 24, // Transfer after 24 hours
+    //     status: "pending",
+    // });
+
     await sqsGQLClient({
         queueUrl: SQSQueueUrl.BillingFifoQueue,
         dedupId: `createStripeTransfer-${userEmail}-${Date.now()}`,
     }).mutate({
         mutation: gql(`
             mutation CreateStripeTransfer(
-                $userEmail: Email!
+                $userPK: ID!
                 $withdrawAmount: NonNegativeDecimal!
                 $receiveAmount: NonNegativeDecimal!
             ) {
                 createStripeTransfer(
-                    receiver: $userEmail, 
+                    receiver: $userPK, 
                     withdrawAmount: $withdrawAmount,
                     receiveAmount: $receiveAmount,
                     currency: "usd",
@@ -109,7 +120,7 @@ async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredRe
             }
         `),
         variables: {
-            userEmail,
+            userPK: UserPK.stringify(user),
             withdrawAmount: withdraw.toString(),
             receiveAmount: receivable.toString(),
         },

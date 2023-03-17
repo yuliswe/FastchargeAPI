@@ -1,8 +1,9 @@
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { Chalk } from "chalk";
 import { LambdaEventV2, LambdaHandlerV2, getAuthorizerContext } from "../utils/LambdaContext";
-import { createDefaultContextBatched } from "graphql-service";
+import { UserPK, createDefaultContextBatched } from "graphql-service";
 import { getStripeClient } from "../utils/stripe-client";
+import { GQLUserIndex } from "__generated__/gql-operations";
 
 const chalk = new Chalk({ level: 3 });
 const batched = createDefaultContextBatched();
@@ -35,15 +36,19 @@ async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredRe
     // It may happen that the user has already onboarded and has a Stripe
     // account, but is revisiting the page becuase they didn't complete the
     // onboarding the previous time.
-    let user = await batched.User.get({ email: userEmail });
+    let user = await batched.User.get({ email: userEmail }, { using: GQLUserIndex.IndexByEmailOnlyPk });
     let accountId = user.stripeConnectAccountId;
     if (!accountId) {
         let result = await stripeClient.accounts.create({
             type: "express",
             email: userEmail,
+            metadata: {
+                userPK: UserPK.stringify(user),
+                email: userEmail,
+            },
         });
         accountId = result.id;
-        await batched.User.update({ email: userEmail }, { stripeConnectAccountId: accountId });
+        await batched.User.update(user, { stripeConnectAccountId: accountId });
     }
     let link = await stripeClient.accountLinks.create({
         account: accountId,

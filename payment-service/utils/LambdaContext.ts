@@ -7,6 +7,7 @@ import {
 
 export type AuthorizerContext = {
     userEmail: string | undefined;
+    userPK: string | undefined;
 };
 
 export type LambdaEventV2 = APIGatewayProxyEventV2WithLambdaAuthorizer<AuthorizerContext>;
@@ -30,4 +31,12 @@ export function getUserEmailFromEvent(event: LambdaEventV2): string {
         throw new Error("User email not found in authorizer context.");
     }
     return email;
+}
+
+export function getUserPKFromEvent(event: LambdaEventV2): string {
+    let pk = event.requestContext.authorizer.lambda.userPK;
+    if (!pk) {
+        throw new Error("User pk not found in authorizer context.");
+    }
+    return pk;
 }
