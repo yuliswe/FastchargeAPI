@@ -145,6 +145,7 @@ Resources:
         - AWSLambdaRole
         - AmazonDynamoDBReadOnlyAccess # For looking up user's stripe id
         - AmazonSESFullAccess # For ending email to user
+        - AmazonSSMReadOnlyAccess # Need to get credentials for the Stripe API
       Events:
         POST:
           Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -171,7 +172,7 @@ Resources:
       Timeout: 10
       Policies:
         - AWSLambdaRole
-        - AmazonDynamoDBReadOnlyAccess # For looking up user's stripe id
+        - AmazonDynamoDBFullAccess # For looking up or update user's stripe id
         - AmazonSSMReadOnlyAccess # Need to get credentials for the Stripe API
       Events:
         POST:

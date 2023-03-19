@@ -5,6 +5,7 @@ import { getStripeClient } from "../utils/stripe-client";
 import { LambdaEventV2, LambdaHandlerV2, getAuthorizerContext } from "../utils/LambdaContext";
 import { SES } from "aws-sdk";
 import { GQLUserIndex } from "__generated__/gql-operations";
+import Stripe from "stripe";
 
 const chalk = new Chalk({ level: 3 });
 let ses = new SES({ region: "us-east-1" });
@@ -24,7 +25,24 @@ async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredRe
     if (!user.stripeConnectAccountId) {
         throw new Error("User stripeConnectAccountId not found");
     }
-    let link = await stripeClient.accounts.createLoginLink(user.stripeConnectAccountId);
+    let link;
+    try {
+        link = await stripeClient.accounts.createLoginLink(user.stripeConnectAccountId);
+    } catch (e) {
+        if (e instanceof Stripe.errors.StripeInvalidRequestError) {
+            await sendOnboardingEmail({ email: userEmail });
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ error: "Bad Request" }),
+                isBase64Encoded: false,
+            };
+        }
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: "Internal Server Error" }),
+            isBase64Encoded: false,
+        };
+    }
     await sendEmail({ email: userEmail, link: link.url });
     return {
         statusCode: 200,
@@ -53,7 +71,36 @@ async function sendEmail({ email, link }: { email: string; link: string }) {
                 },
                 Subject: {
                     Charset: "UTF-8",
-                    Data: `Sign-in Link to Your FastChargeAPI Dashboard (Stripe)`,
+                    Data: `Sign-in Link to Your FastchargeAPI Dashboard (Stripe)`,
+                },
+            },
+            Source: "FastchargeAPI <no-reply@fastchargeapi.com>",
+        })
+        .promise();
+}
+
+async function sendOnboardingEmail({ email }: { email: string }) {
+    console.log(chalk.yellow(`Sending onboarding email to ${email}`));
+    const link = "https://fastchargeapi.com/onboard";
+    await ses
+        .sendEmail({
+            Destination: {
+                ToAddresses: [email],
+            },
+            Message: {
+                Body: {
+                    Html: {
+                        Charset: "UTF-8",
+                        Data: `${link}`,
+                    },
+                    Text: {
+                        Charset: "UTF-8",
+                        Data: `${link}`,
+                    },
+                },
+                Subject: {
+                    Charset: "UTF-8",
+                    Data: `Set Up Your FastchargeAPI Account with Stripe`,
                 },
             },
             Source: "FastchargeAPI <no-reply@fastchargeapi.com>",
