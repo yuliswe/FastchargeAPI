@@ -7,8 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "poetry build",
     "deploy": "npm run build && poetry publish -r testpypi",
-    "typecheck": "pyright .",
     "gen": "turms gen",
+    "typecheck": "npm run gen && pyright .",
     "watch": "nodemon --exec 'npm run gen && npm run typecheck' --watch . --ext py,json,graphql,yaml --delay 1 --ignore '**/__pycache__/' --ignore '**/__generated__/**'"
   },
   "author": "",
