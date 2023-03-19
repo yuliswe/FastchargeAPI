@@ -29,11 +29,12 @@ export const accountActivityResolvers: GQLResolvers & {
     AccountActivity: Required<GQLAccountActivityResolvers>;
 } = {
     AccountActivity: {
+        __isTypeOf: (parent) => parent instanceof AccountActivityModel,
+
         /***********************************************
          * All attributes readable to the account owner
          **********************************************/
 
-        __isTypeOf: (parent) => parent instanceof AccountActivityModel,
         pk: makeOwnerReadable((parent) => AccountActivityPK.stringify(parent)),
         createdAt: makeOwnerReadable((parent) => parent.createdAt),
         amount: makeOwnerReadable((parent) => parent.amount),
