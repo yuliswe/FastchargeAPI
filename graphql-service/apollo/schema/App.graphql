@@ -4,7 +4,7 @@ scalar Timestamp
 
 type Query {
     ### App API
-    apps: [App]
+    # apps: [App]
     app(name: String): App!
     appFullTextSearch(query: String!): [App!]!
     ### User API

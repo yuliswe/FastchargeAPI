@@ -262,7 +262,6 @@ export type GQLQuery = {
     accountActivities: Array<GQLAccountActivity>;
     app: GQLApp;
     appFullTextSearch: Array<GQLApp>;
-    apps?: Maybe<Array<Maybe<GQLApp>>>;
     checkUserIsAllowedForGatewayRequest: GQLGatewayDecisionResponse;
     endpoint: GQLEndpoint;
     endpoints?: Maybe<Array<Maybe<GQLEndpoint>>>;
@@ -835,7 +834,6 @@ export type GQLQueryResolvers<
         ContextType,
         RequireFields<GQLQueryAppFullTextSearchArgs, "query">
     >;
-    apps?: Resolver<Maybe<Array<Maybe<GQLResolversTypes["App"]>>>, ParentType, ContextType>;
     checkUserIsAllowedForGatewayRequest?: Resolver<
         GQLResolversTypes["GatewayDecisionResponse"],
         ParentType,

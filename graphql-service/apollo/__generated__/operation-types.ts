@@ -243,7 +243,6 @@ export type GQLQuery = {
     accountActivities: Array<GQLAccountActivity>;
     app: GQLApp;
     appFullTextSearch: Array<GQLApp>;
-    apps?: Maybe<Array<Maybe<GQLApp>>>;
     checkUserIsAllowedForGatewayRequest: GQLGatewayDecisionResponse;
     endpoint: GQLEndpoint;
     endpoints?: Maybe<Array<Maybe<GQLEndpoint>>>;

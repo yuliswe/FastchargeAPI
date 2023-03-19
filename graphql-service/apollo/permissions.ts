@@ -1,6 +1,7 @@
 import { App, Endpoint, Pricing, Subscription, User } from "./dynamoose/models";
 import { RequestContext } from "./RequestContext";
 import {
+    GQLAppUpdateAppArgs,
     GQLMutationCreateEndpointArgs,
     GQLMutationCreateSubscriptionArgs,
     GQLMutationCreateUsageLogArgs,
@@ -67,15 +68,29 @@ export const Can = {
         // return userEmail === "ylilarry@gmail.com"
     },
     async createApp({ owner }: { owner: string }, context: RequestContext): Promise<boolean> {
-        // Is the current user the claimed owner of the app?
-        // return await Promise.resolve(args.owner === context.currentUser)
         return await Promise.resolve(true);
     },
-    async updateApp({ owner }: { owner: string }, context: RequestContext): Promise<boolean> {
-        return await Promise.resolve(true);
+    async updateApp(
+        parent: App,
+        { title, description, homepage, repository }: GQLAppUpdateAppArgs,
+        context: RequestContext
+    ): Promise<boolean> {
+        if (context.isServiceRequest) {
+            return true;
+        }
+        if (!context.currentUser) {
+            return false;
+        }
+        return await Promise.resolve(parent.owner === context.currentUser.uid);
     },
-    async deleteApp({ name }: { name: string }, context: RequestContext): Promise<boolean> {
-        return await Promise.resolve(true);
+    async deleteApp(parent: App, context: RequestContext): Promise<boolean> {
+        if (context.isServiceRequest) {
+            return true;
+        }
+        if (!context.currentUser) {
+            return false;
+        }
+        return await Promise.resolve(parent.owner === context.currentUser.uid);
     },
     async createAppUserToken(parent: App, context: RequestContext): Promise<boolean> {
         return await Promise.resolve(true);
