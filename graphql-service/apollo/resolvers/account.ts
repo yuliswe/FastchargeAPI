@@ -18,7 +18,7 @@ function makeOwnerReadable<T>(
     getter: (parent: AccountActivity, args: {}, context: RequestContext) => T
 ): (parent: AccountActivity, args: {}, context: RequestContext) => Promise<T> {
     return async (parent: AccountActivity, args: {}, context: RequestContext): Promise<T> => {
-        if (!(await Can.viewAccountActivityInfo(parent, context))) {
+        if (!(await Can.viewAccountActivityPrivateAttributes(parent, context))) {
             throw new Denied();
         }
         return getter(parent, args, context);
@@ -44,7 +44,7 @@ export const accountActivityResolvers: GQLResolvers & {
         status: makeOwnerReadable((parent) => parent.status as GQLAccountActivityStatus),
         settleAt: makeOwnerReadable((parent) => parent.settleAt),
         async billedApp(parent: AccountActivity, args: {}, context, info) {
-            if (!(await Can.viewAccountActivityInfo(parent, context))) {
+            if (!(await Can.viewAccountActivityPrivateAttributes(parent, context))) {
                 throw new Denied();
             }
             if (parent.billedApp) {
@@ -54,7 +54,7 @@ export const accountActivityResolvers: GQLResolvers & {
             }
         },
         async usageSummary(parent, args, context, info) {
-            if (!(await Can.viewAccountActivityInfo(parent, context))) {
+            if (!(await Can.viewAccountActivityPrivateAttributes(parent, context))) {
                 throw new Denied();
             }
             if (parent.usageSummary) {
@@ -65,7 +65,7 @@ export const accountActivityResolvers: GQLResolvers & {
             }
         },
         async stripeTransfer(parent, args, context, info) {
-            if (!(await Can.viewAccountActivityInfo(parent, context))) {
+            if (!(await Can.viewAccountActivityPrivateAttributes(parent, context))) {
                 throw new Denied();
             }
             if (parent.stripeTransfer) {

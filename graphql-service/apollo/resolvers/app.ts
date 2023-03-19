@@ -88,8 +88,7 @@ export const appResolvers: GQLResolvers & {
             context: RequestContext
         ): Promise<Array<App>> {
             let apps = await context.batched.App.substringSearch(query, ["name", "description"]);
-            let visableApps = await Can.viewAppFilter(apps, context);
-            return visableApps;
+            return apps;
         },
     },
     Mutation: {

@@ -25,7 +25,7 @@ function makePrivate<T>(
     getter: (parent: User, args: {}, context: RequestContext) => T
 ): (parent: User, args: {}, context: RequestContext) => Promise<T> {
     return async (parent: User, args: {}, context: RequestContext): Promise<T> => {
-        if (!(await Can.viewUserPrivateInfo(parent, context))) {
+        if (!(await Can.viewUserPrivateAttributes(parent, context))) {
             throw new Denied();
         }
         return getter(parent, args, context);
@@ -69,7 +69,7 @@ export const userResolvers: GQLResolvers & {
         balanceLimit: makePrivate((parent) => parent.balanceLimit),
 
         async subscriptions(parent: User, args: {}, context: RequestContext): Promise<Subscription[]> {
-            if (!(await Can.viewUserPrivateInfo(parent, context))) {
+            if (!(await Can.viewUserPrivateAttributes(parent, context))) {
                 throw new Denied();
             }
             return await context.batched.Subscription.many({
@@ -81,28 +81,28 @@ export const userResolvers: GQLResolvers & {
          * @returns user's account balance.
          */
         async balance(parent, args, context) {
-            if (!(await Can.viewUserPrivateInfo(parent, context))) {
+            if (!(await Can.viewUserPrivateAttributes(parent, context))) {
                 throw new Denied();
             }
             return await getUserBalance(context, UserPK.stringify(parent));
         },
 
         async appToken(parent, { app }, context) {
-            if (!(await Can.viewUserPrivateInfo(parent, context))) {
+            if (!(await Can.viewUserPrivateAttributes(parent, context))) {
                 throw new Denied();
             }
             return await context.batched.UserAppToken.get({ subscriber: UserPK.stringify(parent), app });
         },
 
         async stripePaymentAccept(parent, { stripeSessionId }: GQLUserStripePaymentAcceptArgs, context) {
-            if (!(await Can.viewUserPrivateInfo(parent, context))) {
+            if (!(await Can.viewUserPrivateAttributes(parent, context))) {
                 throw new Denied();
             }
             return await context.batched.StripePaymentAccept.get({ user: UserPK.stringify(parent), stripeSessionId });
         },
 
         async accountActivities(parent: User, { limit, dateRange }: GQLUserAccountActivitiesArgs, context) {
-            if (!(await Can.viewUserPrivateInfo(parent, context))) {
+            if (!(await Can.viewUserPrivateAttributes(parent, context))) {
                 throw new Denied();
             }
             let result = await context.batched.AccountActivity.many(
@@ -124,7 +124,7 @@ export const userResolvers: GQLResolvers & {
         },
 
         async accountHistories(parent: User, { limit, dateRange }: GQLUserAccountActivitiesArgs, context) {
-            if (!(await Can.viewUserPrivateInfo(parent, context))) {
+            if (!(await Can.viewUserPrivateAttributes(parent, context))) {
                 throw new Denied();
             }
             let result = await context.batched.AccountHistory.many(
@@ -146,7 +146,7 @@ export const userResolvers: GQLResolvers & {
         },
 
         async usageLogs(parent: User, args: GQLUserUsageLogsArgs, context, info) {
-            if (!(await Can.viewUserPrivateInfo(parent, context))) {
+            if (!(await Can.viewUserPrivateAttributes(parent, context))) {
                 throw new Denied();
             }
             let { app, path, limit, dateRange } = args;
@@ -170,7 +170,7 @@ export const userResolvers: GQLResolvers & {
         },
 
         async usageSummaries(parent: User, { limit, app, dateRange }: GQLUserUsageSummariesArgs, context, info) {
-            if (!(await Can.viewUserPrivateInfo(parent, context))) {
+            if (!(await Can.viewUserPrivateAttributes(parent, context))) {
                 throw new Denied();
             }
             let usageSummaries = await context.batched.UsageSummary.many(
@@ -277,7 +277,7 @@ export const userResolvers: GQLResolvers & {
             }
             // Does this need to be private? I don't think so, but I'll leave it
             // for now.
-            if (!(await Can.viewUserPrivateInfo(user, context))) {
+            if (!(await Can.viewUserPrivateAttributes(user, context))) {
                 throw new Denied();
             }
             return user;

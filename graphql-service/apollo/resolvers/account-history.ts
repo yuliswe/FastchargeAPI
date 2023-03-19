@@ -8,7 +8,7 @@ function makeOwnerReadable<T>(
     getter: (parent: AccountHistory, args: {}, context: RequestContext) => T
 ): (parent: AccountHistory, args: {}, context: RequestContext) => Promise<T> {
     return async (parent: AccountHistory, args: {}, context: RequestContext): Promise<T> => {
-        if (!(await Can.viewAccountHistoryInfo(parent, context))) {
+        if (!(await Can.viewAccountHistoryPrivateAttributes(parent, context))) {
             throw new Denied();
         }
         return getter(parent, args, context);

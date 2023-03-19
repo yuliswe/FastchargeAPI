@@ -1,5 +1,5 @@
 import { Endpoint, EndpointModel } from "../dynamoose/models";
-import { Denied } from "../errors";
+import { BadInput, Denied } from "../errors";
 import { Can } from "../permissions";
 import { RequestContext } from "../RequestContext";
 import {
@@ -11,28 +11,61 @@ import {
     GQLResolvers,
 } from "../__generated__/resolvers-types";
 import { EndpointPK } from "../pks/EndpointPK";
-import { AppPK } from "../pks/AppPK";
+
+function makeOwnerReadable<T>(
+    getter: (parent: Endpoint, args: {}, context: RequestContext) => T
+): (parent: Endpoint, args: {}, context: RequestContext) => Promise<T> {
+    return async (parent: Endpoint, args: {}, context: RequestContext): Promise<T> => {
+        if (!(await Can.viewPrivateEndpointArributes(parent, context))) {
+            throw new Denied();
+        }
+        return getter(parent, args, context);
+    };
+}
 
 export const endpointResolvers: GQLResolvers & {
     Endpoint: Required<GQLEndpointResolvers>;
 } = {
     Endpoint: {
         __isTypeOf: (parent) => parent instanceof EndpointModel,
+
+        /**************************
+         * All public attributes
+         **************************/
+
         pk: (parent) => EndpointPK.stringify(parent),
         method: (parent) => parent.method as GQLHttpMethod,
         description: (parent) => parent.description,
         destination: (parent) => parent.destination,
-        createdAt: (parent) => parent.createdAt,
-        updatedAt: (parent) => parent.updatedAt,
         path: ({ path }) => path,
+
+        /***********************************************
+         * All arributes only readable by the app owner
+         ***********************************************/
+
+        createdAt: makeOwnerReadable((parent) => parent.createdAt),
+        updatedAt: makeOwnerReadable((parent) => parent.updatedAt),
 
         async updateEndpoint(
             parent: Endpoint,
             { method, path, description, destination }: GQLEndpointUpdateEndpointArgs,
             context: RequestContext
         ) {
-            if (!(await Can.updateEndpoint(parent, context))) {
+            if (!(await Can.updateEndpoint(parent, { method, path, description, destination }, context))) {
                 throw new Denied();
+            }
+            if (path || destination) {
+                if (
+                    !(await checkPathDestinationConsistent(context, {
+                        app: parent.app,
+                        path: path ?? parent.path,
+                        destination: destination ?? parent.destination,
+                    }))
+                ) {
+                    throw new BadInput(
+                        "There is already an endpoint with this path, but a different destination. This is not allowed."
+                    );
+                }
             }
             return await context.batched.Endpoint.update(parent, {
                 method,
@@ -50,15 +83,18 @@ export const endpointResolvers: GQLResolvers & {
         },
     },
     Query: {
-        async endpoint(parent: {}, { pk, app, path, ...newVals }: GQLQueryEndpointArgs, context, info) {
+        /**
+         * Offers an API to look up endpoints by either their primary key or by app+path.
+         */
+        async endpoint(parent: {}, { pk, app, path }: GQLQueryEndpointArgs, context, info) {
+            if (!pk && !app) {
+                throw new BadInput("Must provide either pk or app");
+            }
             let endpoint: Endpoint;
             if (pk) {
                 endpoint = await context.batched.Endpoint.get(EndpointPK.parse(pk));
             } else {
                 endpoint = await context.batched.Endpoint.get({ app, path });
-            }
-            if (!(await Can.viewEndpoint(endpoint, context))) {
-                throw new Denied();
             }
             return endpoint;
         },
@@ -70,9 +106,13 @@ export const endpointResolvers: GQLResolvers & {
             context,
             info
         ) {
-            await context.batched.App.get(AppPK.parse(app)); // checks if app exists
             if (!(await Can.createEndpoint({ app, path, method, description, destination }, context))) {
                 throw new Denied();
+            }
+            if (!(await checkPathDestinationConsistent(context, { app, path, destination }))) {
+                throw new BadInput(
+                    "There is already an endpoint with this path, but a different destination. This is not allowed."
+                );
             }
             let endpoint = await context.batched.Endpoint.create({
                 app,
@@ -85,3 +125,18 @@ export const endpointResolvers: GQLResolvers & {
         },
     },
 };
+
+async function checkPathDestinationConsistent(
+    context: RequestContext,
+    { app, path, destination }: { app: string; path: string; destination: string }
+) {
+    let endpoints = await context.batched.Endpoint.many({ app, path });
+    if (endpoints.length == 0) {
+        return true;
+    }
+    let endpoint = endpoints[0];
+    if (endpoint.destination !== destination) {
+        return false;
+    }
+    return true;
+}
