@@ -16,11 +16,12 @@ type Query {
     ### Subscriptions API
     subscription(pk: ID, subscriber: ID, app: String): Subscribe!
 
-    accountActivities(
-        status: AccountActivityStatus
-        settleAtRange: DateRangeInput
-        using: AccountActivityIndex
-    ): [AccountActivity!]!
+    # accountActivities(
+    #     status: AccountActivityStatus
+    #     settleAtRange: DateRangeInput
+    #     using: AccountActivityIndex
+    # ): [AccountActivity!]!
+
     stripePaymentAccept(stripeSessionId: String!): StripePaymentAccept!
 
     secret(key: String!): Secret!

@@ -1,4 +1,4 @@
-import { App, Endpoint, Pricing, Subscription, User } from "./dynamoose/models";
+import { AccountActivity, App, Endpoint, Pricing, Subscription, User } from "./dynamoose/models";
 import { RequestContext } from "./RequestContext";
 import {
     GQLAppUpdateAppArgs,
@@ -131,6 +131,15 @@ export const Can = {
     },
     async readStripePaymentAccepts(parent: User, args: GQLQueryStripePaymentAcceptArgs, context: RequestContext) {
         return await Promise.resolve(true);
+    },
+    async viewAccountActivityInfo(parent: AccountActivity, context: RequestContext): Promise<boolean> {
+        if (context.isServiceRequest) {
+            return true;
+        }
+        if (!context.currentUser) {
+            return false;
+        }
+        return await Promise.resolve(parent.user === context.currentUser.uid);
     },
     async *viewAppIter<App extends { owner: string }>(
         arr: App[],

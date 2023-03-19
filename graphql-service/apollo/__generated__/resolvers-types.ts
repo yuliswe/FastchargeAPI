@@ -259,7 +259,6 @@ export type GQLPricing = {
 
 export type GQLQuery = {
     __typename?: "Query";
-    accountActivities: Array<GQLAccountActivity>;
     app: GQLApp;
     appFullTextSearch: Array<GQLApp>;
     checkUserIsAllowedForGatewayRequest: GQLGatewayDecisionResponse;
@@ -269,12 +268,6 @@ export type GQLQuery = {
     stripePaymentAccept: GQLStripePaymentAccept;
     subscription: GQLSubscribe;
     user: GQLUser;
-};
-
-export type GQLQueryAccountActivitiesArgs = {
-    settleAtRange?: InputMaybe<GQLDateRangeInput>;
-    status?: InputMaybe<GQLAccountActivityStatus>;
-    using?: InputMaybe<GQLAccountActivityIndex>;
 };
 
 export type GQLQueryAppArgs = {
@@ -821,12 +814,6 @@ export type GQLQueryResolvers<
     ContextType = RequestContext,
     ParentType extends GQLResolversParentTypes["Query"] = GQLResolversParentTypes["Query"]
 > = ResolversObject<{
-    accountActivities?: Resolver<
-        Array<GQLResolversTypes["AccountActivity"]>,
-        ParentType,
-        ContextType,
-        Partial<GQLQueryAccountActivitiesArgs>
-    >;
     app?: Resolver<GQLResolversTypes["App"], ParentType, ContextType, Partial<GQLQueryAppArgs>>;
     appFullTextSearch?: Resolver<
         Array<GQLResolversTypes["App"]>,

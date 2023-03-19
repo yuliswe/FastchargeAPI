@@ -240,7 +240,6 @@ export type GQLPricing = {
 
 export type GQLQuery = {
     __typename?: "Query";
-    accountActivities: Array<GQLAccountActivity>;
     app: GQLApp;
     appFullTextSearch: Array<GQLApp>;
     checkUserIsAllowedForGatewayRequest: GQLGatewayDecisionResponse;
@@ -250,12 +249,6 @@ export type GQLQuery = {
     stripePaymentAccept: GQLStripePaymentAccept;
     subscription: GQLSubscribe;
     user: GQLUser;
-};
-
-export type GQLQueryAccountActivitiesArgs = {
-    settleAtRange?: InputMaybe<GQLDateRangeInput>;
-    status?: InputMaybe<GQLAccountActivityStatus>;
-    using?: InputMaybe<GQLAccountActivityIndex>;
 };
 
 export type GQLQueryAppArgs = {

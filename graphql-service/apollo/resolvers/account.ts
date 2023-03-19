@@ -5,35 +5,47 @@ import {
     GQLAccountActivityType,
     GQLAccountActivityReason,
     GQLAccountActivityStatus,
-    GQLQueryAccountActivitiesArgs,
 } from "../__generated__/resolvers-types";
 import { AccountActivity, AccountActivityModel } from "../dynamoose/models";
 import { AppPK } from "../pks/AppPK";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { StripeTransferPK } from "../pks/StripeTransferPK";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
+import { Denied } from "../errors";
+import { Can } from "../permissions";
 
-/**
- * Remember to add your resolver to the resolvers object in server.ts.
- *
- * Note that to make the typing work, you must also add your Models to the
- * codegen.yml file, under the mappers section.
- */
+function makeOwnerReadable<T>(
+    getter: (parent: AccountActivity, args: {}, context: RequestContext) => T
+): (parent: AccountActivity, args: {}, context: RequestContext) => Promise<T> {
+    return async (parent: AccountActivity, args: {}, context: RequestContext): Promise<T> => {
+        if (!(await Can.viewAccountActivityInfo(parent, context))) {
+            throw new Denied();
+        }
+        return getter(parent, args, context);
+    };
+}
 
 export const accountActivityResolvers: GQLResolvers & {
     AccountActivity: Required<GQLAccountActivityResolvers>;
 } = {
     AccountActivity: {
+        /***********************************************
+         * All attributes readable to the account owner
+         **********************************************/
+
         __isTypeOf: (parent) => parent instanceof AccountActivityModel,
-        pk: (parent) => AccountActivityPK.stringify(parent),
-        createdAt: (parent) => parent.createdAt,
-        amount: (parent) => parent.amount,
-        type: (parent) => parent.type as GQLAccountActivityType,
-        reason: (parent) => parent.reason as GQLAccountActivityReason,
-        description: (parent) => parent.description,
-        status: (parent) => parent.status as GQLAccountActivityStatus,
-        settleAt: (parent) => parent.settleAt,
+        pk: makeOwnerReadable((parent) => AccountActivityPK.stringify(parent)),
+        createdAt: makeOwnerReadable((parent) => parent.createdAt),
+        amount: makeOwnerReadable((parent) => parent.amount),
+        type: makeOwnerReadable((parent) => parent.type as GQLAccountActivityType),
+        reason: makeOwnerReadable((parent) => parent.reason as GQLAccountActivityReason),
+        description: makeOwnerReadable((parent) => parent.description),
+        status: makeOwnerReadable((parent) => parent.status as GQLAccountActivityStatus),
+        settleAt: makeOwnerReadable((parent) => parent.settleAt),
         async billedApp(parent: AccountActivity, args: {}, context, info) {
+            if (!(await Can.viewAccountActivityInfo(parent, context))) {
+                throw new Denied();
+            }
             if (parent.billedApp) {
                 return await context.batched.App.get(AppPK.parse(parent.billedApp));
             } else {
@@ -41,6 +53,9 @@ export const accountActivityResolvers: GQLResolvers & {
             }
         },
         async usageSummary(parent, args, context, info) {
+            if (!(await Can.viewAccountActivityInfo(parent, context))) {
+                throw new Denied();
+            }
             if (parent.usageSummary) {
                 // Use getOrNull because the usage summary may have been deleted
                 return await context.batched.UsageSummary.getOrNull(UsageSummaryPK.parse(parent.usageSummary));
@@ -49,18 +64,25 @@ export const accountActivityResolvers: GQLResolvers & {
             }
         },
         async stripeTransfer(parent, args, context, info) {
+            if (!(await Can.viewAccountActivityInfo(parent, context))) {
+                throw new Denied();
+            }
             if (parent.stripeTransfer) {
                 return await context.batched.StripeTransfer.get(StripeTransferPK.parse(parent.stripeTransfer));
             } else {
                 return null;
             }
         },
+
+        /*****************************************************
+         * All attributes that are only visible to the system
+         *****************************************************/
     },
     Query: {
-        async accountActivities(parent: {}, { status, using }: GQLQueryAccountActivitiesArgs, context: RequestContext) {
-            let activities = await context.batched.AccountActivity.many({ status }, { using });
-            return activities;
-        },
+        // async accountActivities(parent: {}, { status, using }: GQLQueryAccountActivitiesArgs, context: RequestContext) {
+        //     let activities = await context.batched.AccountActivity.many({ status }, { using });
+        //     return activities;
+        // },
     },
     Mutation: {},
 };
