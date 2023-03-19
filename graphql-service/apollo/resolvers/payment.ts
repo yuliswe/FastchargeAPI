@@ -1,43 +1,46 @@
-import { GraphQLResolveInfo } from "graphql";
 import { StripePaymentAccept, StripePaymentAcceptModel, User } from "../dynamoose/models";
 import { RequestContext } from "../RequestContext";
-import {
-    GQLMutationCreateStripePaymentAcceptArgs,
-    GQLQueryStripePaymentAcceptArgs,
-    GQLResolvers,
-    GQLStripePaymentAcceptResolvers,
-    GQLStripePaymentAcceptUpdateStripePaymentAcceptArgs,
-} from "../__generated__/resolvers-types";
-import { BadInput, Denied } from "../errors";
+import { GQLResolvers, GQLStripePaymentAcceptResolvers } from "../__generated__/resolvers-types";
+import { Denied } from "../errors";
 import { Can } from "../permissions";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { settleAccountActivities } from "../functions/account";
 import { GQLStripePaymentAcceptStatus } from "../__generated__/operation-types";
 import { StripePaymentAcceptPK } from "../pks/StripePaymentAccept";
 import { UserPK } from "../pks/UserPK";
-/**
- * Remember to add your resolver to the resolvers object in server.ts.
- *
- * Note that to make the typing work, you must also add your Models to the
- * codegen.yml file, under the mappers section.
- */
+
+function makeOwnerReadable<T>(
+    getter: (parent: StripePaymentAccept, args: {}, context: RequestContext) => T
+): (parent: StripePaymentAccept, args: {}, context: RequestContext) => Promise<T> {
+    return async (parent: StripePaymentAccept, args: {}, context: RequestContext): Promise<T> => {
+        if (!(await Can.viewStripePaymentAcceptPrivateAttributes(parent, context))) {
+            throw new Denied();
+        }
+        return getter(parent, args, context);
+    };
+}
+
 export const stripePaymentAcceptResolvers: GQLResolvers & {
     StripePaymentAccept: Required<GQLStripePaymentAcceptResolvers>;
 } = {
     StripePaymentAccept: {
         __isTypeOf: (parent) => parent instanceof StripePaymentAcceptModel,
+        amount: makeOwnerReadable((parent) => parent.amount),
+        currency: makeOwnerReadable((parent) => parent.currency),
+        stripePaymentIntent: makeOwnerReadable((parent) => parent.stripePaymentIntent),
+        stripeSessionId: makeOwnerReadable((parent) => parent.stripeSessionId),
+        stripePaymentStatus: makeOwnerReadable((parent) => parent.stripePaymentStatus),
+        stripeSessionObject: makeOwnerReadable((parent) => JSON.stringify(parent.stripeSessionObject)),
+        createdAt: makeOwnerReadable((parent) => parent.createdAt),
+        status: makeOwnerReadable((parent) => parent.status as GQLStripePaymentAcceptStatus),
+
         async user(parent: StripePaymentAccept, args, context, info) {
+            if (!(await Can.viewStripePaymentAcceptPrivateAttributes(parent, context))) {
+                throw new Denied();
+            }
             let user = await context.batched.User.get(UserPK.parse(parent.user));
             return user;
         },
-        amount: (parent) => parent.amount,
-        currency: (parent) => parent.currency,
-        stripePaymentIntent: (parent) => parent.stripePaymentIntent,
-        stripeSessionId: (parent) => parent.stripeSessionId,
-        stripePaymentStatus: (parent) => parent.stripePaymentStatus,
-        stripeSessionObject: (parent) => JSON.stringify(parent.stripeSessionObject),
-        createdAt: (parent) => parent.createdAt,
-        status: (parent) => parent.status as GQLStripePaymentAcceptStatus,
 
         /**
          * Important: This method must be idempotent. It must be safe to call
@@ -50,6 +53,9 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
          * @returns
          */
         async settlePayment(parent: StripePaymentAccept, { stripeSessionObject }, context) {
+            if (!(await Can.settleUserAccountActivities(context))) {
+                throw new Denied();
+            }
             let activity = await context.batched.AccountActivity.create({
                 user: parent.user,
                 amount: parent.amount,
@@ -69,57 +75,16 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
             });
             return parent;
         },
-
-        async updateStripePaymentAccept(
-            parent: StripePaymentAccept,
-            { stripePaymentStatus, stripeSessionObject }: GQLStripePaymentAcceptUpdateStripePaymentAcceptArgs,
-            context: RequestContext
-        ) {
-            let newPayment = await context.batched.StripePaymentAccept.update(parent, {
-                stripePaymentStatus: (stripePaymentStatus as typeof parent.stripePaymentStatus) || undefined,
-                stripeSessionObject: stripeSessionObject ? JSON.parse(stripeSessionObject) : undefined,
-            });
-            return newPayment;
-        },
     },
     Query: {
-        async stripePaymentAccept(parent: User, args: GQLQueryStripePaymentAcceptArgs, context, info) {
-            if (!(await Can.readStripePaymentAccepts(parent, args, context))) {
-                throw new Denied();
-            }
-            return await context.batched.StripePaymentAccept.get({
-                stripeSessionId: args.stripeSessionId,
-            });
-        },
+        // async stripePaymentAccept(parent: User, args: GQLQueryStripePaymentAcceptArgs, context, info) {
+        //     if (!(await Can.readStripePaymentAccepts(parent, args, context))) {
+        //         throw new Denied();
+        //     }
+        //     return await context.batched.StripePaymentAccept.get({
+        //         stripeSessionId: args.stripeSessionId,
+        //     });
+        // },
     },
-    Mutation: {
-        async createStripePaymentAccept(
-            parent: {},
-            {
-                user,
-                amount,
-                currency,
-                stripePaymentStatus,
-                stripeSessionId,
-                stripePaymentIntent,
-                stripeSessionObject,
-            }: GQLMutationCreateStripePaymentAcceptArgs,
-            context: RequestContext,
-            info: GraphQLResolveInfo
-        ) {
-            if (stripePaymentStatus !== "paid") {
-                throw new BadInput("stripePaymentStatus must be paid");
-            }
-            let stripePaymentAccept = await StripePaymentAcceptModel.create({
-                user,
-                amount,
-                currency,
-                stripePaymentStatus,
-                stripeSessionId,
-                stripePaymentIntent,
-                stripeSessionObject: JSON.parse(stripeSessionObject),
-            });
-            return stripePaymentAccept;
-        },
-    },
+    Mutation: {},
 };

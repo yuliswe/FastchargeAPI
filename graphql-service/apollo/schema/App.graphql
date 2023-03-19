@@ -22,7 +22,7 @@ type Query {
     #     using: AccountActivityIndex
     # ): [AccountActivity!]!
 
-    stripePaymentAccept(stripeSessionId: String!): StripePaymentAccept!
+    # stripePaymentAccept(stripeSessionId: String!): StripePaymentAccept!
 
     secret(key: String!): Secret!
 
@@ -80,17 +80,6 @@ type Mutation {
     createSubscription(app: ID!, pricing: ID!, subscriber: ID!): Subscribe!
 
     createUsageLog(app: ID!, path: String!, subscriber: ID!, volume: Int! = 1, pricing: ID!): UsageLog!
-
-    # TODO: remove this
-    createStripePaymentAccept(
-        user: ID!
-        amount: NonNegativeDecimal!
-        currency: String!
-        stripePaymentStatus: String!
-        stripeSessionId: String!
-        stripePaymentIntent: String!
-        stripeSessionObject: String!
-    ): StripePaymentAccept!
 
     # TODO: remove this
     createStripeTransfer(
@@ -274,7 +263,7 @@ type StripePaymentAccept {
     createdAt: Timestamp!
     status: StripePaymentAcceptStatus!
 
-    updateStripePaymentAccept(stripePaymentStatus: String, stripeSessionObject: String): StripePaymentAccept!
+    # updateStripePaymentAccept(stripePaymentStatus: String, stripeSessionObject: String): StripePaymentAccept!
 
     settlePayment(stripeSessionObject: String!): StripePaymentAccept!
 }

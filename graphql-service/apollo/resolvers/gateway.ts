@@ -12,7 +12,7 @@ import { ShouldCollectMonthlyChargePromiseResult, shouldCollectMonthlyCharge } f
 import Decimal from "decimal.js-light";
 import { GatewayRequestCounter, GatewayRequestDecisionCache, Pricing, User } from "../dynamoose/models";
 import { Chalk } from "chalk";
-import { AlreadyExists, NotFound } from "../errors";
+import { AlreadyExists, Denied, NotFound } from "../errors";
 import { PricingPK } from "../pks/PricingPK";
 import { AppPK } from "../pks/AppPK";
 import { UserPK } from "../pks/UserPK";
@@ -45,6 +45,9 @@ export const gatewayResolvers: GQLResolvers & {
             }: GQLQueryCheckUserIsAllowedForGatewayRequestArgs,
             context: RequestContext
         ): Promise<GatewayDecisionResponse> {
+            if (!context.isServiceRequest) {
+                throw new Denied();
+            }
             // Attention: You will see a lot of Promises being passed in this
             // function, because this way we can maximize the parallelism when
             // making requests. In general, only await the Promise at the last

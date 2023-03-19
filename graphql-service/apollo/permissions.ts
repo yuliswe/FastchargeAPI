@@ -1,4 +1,13 @@
-import { AccountActivity, AccountHistory, App, Endpoint, Pricing, Subscription, User } from "./dynamoose/models";
+import {
+    AccountActivity,
+    AccountHistory,
+    App,
+    Endpoint,
+    Pricing,
+    StripePaymentAccept,
+    Subscription,
+    User,
+} from "./dynamoose/models";
 import { RequestContext } from "./RequestContext";
 import {
     GQLAppUpdateAppArgs,
@@ -6,7 +15,6 @@ import {
     GQLMutationCreateEndpointArgs,
     GQLMutationCreateSubscriptionArgs,
     GQLMutationCreateUsageLogArgs,
-    GQLQueryStripePaymentAcceptArgs,
     GQLQuerySubscriptionArgs,
     GQLUserUpdateUserArgs,
 } from "./__generated__/resolvers-types";
@@ -161,8 +169,14 @@ export const Can = {
     async createUsageLog(args: GQLMutationCreateUsageLogArgs, context: RequestContext) {
         return await Promise.resolve(true);
     },
-    async readStripePaymentAccepts(parent: User, args: GQLQueryStripePaymentAcceptArgs, context: RequestContext) {
-        return await Promise.resolve(true);
+    async viewStripePaymentAcceptPrivateAttributes(parent: StripePaymentAccept, context: RequestContext) {
+        if (context.isServiceRequest) {
+            return true;
+        }
+        if (!context.currentUser) {
+            return false;
+        }
+        return await Promise.resolve(parent.user === context.currentUser.uid);
     },
     async viewAccountActivityPrivateAttributes(parent: AccountActivity, context: RequestContext): Promise<boolean> {
         if (context.isServiceRequest) {
