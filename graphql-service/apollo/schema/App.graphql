@@ -8,7 +8,7 @@ type Query {
     app(name: String): App!
     appFullTextSearch(query: String!): [App!]!
     ### User API
-    users(pk: [ID!]): [User!]! # Get all users in the system
+    # users(pk: [ID!]): [User!]! # Get all users in the system
     user(pk: ID, email: Email): User!
     ### Endpoint API
     endpoint(pk: ID, app: String, path: String): Endpoint!
@@ -48,7 +48,7 @@ type GatewayDecisionResponse {
 }
 
 type Mutation {
-    createUser(email: Email!): User!
+    # createUser(email: Email!): User!
 
     createApp(
         name: String!

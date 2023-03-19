@@ -1,11 +1,10 @@
 import { GraphQLResolveInfo } from "graphql";
-import { AccountActivity, User, UserAppToken, UserModel } from "../dynamoose/models";
+import { AccountActivity, App, Subscription, User, UserAppToken, UserModel } from "../dynamoose/models";
 import { BadInput, Denied, TooManyResources } from "../errors";
 import { Can } from "../permissions";
 import { RequestContext } from "../RequestContext";
 import {
     GQLAppIndex,
-    GQLMutationCreateUserArgs,
     GQLQueryUserArgs,
     GQLResolvers,
     GQLUserAccountActivitiesArgs,
@@ -21,51 +20,91 @@ import { UserPK } from "../pks/UserPK";
 import { getUserBalance, settleAccountActivities } from "../functions/account";
 import { makeAppTokenForUser } from "../functions/token";
 import { AppPK } from "../pks/AppPK";
-import { createUserWithEmail } from "../functions/user";
+
+function makePrivate<T>(
+    getter: (parent: User, args: {}, context: RequestContext) => T
+): (parent: User, args: {}, context: RequestContext) => Promise<T> {
+    return async (parent: User, args: {}, context: RequestContext): Promise<T> => {
+        if (!(await Can.viewUserPrivateInfo(parent, context))) {
+            throw new Denied();
+        }
+        return getter(parent, args, context);
+    };
+}
 
 export const userResolvers: GQLResolvers & {
     User: Required<GQLUserResolvers>;
 } = {
     User: {
+        /**************************
+         * All public attributes
+         **************************/
+
         __isTypeOf: (parent) => parent instanceof UserModel,
-        pk: (parent) => UserPK.stringify(parent),
-        async email(parent, args, context, info) {
-            if (!(await Can.viewUser(parent, context))) {
-                throw new Denied();
-            }
-            return parent.email;
-        },
-        async apps(parent: User, args: {}, context: RequestContext, info: GraphQLResolveInfo) {
+        createdAt: (parent) => parent.createdAt,
+        updatedAt: (parent) => parent.updatedAt,
+        author: (parent) => parent.author || "", // users name that is visible to everyone.
+
+        /**
+         * @returns apps owned by this user. All apps are public information.
+         */
+        async apps(parent: User, args: {}, context: RequestContext): Promise<App[]> {
             let apps = await context.batched.App.many(
                 { owner: UserPK.stringify(parent) },
                 {
                     using: GQLAppIndex.IndexByOwnerOnlyPk,
                 }
             );
-            let visableApps = await Can.viewAppFilter(apps, context);
-            return visableApps;
+            return apps;
         },
-        async subscriptions(parent: User, args: {}, context: RequestContext, info: GraphQLResolveInfo) {
+
+        /**************************
+         * All private attributes
+         **************************/
+
+        pk: makePrivate((parent) => UserPK.stringify(parent)),
+        email: makePrivate((parent) => parent.email),
+        stripeCustomerId: makePrivate((parent) => parent.stripeCustomerId),
+        stripeConnectAccountId: makePrivate((parent) => parent.stripeConnectAccountId),
+        balanceLimit: makePrivate((parent) => parent.balanceLimit),
+
+        async subscriptions(parent: User, args: {}, context: RequestContext): Promise<Subscription[]> {
+            if (!(await Can.viewUserPrivateInfo(parent, context))) {
+                throw new Denied();
+            }
             return await context.batched.Subscription.many({
                 subscriber: UserPK.stringify(parent),
             });
         },
-        author: (parent) => parent.author || "",
+
+        /**
+         * @returns user's account balance.
+         */
         async balance(parent, args, context) {
+            if (!(await Can.viewUserPrivateInfo(parent, context))) {
+                throw new Denied();
+            }
             return await getUserBalance(context, UserPK.stringify(parent));
         },
-        createdAt: (parent) => parent.createdAt,
-        updatedAt: (parent) => parent.updatedAt,
-        stripeCustomerId: (parent) => parent.stripeCustomerId,
-        stripeConnectAccountId: (parent) => parent.stripeConnectAccountId,
-        balanceLimit: (parent) => parent.balanceLimit,
+
         async appToken(parent, { app }, context) {
+            if (!(await Can.viewUserPrivateInfo(parent, context))) {
+                throw new Denied();
+            }
             return await context.batched.UserAppToken.get({ subscriber: UserPK.stringify(parent), app });
         },
+
         async stripePaymentAccept(parent, { stripeSessionId }: GQLUserStripePaymentAcceptArgs, context) {
+            if (!(await Can.viewUserPrivateInfo(parent, context))) {
+                throw new Denied();
+            }
             return await context.batched.StripePaymentAccept.get({ user: UserPK.stringify(parent), stripeSessionId });
         },
+
         async accountActivities(parent: User, { limit, dateRange }: GQLUserAccountActivitiesArgs, context) {
+            if (!(await Can.viewUserPrivateInfo(parent, context))) {
+                throw new Denied();
+            }
             let result = await context.batched.AccountActivity.many(
                 {
                     user: UserPK.stringify(parent),
@@ -83,7 +122,11 @@ export const userResolvers: GQLResolvers & {
             );
             return result;
         },
+
         async accountHistories(parent: User, { limit, dateRange }: GQLUserAccountActivitiesArgs, context) {
+            if (!(await Can.viewUserPrivateInfo(parent, context))) {
+                throw new Denied();
+            }
             let result = await context.batched.AccountHistory.many(
                 {
                     user: UserPK.stringify(parent),
@@ -101,24 +144,11 @@ export const userResolvers: GQLResolvers & {
             );
             return result;
         },
-        async updateUser(
-            parent: User,
-            { author, stripeCustomerId, stripeConnectAccountId }: GQLUserUpdateUserArgs,
-            context: RequestContext,
-            info: GraphQLResolveInfo
-        ): Promise<User> {
-            if (!(await Can.updateUser(parent, context))) {
-                throw new Denied();
-            }
-            let user = await context.batched.User.update(parent, {
-                author,
-                stripeCustomerId,
-                stripeConnectAccountId,
-            });
-            return user;
-        },
 
         async usageLogs(parent: User, args: GQLUserUsageLogsArgs, context, info) {
+            if (!(await Can.viewUserPrivateInfo(parent, context))) {
+                throw new Denied();
+            }
             let { app, path, limit, dateRange } = args;
             let usage = await context.batched.UsageLog.many(
                 {
@@ -140,6 +170,9 @@ export const userResolvers: GQLResolvers & {
         },
 
         async usageSummaries(parent: User, { limit, app, dateRange }: GQLUserUsageSummariesArgs, context, info) {
+            if (!(await Can.viewUserPrivateInfo(parent, context))) {
+                throw new Denied();
+            }
             let usageSummaries = await context.batched.UsageSummary.many(
                 {
                     subscriber: UserPK.stringify(parent),
@@ -159,10 +192,30 @@ export const userResolvers: GQLResolvers & {
             return usageSummaries;
         },
 
+        async updateUser(
+            parent: User,
+            { author, stripeCustomerId, stripeConnectAccountId }: GQLUserUpdateUserArgs,
+            context: RequestContext,
+            info: GraphQLResolveInfo
+        ): Promise<User> {
+            if (!(await Can.updateUser(parent, { author, stripeCustomerId, stripeConnectAccountId }, context))) {
+                throw new Denied();
+            }
+            let user = await context.batched.User.update(parent, {
+                author,
+                stripeCustomerId,
+                stripeConnectAccountId,
+            });
+            return user;
+        },
+
         /**
          * settleAccountActivities should only be called from the billing queue.
          */
         async settleAccountActivities(parent: User, args: {}, context: RequestContext): Promise<AccountActivity[]> {
+            if (!(await Can.settleUserAccountActivities(context))) {
+                throw new Denied();
+            }
             let result = await settleAccountActivities(context, UserPK.stringify(parent));
             if (result === null) {
                 return [];
@@ -175,6 +228,9 @@ export const userResolvers: GQLResolvers & {
             { app }: GQLUserCreateAppTokenArgs,
             context: RequestContext
         ): Promise<UserAppToken> {
+            if (!(await Can.createUserPrivateResources(parent, context))) {
+                throw new Denied();
+            }
             await context.batched.App.get(AppPK.parse(app)); // check that the app exists
             let { token: tokenString, signature } = await makeAppTokenForUser(context, {
                 user: UserPK.stringify(parent),
@@ -197,13 +253,13 @@ export const userResolvers: GQLResolvers & {
         },
     },
     Query: {
-        async users(parent: {}, args: {}, context: RequestContext, info: GraphQLResolveInfo): Promise<User[]> {
-            if (!(await Can.listUsers(context))) {
-                throw new Denied();
-            }
-            let users = await context.batched.User.scan();
-            return users;
-        },
+        // async users(parent: {}, args: {}, context: RequestContext): Promise<User[]> {
+        //     if (!(await Can.listUsers(context))) {
+        //         throw new Denied();
+        //     }
+        //     let users = await context.batched.User.scan();
+        //     return users;
+        // },
         async user(parent: {}, { pk, email }: GQLQueryUserArgs, context: RequestContext) {
             let user;
             if (email) {
@@ -219,24 +275,26 @@ export const userResolvers: GQLResolvers & {
             if (!user) {
                 throw new BadInput("id or email required");
             }
-            if (!(await Can.viewUser(user, context))) {
+            // Does this need to be private? I don't think so, but I'll leave it
+            // for now.
+            if (!(await Can.viewUserPrivateInfo(user, context))) {
                 throw new Denied();
             }
             return user;
         },
     },
     Mutation: {
-        async createUser(
-            parent: {},
-            { email }: GQLMutationCreateUserArgs,
-            context: RequestContext,
-            info: GraphQLResolveInfo
-        ): Promise<User> {
-            if (!(await Can.createUser({ email }, context))) {
-                throw new Denied();
-            }
-            let user = await createUserWithEmail(context.batched, email);
-            return user;
-        },
+        // async createUser(
+        //     parent: {},
+        //     { email }: GQLMutationCreateUserArgs,
+        //     context: RequestContext,
+        //     info: GraphQLResolveInfo
+        // ): Promise<User> {
+        //     if (!(await Can.createUser({ email }, context))) {
+        //         throw new Denied();
+        //     }
+        //     let user = await createUserWithEmail(context.batched, email);
+        //     return user;
+        // },
     },
 };

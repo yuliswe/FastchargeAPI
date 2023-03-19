@@ -152,7 +152,6 @@ export type GQLMutation = {
     createStripeTransfer: GQLStripeTransfer;
     createSubscription: GQLSubscribe;
     createUsageLog: GQLUsageLog;
-    createUser: GQLUser;
     triggerBilling: Array<GQLUsageSummary>;
 };
 
@@ -222,10 +221,6 @@ export type GQLMutationCreateUsageLogArgs = {
     volume?: Scalars["Int"];
 };
 
-export type GQLMutationCreateUserArgs = {
-    email: Scalars["Email"];
-};
-
 export type GQLMutationTriggerBillingArgs = {
     app: Scalars["ID"];
     user: Scalars["ID"];
@@ -256,7 +251,6 @@ export type GQLQuery = {
     stripePaymentAccept: GQLStripePaymentAccept;
     subscription: GQLSubscribe;
     user: GQLUser;
-    users: Array<GQLUser>;
 };
 
 export type GQLQueryAccountActivitiesArgs = {
@@ -303,10 +297,6 @@ export type GQLQuerySubscriptionArgs = {
 export type GQLQueryUserArgs = {
     email?: InputMaybe<Scalars["Email"]>;
     pk?: InputMaybe<Scalars["ID"]>;
-};
-
-export type GQLQueryUsersArgs = {
-    pk?: InputMaybe<Array<Scalars["ID"]>>;
 };
 
 export type GQLSecret = {

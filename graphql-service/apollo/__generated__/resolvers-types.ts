@@ -171,7 +171,6 @@ export type GQLMutation = {
     createStripeTransfer: GQLStripeTransfer;
     createSubscription: GQLSubscribe;
     createUsageLog: GQLUsageLog;
-    createUser: GQLUser;
     triggerBilling: Array<GQLUsageSummary>;
 };
 
@@ -241,10 +240,6 @@ export type GQLMutationCreateUsageLogArgs = {
     volume?: Scalars["Int"];
 };
 
-export type GQLMutationCreateUserArgs = {
-    email: Scalars["Email"];
-};
-
 export type GQLMutationTriggerBillingArgs = {
     app: Scalars["ID"];
     user: Scalars["ID"];
@@ -275,7 +270,6 @@ export type GQLQuery = {
     stripePaymentAccept: GQLStripePaymentAccept;
     subscription: GQLSubscribe;
     user: GQLUser;
-    users: Array<GQLUser>;
 };
 
 export type GQLQueryAccountActivitiesArgs = {
@@ -322,10 +316,6 @@ export type GQLQuerySubscriptionArgs = {
 export type GQLQueryUserArgs = {
     email?: InputMaybe<Scalars["Email"]>;
     pk?: InputMaybe<Scalars["ID"]>;
-};
-
-export type GQLQueryUsersArgs = {
-    pk?: InputMaybe<Array<Scalars["ID"]>>;
 };
 
 export type GQLSecret = {
@@ -800,12 +790,6 @@ export type GQLMutationResolvers<
         ContextType,
         RequireFields<GQLMutationCreateUsageLogArgs, "app" | "path" | "pricing" | "subscriber" | "volume">
     >;
-    createUser?: Resolver<
-        GQLResolversTypes["User"],
-        ParentType,
-        ContextType,
-        RequireFields<GQLMutationCreateUserArgs, "email">
-    >;
     triggerBilling?: Resolver<
         Array<GQLResolversTypes["UsageSummary"]>,
         ParentType,
@@ -872,7 +856,6 @@ export type GQLQueryResolvers<
     >;
     subscription?: Resolver<GQLResolversTypes["Subscribe"], ParentType, ContextType, Partial<GQLQuerySubscriptionArgs>>;
     user?: Resolver<GQLResolversTypes["User"], ParentType, ContextType, Partial<GQLQueryUserArgs>>;
-    users?: Resolver<Array<GQLResolversTypes["User"]>, ParentType, ContextType, Partial<GQLQueryUsersArgs>>;
 }>;
 
 export type GQLSecretResolvers<

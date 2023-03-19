@@ -7,25 +7,64 @@ import {
     GQLQueryEndpointArgs,
     GQLQueryStripePaymentAcceptArgs,
     GQLQuerySubscriptionArgs,
+    GQLUserUpdateUserArgs,
 } from "./__generated__/resolvers-types";
 import { AppPK } from "./pks/AppPK";
 
 export const Can = {
-    async viewUser({ email }: { email: string }, context: RequestContext): Promise<boolean> {
-        return await Promise.resolve(true);
+    async viewUserPrivateInfo(user: User, context: RequestContext): Promise<boolean> {
+        if (context.isServiceRequest) {
+            return true;
+        }
+        if (!context.currentUser) {
+            return false;
+        }
+        return await Promise.resolve(user.uid === context.currentUser.uid);
+    },
+    async createUserPrivateResources(user: User, context: RequestContext): Promise<boolean> {
+        if (context.isServiceRequest) {
+            return true;
+        }
+        if (!context.currentUser) {
+            return false;
+        }
+        return await Promise.resolve(user.uid === context.currentUser.uid);
+    },
+    async updateUser(
+        user: User,
+        { author, stripeCustomerId, stripeConnectAccountId }: GQLUserUpdateUserArgs,
+        context: RequestContext
+    ): Promise<boolean> {
+        if (context.isServiceRequest) {
+            return true;
+        }
+        if (stripeCustomerId || stripeConnectAccountId) {
+            return context.isServiceRequest;
+        }
+        if (!context.currentUser) {
+            return false;
+        }
+        return await Promise.resolve(user.uid === context.currentUser.uid);
     },
     async listUsers(context: RequestContext): Promise<boolean> {
-        return await Promise.resolve(true);
+        if (context.isServiceRequest) {
+            return Promise.resolve(true);
+        }
+        return Promise.resolve(false);
     },
+    async settleUserAccountActivities(context: RequestContext): Promise<boolean> {
+        if (context.isSQSMessage && context.isServiceRequest) {
+            return Promise.resolve(true);
+        }
+        return Promise.resolve(false);
+    },
+
     async viewApp({ owner }: { owner: string }, context: RequestContext): Promise<boolean> {
         return await Promise.resolve(true);
     },
     async createUser({ email }: { email: string }, context: RequestContext) {
-        return await Promise.resolve(true);
+        return await Promise.resolve(context.isServiceRequest);
         // return userEmail === "ylilarry@gmail.com"
-    },
-    async updateUser({ email }: { email: string }, context: RequestContext) {
-        return await Promise.resolve(true);
     },
     async createApp({ owner }: { owner: string }, context: RequestContext): Promise<boolean> {
         // Is the current user the claimed owner of the app?

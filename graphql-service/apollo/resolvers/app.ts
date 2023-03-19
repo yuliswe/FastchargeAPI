@@ -33,9 +33,6 @@ export const appResolvers: GQLResolvers & {
         },
         async owner(parent, args, context, info) {
             let user = await context.batched.User.get(UserPK.parse(parent.owner));
-            if (!(await Can.viewUser(user, context))) {
-                throw new Denied();
-            }
             return user;
         },
         async pricingPlans(parent: App, args: {}, context: RequestContext) {
