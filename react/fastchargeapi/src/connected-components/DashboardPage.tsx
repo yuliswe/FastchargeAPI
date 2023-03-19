@@ -1,18 +1,7 @@
 import React from "react";
 import { RootAppState } from "../states/RootAppState";
 import { connect } from "react-redux";
-import {
-    Box,
-    Button,
-    CircularProgress,
-    Divider,
-    Grid,
-    Link,
-    Menu,
-    MenuItem,
-    Stack,
-    Typography,
-} from "@mui/material";
+import { Box, Button, CircularProgress, Divider, Grid, Link, Menu, MenuItem, Stack, Typography } from "@mui/material";
 import { DashboardAppState } from "../states/DashboardAppState";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { AccountActivity, DashboardEvent } from "../events/DashboardEvent";
@@ -26,10 +15,7 @@ import {
 } from "../__generated__/gql-operations";
 import { Line } from "react-chartjs-2";
 import "chart.js/auto";
-import {
-    LogTable,
-    LogTableOnChangeHandler,
-} from "../stateless-components/LogTable";
+import { LogTable, LogTableOnChangeHandler } from "../stateless-components/LogTable";
 import { AfterEventOfType } from "react-appevent-redux";
 import {
     DocumentationDialog,
@@ -166,10 +152,7 @@ class _DashboardPage extends React.Component<Props, State> {
 
     currentPageActivities() {
         let start = (this.activityPageNum() - 1) * this.activitiesPerPage;
-        return this.allActivities().slice(
-            start,
-            start + this.activitiesPerPage
-        );
+        return this.allActivities().slice(start, start + this.activitiesPerPage);
     }
 
     handlePageChange(page: number) {
@@ -188,10 +171,7 @@ class _DashboardPage extends React.Component<Props, State> {
                 let date = new Date(activity.stripeTransfer?.transferAt);
                 return date.toDateString();
             }
-        } else if (
-            activity.status === GQLAccountActivityStatus.Pending &&
-            activity.settleAt
-        ) {
+        } else if (activity.status === GQLAccountActivityStatus.Pending && activity.settleAt) {
             let date = new Date(activity.settleAt);
             return date.toDateString();
         }
@@ -239,8 +219,7 @@ class _DashboardPage extends React.Component<Props, State> {
                     label: "",
                     data: sample.map((x) => x.value),
                     borderColor: this._context.theme.palette.info.main,
-                    backgroundColor:
-                        this._context.theme.palette.info.main + "33",
+                    backgroundColor: this._context.theme.palette.info.main + "33",
                     tension: 0.1,
                     fill: {
                         target: "origin",
@@ -254,10 +233,7 @@ class _DashboardPage extends React.Component<Props, State> {
         return data;
     }
 
-    handleActivitiesPageChange: LogTableOnChangeHandler = ({
-        page,
-        dateRange,
-    }) => {
+    handleActivitiesPageChange: LogTableOnChangeHandler = ({ page, dateRange }) => {
         appStore.dispatch(
             new DashboardEvent.LoadActivities(this._context, {
                 beforeDate: dateRange.end,
@@ -271,9 +247,7 @@ class _DashboardPage extends React.Component<Props, State> {
                 <Typography variant="body1" gutterBottom>
                     We recommend using the cli tool to transfer funds.
                 </Typography>
-                <TerminalInput>
-                    {`fastcharge account withdraw [AMOUNT]`}
-                </TerminalInput>
+                <TerminalInput>{`fastcharge account withdraw [AMOUNT]`}</TerminalInput>
             </Terminal>
         );
     }
@@ -282,12 +256,9 @@ class _DashboardPage extends React.Component<Props, State> {
         return (
             <Terminal height="5em" colorMode={ColorMode.Light}>
                 <Typography variant="body1" gutterBottom>
-                    We recommend using the cli tool to add funds to your
-                    account.
+                    We recommend using the cli tool to add funds to your account.
                 </Typography>
-                <TerminalInput>
-                    {`fastapi account topup [AMOUNT]`}
-                </TerminalInput>
+                <TerminalInput>{`fastapi account topup [AMOUNT]`}</TerminalInput>
             </Terminal>
         );
     }
@@ -299,48 +270,31 @@ class _DashboardPage extends React.Component<Props, State> {
                     Sign in to Stripe
                 </Typography>
                 <Typography variant="body1" gutterBottom>
-                    To verify your identity, we will send an email containing
-                    the Stripe login link to your email.
+                    To verify your identity, we will send an email containing the Stripe login link to your email.
                 </Typography>
                 <Button
                     variant="contained"
                     color="secondary"
                     sx={{ mt: 2 }}
-                    disabled={
-                        this.appState.loadingStripeLoginLink ||
-                        this.state.stripeLoginLinkTimeout > 0
-                    }
-                    endIcon={
-                        this.appState.loadingStripeLoginLink && (
-                            <CircularProgress size={20} color="info" />
-                        )
-                    }
+                    disabled={this.appState.loadingStripeLoginLink || this.state.stripeLoginLinkTimeout > 0}
+                    endIcon={this.appState.loadingStripeLoginLink && <CircularProgress size={20} color="info" />}
                     onClick={() => {
-                        appStore.dispatch(
-                            new DashboardEvent.SendStripeLoginLink(
-                                this._context
-                            )
-                        );
+                        appStore.dispatch(new DashboardEvent.SendStripeLoginLink(this._context));
                         appStore.addSchedule(
-                            new AfterEventOfType(
-                                DashboardEvent.StripeLinkReady,
-                                {
-                                    id: "StripeLinkReady",
-                                    once: true,
-                                    onTriggered: () => {
-                                        void (async () => {
-                                            for (let i = 60; i > 0; i--) {
-                                                this.setState({
-                                                    stripeLoginLinkTimeout: i,
-                                                });
-                                                await new Promise((resolve) =>
-                                                    setTimeout(resolve, 1000)
-                                                );
-                                            }
-                                        })();
-                                    },
-                                }
-                            )
+                            new AfterEventOfType(DashboardEvent.StripeLinkReady, {
+                                id: "StripeLinkReady",
+                                once: true,
+                                onTriggered: () => {
+                                    void (async () => {
+                                        for (let i = 60; i > 0; i--) {
+                                            this.setState({
+                                                stripeLoginLinkTimeout: i,
+                                            });
+                                            await new Promise((resolve) => setTimeout(resolve, 1000));
+                                        }
+                                    })();
+                                },
+                            })
                         );
                     }}
                 >
@@ -360,11 +314,7 @@ class _DashboardPage extends React.Component<Props, State> {
                         <Grid item md={8} flexGrow={1}>
                             <Typography variant="h6">Account</Typography>
                             <Divider sx={{ mb: 1 }} />
-                            <Typography
-                                variant="body1"
-                                fontSize={30}
-                                fontWeight={700}
-                            >
+                            <Typography variant="body1" fontSize={30} fontWeight={700}>
                                 ${this.appState.accountBalance}{" "}
                             </Typography>
                         </Grid>
@@ -378,11 +328,7 @@ class _DashboardPage extends React.Component<Props, State> {
                                 alignItems: "start",
                             }}
                         >
-                            <Button
-                                variant="contained"
-                                onClick={this.handleMenu}
-                                endIcon={<KeyboardArrowDownIcon />}
-                            >
+                            <Button variant="contained" onClick={this.handleMenu} endIcon={<KeyboardArrowDownIcon />}>
                                 Move Money
                             </Button>
                             <Menu
@@ -409,9 +355,7 @@ class _DashboardPage extends React.Component<Props, State> {
                                 <MenuItem
                                     LinkComponent={Button}
                                     onClick={() => {
-                                        openDocumentationDialog(this, () =>
-                                            this.renderTopUpDocumentation()
-                                        );
+                                        openDocumentationDialog(this, () => this.renderTopUpDocumentation());
                                         this.handleClose();
                                     }}
                                 >
@@ -420,9 +364,7 @@ class _DashboardPage extends React.Component<Props, State> {
                                 <MenuItem
                                     href="/account"
                                     onClick={() => {
-                                        openDocumentationDialog(this, () =>
-                                            this.renderTransferDocumentation()
-                                        );
+                                        openDocumentationDialog(this, () => this.renderTransferDocumentation());
                                         this.handleClose();
                                     }}
                                     LinkComponent={Button}
@@ -448,32 +390,23 @@ class _DashboardPage extends React.Component<Props, State> {
                         <Typography variant="h6">Stripe</Typography>
                         <Divider sx={{ mb: 2 }} />
                         <Typography variant="body1">
-                            As an API developer, you can set up a Stripe account
-                            to start receiving payment. If you are using an API
-                            that's developed by someone else, you can skip this
-                            step.
+                            As an API developer, you can set up a Stripe account to start receiving payment. If you are
+                            using an API that's developed by someone else, you can skip this step.
                         </Typography>
                         <Typography variant="body1" component="div">
                             To set up a Stripe account,{" "}
-                            <Link
-                                href="/onboard"
-                                target="_blank"
-                                color="info.main"
-                            >
+                            <Link href="/onboard" target="_blank" color="info.main">
                                 go to the onboarding page
                             </Link>{" "}
                             and complete the registration.
                         </Typography>
-                        If you have completed the setup above, you can log in to
-                        your Stripe portal.
+                        If you have completed the setup above, you can log in to your Stripe portal.
                         <Typography variant="body1"></Typography>
                         <Box my={1}>
                             <Link
                                 color="info.main"
                                 onClick={() => {
-                                    openDocumentationDialog(this, () =>
-                                        this.renderLoginStripeDocumentation()
-                                    );
+                                    openDocumentationDialog(this, () => this.renderLoginStripeDocumentation());
                                 }}
                             >
                                 Having trouble signing in?
@@ -495,10 +428,7 @@ class _DashboardPage extends React.Component<Props, State> {
                         activities={this.allActivities()}
                         activitiesPerPage={20}
                         onChange={this.handleActivitiesPageChange}
-                        renderCell={(
-                            head: string,
-                            activity: AccountActivity
-                        ) => {
+                        renderCell={(head: string, activity: AccountActivity) => {
                             switch (head) {
                                 case "Date":
                                     return this.date(activity);
@@ -557,8 +487,6 @@ class _DashboardPage extends React.Component<Props, State> {
     }
 }
 
-export const DashboardPage = connect<Props, {}, {}, RootAppState>(
-    (rootAppState: RootAppState) => ({
-        dashboard: rootAppState.dashboard,
-    })
-)(_DashboardPage);
+export const DashboardPage = connect<Props, {}, {}, RootAppState>((rootAppState: RootAppState) => ({
+    dashboard: rootAppState.dashboard,
+}))(_DashboardPage);
