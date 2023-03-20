@@ -239,11 +239,23 @@ export type GQLPricing = {
     app: GQLApp;
     callToAction: Scalars["String"];
     chargePerRequest: Scalars["String"];
-    deletePricing?: Maybe<GQLPricing>;
+    deletePricing: GQLPricing;
     freeQuota: Scalars["Int"];
     minMonthlyCharge: Scalars["String"];
+    mutable: Scalars["Boolean"];
     name: Scalars["String"];
     pk: Scalars["ID"];
+    updatePricing: GQLPricing;
+    visible: Scalars["Boolean"];
+};
+
+export type GQLPricingUpdatePricingArgs = {
+    callToAction?: InputMaybe<Scalars["String"]>;
+    chargePerRequest?: InputMaybe<Scalars["String"]>;
+    freeQuota?: InputMaybe<Scalars["Int"]>;
+    minMonthlyCharge?: InputMaybe<Scalars["String"]>;
+    name?: InputMaybe<Scalars["String"]>;
+    visible?: InputMaybe<Scalars["Boolean"]>;
 };
 
 export type GQLQuery = {
@@ -765,11 +777,19 @@ export type GQLPricingResolvers<
     app?: Resolver<GQLResolversTypes["App"], ParentType, ContextType>;
     callToAction?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
     chargePerRequest?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
-    deletePricing?: Resolver<Maybe<GQLResolversTypes["Pricing"]>, ParentType, ContextType>;
+    deletePricing?: Resolver<GQLResolversTypes["Pricing"], ParentType, ContextType>;
     freeQuota?: Resolver<GQLResolversTypes["Int"], ParentType, ContextType>;
     minMonthlyCharge?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
+    mutable?: Resolver<GQLResolversTypes["Boolean"], ParentType, ContextType>;
     name?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
     pk?: Resolver<GQLResolversTypes["ID"], ParentType, ContextType>;
+    updatePricing?: Resolver<
+        GQLResolversTypes["Pricing"],
+        ParentType,
+        ContextType,
+        Partial<GQLPricingUpdatePricingArgs>
+    >;
+    visible?: Resolver<GQLResolversTypes["Boolean"], ParentType, ContextType>;
     __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 

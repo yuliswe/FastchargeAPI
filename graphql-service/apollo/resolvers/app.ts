@@ -34,9 +34,18 @@ export const appResolvers: GQLResolvers & {
             return user;
         },
         async pricingPlans(parent: App, args: {}, context: RequestContext) {
-            return await context.batched.Pricing.many({
-                app: parent.name,
-            });
+            // If the current user is the app owner, then they can see all pricing plans.
+            if (context.currentUser && parent.owner === UserPK.stringify(context.currentUser)) {
+                return await context.batched.Pricing.many({
+                    app: parent.name,
+                });
+            } else {
+                // Otherwise, only visible pricing plans are returned.
+                return await context.batched.Pricing.many({
+                    app: parent.name,
+                    visible: true,
+                });
+            }
         },
         async endpoints(parent, args, context) {
             let endpoints = await context.batched.Endpoint.many({
@@ -55,7 +64,7 @@ export const appResolvers: GQLResolvers & {
             }
             return await context.batched.App.update(parent, { title, description, homepage, repository });
         },
-        async deleteApp(parent, args: never, context, info) {
+        async deleteApp(parent: App, args: never, context: RequestContext): Promise<App> {
             if (!(await Can.deleteApp(parent, context))) {
                 throw new Denied();
             }

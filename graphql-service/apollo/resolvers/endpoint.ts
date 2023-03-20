@@ -36,7 +36,6 @@ export const endpointResolvers: GQLResolvers & {
         pk: (parent) => EndpointPK.stringify(parent),
         method: (parent) => parent.method as GQLHttpMethod,
         description: (parent) => parent.description,
-        destination: (parent) => parent.destination,
         path: ({ path }) => path,
 
         /***********************************************
@@ -45,6 +44,7 @@ export const endpointResolvers: GQLResolvers & {
 
         createdAt: makeOwnerReadable((parent) => parent.createdAt),
         updatedAt: makeOwnerReadable((parent) => parent.updatedAt),
+        destination: makeOwnerReadable((parent) => parent.destination),
 
         async updateEndpoint(
             parent: Endpoint,

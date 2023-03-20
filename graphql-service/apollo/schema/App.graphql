@@ -216,8 +216,18 @@ type Pricing {
     minMonthlyCharge: String!
     chargePerRequest: String!
     freeQuota: Int!
+    visible: Boolean!
+    mutable: Boolean!
 
-    deletePricing: Pricing
+    deletePricing: Pricing!
+    updatePricing(
+        name: String
+        callToAction: String
+        minMonthlyCharge: String
+        chargePerRequest: String
+        freeQuota: Int
+        visible: Boolean
+    ): Pricing!
 }
 
 type Subscribe {

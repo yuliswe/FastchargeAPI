@@ -220,11 +220,23 @@ export type GQLPricing = {
     app: GQLApp;
     callToAction: Scalars["String"];
     chargePerRequest: Scalars["String"];
-    deletePricing?: Maybe<GQLPricing>;
+    deletePricing: GQLPricing;
     freeQuota: Scalars["Int"];
     minMonthlyCharge: Scalars["String"];
+    mutable: Scalars["Boolean"];
     name: Scalars["String"];
     pk: Scalars["ID"];
+    updatePricing: GQLPricing;
+    visible: Scalars["Boolean"];
+};
+
+export type GQLPricingUpdatePricingArgs = {
+    callToAction?: InputMaybe<Scalars["String"]>;
+    chargePerRequest?: InputMaybe<Scalars["String"]>;
+    freeQuota?: InputMaybe<Scalars["Int"]>;
+    minMonthlyCharge?: InputMaybe<Scalars["String"]>;
+    name?: InputMaybe<Scalars["String"]>;
+    visible?: InputMaybe<Scalars["Boolean"]>;
 };
 
 export type GQLQuery = {

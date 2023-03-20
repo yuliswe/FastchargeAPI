@@ -13,7 +13,7 @@ import { SubscriptionPK } from "../pks/SubscriptionPK";
 import { UserPK } from "../pks/UserPK";
 import { AppPK } from "../pks/AppPK";
 
-export const subscribeResolvers: GQLResolvers = {
+export const subscriptionResolvers: GQLResolvers = {
     Subscribe: {
         pk: (parent) => SubscriptionPK.stringify(parent),
         updatedAt: (parent) => parent.updatedAt,

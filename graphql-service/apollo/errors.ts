@@ -33,9 +33,17 @@ export class BadInput extends GraphQLError {
 }
 
 export class Denied extends GraphQLError {
-    constructor() {
-        super(`You do not have permission to perform this action.`, {
+    constructor(msg?: string) {
+        super(msg ?? `You do not have permission to perform this action.`, {
             extensions: { code: "PERMISSION_DENIED" },
+        });
+    }
+}
+
+export class ImmutableResource extends GraphQLError {
+    constructor(msg?: string) {
+        super(msg ?? `This resource can no longer be modified.`, {
+            extensions: { code: "IMMUTABLE_RESOURCE" },
         });
     }
 }

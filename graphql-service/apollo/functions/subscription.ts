@@ -13,8 +13,10 @@ export async function findUserSubscription(
 }
 
 /**
- * @returns the Pricing object that the user is subscribed to, or null if the
- * user is not subscribed
+ * Returns the Pricing object that the user is subscribed to, and validate that
+ * the pricing oject is valid (because pricing is an deletable resource).
+ * Returns null if the user is not subscribed, or the pricing has been deleted.
+ * @returns pricing object or null
  */
 export async function findUserSubscriptionPricing(
     context: RequestContext,

@@ -9,7 +9,7 @@ import { initializeDB } from "./dynamoose";
 import { GQLResolvers } from "./__generated__/resolvers-types";
 import { endpointResolvers } from "./resolvers/endpoint";
 import { pricingResolvers } from "./resolvers/pricing";
-import { subscribeResolvers } from "./resolvers/subscription";
+import { subscriptionResolvers } from "./resolvers/subscription";
 import customScalars from "./scalars";
 import { usageLogResolvers } from "./resolvers/usage";
 import { stripePaymentAcceptResolvers } from "./resolvers/payment";
@@ -31,7 +31,7 @@ const resolvers: GQLResolvers = {
     App: appResolvers.App,
     User: userResolvers.User,
     Endpoint: endpointResolvers.Endpoint,
-    Subscribe: subscribeResolvers.Subscribe,
+    Subscribe: subscriptionResolvers.Subscribe,
     UsageLog: usageLogResolvers.UsageLog,
     StripePaymentAccept: stripePaymentAcceptResolvers.StripePaymentAccept,
     StripeTransfer: stripeTransferResolvers.StripeTransfer,
@@ -46,7 +46,7 @@ const resolvers: GQLResolvers = {
         ...appResolvers.Query,
         ...userResolvers.Query,
         ...endpointResolvers.Query,
-        ...subscribeResolvers.Query,
+        ...subscriptionResolvers.Query,
         ...pricingResolvers.Query,
         ...usageLogResolvers.Query,
         ...stripePaymentAcceptResolvers.Query,
@@ -63,7 +63,7 @@ const resolvers: GQLResolvers = {
         ...appResolvers.Mutation,
         ...userResolvers.Mutation,
         ...endpointResolvers.Mutation,
-        ...subscribeResolvers.Mutation,
+        ...subscriptionResolvers.Mutation,
         ...pricingResolvers.Mutation,
         ...usageLogResolvers.Mutation,
         ...stripePaymentAcceptResolvers.Mutation,

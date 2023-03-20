@@ -168,6 +168,8 @@ const PricingTableSchema = new dynamoose.Schema(
         freeQuota: { type: Number, default: 0 },
         minMonthlyChargeApprox: Number,
         chargePerRequestApprox: Number,
+        visible: { type: Boolean, default: false },
+        mutable: { type: Boolean, default: true },
     },
     {
         timestamps: {
@@ -516,6 +518,8 @@ export class Pricing extends Item {
     freeQuota: number;
     minMonthlyChargeApprox: number;
     chargePerRequestApprox: number;
+    visible: boolean;
+    mutable: boolean;
 }
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.

@@ -15,10 +15,12 @@ import {
     GQLMutationCreateEndpointArgs,
     GQLMutationCreateSubscriptionArgs,
     GQLMutationCreateUsageLogArgs,
+    GQLPricingUpdatePricingArgs,
     GQLQuerySubscriptionArgs,
     GQLUserUpdateUserArgs,
 } from "./__generated__/resolvers-types";
 import { AppPK } from "./pks/AppPK";
+import { UserPK } from "./pks/UserPK";
 
 export const Can = {
     async viewUserPrivateAttributes(user: User, context: RequestContext): Promise<boolean> {
@@ -87,7 +89,7 @@ export const Can = {
         if (!context.currentUser) {
             return false;
         }
-        return await Promise.resolve(parent.owner === context.currentUser.uid);
+        return await Promise.resolve(parent.owner === UserPK.stringify(context.currentUser));
     },
     async deleteApp(parent: App, context: RequestContext): Promise<boolean> {
         if (context.isServiceRequest) {
@@ -96,7 +98,7 @@ export const Can = {
         if (!context.currentUser) {
             return false;
         }
-        return await Promise.resolve(parent.owner === context.currentUser.uid);
+        return await Promise.resolve(parent.owner === UserPK.stringify(context.currentUser));
     },
     async createAppUserToken(parent: App, context: RequestContext): Promise<boolean> {
         return await Promise.resolve(true);
@@ -104,11 +106,45 @@ export const Can = {
     async revokeAppUserToken(parent: App, context: RequestContext): Promise<boolean> {
         return await Promise.resolve(true);
     },
-    async createPricing({ app }: { app: string }, context: RequestContext): Promise<boolean> {
-        return await Promise.resolve(true);
+    async viewPricingInvisiableAttributes(pricing: Pricing, context: RequestContext): Promise<boolean> {
+        if (context.isServiceRequest) {
+            return true;
+        }
+        if (!context.currentUser) {
+            return false;
+        }
+        let app = await context.batched.App.get(AppPK.parse(pricing.app));
+        return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
+    },
+    async createPricing({ app: appPK }: { app: string }, context: RequestContext): Promise<boolean> {
+        if (context.isServiceRequest) {
+            return true;
+        }
+        if (!context.currentUser) {
+            return false;
+        }
+        let app = await context.batched.App.get(AppPK.parse(appPK));
+        return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
     },
     async deletePricing(parent: Pricing, args: never, context: RequestContext): Promise<boolean> {
-        return await Promise.resolve(true);
+        if (context.isServiceRequest) {
+            return true;
+        }
+        if (!context.currentUser) {
+            return false;
+        }
+        let app = await context.batched.App.get(AppPK.parse(parent.app));
+        return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
+    },
+    async updatePricing(parent: Pricing, context: RequestContext): Promise<boolean> {
+        if (context.isServiceRequest) {
+            return true;
+        }
+        if (!context.currentUser) {
+            return false;
+        }
+        let app = await context.batched.App.get(AppPK.parse(parent.app));
+        return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
     },
     async createSubscribe(args: GQLMutationCreateSubscriptionArgs, context: RequestContext): Promise<boolean> {
         return await Promise.resolve(true);
@@ -120,7 +156,7 @@ export const Can = {
         return await Promise.resolve(true);
     },
     async createEndpoint(
-        { app: appName, method, path, description, destination }: GQLMutationCreateEndpointArgs,
+        { app: appPK, method, path, description, destination }: GQLMutationCreateEndpointArgs,
         context: RequestContext
     ): Promise<boolean> {
         if (context.isServiceRequest) {
@@ -129,8 +165,8 @@ export const Can = {
         if (!context.currentUser) {
             return false;
         }
-        let app = await context.batched.App.get({ name: appName });
-        return await Promise.resolve(app.owner === context.currentUser.uid);
+        let app = await context.batched.App.get(AppPK.parse(appPK));
+        return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
     },
     async updateEndpoint(
         parent: Endpoint,
@@ -144,7 +180,7 @@ export const Can = {
             return false;
         }
         let app = await context.batched.App.get(AppPK.parse(parent.app));
-        return await Promise.resolve(app.owner === context.currentUser.uid);
+        return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
     },
     async viewPrivateEndpointArributes(parent: Endpoint, context: RequestContext): Promise<boolean> {
         if (context.isServiceRequest) {
@@ -154,7 +190,7 @@ export const Can = {
             return false;
         }
         let app = await context.batched.App.get(AppPK.parse(parent.app));
-        return await Promise.resolve(app.owner === context.currentUser.uid);
+        return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
     },
     async deleteEndpoint(parent: Endpoint, args: never, context: RequestContext): Promise<boolean> {
         if (context.isServiceRequest) {
@@ -164,7 +200,7 @@ export const Can = {
             return false;
         }
         let app = await context.batched.App.get(AppPK.parse(parent.app));
-        return await Promise.resolve(app.owner === context.currentUser.uid);
+        return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
     },
     async createUsageLog(args: GQLMutationCreateUsageLogArgs, context: RequestContext) {
         return await Promise.resolve(true);
@@ -176,7 +212,7 @@ export const Can = {
         if (!context.currentUser) {
             return false;
         }
-        return await Promise.resolve(parent.user === context.currentUser.uid);
+        return await Promise.resolve(parent.user === UserPK.stringify(context.currentUser));
     },
     async viewAccountActivityPrivateAttributes(parent: AccountActivity, context: RequestContext): Promise<boolean> {
         if (context.isServiceRequest) {
@@ -185,7 +221,7 @@ export const Can = {
         if (!context.currentUser) {
             return false;
         }
-        return await Promise.resolve(parent.user === context.currentUser.uid);
+        return await Promise.resolve(parent.user === UserPK.stringify(context.currentUser));
     },
     async viewAccountHistoryPrivateAttributes(parent: AccountHistory, context: RequestContext): Promise<boolean> {
         if (context.isServiceRequest) {
@@ -194,7 +230,7 @@ export const Can = {
         if (!context.currentUser) {
             return false;
         }
-        return await Promise.resolve(parent.user === context.currentUser.uid);
+        return await Promise.resolve(parent.user === UserPK.stringify(context.currentUser));
     },
     // async *viewAppIter<App extends { owner: string }>(
     //     arr: App[],
