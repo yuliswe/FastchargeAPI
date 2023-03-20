@@ -12,6 +12,7 @@ let { url } = await startStandaloneServer<RequestContext>(server, {
         // Note: You must not trust the header in production. This is just for
         // development.
         let email = (req.headers["X-User-Email"] || req.headers["x-user-email"]) as string | undefined;
+        let serviceName = (req.headers["X-Service-Name"] || req.headers["x-service-name"]) as string | undefined;
         // The batcher must be created for every request in order for it to
         // function properly.
         let batched = createDefaultContextBatched();
@@ -32,7 +33,7 @@ let { url } = await startStandaloneServer<RequestContext>(server, {
         return Promise.resolve({
             currentUser,
             batched,
-            isServiceRequest: false,
+            isServiceRequest: serviceName != undefined,
             isSQSMessage: false,
             isAnonymousUser: email == undefined,
         });

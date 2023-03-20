@@ -17,6 +17,7 @@ import {
     GQLMutationCreateUsageLogArgs,
     GQLPricingUpdatePricingArgs,
     GQLQuerySubscriptionArgs,
+    GQLSubscribeUpdateSubscriptionArgs,
     GQLUserUpdateUserArgs,
 } from "./__generated__/resolvers-types";
 import { AppPK } from "./pks/AppPK";
@@ -146,14 +147,84 @@ export const Can = {
         let app = await context.batched.App.get(AppPK.parse(parent.app));
         return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
     },
-    async createSubscribe(args: GQLMutationCreateSubscriptionArgs, context: RequestContext): Promise<boolean> {
-        return await Promise.resolve(true);
+    async viewSubscriptionPrivateAttributes(parent: Subscription, context: RequestContext): Promise<boolean> {
+        if (context.isServiceRequest) {
+            return true;
+        }
+        if (!context.currentUser) {
+            return false;
+        }
+        if (parent.subscriber === UserPK.stringify(context.currentUser)) {
+            return true;
+        }
+        let app = await context.batched.App.get(AppPK.parse(parent.app));
+        if (app.owner === UserPK.stringify(context.currentUser)) {
+            return true;
+        }
+        return false;
     },
-    async deleteSubscribe(parent: Subscription, args: {}, context: RequestContext): Promise<boolean> {
-        return await Promise.resolve(true);
+    async createSubscription(
+        { app, pricing, subscriber }: GQLMutationCreateSubscriptionArgs,
+        context: RequestContext
+    ): Promise<boolean> {
+        if (context.isServiceRequest) {
+            return true;
+        }
+        if (!context.currentUser) {
+            return false;
+        }
+        if (subscriber === UserPK.stringify(context.currentUser)) {
+            return true;
+        }
+        return Promise.resolve(false);
     },
-    async viewSubscribe(parent: {}, args: GQLQuerySubscriptionArgs, context: RequestContext): Promise<boolean> {
-        return await Promise.resolve(true);
+    async updateSubscription(
+        parent: Subscription,
+        { pricing }: GQLSubscribeUpdateSubscriptionArgs,
+        context: RequestContext
+    ): Promise<boolean> {
+        if (context.isServiceRequest) {
+            return true;
+        }
+        if (!context.currentUser) {
+            return false;
+        }
+        if (parent.subscriber === UserPK.stringify(context.currentUser)) {
+            return true;
+        }
+        return Promise.resolve(false);
+    },
+    async deleteSubscription(parent: Subscription, args: {}, context: RequestContext): Promise<boolean> {
+        if (context.isServiceRequest) {
+            return true;
+        }
+        if (!context.currentUser) {
+            return false;
+        }
+        if (parent.subscriber === UserPK.stringify(context.currentUser)) {
+            return true;
+        }
+        return Promise.resolve(false);
+    },
+    async viewSubscription(
+        subscription: Subscription,
+        args: GQLQuerySubscriptionArgs,
+        context: RequestContext
+    ): Promise<boolean> {
+        if (context.isServiceRequest) {
+            return true;
+        }
+        if (!context.currentUser) {
+            return false;
+        }
+        if (subscription.subscriber === UserPK.stringify(context.currentUser)) {
+            return true;
+        }
+        let app = await context.batched.App.get(AppPK.parse(subscription.app));
+        if (app.owner === UserPK.stringify(context.currentUser)) {
+            return true;
+        }
+        return false;
     },
     async createEndpoint(
         { app: appPK, method, path, description, destination }: GQLMutationCreateEndpointArgs,
