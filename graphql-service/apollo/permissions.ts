@@ -5,6 +5,7 @@ import {
     Endpoint,
     Pricing,
     StripePaymentAccept,
+    StripeTransfer,
     Subscription,
     User,
     UserAppToken,
@@ -320,6 +321,15 @@ export const Can = {
             return false;
         }
         return await Promise.resolve(parent.subscriber === UserPK.stringify(context.currentUser));
+    },
+    async viewStripeTransferPrivateAttributes(parent: StripeTransfer, context: RequestContext): Promise<boolean> {
+        if (context.isServiceRequest) {
+            return true;
+        }
+        if (!context.currentUser) {
+            return false;
+        }
+        return await Promise.resolve(parent.receiver === UserPK.stringify(context.currentUser));
     },
     // async *viewAppIter<App extends { owner: string }>(
     //     arr: App[],

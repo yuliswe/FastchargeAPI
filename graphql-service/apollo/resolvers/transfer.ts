@@ -5,35 +5,48 @@ import {
     GQLStripeTransferResolvers,
     GQLStripeTransferStatus,
 } from "../__generated__/resolvers-types";
-import { StripeTransferModel } from "../dynamoose/models";
+import { StripeTransfer, StripeTransferModel } from "../dynamoose/models";
 import { RequestContext } from "../RequestContext";
 import { UserPK } from "../pks/UserPK";
 import { createAccountActivitiesForTransfer } from "../functions/transfer";
+import { Denied } from "../errors";
+import { Can } from "../permissions";
 
 /**
- * Remember to add your resolver to the resolvers object in server.ts.
- *
- * Note that to make the typing work, you must also add your Models to the
- * codegen.yml file, under the mappers section.
+ * Make is so that only the owner can read the private attributes.
  */
+function makePrivate<T>(
+    getter: (parent: StripeTransfer, args: {}, context: RequestContext) => T
+): (parent: StripeTransfer, args: {}, context: RequestContext) => Promise<T> {
+    return async (parent: StripeTransfer, args: {}, context: RequestContext): Promise<T> => {
+        if (!(await Can.viewStripeTransferPrivateAttributes(parent, context))) {
+            throw new Denied();
+        }
+        return getter(parent, args, context);
+    };
+}
+
 export const stripeTransferResolvers: GQLResolvers & {
     StripeTransfer: Required<GQLStripeTransferResolvers>;
 } = {
     StripeTransfer: {
         __isTypeOf: (parent) => parent instanceof StripeTransferModel,
-        async receiver(parent, args, context, info) {
-            let user = await context.batched.User.get(UserPK.parse(parent.receiver));
-            return user;
-        },
-        withdrawAmount: (parent) => parent.withdrawAmount,
-        receiveAmount: (parent) => parent.receiveAmount,
-        stripeTransferId: (parent) => parent.stripeTransferId,
-        stripeTransferObject: (parent) => JSON.stringify(parent.stripeTransferObject),
-        createdAt: (parent) => parent.createdAt,
-        currency: (parent) => parent.currency,
-        transferAt: (parent) => parent.transferAt,
-        status: (parent) => parent.status as GQLStripeTransferStatus,
 
+        withdrawAmount: makePrivate((parent) => parent.withdrawAmount),
+        receiveAmount: makePrivate((parent) => parent.receiveAmount),
+        stripeTransferId: makePrivate((parent) => parent.stripeTransferId),
+        stripeTransferObject: makePrivate((parent) => JSON.stringify(parent.stripeTransferObject)),
+        createdAt: makePrivate((parent) => parent.createdAt),
+        currency: makePrivate((parent) => parent.currency),
+        transferAt: makePrivate((parent) => parent.transferAt),
+        status: makePrivate((parent) => parent.status as GQLStripeTransferStatus),
+
+        async receiver(parent, args, context, info) {
+            if (!(await Can.viewStripeTransferPrivateAttributes(parent, context))) {
+                throw new Denied();
+            }
+            return await context.batched.User.get(UserPK.parse(parent.receiver));
+        },
         /**
          * A StripeTransfer happens when the user withdraws money from their
          * account. Calling this method creates an AccountActivity for the user,
@@ -45,7 +58,10 @@ export const stripeTransferResolvers: GQLResolvers & {
          * @param context
          * @param info
          */
-        async settleStripeTransfer(parent, args: {}, context, info) {
+        async settleStripeTransfer(parent: StripeTransfer, args: {}, context: RequestContext): Promise<StripeTransfer> {
+            if (!(await Can.settleUserAccountActivities(context))) {
+                throw new Denied();
+            }
             let user = await context.batched.User.get(UserPK.parse(parent.receiver));
             await createAccountActivitiesForTransfer(context, {
                 transfer: parent,
