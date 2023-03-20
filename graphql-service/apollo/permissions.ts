@@ -7,6 +7,7 @@ import {
     StripePaymentAccept,
     Subscription,
     User,
+    UserAppToken,
 } from "./dynamoose/models";
 import { RequestContext } from "./RequestContext";
 import {
@@ -15,7 +16,6 @@ import {
     GQLMutationCreateEndpointArgs,
     GQLMutationCreateSubscriptionArgs,
     GQLMutationCreateUsageLogArgs,
-    GQLPricingUpdatePricingArgs,
     GQLQuerySubscriptionArgs,
     GQLSubscribeUpdateSubscriptionArgs,
     GQLUserUpdateUserArgs,
@@ -302,6 +302,24 @@ export const Can = {
             return false;
         }
         return await Promise.resolve(parent.user === UserPK.stringify(context.currentUser));
+    },
+    async viewUserAppTokenPrivateAttributes(parent: UserAppToken, context: RequestContext): Promise<boolean> {
+        if (context.isServiceRequest) {
+            return true;
+        }
+        if (!context.currentUser) {
+            return false;
+        }
+        return await Promise.resolve(parent.subscriber === UserPK.stringify(context.currentUser));
+    },
+    async deleteUserAppToken(parent: UserAppToken, context: RequestContext): Promise<boolean> {
+        if (context.isServiceRequest) {
+            return true;
+        }
+        if (!context.currentUser) {
+            return false;
+        }
+        return await Promise.resolve(parent.subscriber === UserPK.stringify(context.currentUser));
     },
     // async *viewAppIter<App extends { owner: string }>(
     //     arr: App[],
