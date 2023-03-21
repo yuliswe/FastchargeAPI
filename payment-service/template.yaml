@@ -219,11 +219,11 @@ Resources:
         EntryPoints:
           - handlers/AcceptStripePayment.ts
 
-  GetCheckoutLink:
+  GetStripeCheckoutLink:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: ./
-      Handler: GetCheckoutLink.lambdaHandler
+      Handler: GetStripeCheckoutLink.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
         - arm64 # if you are using Apple M1
@@ -239,14 +239,14 @@ Resources:
           Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             ApiId: !Ref APIGatewayV2
-            Path: /get-checkout-link
+            Path: /get-stripe-checkout-link
             Method: post
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
         Target: "es2022"
         EntryPoints:
-          - handlers/GetCheckoutLink.ts
+          - handlers/GetStripeCheckoutLink.ts
 
   CreateStripeTransfer:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction

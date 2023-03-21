@@ -131,7 +131,7 @@ class _TopUp extends React.Component<_Props, _State> {
     }
 
     getBackendUrl(): string {
-        let url = new URL(`https://api.v2.payment.fastchargeapi.com/get-checkout-link`);
+        let url = new URL(`https://api.v2.payment.fastchargeapi.com/get-stripe-checkout-link`);
         return url.href;
     }
 

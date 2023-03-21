@@ -1,5 +1,5 @@
 import { describe, expect, test } from "@jest/globals";
-import { handle as Checkout } from "../handlers/GetCheckoutLink";
+import { handle as Checkout } from "../handlers/GetStripeCheckoutLink";
 import { LambdaEventV2 } from "../utils/LambdaContext";
 
 let lambdaEvent: LambdaEventV2 = {
