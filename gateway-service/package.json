@@ -6,7 +6,7 @@
   "scripts": {
     "gen": "go run github.com/Khan/genqlient",
     "try-build-go": "cd app && go build && rm app",
-    "build": "npm run gen && npm run try-build-go && cd ../ && sam build",
+    "build": "(npm run gen) && (npm run try-build-go) && sam build",
     "start": "npm run build && sam local start-api -p 6000 --warm-containers eager --env-vars ./devenv.json",
     "watch": "nodemon -e go,graphql,yaml -i generated__graphql.go --signal SIGINT -x 'npm run start || exit 1'",
     "logs": "sam logs --stack-name gateway-service --tail",

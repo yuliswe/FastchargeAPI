@@ -7,6 +7,7 @@ import {
     StripePaymentAccept,
     StripeTransfer,
     Subscription,
+    UsageSummary,
     User,
     UserAppToken,
 } from "./dynamoose/models";
@@ -351,6 +352,15 @@ export const Can = {
     },
     async createStripeTransfer(context: RequestContext): Promise<boolean> {
         return Promise.resolve(context.isSQSMessage && context.isServiceRequest);
+    },
+    async viewUsageSummaryPrivateAttributes(parent: UsageSummary, context: RequestContext): Promise<boolean> {
+        if (context.isServiceRequest) {
+            return true;
+        }
+        if (!context.currentUser) {
+            return false;
+        }
+        return await Promise.resolve(parent.subscriber === UserPK.stringify(context.currentUser));
     },
     // async *viewAppIter<App extends { owner: string }>(
     //     arr: App[],

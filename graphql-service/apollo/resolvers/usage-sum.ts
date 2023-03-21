@@ -2,43 +2,71 @@ import { Chalk } from "chalk";
 import { GQLResolvers, GQLUsageSummaryResolvers } from "../__generated__/resolvers-types";
 import { UsageSummary, UsageSummaryModel } from "../dynamoose/models";
 import { triggerBilling } from "../functions/billing";
-import { getUserByPK } from "../functions/user";
 import { RequestContext } from "../RequestContext";
-import { getAppByPK } from "../functions/app";
-import { getAccountActivityByPK } from "../functions/account";
+import { Denied } from "../errors";
+import { Can } from "../permissions";
+import { UserPK } from "../pks/UserPK";
+import { AppPK } from "../pks/AppPK";
+import { AccountActivityPK } from "../pks/AccountActivityPK";
 
 const chalk = new Chalk({ level: 3 });
 /**
- * Remember to add your resolver to the resolvers object in server.ts.
- *
- * Note that to make the typing work, you must also add your Models to the
- * codegen.yml file, under the mappers section.
+ * Make is so that only the owner can read the private attributes.
  */
+function makePrivate<T>(
+    getter: (parent: UsageSummary, args: {}, context: RequestContext) => T
+): (parent: UsageSummary, args: {}, context: RequestContext) => Promise<T> {
+    return async (parent: UsageSummary, args: {}, context: RequestContext): Promise<T> => {
+        if (!(await Can.viewUsageSummaryPrivateAttributes(parent, context))) {
+            throw new Denied();
+        }
+        return getter(parent, args, context);
+    };
+}
 
 export const usageSummaryResolvers: GQLResolvers & {
     UsageSummary: Required<GQLUsageSummaryResolvers>;
 } = {
     UsageSummary: {
         __isTypeOf: (parent) => parent instanceof UsageSummaryModel,
-        createdAt: (parent) => parent.createdAt,
-        billedAt: (parent) => parent.billedAt,
-        billed: (parent) => parent.billedAt !== undefined,
-        volume: (parent) => parent.volume,
-        subscriber(parent: UsageSummary, args: {}, context: RequestContext) {
-            return getUserByPK(context, parent.subscriber);
+        createdAt: makePrivate((parent) => parent.createdAt),
+        billedAt: makePrivate((parent) => parent.billedAt),
+        billed: makePrivate((parent) => parent.billedAt !== undefined),
+        volume: makePrivate((parent) => parent.volume),
+        async subscriber(parent: UsageSummary, args: {}, context: RequestContext) {
+            if (!(await Can.viewUsageSummaryPrivateAttributes(parent, context))) {
+                throw new Denied();
+            }
+            return context.batched.User.get(UserPK.parse(parent.subscriber));
         },
-        app(parent: UsageSummary, args: {}, context: RequestContext) {
-            return getAppByPK(context, parent.app);
+        async app(parent: UsageSummary, args: {}, context: RequestContext) {
+            if (!(await Can.viewUsageSummaryPrivateAttributes(parent, context))) {
+                throw new Denied();
+            }
+            return context.batched.App.get(AppPK.parse(parent.app));
         },
-        billingAccountActivity(parent: UsageSummary, args: {}, context: RequestContext) {
-            return parent.billingAccountActivity
-                ? getAccountActivityByPK(context, parent.billingAccountActivity)
-                : null;
+        async billingAccountActivity(parent: UsageSummary, args: {}, context: RequestContext) {
+            if (!(await Can.viewUsageSummaryPrivateAttributes(parent, context))) {
+                throw new Denied();
+            }
+            if (parent.billingAccountActivity) {
+                return context.batched.AccountActivity.getOrNull(
+                    AccountActivityPK.parse(parent.billingAccountActivity)
+                );
+            } else {
+                return null;
+            }
         },
     },
     Query: {},
     Mutation: {
+        /**
+         * Used by the billing lambda to trigger billing.
+         */
         async triggerBilling(parent, { user, app }, context, info) {
+            if (!(await Can.settleUserAccountActivities(context))) {
+                throw new Denied();
+            }
             let result = await triggerBilling(context, { user, app });
             return result.affectedUsageSummaries;
         },

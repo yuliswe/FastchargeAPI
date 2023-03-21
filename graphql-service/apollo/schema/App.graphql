@@ -101,6 +101,7 @@ type Mutation {
         stripeSessionObject: String!
     ): StripePaymentAccept!
 
+    # Used by the gateway to trigger the billing flow
     triggerBilling(user: ID!, app: ID!): [UsageSummary!]!
 
     createSecret(key: String!, value: String!, description: String, expireAt: Timestamp): Secret!

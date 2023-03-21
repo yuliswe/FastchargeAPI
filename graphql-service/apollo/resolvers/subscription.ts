@@ -100,12 +100,11 @@ export const subscriptionResolvers: GQLResolvers = {
             if (!pricing.visible) {
                 throw new Denied("This pricing plan is not available for purchase.");
             }
-            let Subscribe = await context.batched.Subscription.create({
+            return await context.batched.Subscription.create({
                 app,
                 pricing: pricingPK,
                 subscriber,
             });
-            return Subscribe;
         },
     },
 };
