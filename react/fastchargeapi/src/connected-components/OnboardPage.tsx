@@ -51,7 +51,7 @@ class _Onboard extends React.Component<_Props, _State> {
     }
 
     getBackendUrl(): string {
-        let url = new URL("https://api.v2.payment.fastchargeapi.com/get-onboard-link");
+        let url = new URL("https://api.v2.payment.fastchargeapi.com/get-stripe-onboard-link");
         url.searchParams.append("return_url", document.location.href + "?success=true");
         url.searchParams.append("refresh_url", document.location.href);
         return url.href;
