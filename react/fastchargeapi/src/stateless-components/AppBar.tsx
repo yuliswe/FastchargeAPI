@@ -86,7 +86,7 @@ export class AppBar extends React.Component<Props, State> {
                                 <Typography variant="body1">Enpowering developers</Typography>
                             </Link>
                             <Stack direction="row" spacing={5} ml={5}>
-                                <Link href="/#tag-pricing">
+                                <Link href="/terms-of-service#pricing">
                                     <Typography variant="body1" color="primary.contrastText">
                                         Pricing
                                     </Typography>
