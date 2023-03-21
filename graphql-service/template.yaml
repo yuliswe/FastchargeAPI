@@ -231,10 +231,10 @@ Resources:
     Properties:
       QueueName: graphql-service-billing-queue.fifo
       FifoQueue: true
-      # DelaySeconds: 5 # Delay so that the billing is triggered after the UsageLogs are created
+      DelaySeconds: 0 # Delay so that the billing is triggered after the UsageLogs are created
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt BillingDeadLetterQueue.Arn
-        maxReceiveCount: 3
+        maxReceiveCount: 1
       Tags:
         - Key: service-name
           Value: graphql-service

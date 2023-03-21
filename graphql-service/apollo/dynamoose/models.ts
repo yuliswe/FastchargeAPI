@@ -343,7 +343,7 @@ const StripePaymentAcceptTableSchema = new dynamoose.Schema(
             required: true,
             validate: validateStringDecimal("amount"),
         },
-        currency: { ...String_Required_NotEmpty("currency") },
+        currency: { type: String, required: false, default: "usd" },
         // @stripePaymentStatus: Do not check enum, as the source is stripe and
         // can change. Read the comment of the stripePaymentStatus field in the
         // StripePaymentAcceptTableSchema
@@ -353,7 +353,7 @@ const StripePaymentAcceptTableSchema = new dynamoose.Schema(
         },
         stripeSessionObject: { type: Object, required: true },
         accountActivity: { type: String, required: false },
-        status: { type: String, enum: ["pending", "settled"], default: "pending" },
+        status: { type: String, enum: ["pending", "settled"], required: false, default: "pending" },
     },
     {
         timestamps: {

@@ -167,6 +167,7 @@ export type GQLMutation = {
     createEndpoint: GQLEndpoint;
     createPricing: GQLPricing;
     createSecret: GQLSecret;
+    createStripePaymentAccept: GQLStripePaymentAccept;
     createStripeTransfer: GQLStripeTransfer;
     createSubscription: GQLSubscribe;
     createUsageLog: GQLUsageLog;
@@ -204,6 +205,15 @@ export type GQLMutationCreateSecretArgs = {
     expireAt?: InputMaybe<Scalars["Timestamp"]>;
     key: Scalars["String"];
     value: Scalars["String"];
+};
+
+export type GQLMutationCreateStripePaymentAcceptArgs = {
+    amount: Scalars["NonNegativeDecimal"];
+    stripePaymentIntent: Scalars["String"];
+    stripePaymentStatus: Scalars["String"];
+    stripeSessionId: Scalars["String"];
+    stripeSessionObject: Scalars["String"];
+    user: Scalars["ID"];
 };
 
 export type GQLMutationCreateStripeTransferArgs = {
@@ -266,6 +276,8 @@ export type GQLQuery = {
     endpoint: GQLEndpoint;
     endpoints?: Maybe<Array<Maybe<GQLEndpoint>>>;
     secret: GQLSecret;
+    stripePaymentAccept: GQLStripePaymentAccept;
+    stripeTransfer: GQLStripeTransfer;
     subscription: GQLSubscribe;
     user: GQLUser;
 };
@@ -293,6 +305,14 @@ export type GQLQueryEndpointArgs = {
 
 export type GQLQuerySecretArgs = {
     key: Scalars["String"];
+};
+
+export type GQLQueryStripePaymentAcceptArgs = {
+    stripeSessionId: Scalars["String"];
+};
+
+export type GQLQueryStripeTransferArgs = {
+    pk?: InputMaybe<Scalars["ID"]>;
 };
 
 export type GQLQuerySubscriptionArgs = {
@@ -335,7 +355,9 @@ export type GQLStripePaymentAccept = {
 };
 
 export type GQLStripePaymentAcceptSettlePaymentArgs = {
-    stripeSessionObject: Scalars["String"];
+    stripePaymentIntent?: InputMaybe<Scalars["String"]>;
+    stripePaymentStatus?: InputMaybe<Scalars["String"]>;
+    stripeSessionObject?: InputMaybe<Scalars["String"]>;
 };
 
 export enum GQLStripePaymentAcceptStatus {
@@ -739,6 +761,20 @@ export type GQLMutationResolvers<
         ContextType,
         RequireFields<GQLMutationCreateSecretArgs, "key" | "value">
     >;
+    createStripePaymentAccept?: Resolver<
+        GQLResolversTypes["StripePaymentAccept"],
+        ParentType,
+        ContextType,
+        RequireFields<
+            GQLMutationCreateStripePaymentAcceptArgs,
+            | "amount"
+            | "stripePaymentIntent"
+            | "stripePaymentStatus"
+            | "stripeSessionId"
+            | "stripeSessionObject"
+            | "user"
+        >
+    >;
     createStripeTransfer?: Resolver<
         GQLResolversTypes["StripeTransfer"],
         ParentType,
@@ -816,6 +852,18 @@ export type GQLQueryResolvers<
     endpoint?: Resolver<GQLResolversTypes["Endpoint"], ParentType, ContextType, Partial<GQLQueryEndpointArgs>>;
     endpoints?: Resolver<Maybe<Array<Maybe<GQLResolversTypes["Endpoint"]>>>, ParentType, ContextType>;
     secret?: Resolver<GQLResolversTypes["Secret"], ParentType, ContextType, RequireFields<GQLQuerySecretArgs, "key">>;
+    stripePaymentAccept?: Resolver<
+        GQLResolversTypes["StripePaymentAccept"],
+        ParentType,
+        ContextType,
+        RequireFields<GQLQueryStripePaymentAcceptArgs, "stripeSessionId">
+    >;
+    stripeTransfer?: Resolver<
+        GQLResolversTypes["StripeTransfer"],
+        ParentType,
+        ContextType,
+        Partial<GQLQueryStripeTransferArgs>
+    >;
     subscription?: Resolver<GQLResolversTypes["Subscribe"], ParentType, ContextType, Partial<GQLQuerySubscriptionArgs>>;
     user?: Resolver<GQLResolversTypes["User"], ParentType, ContextType, Partial<GQLQueryUserArgs>>;
 }>;
@@ -843,7 +891,7 @@ export type GQLStripePaymentAcceptResolvers<
         GQLResolversTypes["StripePaymentAccept"],
         ParentType,
         ContextType,
-        RequireFields<GQLStripePaymentAcceptSettlePaymentArgs, "stripeSessionObject">
+        Partial<GQLStripePaymentAcceptSettlePaymentArgs>
     >;
     status?: Resolver<GQLResolversTypes["StripePaymentAcceptStatus"], ParentType, ContextType>;
     stripePaymentIntent?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;

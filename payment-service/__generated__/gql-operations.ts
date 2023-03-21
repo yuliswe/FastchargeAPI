@@ -148,6 +148,7 @@ export type GQLMutation = {
     createEndpoint: GQLEndpoint;
     createPricing: GQLPricing;
     createSecret: GQLSecret;
+    createStripePaymentAccept: GQLStripePaymentAccept;
     createStripeTransfer: GQLStripeTransfer;
     createSubscription: GQLSubscribe;
     createUsageLog: GQLUsageLog;
@@ -185,6 +186,15 @@ export type GQLMutationCreateSecretArgs = {
     expireAt?: InputMaybe<Scalars["Timestamp"]>;
     key: Scalars["String"];
     value: Scalars["String"];
+};
+
+export type GQLMutationCreateStripePaymentAcceptArgs = {
+    amount: Scalars["NonNegativeDecimal"];
+    stripePaymentIntent: Scalars["String"];
+    stripePaymentStatus: Scalars["String"];
+    stripeSessionId: Scalars["String"];
+    stripeSessionObject: Scalars["String"];
+    user: Scalars["ID"];
 };
 
 export type GQLMutationCreateStripeTransferArgs = {
@@ -247,6 +257,8 @@ export type GQLQuery = {
     endpoint: GQLEndpoint;
     endpoints?: Maybe<Array<Maybe<GQLEndpoint>>>;
     secret: GQLSecret;
+    stripePaymentAccept: GQLStripePaymentAccept;
+    stripeTransfer: GQLStripeTransfer;
     subscription: GQLSubscribe;
     user: GQLUser;
 };
@@ -274,6 +286,14 @@ export type GQLQueryEndpointArgs = {
 
 export type GQLQuerySecretArgs = {
     key: Scalars["String"];
+};
+
+export type GQLQueryStripePaymentAcceptArgs = {
+    stripeSessionId: Scalars["String"];
+};
+
+export type GQLQueryStripeTransferArgs = {
+    pk?: InputMaybe<Scalars["ID"]>;
 };
 
 export type GQLQuerySubscriptionArgs = {
@@ -316,7 +336,9 @@ export type GQLStripePaymentAccept = {
 };
 
 export type GQLStripePaymentAcceptSettlePaymentArgs = {
-    stripeSessionObject: Scalars["String"];
+    stripePaymentIntent?: InputMaybe<Scalars["String"]>;
+    stripePaymentStatus?: InputMaybe<Scalars["String"]>;
+    stripeSessionObject?: InputMaybe<Scalars["String"]>;
 };
 
 export enum GQLStripePaymentAcceptStatus {
@@ -466,10 +488,43 @@ export enum GQLUserIndex {
     IndexByEmailOnlyPk = "indexByEmail__onlyPK",
 }
 
+export type GQLCreateStripePaymentAcceptAndSettleMutationVariables = Exact<{
+    user: Scalars["ID"];
+    amount: Scalars["NonNegativeDecimal"];
+    stripeSessionId: Scalars["String"];
+    stripeSessionObject: Scalars["String"];
+    stripePaymentIntent: Scalars["String"];
+    stripePaymentStatus: Scalars["String"];
+}>;
+
+export type GQLCreateStripePaymentAcceptAndSettleMutation = {
+    __typename?: "Mutation";
+    createStripePaymentAccept: {
+        __typename?: "StripePaymentAccept";
+        settlePayment: { __typename?: "StripePaymentAccept"; status: GQLStripePaymentAcceptStatus };
+    };
+};
+
+export type GQLCreateStripePaymentAcceptMutationVariables = Exact<{
+    user: Scalars["ID"];
+    amount: Scalars["NonNegativeDecimal"];
+    stripeSessionId: Scalars["String"];
+    stripeSessionObject: Scalars["String"];
+    stripePaymentIntent: Scalars["String"];
+    stripePaymentStatus: Scalars["String"];
+}>;
+
+export type GQLCreateStripePaymentAcceptMutation = {
+    __typename?: "Mutation";
+    createStripePaymentAccept: { __typename?: "StripePaymentAccept"; createdAt: number };
+};
+
 export type GQLFulfillUserStripePaymentAcceptQueryVariables = Exact<{
     user: Scalars["ID"];
     stripeSessionId: Scalars["String"];
     stripeSessionObject: Scalars["String"];
+    stripePaymentStatus: Scalars["String"];
+    stripePaymentIntent: Scalars["String"];
 }>;
 
 export type GQLFulfillUserStripePaymentAcceptQuery = {
@@ -483,16 +538,14 @@ export type GQLFulfillUserStripePaymentAcceptQuery = {
     };
 };
 
-export type GQLCreateStripeTransferMutationVariables = Exact<{
-    userPK: Scalars["ID"];
-    withdrawAmount: Scalars["NonNegativeDecimal"];
-    receiveAmount: Scalars["NonNegativeDecimal"];
+export type GQLSettleStripeTransferQueryVariables = Exact<{
+    pk: Scalars["ID"];
 }>;
 
-export type GQLCreateStripeTransferMutation = {
-    __typename?: "Mutation";
-    createStripeTransfer: {
+export type GQLSettleStripeTransferQuery = {
+    __typename?: "Query";
+    stripeTransfer: {
         __typename?: "StripeTransfer";
-        settleStripeTransfer: { __typename?: "StripeTransfer"; createdAt: number };
+        settleStripeTransfer: { __typename?: "StripeTransfer"; status?: GQLStripeTransferStatus | null };
     };
 };

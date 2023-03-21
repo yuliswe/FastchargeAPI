@@ -22,7 +22,7 @@ type Query {
     #     using: AccountActivityIndex
     # ): [AccountActivity!]!
 
-    # stripePaymentAccept(stripeSessionId: String!): StripePaymentAccept!
+    stripePaymentAccept(stripeSessionId: String!): StripePaymentAccept!
 
     secret(key: String!): Secret!
 
@@ -32,6 +32,8 @@ type Query {
         forceBalanceCheck: Boolean = false
         forceAwait: Boolean = false
     ): GatewayDecisionResponse!
+
+    stripeTransfer(pk: ID): StripeTransfer!
 }
 
 enum GatewayDecisionResponseReason {
@@ -81,7 +83,6 @@ type Mutation {
 
     createUsageLog(app: ID!, path: String!, subscriber: ID!, volume: Int! = 1, pricing: ID!): UsageLog!
 
-    # TODO: remove this
     createStripeTransfer(
         receiver: ID!
         withdrawAmount: NonNegativeDecimal!
@@ -90,6 +91,15 @@ type Mutation {
         stripeTransferId: String
         stripeTransferObject: String
     ): StripeTransfer!
+
+    createStripePaymentAccept(
+        user: ID!
+        amount: NonNegativeDecimal!
+        stripePaymentStatus: String!
+        stripePaymentIntent: String!
+        stripeSessionId: String!
+        stripeSessionObject: String!
+    ): StripePaymentAccept!
 
     triggerBilling(user: ID!, app: ID!): [UsageSummary!]!
 
@@ -275,7 +285,11 @@ type StripePaymentAccept {
 
     # updateStripePaymentAccept(stripePaymentStatus: String, stripeSessionObject: String): StripePaymentAccept!
 
-    settlePayment(stripeSessionObject: String!): StripePaymentAccept!
+    settlePayment(
+        stripePaymentStatus: String
+        stripeSessionObject: String
+        stripePaymentIntent: String
+    ): StripePaymentAccept!
 }
 
 enum StripePaymentAcceptStatus {

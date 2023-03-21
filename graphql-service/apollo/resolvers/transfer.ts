@@ -1,6 +1,5 @@
-import { GraphQLResolveInfo } from "graphql";
 import {
-    GQLMutationCreateStripeTransferArgs,
+    GQLQueryStripeTransferArgs,
     GQLResolvers,
     GQLStripeTransferResolvers,
     GQLStripeTransferStatus,
@@ -9,8 +8,9 @@ import { StripeTransfer, StripeTransferModel } from "../dynamoose/models";
 import { RequestContext } from "../RequestContext";
 import { UserPK } from "../pks/UserPK";
 import { createAccountActivitiesForTransfer } from "../functions/transfer";
-import { Denied } from "../errors";
+import { BadInput, Denied } from "../errors";
 import { Can } from "../permissions";
+import { StripeTransferPK } from "../pks/StripeTransferPK";
 
 /**
  * Make is so that only the owner can read the private attributes.
@@ -70,32 +70,21 @@ export const stripeTransferResolvers: GQLResolvers & {
             return parent;
         },
     },
-    Query: {},
-    Mutation: {
-        async createStripeTransfer(
-            parent,
-            {
-                receiver,
-                withdrawAmount,
-                receiveAmount,
-                currency,
-                stripeTransferId,
-                stripeTransferObject,
-            }: GQLMutationCreateStripeTransferArgs,
-            context: RequestContext,
-            info: GraphQLResolveInfo
-        ) {
-            let transfer = await context.batched.StripeTransfer.create({
-                receiver,
-                withdrawAmount,
-                receiveAmount,
-                stripeTransferId,
-                currency,
-                stripeTransferObject: stripeTransferObject && JSON.parse(stripeTransferObject),
-                transferAt: Date.now() + 1000 * 60 * 60 * 24, // Transfer after 24 hours
-                status: "pending",
-            });
+    Query: {
+        async stripeTransfer(
+            parent: {},
+            { pk }: GQLQueryStripeTransferArgs,
+            context: RequestContext
+        ): Promise<StripeTransfer> {
+            if (!pk) {
+                throw new BadInput("pk is required");
+            }
+            let transfer = await context.batched.StripeTransfer.get(StripeTransferPK.parse(pk));
+            if (!(await Can.viewStripeTransfer(transfer, context))) {
+                throw new Denied();
+            }
             return transfer;
         },
     },
+    Mutation: {},
 };

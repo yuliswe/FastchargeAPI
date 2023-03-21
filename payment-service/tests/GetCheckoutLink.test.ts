@@ -31,7 +31,6 @@ let lambdaEvent: LambdaEventV2 = {
         authorizer: {
             lambda: {
                 userEmail: "testuser1.fastchargeapi@gmail.com",
-                userPK: "user_c914a512d4305518a64d895c7064b4b2",
             },
         },
         http: {

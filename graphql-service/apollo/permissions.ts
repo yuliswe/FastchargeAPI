@@ -286,6 +286,18 @@ export const Can = {
         }
         return await Promise.resolve(parent.user === UserPK.stringify(context.currentUser));
     },
+    async viewStripePaymentAccept(item: StripePaymentAccept, context: RequestContext) {
+        if (context.isServiceRequest) {
+            return true;
+        }
+        if (!context.currentUser) {
+            return false;
+        }
+        return await Promise.resolve(item.user === UserPK.stringify(context.currentUser));
+    },
+    async createStripePaymentAccept(context: RequestContext): Promise<boolean> {
+        return Promise.resolve(context.isSQSMessage && context.isServiceRequest);
+    },
     async viewAccountActivityPrivateAttributes(parent: AccountActivity, context: RequestContext): Promise<boolean> {
         if (context.isServiceRequest) {
             return true;
@@ -323,6 +335,15 @@ export const Can = {
         return await Promise.resolve(parent.subscriber === UserPK.stringify(context.currentUser));
     },
     async viewStripeTransferPrivateAttributes(parent: StripeTransfer, context: RequestContext): Promise<boolean> {
+        if (context.isServiceRequest) {
+            return true;
+        }
+        if (!context.currentUser) {
+            return false;
+        }
+        return await Promise.resolve(parent.receiver === UserPK.stringify(context.currentUser));
+    },
+    async viewStripeTransfer(parent: StripeTransfer, context: RequestContext): Promise<boolean> {
         if (context.isServiceRequest) {
             return true;
         }

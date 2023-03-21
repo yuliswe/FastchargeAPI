@@ -1,7 +1,7 @@
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { Chalk } from "chalk";
 import { LambdaEventV2, LambdaHandlerV2 } from "../utils/LambdaContext";
-import { UserPK, createDefaultContextBatched, sqsGQLClient } from "graphql-service";
+import { RequestContext, UserPK, createDefaultContextBatched, sqsGQLClient } from "graphql-service";
 import { parseStripeWebhookEvent } from "../utils/stripe-client";
 import { StripePaymentAccept, User } from "graphql-service/dynamoose/models";
 import { SQSQueueUrl } from "graphql-service/cron-jobs/sqsClient";
@@ -10,14 +10,22 @@ import Decimal from "decimal.js-light";
 import {
     GQLFulfillUserStripePaymentAcceptQuery,
     GQLFulfillUserStripePaymentAcceptQueryVariables,
+    GQLMutationCreateStripePaymentAcceptArgs,
     GQLUserIndex,
 } from "../__generated__/gql-operations";
 import { Stripe } from "stripe";
+import crypto from "crypto";
 
 const chalk = new Chalk({ level: 3 });
-const batched = createDefaultContextBatched();
 
-type StripeSessionObject = {
+export const context: RequestContext = {
+    service: "payment",
+    isServiceRequest: true,
+    isSQSMessage: false,
+    batched: createDefaultContextBatched(),
+};
+
+export type StripeSessionObject = {
     id: string;
     object: "checkout.session";
     payment_status: "paid" | "unpaid";
@@ -30,16 +38,18 @@ type StripeSessionObject = {
 export async function handle(
     event: LambdaEventV2,
     {
-        stripeParser,
+        parseStripeEvent,
     }: {
-        stripeParser: (event: LambdaEventV2) => Promise<Stripe.Event>; // Allows mocking in tests
+        parseStripeEvent: (event: LambdaEventV2) => Promise<Stripe.Event> | Stripe.Event; // Allows mocking in tests
     } = {
-        stripeParser: parseStripeWebhookEvent,
+        parseStripeEvent: parseStripeWebhookEvent,
     }
 ): Promise<APIGatewayProxyStructuredResultV2> {
-    let stripeEvent = await stripeParser(event);
+    let stripeEvent = await parseStripeEvent(event);
 
-    console.log(chalk.yellow("Stripe event: " + JSON.stringify(stripeEvent)));
+    if (process.env.LOGGING == "1") {
+        console.log(chalk.yellow("Stripe event: " + JSON.stringify(stripeEvent)));
+    }
 
     switch (stripeEvent.type) {
         case "checkout.session.completed": {
@@ -49,7 +59,7 @@ export async function handle(
             if (!email) {
                 throw new Error("Email not found in Stripe session.");
             }
-            let user = await batched.User.get({ email }, { using: GQLUserIndex.IndexByEmailOnlyPk });
+            let user = await context.batched.User.get({ email }, { using: GQLUserIndex.IndexByEmailOnlyPk });
             // Check if the order is already paid (for example, from a card
             // payment)
             //
@@ -78,8 +88,8 @@ export async function handle(
         case "checkout.session.async_payment_succeeded": {
             let session = stripeEvent.data.object as StripeSessionObject;
             let email = session.customer_details.email;
-            let user = await batched.User.get({ email }, { using: GQLUserIndex.IndexByEmailOnlyPk });
-            let paymentAccept = await batched.StripePaymentAccept.get({
+            let user = await context.batched.User.get({ email }, { using: GQLUserIndex.IndexByEmailOnlyPk });
+            let paymentAccept = await context.batched.StripePaymentAccept.get({
                 user: UserPK.stringify(user),
             });
             await fulfillOrder(paymentAccept, session);
@@ -130,6 +140,9 @@ export const lambdaHandler: LambdaHandlerV2 = async (
     }
 };
 
+/**
+ * Must be done on the billing queue so that the creation of StripePaymentAccept is idempotent.
+ */
 async function createAndFufillOrder({
     session,
     user,
@@ -138,12 +151,35 @@ async function createAndFufillOrder({
     session: StripeSessionObject;
     user: User;
     amount: string;
-}): Promise<StripePaymentAccept> {
-    let paymentAccept = await createOrder({ session, user, amount });
-    await fulfillOrder(paymentAccept, session);
-    return paymentAccept;
+}): Promise<void> {
+    let billingQueueClient = sqsGQLClient({
+        queueUrl: SQSQueueUrl.BillingFifoQueue,
+        dedupId: md5(`${UserPK.stringify(user)}-createAndFufillOrder-${session.id}`),
+    });
+    await billingQueueClient.mutate<void, GQLMutationCreateStripePaymentAcceptArgs>({
+        mutation: gql(`
+            mutation CreateStripePaymentAcceptAndSettle($user: ID!, $amount: NonNegativeDecimal!, $stripeSessionId: String!, $stripeSessionObject: String!, $stripePaymentIntent: String!, $stripePaymentStatus: String!) {
+                createStripePaymentAccept(user: $user, amount: $amount, stripeSessionId: $stripeSessionId, stripeSessionObject: $stripeSessionObject, stripePaymentIntent: $stripePaymentIntent, stripePaymentStatus: $stripePaymentStatus) {
+                    settlePayment {
+                        status
+                    }
+                }
+            }
+        `),
+        variables: {
+            user: UserPK.stringify(user),
+            amount,
+            stripeSessionId: session.id,
+            stripeSessionObject: JSON.stringify(session),
+            stripePaymentIntent: session.payment_intent,
+            stripePaymentStatus: session.payment_status,
+        },
+    });
 }
 
+/**
+ * Must be done on the billing queue so that the creation of StripePaymentAccept is idempotent.
+ */
 async function createOrder({
     session,
     user,
@@ -152,38 +188,51 @@ async function createOrder({
     session: StripeSessionObject;
     user: User;
     amount: string;
-}): Promise<StripePaymentAccept> {
+}): Promise<void> {
     // console.log(chalk.yellow("Creating order"), email, amount, session);
-    return batched.StripePaymentAccept.create({
-        user: UserPK.stringify(user),
-        amount,
-        currency: "usd",
-        stripePaymentStatus: session.payment_status as StripePaymentAccept["stripePaymentStatus"],
-        stripeSessionId: session.id,
-        stripePaymentIntent: session.payment_intent,
-        stripeSessionObject: session,
+    let billingQueueClient = sqsGQLClient({
+        queueUrl: SQSQueueUrl.BillingFifoQueue,
+        dedupId: md5(`${UserPK.stringify(user)}-createOrder-${session.id}`),
+    });
+    await billingQueueClient.mutate<void, GQLMutationCreateStripePaymentAcceptArgs>({
+        mutation: gql(`
+            mutation CreateStripePaymentAccept($user: ID!, $amount: NonNegativeDecimal!, $stripeSessionId: String!, $stripeSessionObject: String!, $stripePaymentIntent: String!, $stripePaymentStatus: String!) {
+                createStripePaymentAccept(user: $user, amount: $amount, stripeSessionId: $stripeSessionId, stripeSessionObject: $stripeSessionObject, stripePaymentIntent: $stripePaymentIntent, stripePaymentStatus: $stripePaymentStatus) {
+                    createdAt
+                }
+            }
+        `),
+        variables: {
+            user: UserPK.stringify(user),
+            amount,
+            stripeSessionId: session.id,
+            stripeSessionObject: JSON.stringify(session),
+            stripePaymentIntent: session.payment_intent,
+            stripePaymentStatus: session.payment_status,
+        },
     });
 }
 
 /**
- * Requires SQS access to the BillingFifoQueue.
+ * Must be done on the billing queue so that the update of StripePaymentAccept is idempotent.
  */
 async function fulfillOrder(paymentAccept: StripePaymentAccept, session: StripeSessionObject): Promise<void> {
     // console.log(chalk.yellow("Fulfilling order"), paymentAccept, session);
     // Settling the payment must be done on the billing queue
     let billingQueueClient = sqsGQLClient({
         queueUrl: SQSQueueUrl.BillingFifoQueue,
-        dedupId: `${paymentAccept.user}-fulfillOrder-${session.id}`,
+        dedupId: md5(`${paymentAccept.user}-fulfillOrder-${session.id}`),
     });
     await billingQueueClient.query<
         GQLFulfillUserStripePaymentAcceptQuery,
         GQLFulfillUserStripePaymentAcceptQueryVariables
     >({
         query: gql(`
-            query FulfillUserStripePaymentAccept($user: ID!, $stripeSessionId: String!, $stripeSessionObject: String!) {
+            query FulfillUserStripePaymentAccept($user: ID!, $stripeSessionId: String!, $stripeSessionObject: String!, $stripePaymentStatus: String!, $stripePaymentIntent: String!,
+               ) {
                 user(pk: $user) {
                     stripePaymentAccept(stripeSessionId: $stripeSessionId) {
-                        settlePayment(stripeSessionObject: $stripeSessionObject) {
+                        settlePayment(stripeSessionObject: $stripeSessionObject, stripePaymentStatus:$stripePaymentStatus, stripePaymentIntent: $stripePaymentIntent) {
                             stripePaymentStatus
                         }
                     }
@@ -194,10 +243,17 @@ async function fulfillOrder(paymentAccept: StripePaymentAccept, session: StripeS
             user: paymentAccept.user,
             stripeSessionId: paymentAccept.stripeSessionId,
             stripeSessionObject: JSON.stringify(session),
+            stripePaymentStatus: session.payment_status,
+            stripePaymentIntent: session.payment_intent,
         },
     });
 }
 
 async function emailCustomerAboutFailedPayment(session: StripeSessionObject): Promise<void> {
     //
+}
+
+function md5(content: string) {
+    let hash = crypto.createHash("md5").update(content).digest("hex");
+    return hash;
 }

@@ -148,6 +148,7 @@ export type GQLMutation = {
     createEndpoint: GQLEndpoint;
     createPricing: GQLPricing;
     createSecret: GQLSecret;
+    createStripePaymentAccept: GQLStripePaymentAccept;
     createStripeTransfer: GQLStripeTransfer;
     createSubscription: GQLSubscribe;
     createUsageLog: GQLUsageLog;
@@ -185,6 +186,15 @@ export type GQLMutationCreateSecretArgs = {
     expireAt?: InputMaybe<Scalars["Timestamp"]>;
     key: Scalars["String"];
     value: Scalars["String"];
+};
+
+export type GQLMutationCreateStripePaymentAcceptArgs = {
+    amount: Scalars["NonNegativeDecimal"];
+    stripePaymentIntent: Scalars["String"];
+    stripePaymentStatus: Scalars["String"];
+    stripeSessionId: Scalars["String"];
+    stripeSessionObject: Scalars["String"];
+    user: Scalars["ID"];
 };
 
 export type GQLMutationCreateStripeTransferArgs = {
@@ -247,6 +257,8 @@ export type GQLQuery = {
     endpoint: GQLEndpoint;
     endpoints?: Maybe<Array<Maybe<GQLEndpoint>>>;
     secret: GQLSecret;
+    stripePaymentAccept: GQLStripePaymentAccept;
+    stripeTransfer: GQLStripeTransfer;
     subscription: GQLSubscribe;
     user: GQLUser;
 };
@@ -274,6 +286,14 @@ export type GQLQueryEndpointArgs = {
 
 export type GQLQuerySecretArgs = {
     key: Scalars["String"];
+};
+
+export type GQLQueryStripePaymentAcceptArgs = {
+    stripeSessionId: Scalars["String"];
+};
+
+export type GQLQueryStripeTransferArgs = {
+    pk?: InputMaybe<Scalars["ID"]>;
 };
 
 export type GQLQuerySubscriptionArgs = {
@@ -316,7 +336,9 @@ export type GQLStripePaymentAccept = {
 };
 
 export type GQLStripePaymentAcceptSettlePaymentArgs = {
-    stripeSessionObject: Scalars["String"];
+    stripePaymentIntent?: InputMaybe<Scalars["String"]>;
+    stripePaymentStatus?: InputMaybe<Scalars["String"]>;
+    stripeSessionObject?: InputMaybe<Scalars["String"]>;
 };
 
 export enum GQLStripePaymentAcceptStatus {

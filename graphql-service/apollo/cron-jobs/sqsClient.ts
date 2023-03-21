@@ -33,6 +33,9 @@ export function sqsGQLClient({
             query: {
                 fetchPolicy: "no-cache",
             },
+            mutate: {
+                fetchPolicy: "no-cache",
+            },
         },
         link: new HttpLink({
             fetch: async (uri: string, options: RequestInit) => {

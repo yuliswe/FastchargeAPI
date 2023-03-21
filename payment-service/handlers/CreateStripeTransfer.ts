@@ -5,9 +5,9 @@ import {
     LambdaEventV2,
     LambdaHandlerV2,
     LambdaResultV2,
-    getUserPKFromEvent,
+    getUserEmailFromEvent,
 } from "../utils/LambdaContext";
-import { UserPK, createDefaultContextBatched, getUserBalance, sqsGQLClient } from "graphql-service";
+import { StripeTransferPK, UserPK, createDefaultContextBatched, getUserBalance, sqsGQLClient } from "graphql-service";
 import { RequestContext } from "graphql-service/RequestContext";
 import Decimal from "decimal.js-light";
 import { SQSQueueUrl } from "graphql-service/cron-jobs/sqsClient";
@@ -55,13 +55,13 @@ function createRequestContext(): RequestContext {
  *   4. The graphql server creates a StripeTransfer, and settles immediate to
  *      substract the amount from the API publisher's FastchargeAPI account.
  */
-async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredResultV2> {
-    let userEmail = getUserPKFromEvent(event);
+export async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredResultV2> {
+    let userEmail = getUserEmailFromEvent(event);
     let { bodyData, errorResponse } = parseBody(event);
     if (errorResponse) {
         return errorResponse;
     }
-    const withdraw = new Decimal(bodyData!.withdrawCents).div(100);
+    const withdraw = bodyData!.withdraw;
     const stripeFeePercentage = 3.65 / 100;
     const stripeFlatFee = new Decimal("2.55");
     const totalStripe = stripeFlatFee.add(withdraw.mul(stripeFeePercentage));
@@ -87,42 +87,30 @@ async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredRe
         };
     }
 
-    // TODO: Use synchronous creating
-    // let stripeTransfer = await context.batched.StripeTransfer.create({
-    //     receiver: UserPK.stringify(user),
-    //     withdrawAmount: withdraw.toString(),
-    //     receiveAmount: receivable.toString(),
-    //     currency: "usd",
-    //     transferAt: Date.now() + 1000 * 60 * 60 * 24, // Transfer after 24 hours
-    //     status: "pending",
-    // });
-
-    await sqsGQLClient({
+    let stripeTransfer = await context.batched.StripeTransfer.create({
+        receiver: UserPK.stringify(user),
+        withdrawAmount: withdraw.toString(),
+        receiveAmount: receivable.toString(),
+        currency: "usd",
+        transferAt: Date.now() + 1000 * 60 * 60 * 24, // Transfer after 24 hours
+        status: "pending",
+    });
+    let billingQueueClient = sqsGQLClient({
         queueUrl: SQSQueueUrl.BillingFifoQueue,
-        dedupId: `createStripeTransfer-${userEmail}-${Date.now()}`,
-    }).mutate({
-        mutation: gql(`
-            mutation CreateStripeTransfer(
-                $userPK: ID!
-                $withdrawAmount: NonNegativeDecimal!
-                $receiveAmount: NonNegativeDecimal!
-            ) {
-                createStripeTransfer(
-                    receiver: $userPK, 
-                    withdrawAmount: $withdrawAmount,
-                    receiveAmount: $receiveAmount,
-                    currency: "usd",
-                ) {
+        dedupId: `createStripeTransfer-${UserPK.stringify(user)}-${Date.now()}`,
+    });
+    await billingQueueClient.query({
+        query: gql(`
+            query SettleStripeTransfer($pk: ID!) {
+                stripeTransfer(pk: $pk) {
                     settleStripeTransfer {
-                        createdAt
+                        status
                     }
                 }
             }
         `),
         variables: {
-            userPK: UserPK.stringify(user),
-            withdrawAmount: withdraw.toString(),
-            receiveAmount: receivable.toString(),
+            pk: StripeTransferPK.stringify(stripeTransfer),
         },
     });
 
@@ -156,24 +144,25 @@ export const lambdaHandler: LambdaHandlerV2 = async (
     }
 };
 
-type BodyData = { withdrawCents: number };
+type BodyData = { withdraw: Decimal };
 function parseBody(event: LambdaEventV2): {
     bodyData?: BodyData;
     errorResponse?: LambdaResultV2;
 } {
     try {
-        let { withdrawCents } = JSON.parse(event.body ?? "{}");
-        if (!withdrawCents) {
+        let { withdraw: withdrawStr } = JSON.parse(event.body ?? "{}");
+        if (!withdrawStr) {
             return {
                 errorResponse: {
                     statusCode: 400,
                     body: JSON.stringify({
-                        message: "Required: { withdrawCents: number }",
+                        message: "Required: { withdraw: string }",
                     }),
                 },
             };
         }
-        return { bodyData: { withdrawCents } };
+        let withdraw = new Decimal(withdrawStr);
+        return { bodyData: { withdraw } };
     } catch (e) {
         return {
             errorResponse: {

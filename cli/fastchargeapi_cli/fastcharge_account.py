@@ -117,7 +117,7 @@ def fastcharge_account_withdraw(amount: str):
     if input("Continue? (y/N)").strip().lower() == "y":
         response = HttpClient().post(
             f"{config.payment_service_host}/create-stripe-transfer",
-            json={"withdrawCents": withdraw_cents},
+            json={"withdraw": withdraw},
         )
         if response.status_code != 200:
             echo(

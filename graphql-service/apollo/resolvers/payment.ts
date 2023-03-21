@@ -1,7 +1,13 @@
 import { StripePaymentAccept, StripePaymentAcceptModel, User } from "../dynamoose/models";
 import { RequestContext } from "../RequestContext";
-import { GQLResolvers, GQLStripePaymentAcceptResolvers } from "../__generated__/resolvers-types";
-import { Denied } from "../errors";
+import {
+    GQLMutationCreateStripePaymentAcceptArgs,
+    GQLQueryStripePaymentAcceptArgs,
+    GQLResolvers,
+    GQLStripePaymentAcceptResolvers,
+    GQLStripePaymentAcceptSettlePaymentArgs,
+} from "../__generated__/resolvers-types";
+import { AlreadyExists, Denied } from "../errors";
 import { Can } from "../permissions";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { settleAccountActivities } from "../functions/account";
@@ -45,14 +51,12 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
         /**
          * Important: This method must be idempotent. It must be safe to call
          * this more than once without adding more money to the user's balance.
-         * TODO: add idempotency
-         * @param parent
-         * @param param1
-         * @param context
-         * @param info
-         * @returns
          */
-        async settlePayment(parent: StripePaymentAccept, { stripeSessionObject }, context) {
+        async settlePayment(
+            parent: StripePaymentAccept,
+            { stripePaymentStatus, stripeSessionObject, stripePaymentIntent }: GQLStripePaymentAcceptSettlePaymentArgs,
+            context
+        ) {
             if (!(await Can.settleUserAccountActivities(context))) {
                 throw new Denied();
             }
@@ -69,7 +73,9 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
                 consistentReadAccountActivities: true,
             });
             parent = await context.batched.StripePaymentAccept.update(parent, {
-                stripeSessionObject: JSON.parse(stripeSessionObject),
+                stripeSessionObject: stripeSessionObject && JSON.parse(stripeSessionObject),
+                stripePaymentStatus: stripePaymentStatus as StripePaymentAccept["stripePaymentStatus"] | undefined,
+                stripePaymentIntent,
                 accountActivity: AccountActivityPK.stringify(activity),
                 status: "settled",
             });
@@ -77,14 +83,47 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
         },
     },
     Query: {
-        // async stripePaymentAccept(parent: User, args: GQLQueryStripePaymentAcceptArgs, context, info) {
-        //     if (!(await Can.readStripePaymentAccepts(parent, args, context))) {
-        //         throw new Denied();
-        //     }
-        //     return await context.batched.StripePaymentAccept.get({
-        //         stripeSessionId: args.stripeSessionId,
-        //     });
-        // },
+        async stripePaymentAccept(parent: User, args: GQLQueryStripePaymentAcceptArgs, context, info) {
+            let item = await context.batched.StripePaymentAccept.get({
+                stripeSessionId: args.stripeSessionId,
+            });
+            if (!(await Can.viewStripePaymentAccept(item, context))) {
+                throw new Denied();
+            }
+            return item;
+        },
     },
-    Mutation: {},
+    Mutation: {
+        async createStripePaymentAccept(
+            parent: {},
+            {
+                user,
+                amount,
+                stripeSessionId,
+                stripeSessionObject,
+                stripePaymentIntent,
+                stripePaymentStatus,
+            }: GQLMutationCreateStripePaymentAcceptArgs,
+            context: RequestContext
+        ): Promise<StripePaymentAccept> {
+            if (!(await Can.createStripePaymentAccept(context))) {
+                throw new Denied();
+            }
+            let existing = await context.batched.StripePaymentAccept.getOrNull({
+                user: user,
+                stripeSessionId: stripeSessionId,
+            });
+            if (existing) {
+                throw new AlreadyExists("StripePaymentAccept", "user,stripeSessionId");
+            }
+            return await context.batched.StripePaymentAccept.create({
+                user,
+                amount,
+                stripeSessionId,
+                stripeSessionObject: JSON.parse(stripeSessionObject),
+                stripePaymentIntent,
+                stripePaymentStatus: stripePaymentStatus as StripePaymentAccept["stripePaymentStatus"],
+            });
+        },
+    },
 };
