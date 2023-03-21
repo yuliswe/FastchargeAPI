@@ -54,7 +54,7 @@ let baseLambdaEvent: LambdaEventV2 = {
     isBase64Encoded: false,
 };
 
-jest.setTimeout(120_000);
+jest.setTimeout(200_000);
 let testUser: User;
 beforeAll(async () => {
     testUser = await context.batched.User.get(
@@ -153,6 +153,8 @@ describe("Test that the creation of StripeTransfer is properly queued.", () => {
                 }),
             });
             promises.push(p);
+            // Add a delay to ensure that the StripeTransfer objects have unique timestamps (the rangekey)
+            await new Promise((resolve) => setTimeout(resolve, 10));
         }
         await Promise.all(promises);
     });
@@ -160,19 +162,17 @@ describe("Test that the creation of StripeTransfer is properly queued.", () => {
     test("Check that 20 StripeTransfer objects were created", async () => {
         let count = 0;
         for (let i = 0; i < 5; i++) {
-            console.log("Waiting for SQS to create the StripeTransfer object", i);
-            await new Promise((resolve) => setTimeout(resolve, 20_000));
-            count = await context.batched.StripeTransfer.count({
-                receiver: UserPK.stringify(testUser),
-            });
-            if (count > 0) {
+            console.log("Waiting for SQS to create 20 StripeTransfer objects", i);
+            await new Promise((resolve) => setTimeout(resolve, 10_000));
+            count = await context.batched.StripeTransfer.count({ receiver: UserPK.stringify(testUser) });
+            if (count >= 20) {
                 break;
             }
         }
         expect(count).toEqual(20);
     });
 
-    test("Check the users balance is reduced $30", async () => {
+    test("Check the users balance is reduced $60", async () => {
         // Wait for the SQS to handle the message
         let newBalance: Decimal;
         for (let i = 0; i < 5; i++) {
@@ -184,7 +184,7 @@ describe("Test that the creation of StripeTransfer is properly queued.", () => {
                 break;
             }
         }
-        expect(newBalance!.toString()).toEqual(userBalance.minus("30").toString());
+        expect(newBalance!.toString()).toEqual(userBalance.minus("60").toString());
     });
 });
 
