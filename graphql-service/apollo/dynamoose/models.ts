@@ -325,7 +325,7 @@ const AccountHistoryTableSchema = new dynamoose.Schema(
             validate: validateStringDecimal("closingBalance"),
         },
         closingTime: { required: true, type: Number },
-        sequentialID: { required: true, type: Number },
+        sequentialId: { required: true, type: Number },
     },
     {
         timestamps: {
@@ -610,7 +610,7 @@ export class AccountHistory extends Item {
     closingBalance: string;
     startingTime: number;
     closingTime: number;
-    sequentialID: number;
+    sequentialId: number;
 }
 
 /// When creating a new Item class, remember to add it to codegen.yml mappers

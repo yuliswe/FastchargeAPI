@@ -81,7 +81,7 @@ export async function settleAccountActivities(
             closingBalance: previous == null ? "0" : previous.closingBalance,
             startingTime: previous == null ? 0 : previous.closingTime,
             closingTime,
-            sequentialID: previous == null ? 0 : previous.sequentialID + 1,
+            sequentialId: previous == null ? 0 : previous.sequentialId + 1,
         });
     } catch (e) {
         if (e instanceof AlreadyExists) {
