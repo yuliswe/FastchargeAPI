@@ -277,11 +277,11 @@ Resources:
         EntryPoints:
           - handlers/CreateStripeTransfer.ts
 
-  FinishOnboard:
+  FinishStripeOnboard:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: ./
-      Handler: FinishOnboard.lambdaHandler
+      Handler: FinishStripeOnboard.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
         - arm64 # if you are using Apple M1
@@ -298,14 +298,14 @@ Resources:
             Auth:
               Authorizer: NONE
             ApiId: !Ref APIGatewayV2
-            Path: /finish-onboard
+            Path: /finish-stripe-onboard
             Method: post
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
         Target: "es2022"
         EntryPoints:
-          - handlers/FinishOnboard.ts
+          - handlers/FinishStripeOnboard.ts
 # Outputs:
 #   APIGateway:
 #     Description: API APIGateway endpoint URL for DEV stage for Hello World function
