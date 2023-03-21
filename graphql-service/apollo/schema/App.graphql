@@ -27,7 +27,7 @@ type Query {
     secret(key: String!): Secret!
 
     checkUserIsAllowedForGatewayRequest(
-        userEmail: Email!
+        user: ID!
         app: ID!
         forceBalanceCheck: Boolean = false
         forceAwait: Boolean = false

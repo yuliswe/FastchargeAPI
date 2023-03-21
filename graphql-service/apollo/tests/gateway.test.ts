@@ -79,7 +79,7 @@ describe("Gateway API", () => {
         let result = await gatewayResolvers.Query.checkUserIsAllowedForGatewayRequest!(
             {},
             {
-                userEmail: user.email,
+                user: UserPK.stringify(user),
                 app: "myapp",
                 forceBalanceCheck: true,
                 forceAwait: true,

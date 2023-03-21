@@ -21,8 +21,8 @@ mutation TriggerBilling($user: ID!, $app: ID!) {
     }
 }
 
-query CheckUserIsAllowedToCallEndpoint($userEmail: Email!, $app: ID!) {
-    checkUserIsAllowedForGatewayRequest(userEmail: $userEmail, app: $app) {
+query CheckUserIsAllowedToCallEndpoint($user: ID!, $app: ID!) {
+    checkUserIsAllowedForGatewayRequest(user: $user, app: $app) {
         allowed
         reason
         pricingPK

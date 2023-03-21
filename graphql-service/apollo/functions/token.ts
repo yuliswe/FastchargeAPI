@@ -23,7 +23,7 @@ export async function makeAppTokenForUser(
         {
             app,
             iat: Math.floor(Date.now() / 1000),
-            email: user, // TODO: Use user id instead of email
+            userPK: user,
         },
         privateKey,
         {

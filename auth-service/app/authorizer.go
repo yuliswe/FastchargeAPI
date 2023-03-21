@@ -30,10 +30,6 @@ func lambdaHandler(request events.APIGatewayV2CustomAuthorizerV2Request) (*event
 		auth = request.Headers["authorization"]
 	}
 
-	if auth == "" {
-		return denied(), nil
-	}
-
 	if os.Getenv("AllowAnonymousUser") == "1" {
 		if isAnonymous, _ := isAnonymousUser(auth); isAnonymous {
 			return allowedAnonymousUser(), nil
@@ -41,13 +37,21 @@ func lambdaHandler(request events.APIGatewayV2CustomAuthorizerV2Request) (*event
 	}
 
 	if os.Getenv("AllowUserAppToken") == "1" {
-		if user, err := verifyUserAppToken(auth); err == nil {
+		apiKey := request.Headers["X-FAST-API-KEY"]
+		if apiKey == "" {
+			apiKey = request.Headers["x-fast-api-key"]
+		}
+		if user, err := verifyUserAppToken(apiKey); err == nil {
 			return allowed(user), nil
+		} else {
+			fmt.Println(color.Red, "This is not a valid user app token. Reason:", err, color.Reset)
 		}
 	}
 
 	if user, err := verifyFirebaseIdToken(auth); err == nil {
 		return allowed(user), nil
+	} else {
+		fmt.Println(color.Red, "This is not a valid firebase token. Reason:", err, color.Reset)
 	}
 
 	return denied(), nil
@@ -88,6 +92,7 @@ func allowed(user *UserClaims) *events.APIGatewayV2CustomAuthorizerIAMPolicyResp
 		Context: map[string]interface{}{
 			"isAnonymousUser": "false",
 			"userEmail":       user.Email,
+			"userPK":          user.UserPK,
 			"firebaseUserId":  user.Sub,
 		},
 	}
@@ -223,8 +228,9 @@ func getSignInProvider(idToken string) (string, error) {
 }
 
 type UserClaims struct {
-	Email string `json:"email,omitempty"`
-	Sub   string `json:"sub,omitempty"`
+	Email  string `json:"email,omitempty"`
+	UserPK string `json:"userPK,omitempty"`
+	Sub    string `json:"sub,omitempty"`
 }
 
 func verifyFirebaseIdToken(idToken string) (*UserClaims, error) {
@@ -317,8 +323,8 @@ func verifyUserAppToken(idToken string) (*UserClaims, error) {
 	}
 	claims := token.Claims
 	userAppTokenClaims := UserClaims{
-		Email: claims.(jwt.MapClaims)["email"].(string),
-		Sub:   "",
+		UserPK: claims.(jwt.MapClaims)["userPK"].(string),
+		Sub:    "",
 	}
 	return &userAppTokenClaims, nil
 }

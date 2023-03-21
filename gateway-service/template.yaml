@@ -20,14 +20,14 @@ Globals:
     TracingEnabled: true
 
 Resources:
-  GenerateCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain 
+  GenerateCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain
     Type: AWS::CertificateManager::Certificate
-    Properties: 
+    Properties:
       DomainName: "*.fastchargeapi.com"
       ValidationMethod: DNS
       DomainValidationOptions:
-      - DomainName: "*.fastchargeapi.com"
-        HostedZoneId: Z0358815GI2I8U5CTHXW
+        - DomainName: "*.fastchargeapi.com"
+          HostedZoneId: Z0358815GI2I8U5CTHXW
 
   GatewayAPI:
     Type: AWS::Serverless::Api
@@ -43,7 +43,7 @@ Resources:
           MetricsEnabled: True
           ResourcePath: "/*" # allows for logging on any resource
           HttpMethod: "*" # allows for logging on any method
-      Auth: # Uses the UserAppTokenAuthorizer to identify the session user. 
+      Auth: # Uses the UserAppTokenAuthorizer to identify the session user.
         ApiKeyRequired: false
         DefaultAuthorizer: UserAppTokenAuthorizer
         Authorizers:
@@ -52,8 +52,8 @@ Resources:
             FunctionArn: arn:aws:lambda:us-east-1:887279901853:function:UserAppTokenAuthorizer
             Identity:
               ReauthorizeEvery: 300
-              Headers: [ "Authorization" ]
-      # GatewayResponses: 
+              Headers: ["X-FAST-API-KEY"]
+      # GatewayResponses:
       #   UNAUTHORIZED: # This block allows customizing the message shown to user that are not logged in.
       #     StatusCode: 401
       #     ResponseTemplates:

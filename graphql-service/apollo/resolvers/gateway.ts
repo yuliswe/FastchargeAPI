@@ -38,7 +38,7 @@ export const gatewayResolvers: GQLResolvers & {
         async checkUserIsAllowedForGatewayRequest(
             parent: GQLQueryCheckUserIsAllowedForGatewayRequestArgs,
             {
-                userEmail,
+                user,
                 app,
                 forceBalanceCheck = false,
                 forceAwait = false,
@@ -55,10 +55,7 @@ export const gatewayResolvers: GQLResolvers & {
 
             // let startTimer = Date.now();
 
-            let userPromise = context.batched.User.get(
-                { email: userEmail },
-                { using: GQLUserIndex.IndexByEmailOnlyPk }
-            );
+            let userPromise = context.batched.User.get(UserPK.parse(user));
 
             // Increment the request counter, or create it if it doesn't exist
             let globalRequestCounterPromise = incrementOrCreateRequestCounter(context, { userPromise });

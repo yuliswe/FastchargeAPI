@@ -1,7 +1,12 @@
 import { startServerAndCreateLambdaHandler } from "@as-integrations/aws-lambda";
 import { server } from "./server";
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { createRequestHandler } from "@as-integrations/aws-lambda/dist/request-handlers/_create";
+import {
+    APIGatewayProxyEvent,
+    APIGatewayProxyEventBase,
+    APIGatewayEventRequestContextV2,
+    APIGatewayProxyResult,
+} from "aws-lambda";
+import { createRequestHandler, RequestHandler } from "@as-integrations/aws-lambda/dist/request-handlers/_create";
 import { HeaderMap } from "@apollo/server";
 import { BadInput, Unauthorized } from "./errors";
 import { RequestContext, RequestService, createDefaultContextBatched } from "./RequestContext";
@@ -9,7 +14,10 @@ import { Chalk } from "chalk";
 import { LambdaRequest, LambdaResponse } from "@as-integrations/aws-lambda/dist/middleware";
 import { createUserWithEmail } from "./functions/user";
 import { GQLUserIndex } from "./__generated__/resolvers-types";
+import { User } from "./dynamoose/models";
 
+export type LambdaEvent = APIGatewayProxyEventBase<APIGatewayEventRequestContextV2 | undefined>;
+export type LambdaResult = APIGatewayProxyResult;
 const chalk = new Chalk({ level: 3 });
 
 const corsMiddleware: LambdaRequest<APIGatewayProxyEvent, APIGatewayProxyResult> = async (
@@ -37,7 +45,7 @@ const corsMiddleware: LambdaRequest<APIGatewayProxyEvent, APIGatewayProxyResult>
 
 const batched = createDefaultContextBatched();
 
-let handle = startServerAndCreateLambdaHandler(
+let handle = startServerAndCreateLambdaHandler<RequestHandler<LambdaEvent, LambdaResult>, RequestContext>(
     server,
     createRequestHandler<APIGatewayProxyEvent, APIGatewayProxyResult>(
         {
@@ -140,7 +148,11 @@ let handle = startServerAndCreateLambdaHandler(
                 }
                 isServiceRequest = false;
             }
-            let currentUser = await getOrCreateUserFromEmail(userEmail!);
+            let currentUser: User | undefined = undefined;
+            if (userEmail) {
+                // When the request is from a service to IAM, there's no user.
+                currentUser = await getOrCreateUserFromEmail(userEmail);
+            }
             return Promise.resolve({
                 currentUser,
                 service: serviceName,
@@ -169,9 +181,10 @@ async function getOrCreateUserFromEmail(email: string) {
     return currentUser;
 }
 
-export const lambdaHandler = async (event: APIGatewayProxyEvent, context: never, callback: never) => {
+export const lambdaHandler = async (event: LambdaEvent, context: any, callback: any): Promise<LambdaResult> => {
     try {
-        return await handle(event, context, callback);
+        // console.log(chalk.blue(JSON.stringify(event)));
+        return await handle(event, context, callback)!;
     } catch (error) {
         try {
             console.error(chalk.red(JSON.stringify(error)));

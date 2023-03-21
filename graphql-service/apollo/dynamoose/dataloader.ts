@@ -283,7 +283,7 @@ function stripNullKeys<T extends object>(
             data[key as keyof T] = val;
         }
     }
-    if (options?.returnUndefined && Object.keys(object).length == 0) {
+    if (options?.returnUndefined && Object.keys(data).length == 0) {
         return undefined;
     }
     return data;
@@ -396,8 +396,15 @@ export class Batched<I extends Item> {
      * @returns An array of objects of the model type.
      */
     async many(key: Query<I>, options?: BatchOptions): Promise<I[]> {
+        let strippedKey;
         if (typeof key === "object") {
-            key = stripNullKeys(key)!;
+            strippedKey = stripNullKeys(key, {
+                deep: true,
+                returnUndefined: true,
+            });
+        }
+        if (strippedKey == undefined) {
+            throw new Error("All keys are null");
         }
         if (options != undefined) {
             options = stripNullKeys(options, {
@@ -409,7 +416,7 @@ export class Batched<I extends Item> {
         // do a second lookup with the primary keys.
         if (options?.using) {
             let result = await this.loader.load({
-                query: key,
+                query: strippedKey,
                 options,
             });
             // The result only contains primary keys
@@ -420,7 +427,7 @@ export class Batched<I extends Item> {
             return results.flat();
         } else {
             let result = await this.loader.load({
-                query: key,
+                query: strippedKey,
                 options,
             });
             return result;

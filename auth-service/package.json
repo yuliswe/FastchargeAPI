@@ -59,7 +59,6 @@
     "@jest/globals": "^29.4.3",
     "@types/jest": "^29.4.0",
     "@types/jsonwebtoken": "^9.0.1",
-    "@types/mocha": "^10.0.1",
     "@types/node": "^18.11.18",
     "@types/object-hash": "^3.0.2",
     "babel-jest": "^29.4.3",

@@ -294,7 +294,7 @@ export type GQLQueryCheckUserIsAllowedForGatewayRequestArgs = {
     app: Scalars["ID"];
     forceAwait?: InputMaybe<Scalars["Boolean"]>;
     forceBalanceCheck?: InputMaybe<Scalars["Boolean"]>;
-    userEmail: Scalars["Email"];
+    user: Scalars["ID"];
 };
 
 export type GQLQueryEndpointArgs = {
@@ -846,7 +846,7 @@ export type GQLQueryResolvers<
         ContextType,
         RequireFields<
             GQLQueryCheckUserIsAllowedForGatewayRequestArgs,
-            "app" | "forceAwait" | "forceBalanceCheck" | "userEmail"
+            "app" | "forceAwait" | "forceBalanceCheck" | "user"
         >
     >;
     endpoint?: Resolver<GQLResolversTypes["Endpoint"], ParentType, ContextType, Partial<GQLQueryEndpointArgs>>;

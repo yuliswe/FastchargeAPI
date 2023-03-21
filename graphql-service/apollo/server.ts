@@ -1,6 +1,6 @@
 import { ApolloServer } from "@apollo/server";
 import { readFileSync } from "fs";
-import { handleError } from "./dynamoose/error";
+import { handleError } from "./errors";
 import { resolvers as scalarResolvers } from "graphql-scalars";
 import { typeDefs as scalarTypeDefs } from "graphql-scalars";
 import { appResolvers } from "./resolvers/app";

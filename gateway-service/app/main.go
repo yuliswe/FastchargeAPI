@@ -57,17 +57,20 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 		return errResp, nil
 	}
 
-	setGraphqlClientUser(userEmail)
+	userPK, errResp := parseUserPK(request)
+	if errResp != nil {
+		return errResp, nil
+	}
+
+	setGraphqlClientUser(userEmail, userPK)
 
 	//fmt.Println("Checking is user is allowed to access app", app, "user:", user)
 	startTimer := time.Now()
-	decision, errorResponse := getGatewayRequestDecision(userEmail, app, path)
+	decision, errorResponse := getGatewayRequestDecision(userPK, app, path)
 	if errorResponse != nil {
 		//fmt.Println(color.Red, "User ", user, " is not allowed to access ", app, path, color.Reset)
 		return errorResponse, nil
 	}
-
-	userPK := decision.UserPK
 
 	stopTimer := time.Now()
 	fmt.Println(color.Purple, "getGatewayRequestDecision took", stopTimer.Sub(startTimer), color.Reset)
@@ -148,12 +151,31 @@ func parseUserEmail(request events.APIGatewayProxyRequest) (string, *events.APIG
 	}
 	if user, found := request.RequestContext.Authorizer["userEmail"]; found {
 		userEmail = user.(string)
-	}
-	if userEmail == "" {
-		response := apiGatewayErrorResponse(401, "UNAUTHORIZED", "You must be logged in to access this resource.")
-		return "", response
-	} else {
 		return userEmail, nil
+	} else {
+		return "", nil
+	}
+}
+
+func parseUserPK(request events.APIGatewayProxyRequest) (string, *events.APIGatewayProxyResponse) {
+	var userPK string
+	if os.Getenv("TRUST_X_USER_PK_HEADER") == "1" {
+		fmt.Println(color.Red, "TRUST_X_USER_PK_HEADER enabled. Reading user from the X-User-PK header.", color.Reset)
+		userPK = request.Headers["X-User-PK"]
+		if userPK == "" {
+			userPK = request.Headers["x-user-PK"]
+		}
+		if userPK == "" {
+			fmt.Println(color.Red, "TRUST_X_USER_PK_HEADER enabled. But the X-User-PK header is not set.", color.Reset)
+		} else {
+			fmt.Println(color.Blue, "X-User-PK header: ", userPK, color.Reset)
+		}
+	}
+	if user, found := request.RequestContext.Authorizer["userPK"]; found {
+		userPK = user.(string)
+		return userPK, nil
+	} else {
+		return "", nil
 	}
 }
 

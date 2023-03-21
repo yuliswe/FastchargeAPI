@@ -129,12 +129,12 @@ func (v *TriggerBillingTriggerBillingUsageSummary) GetCreatedAt() int64 { return
 
 // __CheckUserIsAllowedToCallEndpointInput is used internally by genqlient
 type __CheckUserIsAllowedToCallEndpointInput struct {
-	UserEmail string `json:"userEmail"`
-	App       string `json:"app"`
+	User string `json:"user"`
+	App  string `json:"app"`
 }
 
-// GetUserEmail returns __CheckUserIsAllowedToCallEndpointInput.UserEmail, and is useful for accessing the field via an interface.
-func (v *__CheckUserIsAllowedToCallEndpointInput) GetUserEmail() string { return v.UserEmail }
+// GetUser returns __CheckUserIsAllowedToCallEndpointInput.User, and is useful for accessing the field via an interface.
+func (v *__CheckUserIsAllowedToCallEndpointInput) GetUser() string { return v.User }
 
 // GetApp returns __CheckUserIsAllowedToCallEndpointInput.App, and is useful for accessing the field via an interface.
 func (v *__CheckUserIsAllowedToCallEndpointInput) GetApp() string { return v.App }
@@ -182,14 +182,14 @@ func (v *__TriggerBillingInput) GetApp() string { return v.App }
 func CheckUserIsAllowedToCallEndpoint(
 	ctx context.Context,
 	client graphql.Client,
-	userEmail string,
+	user string,
 	app string,
 ) (*CheckUserIsAllowedToCallEndpointResponse, error) {
 	req := &graphql.Request{
 		OpName: "CheckUserIsAllowedToCallEndpoint",
 		Query: `
-query CheckUserIsAllowedToCallEndpoint ($userEmail: Email!, $app: ID!) {
-	checkUserIsAllowedForGatewayRequest(userEmail: $userEmail, app: $app) {
+query CheckUserIsAllowedToCallEndpoint ($user: ID!, $app: ID!) {
+	checkUserIsAllowedForGatewayRequest(user: $user, app: $app) {
 		allowed
 		reason
 		pricingPK
@@ -198,8 +198,8 @@ query CheckUserIsAllowedToCallEndpoint ($userEmail: Email!, $app: ID!) {
 }
 `,
 		Variables: &__CheckUserIsAllowedToCallEndpointInput{
-			UserEmail: userEmail,
-			App:       app,
+			User: user,
+			App:  app,
 		},
 	}
 	var err error

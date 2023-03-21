@@ -69,6 +69,7 @@ func getGraphQLClient() *graphql.Client {
 	return globalGqlClient
 }
 
-func setGraphqlClientUser(userEmail string) {
+func setGraphqlClientUser(userEmail string, userPK string) {
 	globalGraphQLClientTransport.Headers["X-User-Email"] = userEmail
+	globalGraphQLClientTransport.Headers["X-User-PK"] = userPK
 }

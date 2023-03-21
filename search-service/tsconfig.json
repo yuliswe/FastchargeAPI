@@ -15,7 +15,6 @@
     "esModuleInterop": true,
     "types": [
       "node",
-      "mocha",
     ],
     "noImplicitAny": true,
     "noImplicitThis": true,

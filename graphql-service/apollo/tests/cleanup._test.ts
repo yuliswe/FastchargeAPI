@@ -23,28 +23,28 @@ describe("Clean up everything", () => {
         expect(user).not.toBe(null);
     });
 
-    it("Delete all AccountHistories", async () => {
+    test("Delete all AccountHistories", async () => {
         let deleted = await context.batched.AccountHistory.deleteMany({
             user: UserPK.stringify(user),
         });
         console.log("deleted", deleted.length);
     });
 
-    it("Delete all AccountActivities", async () => {
+    test("Delete all AccountActivities", async () => {
         let deleted = await context.batched.AccountActivity.deleteMany({
             user: UserPK.stringify(user),
         });
         console.log("deleted", deleted.length);
     });
 
-    it("Delete all UsageSummaries", async () => {
+    test("Delete all UsageSummaries", async () => {
         let deleted = await context.batched.UsageSummary.deleteMany({
             subscriber: UserPK.stringify(user),
         });
         console.log("deleted", deleted.length);
     });
 
-    it("Delete all UsageLogs", async () => {
+    test("Delete all UsageLogs", async () => {
         let deleted = await context.batched.UsageLog.deleteMany({
             subscriber: UserPK.stringify(user),
         });
