@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "fastchargeapi-cli"
-version = "0.0.1"
+version = "0.0.2"
 description = "Official CLI for managing apps and account on FastchargeAPI.com"
 authors = ["FastchargeAPI <fastchargeapi@gmail.com>"]
 license = "GNU v3.0"
@@ -20,6 +20,7 @@ emoji = "^2.2.0"
 aws-requests-auth = "^0.4.3"
 flask-cors = "^3.0.10"
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+tomli = "^2.0.1"
 
 [tool.poetry.scripts]
 fastcharge = 'fastchargeapi_cli.main:fastcharge'
