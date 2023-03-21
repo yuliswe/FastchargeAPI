@@ -8,35 +8,53 @@ import { AppPK } from "../pks/AppPK";
 import { UserPK } from "../pks/UserPK";
 
 /**
- * Remember to add your resolver to the resolvers object in server.ts.
- *
- * Note that to make the typing work, you must also add your Models to the
- * codegen.yml file, under the mappers section.
+ * Make is so that only the owner can read the private attributes.
  */
+function makePrivate<T>(
+    getter: (parent: UsageLog, args: {}, context: RequestContext) => T
+): (parent: UsageLog, args: {}, context: RequestContext) => Promise<T> {
+    return async (parent: UsageLog, args: {}, context: RequestContext): Promise<T> => {
+        if (!(await Can.viewUsageLogPrivateAttributes(parent, context))) {
+            throw new Denied();
+        }
+        return getter(parent, args, context);
+    };
+}
+
 export const usageLogResolvers: GQLResolvers & {
     UsageLog: Required<GQLUsageLogResolvers>;
 } = {
     UsageLog: {
+        __isTypeOf: (parent: UsageLog, context) => parent instanceof context.batched.UsageLog.model,
+        status: makePrivate((parent: UsageLog) => parent.status),
+        collectedAt: makePrivate((parent: UsageLog) => parent.collectedAt),
+        volume: makePrivate((parent: UsageLog) => parent.volume),
+        createdAt: makePrivate((parent: UsageLog) => parent.createdAt),
+
         async app(parent: UsageLog, args, context, info) {
+            if (!(await Can.viewUsageLogPrivateAttributes(parent, context))) {
+                throw new Denied();
+            }
             let app = await context.batched.App.get(AppPK.parse(parent.app));
             return app;
         },
         async subscriber(parent: UsageLog, args, context, info) {
+            if (!(await Can.viewUsageLogPrivateAttributes(parent, context))) {
+                throw new Denied();
+            }
             let subscriber = await context.batched.User.get(UserPK.parse(parent.subscriber));
             return subscriber;
         },
         async endpoint(parent: UsageLog, args, context, info) {
+            if (!(await Can.viewUsageLogPrivateAttributes(parent, context))) {
+                throw new Denied();
+            }
             let endpoint = await context.batched.Endpoint.get({
                 app: parent.app,
                 path: parent.path,
             });
             return endpoint;
         },
-        status: (parent: UsageLog) => parent.status,
-        collectedAt: (parent: UsageLog) => parent.collectedAt,
-        volume: (parent: UsageLog) => parent.volume,
-        createdAt: (parent: UsageLog) => parent.createdAt,
-        __isTypeOf: (parent: UsageLog, context) => parent instanceof context.batched.UsageLog.model,
     },
     Query: {},
     Mutation: {
@@ -46,7 +64,7 @@ export const usageLogResolvers: GQLResolvers & {
             context: RequestContext,
             info: GraphQLResolveInfo
         ) {
-            if (!(await Can.createUsageLog({ app, path, subscriber, volume, pricing }, context))) {
+            if (!(await Can.createUsageLog(context))) {
                 throw new Denied();
             }
             await context.batched.App.assertExists(AppPK.parse(app));

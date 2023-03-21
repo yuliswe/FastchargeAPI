@@ -7,6 +7,7 @@ import {
     StripePaymentAccept,
     StripeTransfer,
     Subscription,
+    UsageLog,
     UsageSummary,
     User,
     UserAppToken,
@@ -17,7 +18,6 @@ import {
     GQLEndpointUpdateEndpointArgs,
     GQLMutationCreateEndpointArgs,
     GQLMutationCreateSubscriptionArgs,
-    GQLMutationCreateUsageLogArgs,
     GQLQuerySubscriptionArgs,
     GQLSubscribeUpdateSubscriptionArgs,
     GQLUserUpdateUserArgs,
@@ -272,8 +272,17 @@ export const Can = {
         let app = await context.batched.App.get(AppPK.parse(parent.app));
         return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
     },
-    async createUsageLog(args: GQLMutationCreateUsageLogArgs, context: RequestContext) {
-        return await Promise.resolve(true);
+    async createUsageLog(context: RequestContext) {
+        return await Promise.resolve(context.isServiceRequest);
+    },
+    async viewUsageLogPrivateAttributes(parent: UsageLog, context: RequestContext) {
+        if (context.isServiceRequest) {
+            return true;
+        }
+        if (!context.currentUser) {
+            return false;
+        }
+        return await Promise.resolve(parent.subscriber === UserPK.stringify(context.currentUser));
     },
     async viewStripePaymentAcceptPrivateAttributes(parent: StripePaymentAccept, context: RequestContext) {
         if (context.isServiceRequest) {
