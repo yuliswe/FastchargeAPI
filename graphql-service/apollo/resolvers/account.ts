@@ -69,7 +69,8 @@ export const accountActivityResolvers: GQLResolvers & {
                 throw new Denied();
             }
             if (parent.stripeTransfer) {
-                return await context.batched.StripeTransfer.get(StripeTransferPK.parse(parent.stripeTransfer));
+                // Use getOrNull because the transfer may have been deleted
+                return await context.batched.StripeTransfer.getOrNull(StripeTransferPK.parse(parent.stripeTransfer));
             } else {
                 return null;
             }

@@ -66,10 +66,7 @@ export const Can = {
     //     return Promise.resolve(false);
     // },
     async settleUserAccountActivities(context: RequestContext): Promise<boolean> {
-        if (context.isSQSMessage && context.isServiceRequest) {
-            return Promise.resolve(true);
-        }
-        return Promise.resolve(false);
+        return Promise.resolve(context.isSQSMessage && context.isServiceRequest);
     },
     // async viewApp({ owner }: { owner: string }, context: RequestContext): Promise<boolean> {
     //     return await Promise.resolve(true);
@@ -351,6 +348,9 @@ export const Can = {
             return false;
         }
         return await Promise.resolve(parent.receiver === UserPK.stringify(context.currentUser));
+    },
+    async createStripeTransfer(context: RequestContext): Promise<boolean> {
+        return Promise.resolve(context.isSQSMessage && context.isServiceRequest);
     },
     // async *viewAppIter<App extends { owner: string }>(
     //     arr: App[],

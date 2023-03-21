@@ -1,4 +1,5 @@
 import {
+    GQLMutationCreateStripeTransferArgs,
     GQLQueryStripeTransferArgs,
     GQLResolvers,
     GQLStripeTransferResolvers,
@@ -53,10 +54,6 @@ export const stripeTransferResolvers: GQLResolvers & {
          * substracting the withdrawl amount from their balance.
          *
          * This method is tipically called from the payment-service.
-         * @param parent
-         * @param args
-         * @param context
-         * @param info
          */
         async settleStripeTransfer(parent: StripeTransfer, args: {}, context: RequestContext): Promise<StripeTransfer> {
             if (!(await Can.settleUserAccountActivities(context))) {
@@ -86,5 +83,33 @@ export const stripeTransferResolvers: GQLResolvers & {
             return transfer;
         },
     },
-    Mutation: {},
+    Mutation: {
+        async createStripeTransfer(
+            parent,
+            {
+                receiver,
+                withdrawAmount,
+                receiveAmount,
+                currency,
+                stripeTransferId,
+                stripeTransferObject,
+            }: GQLMutationCreateStripeTransferArgs,
+            context: RequestContext
+        ) {
+            if (!(await Can.createStripeTransfer(context))) {
+                throw new Denied();
+            }
+            let transfer = await context.batched.StripeTransfer.create({
+                receiver,
+                withdrawAmount,
+                receiveAmount,
+                stripeTransferId,
+                currency,
+                stripeTransferObject: stripeTransferObject && JSON.parse(stripeTransferObject),
+                transferAt: Date.now() + 1000 * 60 * 60 * 24, // Transfer after 24 hours
+                status: "pending",
+            });
+            return transfer;
+        },
+    },
 };

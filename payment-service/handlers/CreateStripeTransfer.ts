@@ -7,7 +7,7 @@ import {
     LambdaResultV2,
     getUserEmailFromEvent,
 } from "../utils/LambdaContext";
-import { StripeTransferPK, UserPK, createDefaultContextBatched, getUserBalance, sqsGQLClient } from "graphql-service";
+import { UserPK, createDefaultContextBatched, getUserBalance, sqsGQLClient } from "graphql-service";
 import { RequestContext } from "graphql-service/RequestContext";
 import Decimal from "decimal.js-light";
 import { SQSQueueUrl } from "graphql-service/cron-jobs/sqsClient";
@@ -16,14 +16,12 @@ import { GQLUserIndex } from "__generated__/gql-operations";
 
 const chalk = new Chalk({ level: 3 });
 
-function createRequestContext(): RequestContext {
-    return {
-        service: "payment",
-        isServiceRequest: true,
-        isSQSMessage: false,
-        batched: createDefaultContextBatched(),
-    };
-}
+export const context: RequestContext = {
+    service: "payment",
+    isServiceRequest: true,
+    isSQSMessage: false,
+    batched: createDefaultContextBatched(),
+};
 
 /**
  * Stripe's payout API:
@@ -75,7 +73,6 @@ export async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStruc
         };
     }
 
-    const context = createRequestContext();
     let user = await context.batched.User.get({ email: userEmail }, { using: GQLUserIndex.IndexByEmailOnlyPk });
     let userAccountBalance = new Decimal(await getUserBalance(context, UserPK.stringify(user)));
     if (userAccountBalance.lessThan(withdraw)) {
@@ -87,30 +84,33 @@ export async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStruc
         };
     }
 
-    let stripeTransfer = await context.batched.StripeTransfer.create({
-        receiver: UserPK.stringify(user),
-        withdrawAmount: withdraw.toString(),
-        receiveAmount: receivable.toString(),
-        currency: "usd",
-        transferAt: Date.now() + 1000 * 60 * 60 * 24, // Transfer after 24 hours
-        status: "pending",
-    });
     let billingQueueClient = sqsGQLClient({
         queueUrl: SQSQueueUrl.BillingFifoQueue,
         dedupId: `createStripeTransfer-${UserPK.stringify(user)}-${Date.now()}`,
     });
-    await billingQueueClient.query({
-        query: gql(`
-            query SettleStripeTransfer($pk: ID!) {
-                stripeTransfer(pk: $pk) {
+    await billingQueueClient.mutate({
+        mutation: gql(`
+            mutation CreateStripeTransfer(
+                $user: ID!
+                $withdrawAmount: NonNegativeDecimal!
+                $receiveAmount: NonNegativeDecimal!
+            ) {
+                createStripeTransfer(
+                    receiver: $user, 
+                    withdrawAmount: $withdrawAmount,
+                    receiveAmount: $receiveAmount,
+                    currency: "usd",
+                ) {
                     settleStripeTransfer {
-                        status
+                        createdAt
                     }
                 }
             }
         `),
         variables: {
-            pk: StripeTransferPK.stringify(stripeTransfer),
+            user: UserPK.stringify(user),
+            withdrawAmount: withdraw.toString(),
+            receiveAmount: receivable.toString(),
         },
     });
 

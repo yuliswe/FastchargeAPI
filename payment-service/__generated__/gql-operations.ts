@@ -538,14 +538,16 @@ export type GQLFulfillUserStripePaymentAcceptQuery = {
     };
 };
 
-export type GQLSettleStripeTransferQueryVariables = Exact<{
-    pk: Scalars["ID"];
+export type GQLCreateStripeTransferMutationVariables = Exact<{
+    user: Scalars["ID"];
+    withdrawAmount: Scalars["NonNegativeDecimal"];
+    receiveAmount: Scalars["NonNegativeDecimal"];
 }>;
 
-export type GQLSettleStripeTransferQuery = {
-    __typename?: "Query";
-    stripeTransfer: {
+export type GQLCreateStripeTransferMutation = {
+    __typename?: "Mutation";
+    createStripeTransfer: {
         __typename?: "StripeTransfer";
-        settleStripeTransfer: { __typename?: "StripeTransfer"; status?: GQLStripeTransferStatus | null };
+        settleStripeTransfer: { __typename?: "StripeTransfer"; createdAt: number };
     };
 };
