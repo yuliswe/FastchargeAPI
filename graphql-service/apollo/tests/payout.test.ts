@@ -1,7 +1,6 @@
 import { describe, expect, test } from "@jest/globals";
 import { RequestContext, createDefaultContextBatched } from "../RequestContext";
 import { User } from "../dynamoose/models";
-import { stripePaymentAcceptResolvers } from "../resolvers/payment";
 import { getUserBalance } from "../functions/account";
 import Decimal from "decimal.js-light";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
@@ -13,7 +12,7 @@ import { addMoneyForUser } from "./test-utils/account";
 
 let context: RequestContext = {
     batched: createDefaultContextBatched(),
-    isServiceRequest: false,
+    isServiceRequest: true,
     isSQSMessage: true,
     isAnonymousUser: false,
 };

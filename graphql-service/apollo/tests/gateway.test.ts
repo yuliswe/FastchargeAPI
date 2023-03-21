@@ -6,13 +6,12 @@ import { PricingPK } from "../pks/PricingPK";
 import { AlreadyExists } from "../errors";
 import { Subscription, User } from "../dynamoose/models";
 import { gatewayResolvers } from "../resolvers/gateway";
-import { stripePaymentAcceptResolvers } from "../resolvers/payment";
 import { addMoneyForUser } from "./test-utils/account";
 
 let context: RequestContext = {
     batched: createDefaultContextBatched(),
-    isServiceRequest: false,
-    isSQSMessage: false,
+    isServiceRequest: true,
+    isSQSMessage: true,
     isAnonymousUser: false,
 };
 // jest.retryTimes(2);

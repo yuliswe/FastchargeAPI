@@ -16,7 +16,7 @@ import { GQLUserIndex } from "../__generated__/resolvers-types";
 let context: RequestContext = {
     batched: createDefaultContextBatched(),
     isSQSMessage: true,
-    isServiceRequest: false,
+    isServiceRequest: true,
     isAnonymousUser: false,
 };
 // jest.retryTimes(2);

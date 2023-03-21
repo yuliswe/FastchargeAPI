@@ -10,7 +10,7 @@ import { UserPK } from "../pks/UserPK";
 
 let context: RequestContext = {
     batched: createDefaultContextBatched(),
-    isServiceRequest: false,
+    isServiceRequest: true,
     isSQSMessage: true,
     isAnonymousUser: false,
 };
