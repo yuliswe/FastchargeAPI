@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, jest, test } from "@jest/globals";
-import { handle as AcceptPayment, StripeSessionObject, context } from "../handlers/AcceptPayment";
+import { handle as AcceptPayment, StripeSessionObject, context } from "../handlers/AcceptStripePayment";
 import { AuthorizerContext, LambdaEventV2 } from "../utils/LambdaContext";
 import { GQLUserIndex } from "__generated__/gql-operations";
 import { UserPK } from "graphql-service/pks/UserPK";

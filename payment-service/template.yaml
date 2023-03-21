@@ -188,11 +188,11 @@ Resources:
         EntryPoints:
           - handlers/GetOnBoardLink.ts
 
-  AcceptPayment:
+  AcceptStripePayment:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: ./
-      Handler: AcceptPayment.lambdaHandler
+      Handler: AcceptStripePayment.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
         - arm64 # if you are using Apple M1
@@ -210,14 +210,14 @@ Resources:
             Auth:
               Authorizer: NONE
             ApiId: !Ref APIGatewayV2
-            Path: /accept-payment
+            Path: /accept-stripe-payment
             Method: post
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
         Target: "es2022"
         EntryPoints:
-          - handlers/AcceptPayment.ts
+          - handlers/AcceptStripePayment.ts
 
   GetCheckoutLink:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
