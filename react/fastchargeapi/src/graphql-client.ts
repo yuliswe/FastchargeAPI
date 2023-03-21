@@ -8,7 +8,7 @@ import * as jose from "jose";
 import md5 from "md5";
 
 // debug
-const DEBUG_USE_LOCAL_GRAPHQL = true;
+const DEBUG_USE_LOCAL_GRAPHQL = false;
 
 const sqsClient = new SQSClient({ region: "us-east-1" });
 const cache = new InMemoryCache();
