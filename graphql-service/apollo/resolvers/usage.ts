@@ -68,14 +68,13 @@ export const usageLogResolvers: GQLResolvers & {
                 throw new Denied();
             }
             await context.batched.App.assertExists(AppPK.parse(app));
-            const log = await context.batched.UsageLog.create({
+            return await context.batched.UsageLog.create({
                 app,
                 path,
                 subscriber,
                 volume,
                 pricing,
             });
-            return log;
         },
     },
 };

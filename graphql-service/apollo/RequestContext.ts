@@ -17,6 +17,7 @@ import {
     GatewayRequestDecisionCacheModel,
     UserAppTokenModel,
     User,
+    FreeQuotaUsageModel,
 } from "./dynamoose/models";
 
 export type RequestService = "payment" | "gateway" | "internal";
@@ -47,5 +48,6 @@ export function createDefaultContextBatched() {
         GatewayRequestCounter: new Batched(GatewayRequestCounterModel),
         GatewayRequestDecisionCache: new Batched(GatewayRequestDecisionCacheModel),
         UserAppToken: new Batched(UserAppTokenModel),
+        FreeQuotaUsage: new Batched(FreeQuotaUsageModel),
     };
 }

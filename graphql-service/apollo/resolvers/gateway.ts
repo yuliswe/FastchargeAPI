@@ -4,7 +4,6 @@ import {
     GQLGatewayDecisionResponseResolvers,
     GQLQueryCheckUserIsAllowedForGatewayRequestArgs,
     GQLResolvers,
-    GQLUserIndex,
 } from "../__generated__/resolvers-types";
 import { getUserBalance } from "../functions/account";
 import { findUserSubscriptionPricing } from "../functions/subscription";
@@ -148,12 +147,13 @@ export const gatewayResolvers: GQLResolvers & {
             }
 
             // Run all these promises concurrently
+
             let shouldCollectMonthlyChargePromise = checkShouldChargeMonthlyFee(context, {
                 app,
                 userPromise,
                 pricingPromise,
             });
-            let hasSufficientFreeQuotaPromise = checkHasSufficientFreeQuota(context, { app, userPromise });
+            let hasSufficientFreeQuotaPromise = checkHasSufficientFreeQuota(context, { app, user, pricingPromise });
             let hasSufficientBalancePromise = checkHasSufficientBalance(context, {
                 userPromise,
                 shouldCollectMonthlyChargePromise,
@@ -218,12 +218,35 @@ export const gatewayResolvers: GQLResolvers & {
     Mutation: {},
 };
 
-// TODO: implement this
+// async function computeBillableVolumeResult(
+//     context: RequestContext,
+//     { app, user, pricingPromise }: { app: string; user: string; pricingPromise: Promise<Pricing | null> }
+// ): Promise<ComputeBillableVolumeResult | null> {
+//     let pricing = await pricingPromise;
+//     if (pricing == null) {
+//         return null;
+//     }
+//     return computeBillableVolume(context, {
+//         app,
+//         subscriber: user,
+//         pricingFreeQuota: pricing?.freeQuota,
+//         volume: 1,
+//     });
+// }
+
 async function checkHasSufficientFreeQuota(
     context: RequestContext,
-    { app, userPromise }: { app: string; userPromise: Promise<User | null> }
-) {
-    return await Promise.resolve(true);
+    { app, user, pricingPromise }: { app: string; user: string; pricingPromise: Promise<Pricing | null> }
+): Promise<boolean | null> {
+    let pricing = await pricingPromise;
+    if (pricing == null) {
+        return null;
+    }
+    let quota = await context.batched.FreeQuotaUsage.get({
+        subscriber: user,
+        app,
+    });
+    return quota.usage < pricing.freeQuota;
 }
 
 /**
@@ -331,6 +354,7 @@ async function checkShouldChargeMonthlyFee(
         app,
         subscriber: UserPK.stringify(user),
         pricing,
+        volumeBillable: 1,
     });
 }
 

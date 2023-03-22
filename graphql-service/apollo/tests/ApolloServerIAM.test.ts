@@ -97,7 +97,6 @@ const lambdaEvent: LambdaEvent = {
 
 describe("Test a request from the gateway", () => {
     test("Replay a request to https://myapp.fastchargeapi.com/google", async () => {
-        console.log(JSON.parse(lambdaEvent.body!));
         let response = await lambdaHandler(lambdaEvent, {} as never, (_err: any, _res: any) => {
             // nothing
         });

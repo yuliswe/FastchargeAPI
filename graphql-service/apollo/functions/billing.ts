@@ -1,4 +1,4 @@
-import { AccountActivity, Pricing, UsageSummary } from "../dynamoose/models";
+import { AccountActivity, FreeQuotaUsage, Pricing, UsageSummary } from "../dynamoose/models";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
 import { RequestContext } from "../RequestContext";
 import Decimal from "decimal.js-light";
@@ -10,15 +10,20 @@ import { AppPK } from "../pks/AppPK";
 import { PricingPK } from "../pks/PricingPK";
 const chalk = new Chalk({ level: 3 });
 
+export const fastchargeRequestServiceFee = "0.0001";
+
 export type GenerateAccountActivitiesResult = {
-    newUsageSummary: UsageSummary;
+    updatedUsageSummary: UsageSummary;
     createdAccountActivities: {
         subscriberRequestFee: AccountActivity;
         appAuthorRequestFee: AccountActivity;
-        subscriberMonthlyFee?: AccountActivity;
-        appAuthorMonthlyFee?: AccountActivity;
+        subscriberMonthlyFee: AccountActivity | null;
+        appAuthorMonthlyFee: AccountActivity | null;
         appAuthorServiceFee: AccountActivity;
     };
+    affectedFreeQuotaUsage: FreeQuotaUsage | null;
+    volumeFree: number;
+    volumeBilled: number;
 };
 /**
  * Create account activities for API usage and the app author, taking into
@@ -38,7 +43,7 @@ export async function generateAccountActivities(
         monthlyChargeOnHoldPeriodInSeconds = 60 * 60 * 24 * 30, // default to 30 days
         disableMonthlyCharge = false, // for testing purpose
         forceMonthlyCharge = false, // for testing purpose
-        serviceFeePerRequest = "0.0001",
+        serviceFeePerRequest = fastchargeRequestServiceFee,
     }: {
         usageSummary: UsageSummary;
         subscriber: string;
@@ -50,17 +55,38 @@ export async function generateAccountActivities(
     }
 ): Promise<GenerateAccountActivitiesResult> {
     let promises = [];
-    let results = {
-        createdAccountActivities: {} as GenerateAccountActivitiesResult["createdAccountActivities"],
-    } as GenerateAccountActivitiesResult;
+    let results: Partial<GenerateAccountActivitiesResult> = {
+        createdAccountActivities: {
+            subscriberMonthlyFee: null,
+            appAuthorMonthlyFee: null,
+        } as GenerateAccountActivitiesResult["createdAccountActivities"],
+        affectedFreeQuotaUsage: null,
+    };
     let pricing = await context.batched.Pricing.get(PricingPK.parse(usageSummary.pricing));
+    let { volumeFree, volumeBillable, freeQuotaUsage } = await computeBillableVolume(context, {
+        app: usageSummary.app,
+        subscriber,
+        volume: usageSummary.volume,
+        pricingFreeQuota: pricing.freeQuota,
+    });
+    results.volumeFree = volumeFree;
+    results.volumeBilled = volumeBillable;
+    // Update free quota usage
+    if (volumeFree > 0) {
+        promises.push(
+            context.batched.FreeQuotaUsage.update(freeQuotaUsage, {
+                $ADD: { usage: volumeFree },
+            }).then((item) => {
+                results.affectedFreeQuotaUsage = item;
+            })
+        );
+    }
     {
         // Process per-request charge
-        let volume = usageSummary.volume;
         let price = new Decimal(pricing.chargePerRequest);
         usageSummary.status = "billed";
         usageSummary.billedAt = Date.now();
-        results.newUsageSummary = usageSummary;
+        results.updatedUsageSummary = usageSummary;
 
         let subscriberPerRequestActivityPromise = context.batched.AccountActivity.create({
             user: subscriber,
@@ -68,15 +94,16 @@ export async function generateAccountActivities(
             reason: "api_per_request_charge",
             status: "pending",
             settleAt: Date.now(),
-            amount: price.mul(volume).toString(),
+            amount: price.mul(volumeBillable).toString(),
             usageSummary: UsageSummaryPK.stringify(usageSummary),
             description: `API request charge`,
             billedApp: usageSummary.app,
+            consumedFreeQuota: volumeFree,
         }).then(async (activity) => {
-            results.createdAccountActivities.subscriberRequestFee = activity;
+            results.createdAccountActivities!.subscriberRequestFee = activity;
             usageSummary.billingAccountActivity = AccountActivityPK.stringify(activity);
             await usageSummary.save();
-            results.newUsageSummary = usageSummary;
+            results.updatedUsageSummary = usageSummary;
             return activity;
         });
 
@@ -86,12 +113,13 @@ export async function generateAccountActivities(
             reason: "api_per_request_charge",
             status: "pending",
             settleAt: Date.now(),
-            amount: price.mul(volume).toString(),
+            amount: price.mul(volumeBillable).toString(),
             usageSummary: UsageSummaryPK.stringify(usageSummary),
             description: `API request charge paid by customer`,
             billedApp: usageSummary.app,
+            consumedFreeQuota: volumeFree,
         }).then((activity) => {
-            results.createdAccountActivities.appAuthorRequestFee = activity;
+            results.createdAccountActivities!.appAuthorRequestFee = activity;
             return activity;
         });
 
@@ -101,12 +129,12 @@ export async function generateAccountActivities(
             reason: "fastchargeapi_per_request_service_fee",
             status: "pending",
             settleAt: Date.now(),
-            amount: new Decimal(serviceFeePerRequest).mul(volume).toString(),
+            amount: new Decimal(serviceFeePerRequest).mul(usageSummary.volume).toString(), // We charge by the total volume regardless of free quota
             usageSummary: UsageSummaryPK.stringify(usageSummary),
             description: `API request service fee`,
             billedApp: usageSummary.app,
         }).then((activity) => {
-            results.createdAccountActivities.appAuthorServiceFee = activity;
+            results.createdAccountActivities!.appAuthorServiceFee = activity;
             return activity;
         });
 
@@ -126,6 +154,7 @@ export async function generateAccountActivities(
             subscriber,
             app: usageSummary.app,
             pricing: pricing,
+            volumeBillable,
         });
         if (forceMonthlyCharge || (!disableMonthlyCharge && shouldBillMonthly)) {
             let subscriberMonthlyActivityPromise = context.batched.AccountActivity.create({
@@ -139,7 +168,7 @@ export async function generateAccountActivities(
                 description: `API subscription fee every 30 days`,
                 billedApp: usageSummary.app,
             }).then((activity) => {
-                results.createdAccountActivities.subscriberMonthlyFee = activity;
+                results.createdAccountActivities!.subscriberMonthlyFee = activity;
                 return activity;
             });
 
@@ -154,7 +183,7 @@ export async function generateAccountActivities(
                 description: `API subscription fee paid by customer`,
                 billedApp: usageSummary.app,
             }).then((activity) => {
-                results.createdAccountActivities.appAuthorMonthlyFee = activity;
+                results.createdAccountActivities!.appAuthorMonthlyFee = activity;
                 return activity;
             });
 
@@ -171,7 +200,7 @@ export async function generateAccountActivities(
     if (errors.length > 0) {
         throw new Error("Error creating AccountActivity.");
     }
-    return results;
+    return results as GenerateAccountActivitiesResult;
 }
 
 export type ShouldCollectMonthlyChargePromiseResult = {
@@ -190,11 +219,23 @@ export type ShouldCollectMonthlyChargePromiseResult = {
  */
 export async function shouldCollectMonthlyCharge(
     context: RequestContext,
-    { subscriber, app, pricing }: { subscriber: string; app: string; pricing: Pricing },
+    {
+        subscriber,
+        app,
+        pricing,
+        volumeBillable,
+    }: { subscriber: string; app: string; pricing: Pricing; volumeBillable: number },
     {
         collectionPeriodInSeconds = 60 * 60 * 24 * 30, // default to 30 days
     }: { collectionPeriodInSeconds?: number } = {}
 ): Promise<ShouldCollectMonthlyChargePromiseResult> {
+    if (volumeBillable === 0) {
+        return {
+            shouldBill: false,
+            amount: "0",
+            isUpgrade: false,
+        };
+    }
     let allBillsThisMonth = await context.batched.AccountActivity.many({
         user: subscriber,
         billedApp: app,
@@ -221,6 +262,47 @@ export async function shouldCollectMonthlyCharge(
             isUpgrade: false,
         };
     }
+}
+
+export type ComputeBillableVolumeResult = {
+    volumeFree: number;
+    volumeBillable: number;
+    freeQuotaUsage: FreeQuotaUsage;
+};
+/**
+ * Given the total volume of requests, compute the volume that is free and the
+ * volume that is billable.
+ * @returns the volumes, and the FreeQuotaUsage object that was used to compute
+ */
+export async function computeBillableVolume(
+    context: RequestContext,
+    {
+        app,
+        subscriber,
+        volume,
+        pricingFreeQuota,
+    }: { app: string; subscriber: string; volume: number; pricingFreeQuota: number }
+): Promise<ComputeBillableVolumeResult> {
+    let freeQuotaUsage = await context.batched.FreeQuotaUsage.getOrNull({
+        subscriber,
+        app,
+    }).then((item) => {
+        if (item == null) {
+            return context.batched.FreeQuotaUsage.create({
+                subscriber,
+                app,
+                usage: 0,
+            });
+        }
+        return item;
+    });
+    let volumeFree = Math.min(volume, Math.max(0, pricingFreeQuota - freeQuotaUsage.usage));
+    let volumeBillable = volume - volumeFree;
+    return {
+        volumeFree,
+        volumeBillable,
+        freeQuotaUsage,
+    };
 }
 
 /**

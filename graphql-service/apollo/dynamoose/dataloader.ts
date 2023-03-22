@@ -360,14 +360,13 @@ export class Batched<I extends Item> {
     }
 
     async getOrNull(key: Query<I>, options?: BatchOptions): Promise<I | null> {
-        try {
-            return await this.get(key, options);
-        } catch (e) {
-            if (e instanceof NotFound) {
-                return null;
-            } else {
-                throw e;
-            }
+        let result = await this.many(key, options);
+        if (result.length === 0) {
+            return null;
+        } else if (result.length > 1) {
+            throw new Error(`Found more than one ${this.model.name} with key ${JSON.stringify(key)}`);
+        } else {
+            return result[0];
         }
     }
 

@@ -302,6 +302,7 @@ const AccountActivityTableSchema = new dynamoose.Schema(
         stripePaymentAccept: { type: String, default: undefined },
         description: { type: String, default: "" },
         billedApp: { type: String, required: false, default: undefined },
+        consumedFreeQuota: { type: Number, required: false, default: undefined },
     },
     {
         timestamps: {
@@ -469,6 +470,15 @@ const UserAppTokenTableSchema = new dynamoose.Schema(
     }
 );
 
+const FreeQuotaUsageTableSchema = new dynamoose.Schema(
+    {
+        subscriber: { hashKey: true, type: String, required: true },
+        app: { rangeKey: true, type: String, required: true },
+        usage: { type: Number, required: true, default: 0 },
+    },
+    { timestamps: true }
+);
+
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
 export class App extends Item {
@@ -601,6 +611,7 @@ export class AccountActivity extends Item {
     stripeTransfer: string | null; // ID of the StripeTransfer item or null if not related to Stripe
     stripePaymentAccept: string | null; // ID of the StripePaymentAccept item or null if not related to Stripe
     billedApp: string | null; // ID of the App item if the activity is related to billing an app. This is the same as usageSummary.app
+    consumedFreeQuota: number | null; // Number of free quota consumed by the subscriber when the activity is related to API usage. Usually this is the same as usageSummary.volume
 }
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
@@ -701,6 +712,12 @@ export class UserAppToken extends Item {
     token: string | null;
 }
 
+export class FreeQuotaUsage extends Item {
+    subscriber: string;
+    app: string;
+    usage: number;
+}
+
 export const AppModel = dynamoose.model<App>("App", AppTableSchema, {
     ...tableConfigs,
 });
@@ -742,5 +759,8 @@ export const GatewayRequestDecisionCacheModel = dynamoose.model<GatewayRequestDe
     { ...tableConfigs }
 );
 export const UserAppTokenModel = dynamoose.model<UserAppToken>("UserAppToken", UserAppTokenTableSchema, {
+    ...tableConfigs,
+});
+export const FreeQuotaUsageModel = dynamoose.model<FreeQuotaUsage>("FreeQuotaUsage", FreeQuotaUsageTableSchema, {
     ...tableConfigs,
 });
