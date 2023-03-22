@@ -4,14 +4,15 @@ import { usageLogResolvers } from "../resolvers/usage";
 import { collectUsageLogs as collectUsageSummary } from "../functions/usage";
 import { AlreadyExists } from "../errors";
 import { generateAccountActivities } from "../functions/billing";
-import { Pricing, UsageLogModel, UsageSummaryModel, User } from "../dynamoose/models";
+import { App, Pricing, UsageLogModel, UsageSummaryModel, User } from "../dynamoose/models";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
 import { UsageLogPK } from "../pks/UsageLogPK";
 import { PricingPK } from "../pks/PricingPK";
 import { settleAccountActivities } from "../functions/account";
 import Decimal from "decimal.js-light";
-import { GQLUserIndex } from "../__generated__/resolvers-types";
 import { UserPK } from "../pks/UserPK";
+import { v4 as uuidv4 } from "uuid";
+import { getOrCreateTestUser } from "./test-utils";
 
 let context: RequestContext = {
     batched: createDefaultContextBatched(),
@@ -21,20 +22,21 @@ let context: RequestContext = {
 };
 
 describe("Usage API", () => {
-    let user: User;
-    test("Preparation: get test user 1", async () => {
-        user = await context.batched.User.get(
-            { email: "testuser1.fastchargeapi@gmail.com" },
-            { using: GQLUserIndex.IndexByEmailOnlyPk }
-        );
-        expect(user).not.toBe(null);
+    const testUserEmail = `testuser_${uuidv4()}@gmail_mock.com`;
+    const testAppName = `testapp-${uuidv4()}`;
+    let testUser: User;
+    let testApp: App;
+
+    test("Prepare: Create test user and test app", async () => {
+        testUser = await getOrCreateTestUser(context, { email: testUserEmail });
+        testApp = await context.batched.App.getOrCreate({ name: testAppName, owner: UserPK.stringify(testUser) });
     });
 
     test("Preparation: create an App", async () => {
         try {
             let app = await context.batched.App.create({
                 name: "myapp",
-                owner: UserPK.stringify(user),
+                owner: UserPK.stringify(testUser),
             });
         } catch (e) {
             if (e instanceof AlreadyExists) {
@@ -74,7 +76,7 @@ describe("Usage API", () => {
             let usageLog = (await usageLogResolvers.Mutation!.createUsageLog!(
                 {},
                 {
-                    subscriber: UserPK.stringify(user),
+                    subscriber: UserPK.stringify(testUser),
                     app: "myapp",
                     path: "/google",
                     volume: 1,
@@ -92,7 +94,7 @@ describe("Usage API", () => {
     let usageSummaryPK: string;
     test("Test: Create a UsageSummary", async () => {
         let { affectedUsageSummaries } = await collectUsageSummary(context, {
-            user: UserPK.stringify(user),
+            user: UserPK.stringify(testUser),
             app: "myapp",
         });
         let usageSummary = affectedUsageSummaries[0];
@@ -108,8 +110,8 @@ describe("Usage API", () => {
         let usageSummary = await UsageSummaryModel.get(UsageSummaryPK.parse(usageSummaryPK));
         let result = await generateAccountActivities(context, {
             usageSummary,
-            subscriber: UserPK.stringify(user),
-            appAuthor: UserPK.stringify(user),
+            subscriber: UserPK.stringify(testUser),
+            appAuthor: UserPK.stringify(testUser),
             disableMonthlyCharge: true,
         });
         expect(result.createdAccountActivities.appAuthorRequestFee.amount).toEqual("0.003");
@@ -121,13 +123,18 @@ describe("Usage API", () => {
     });
 
     test("Test: Create AccountHistory for API caller", async () => {
-        let result = await settleAccountActivities(context, UserPK.stringify(user));
+        let result = await settleAccountActivities(context, UserPK.stringify(testUser));
         expect(result).not.toBeNull();
         let { newAccountHistory, affectedAccountActivities, previousAccountHistory } = result!;
         expect(affectedAccountActivities.length).toEqual(3);
-        expect(newAccountHistory.startingTime).toEqual(previousAccountHistory!.closingTime);
-        expect(new Decimal(newAccountHistory.closingBalance).toString()).toEqual(
-            new Decimal(previousAccountHistory!.closingBalance).sub("0.0003").toString()
-        );
+        if (previousAccountHistory) {
+            expect(newAccountHistory.startingTime).toEqual(previousAccountHistory.closingTime);
+            expect(new Decimal(newAccountHistory.closingBalance).toString()).toEqual(
+                new Decimal(previousAccountHistory.closingBalance).sub("0.0003").toString()
+            );
+        } else {
+            expect(newAccountHistory.startingTime).toEqual(0);
+            expect(new Decimal(newAccountHistory.closingBalance).toString()).toEqual("-0.0003");
+        }
     });
 });

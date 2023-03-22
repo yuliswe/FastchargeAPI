@@ -11,7 +11,8 @@ import { PricingPK } from "../pks/PricingPK";
 import { settleAccountActivities } from "../functions/account";
 import { UserPK } from "../pks/UserPK";
 import Decimal from "decimal.js-light";
-import { GQLUserIndex } from "../__generated__/resolvers-types";
+import { v4 as uuidv4 } from "uuid";
+import { getOrCreateTestUser } from "./test-utils";
 
 let context: RequestContext = {
     batched: createDefaultContextBatched(),
@@ -21,21 +22,18 @@ let context: RequestContext = {
 };
 // jest.retryTimes(2);
 describe("Test when making a request the monthly subscription fee is charged.", () => {
-    let user: User;
+    const testUserEmail = `testuser_${uuidv4()}@gmail_mock.com`;
+    let testUser: User;
 
     test("Preparation: get test user 1", async () => {
-        user = await context.batched.User.get(
-            { email: "testuser1.fastchargeapi@gmail.com" },
-            { using: GQLUserIndex.IndexByEmailOnlyPk }
-        );
-        expect(user).not.toBe(null);
+        testUser = await getOrCreateTestUser(context, { email: testUserEmail });
     });
 
     test("Preparation: create an App", async () => {
         try {
             let app = await context.batched.App.create({
                 name: "myapp",
-                owner: UserPK.stringify(user),
+                owner: UserPK.stringify(testUser),
             });
         } catch (e) {
             if (e instanceof AlreadyExists) {
@@ -64,12 +62,12 @@ describe("Test when making a request the monthly subscription fee is charged.", 
     let subscription: Subscription;
     test("Preparation: subscribe user to this Pricing", async () => {
         let sub = await context.batched.Subscription.getOrNull({
-            subscriber: UserPK.stringify(user),
+            subscriber: UserPK.stringify(testUser),
         });
         if (sub === null) {
             subscription = await context.batched.Subscription.create({
                 app: "myapp",
-                subscriber: UserPK.stringify(user),
+                subscriber: UserPK.stringify(testUser),
                 pricing: pricingPK,
             });
         } else {
@@ -83,7 +81,7 @@ describe("Test when making a request the monthly subscription fee is charged.", 
             let usageLog = (await usageLogResolvers.Mutation!.createUsageLog!(
                 {},
                 {
-                    subscriber: UserPK.stringify(user),
+                    subscriber: UserPK.stringify(testUser),
                     app: "myapp",
                     path: "/google",
                     volume: 1,
@@ -100,7 +98,7 @@ describe("Test when making a request the monthly subscription fee is charged.", 
     let usageSummaryPK: string;
     test("Create a UsageSummary", async () => {
         let { affectedUsageSummaries } = await collectUsageSummary(context, {
-            user: UserPK.stringify(user),
+            user: UserPK.stringify(testUser),
             app: "myapp",
         });
         let usageSummary = affectedUsageSummaries[0];
@@ -123,8 +121,8 @@ describe("Test when making a request the monthly subscription fee is charged.", 
         let usageSummary = await UsageSummaryModel.get(UsageSummaryPK.parse(usageSummaryPK));
         let result = await generateAccountActivities(context, {
             usageSummary,
-            subscriber: UserPK.stringify(user),
-            appAuthor: UserPK.stringify(user),
+            subscriber: UserPK.stringify(testUser),
+            appAuthor: UserPK.stringify(testUser),
             forceMonthlyCharge: true,
         });
         expect(result).not.toBeNull();
@@ -160,13 +158,18 @@ describe("Test when making a request the monthly subscription fee is charged.", 
      * AccountActivity is in the future in the previous step.
      */
     test("Create AccountHistory", async () => {
-        let result = await settleAccountActivities(context, UserPK.stringify(user));
+        let result = await settleAccountActivities(context, UserPK.stringify(testUser));
         expect(result).not.toBeNull();
         let { newAccountHistory, affectedAccountActivities, previousAccountHistory } = result!;
         expect(affectedAccountActivities.length).toEqual(4);
-        expect(newAccountHistory.startingTime).toEqual(previousAccountHistory!.closingTime);
-        expect(new Decimal(newAccountHistory.closingBalance).toString()).toEqual(
-            new Decimal(previousAccountHistory!.closingBalance).sub("1.0003").toString()
-        );
+        if (previousAccountHistory) {
+            expect(newAccountHistory.startingTime).toEqual(previousAccountHistory.closingTime);
+            expect(new Decimal(newAccountHistory.closingBalance).toString()).toEqual(
+                new Decimal(previousAccountHistory.closingBalance).sub("1.0003").toString()
+            );
+        } else {
+            expect(newAccountHistory.startingTime).toEqual(0);
+            expect(newAccountHistory.closingBalance).toEqual("-1.0003");
+        }
     });
 });

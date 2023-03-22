@@ -1,9 +1,10 @@
 import { describe, expect, test } from "@jest/globals";
 import { RequestContext, createDefaultContextBatched } from "../RequestContext";
-import { GatewayMode, User } from "../dynamoose/models";
+import { App, GatewayMode, User } from "../dynamoose/models";
 import { appResolvers } from "../resolvers/app";
-import { GQLUserIndex } from "../__generated__/resolvers-types";
 import { UserPK } from "../pks/UserPK";
+import { v4 as uuidv4 } from "uuid";
+import { getOrCreateTestUser } from "./test-utils";
 
 let context: RequestContext = {
     batched: createDefaultContextBatched(),
@@ -13,31 +14,22 @@ let context: RequestContext = {
 };
 // jest.retryTimes(2);
 describe("APP API", () => {
-    let user: User;
+    const testUserEmail = `testuser_${uuidv4()}@gmail_mock.com`;
+    const testAppName = `testapp-${uuidv4()}`;
+    let testUser: User;
+
     test("Preparation: get test user 1 (as app owner)", async () => {
-        user = await context.batched.User.get(
-            { email: "testuser1.fastchargeapi@gmail.com" },
-            { using: GQLUserIndex.IndexByEmailOnlyPk }
-        );
-        expect(user).not.toBe(null);
+        testUser = await getOrCreateTestUser(context, { email: testUserEmail });
     });
 
     test("create an App", async () => {
-        // delete the app if it already exists
-        try {
-            await context.batched.App.delete({
-                name: "test-app",
-            });
-        } catch (e) {
-            //
-        }
         let app = await appResolvers.Mutation?.createApp?.(
             {},
             {
-                name: "test-app",
+                name: testAppName,
                 title: "Test App",
                 description: "TestApp Description",
-                owner: UserPK.stringify(user),
+                owner: UserPK.stringify(testUser),
                 homepage: "https://fastchargeapi.com",
                 repository: "",
                 gatewayMode: GatewayMode.proxy,
@@ -46,9 +38,9 @@ describe("APP API", () => {
             {} as never
         );
         expect(app).not.toBe(null);
-        expect(app?.name).toBe("test-app");
+        expect(app?.name).toBe(testAppName);
         expect(app?.description).toBe("TestApp Description");
-        expect(app?.owner).toBe(UserPK.stringify(user));
+        expect(app?.owner).toBe(UserPK.stringify(testUser));
         expect(app?.homepage).toBe("https://fastchargeapi.com");
         expect(app?.repository).toBe("");
         expect(app?.gatewayMode).toBe(GatewayMode.proxy);

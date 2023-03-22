@@ -1,5 +1,18 @@
 import { describe, expect, test } from "@jest/globals";
 import { LambdaEvent, lambdaHandler } from "../lambdaHandler";
+import { v4 as uuidv4 } from "uuid";
+import { User, App } from "../dynamoose/models";
+import { UserPK } from "../pks/UserPK";
+import { getOrCreateTestUser } from "./test-utils";
+import { RequestContext, createDefaultContextBatched } from "../RequestContext";
+import { AppPK } from "../pks/AppPK";
+
+let context: RequestContext = {
+    batched: createDefaultContextBatched(),
+    isServiceRequest: true,
+    isSQSMessage: true,
+    isAnonymousUser: false,
+};
 
 const lambdaEvent: LambdaEvent = {
     resource: "/",
@@ -96,10 +109,40 @@ const lambdaEvent: LambdaEvent = {
 } as any;
 
 describe("Test a request from the gateway", () => {
+    const testUserEmail = `testuser_${uuidv4()}@gmail_mock.com`;
+    const testAppName = `testapp-${uuidv4()}`;
+    let testUser: User;
+    let testApp: App;
+
+    test("Prepare: Create test user and test app", async () => {
+        testUser = await getOrCreateTestUser(context, { email: testUserEmail });
+        testApp = await context.batched.App.getOrCreate({ name: testAppName, owner: UserPK.stringify(testUser) });
+    });
+
     test("Replay a request to https://myapp.fastchargeapi.com/google", async () => {
-        let response = await lambdaHandler(lambdaEvent, {} as never, (_err: any, _res: any) => {
-            // nothing
-        });
+        let response = await lambdaHandler(
+            {
+                ...lambdaEvent,
+                body: JSON.stringify({
+                    query:
+                        "\n" +
+                        "query CheckUserIsAllowedToCallEndpoint ($user: ID!, $app: ID!) {\n" +
+                        "\tcheckUserIsAllowedForGatewayRequest(user: $user, app: $app) {\n" +
+                        "\t\tallowed\n" +
+                        "\t\treason\n" +
+                        "\t\tpricingPK\n" +
+                        "\t\tuserPK\n" +
+                        "\t}\n" +
+                        "}\n",
+                    variables: { user: UserPK.stringify(testUser), app: AppPK.stringify(testApp) },
+                    operationName: "CheckUserIsAllowedToCallEndpoint",
+                }),
+            },
+            {} as never,
+            (_err: any, _res: any) => {
+                // nothing
+            }
+        );
         for (let i = 0; i < 3; i++) {
             // Wait for the balance check to complete
             console.log("Waiting for balance check to complete", i);

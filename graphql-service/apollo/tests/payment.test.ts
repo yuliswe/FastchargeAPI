@@ -5,8 +5,9 @@ import { stripePaymentAcceptResolvers } from "../resolvers/payment";
 import { getUserBalance } from "../functions/account";
 import Decimal from "decimal.js-light";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
-import { GQLUserIndex } from "../__generated__/resolvers-types";
 import { UserPK } from "../pks/UserPK";
+import { v4 as uuidv4 } from "uuid";
+import { getOrCreateTestUser } from "./test-utils";
 
 let context: RequestContext = {
     batched: createDefaultContextBatched(),
@@ -16,19 +17,17 @@ let context: RequestContext = {
 };
 // jest.retryTimes(2);
 describe("Payment API", () => {
-    let user: User;
+    const testUserEmail = `testuser_${uuidv4()}@gmail_mock.com`;
+    let testUser: User;
+
     test("Preparation: get test user 1", async () => {
-        user = await context.batched.User.get(
-            { email: "testuser1.fastchargeapi@gmail.com" },
-            { using: GQLUserIndex.IndexByEmailOnlyPk }
-        );
-        expect(user).not.toBe(null);
+        testUser = await getOrCreateTestUser(context, { email: testUserEmail });
     });
 
     let stripePaymentAccept: StripePaymentAccept;
     test("Create a StripePayment", async () => {
         stripePaymentAccept = await context.batched.StripePaymentAccept.create({
-            user: UserPK.stringify(user),
+            user: UserPK.stringify(testUser),
             amount: "1",
             currency: "usd",
             stripePaymentStatus: "paid",
@@ -40,7 +39,7 @@ describe("Payment API", () => {
     });
 
     test("Settle the payment", async () => {
-        let oldBalance = new Decimal(await getUserBalance(context, UserPK.stringify(user!)));
+        let oldBalance = new Decimal(await getUserBalance(context, UserPK.stringify(testUser)));
         stripePaymentAccept = (await stripePaymentAcceptResolvers.StripePaymentAccept.settlePayment(
             stripePaymentAccept,
             { stripeSessionObject: "{}" },
@@ -52,7 +51,7 @@ describe("Payment API", () => {
         expect(stripePaymentAccept.accountActivity.length).not.toBe(0);
 
         context.batched.AccountHistory.clearCache();
-        let newBalance = new Decimal(await getUserBalance(context, UserPK.stringify(user!)));
+        let newBalance = new Decimal(await getUserBalance(context, UserPK.stringify(testUser)));
         expect(newBalance).toEqual(oldBalance.plus(1));
 
         // Examine the account activity

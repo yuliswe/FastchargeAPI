@@ -19,6 +19,7 @@ const jestConfig: JestConfigWithTsJest = {
     },
     transformIgnorePatterns: ["/node_modules/(?!(chalk)/)"],
     modulePathIgnorePatterns: ["dist"],
+    testTimeout: 120_000,
 };
 
 export default jestConfig;

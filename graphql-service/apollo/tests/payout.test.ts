@@ -6,9 +6,9 @@ import Decimal from "decimal.js-light";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { stripeTransferResolvers } from "../resolvers/transfer";
 import { GraphQLResolveInfo } from "graphql";
-import { GQLUserIndex } from "../__generated__/resolvers-types";
 import { UserPK } from "../pks/UserPK";
-import { addMoneyForUser } from "./test-utils";
+import { addMoneyForUser, getOrCreateTestUser } from "./test-utils";
+import { v4 as uuidv4 } from "uuid";
 
 let context: RequestContext = {
     batched: createDefaultContextBatched(),
@@ -18,25 +18,23 @@ let context: RequestContext = {
 };
 // jest.retryTimes(2);
 describe("Payout API", () => {
-    let user: User;
+    const testUserEmail = `testuser_${uuidv4()}@gmail_mock.com`;
+    let testUser: User;
+
     test("Preparation: get test user 1", async () => {
-        user = await context.batched.User.get(
-            { email: "testuser1.fastchargeapi@gmail.com" },
-            { using: GQLUserIndex.IndexByEmailOnlyPk }
-        );
-        expect(user).not.toBe(null);
+        testUser = await getOrCreateTestUser(context, { email: testUserEmail });
     });
 
     test("Prepration: Add monty to the account", async () => {
-        await addMoneyForUser(context, { user: UserPK.stringify(user), amount: "100" });
+        await addMoneyForUser(context, { user: UserPK.stringify(testUser), amount: "100" });
     });
 
     test("Test: Withdraw the money", async () => {
-        let balanceBefore = new Decimal(await getUserBalance(context, UserPK.stringify(user)));
+        let balanceBefore = new Decimal(await getUserBalance(context, UserPK.stringify(testUser)));
         let transfer = await stripeTransferResolvers.Mutation?.createStripeTransfer!(
             {},
             {
-                receiver: UserPK.stringify(user),
+                receiver: UserPK.stringify(testUser),
                 withdrawAmount: "100",
                 receiveAmount: "75",
                 currency: "usd",
@@ -69,7 +67,7 @@ describe("Payout API", () => {
         expect(feeActivity.status).toEqual("settled");
 
         // Examine new balance
-        let balanceAfter = new Decimal(await getUserBalance(context, UserPK.stringify(user)));
+        let balanceAfter = new Decimal(await getUserBalance(context, UserPK.stringify(testUser)));
 
         expect(balanceAfter.toString()).toEqual(balanceBefore.minus(100).toString());
     });
