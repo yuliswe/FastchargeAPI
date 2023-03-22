@@ -1,10 +1,8 @@
-import { beforeAll, describe, expect, test } from "@jest/globals";
+import { describe, expect, test } from "@jest/globals";
 import { RequestContext, createDefaultContextBatched } from "../RequestContext";
-import { GQLUserIndex } from "../__generated__/resolvers-types";
 import { UserPK } from "../pks/UserPK";
 import { PricingPK } from "../pks/PricingPK";
-import { App, FreeQuotaUsage, Pricing, UsageSummary, User } from "../dynamoose/models";
-import { createUserWithEmail } from "../functions/user";
+import { App, Pricing, UsageSummary, User } from "../dynamoose/models";
 import { AppPK } from "../pks/AppPK";
 import { collectUsageLogs } from "../functions/usage";
 import {
@@ -14,6 +12,7 @@ import {
 } from "../functions/billing";
 import Decimal from "decimal.js-light";
 import { v4 as uuidv4 } from "uuid";
+import { getOrCreateTestUser, createOrUpdatePricing, getOrCreateFreeQuotaUsage } from "./test-utils";
 
 const context: RequestContext = {
     batched: createDefaultContextBatched(),
@@ -103,17 +102,21 @@ function FreeQuotaUsageTestCase(testParams: TestCaseParams) {
     // jest.retryTimes(2);
     describe(testParams.description, () => {
         test("Prepare: Create test user and test app", async () => {
-            testUser = await getOrCreateTestUser(testUserEmail);
-            testApp = await getOrCreateTestApp({ name: testAppName, owner: UserPK.stringify(testUser) });
+            testUser = await getOrCreateTestUser(context, { email: testUserEmail });
+            testApp = await context.batched.App.getOrCreate({ name: testAppName, owner: UserPK.stringify(testUser) });
         });
 
         let pricing: Pricing;
         test("Prepare: Create a pricing with 10 free quota", async () => {
-            pricing = await createOrUpdatePricing("WithFreeQuota", testApp, {
-                freeQuota: testParams.freeQuota,
-                minMonthlyCharge: testParams.minMonthlyCharge,
-                chargePerRequest: testParams.chargePerRequest,
-            });
+            pricing = await createOrUpdatePricing(
+                context,
+                { name: "WithFreeQuota", app: testApp },
+                {
+                    freeQuota: testParams.freeQuota,
+                    minMonthlyCharge: testParams.minMonthlyCharge,
+                    chargePerRequest: testParams.chargePerRequest,
+                }
+            );
             expect(pricing.freeQuota).toStrictEqual(10);
         });
 
@@ -160,7 +163,7 @@ function FreeQuotaUsageTestCase(testParams: TestCaseParams) {
         });
 
         test(`Test: Reset the FreeQuotaUsage to ${testParams.resetFreeQuotaUsageTo}, then call generateAccountActivities()`, async () => {
-            let oldFreeQuotaUsage = await getOrCreateFreeQuotaUsage({
+            let oldFreeQuotaUsage = await getOrCreateFreeQuotaUsage(context, {
                 subscriber: UserPK.stringify(testUser),
                 app: AppPK.stringify(testApp),
             });
@@ -180,55 +183,4 @@ function FreeQuotaUsageTestCase(testParams: TestCaseParams) {
             await testParams.runExpect(result);
         });
     });
-}
-
-async function getOrCreateTestUser(email: string) {
-    let user = await context.batched.User.getOrNull({ email }, { using: GQLUserIndex.IndexByEmailOnlyPk });
-    if (user === null) {
-        user = await createUserWithEmail(context.batched, email);
-    }
-    return user;
-}
-
-async function getOrCreateTestApp({ name, owner }: { name: string; owner: string }) {
-    let app = await context.batched.App.getOrNull({ name });
-    if (app === null) {
-        app = await context.batched.App.create({
-            name,
-            owner,
-        });
-    }
-    return app;
-}
-
-async function createOrUpdatePricing(name: string, app: App, props: Partial<Pricing>): Promise<Pricing> {
-    let pricing = await context.batched.Pricing.getOrNull({ name, app: AppPK.stringify(app) });
-    if (pricing === null) {
-        pricing = await context.batched.Pricing.create({
-            name,
-            app: AppPK.stringify(app),
-            ...props,
-        });
-    } else {
-        pricing = await context.batched.Pricing.update(pricing, props);
-    }
-    return pricing;
-}
-
-async function getOrCreateFreeQuotaUsage({
-    subscriber,
-    app,
-}: {
-    subscriber: string;
-    app: string;
-}): Promise<FreeQuotaUsage> {
-    let freeQuotaUsage = await context.batched.FreeQuotaUsage.getOrNull({ subscriber, app });
-    if (freeQuotaUsage === null) {
-        freeQuotaUsage = await context.batched.FreeQuotaUsage.create({
-            subscriber,
-            app,
-            usage: 0,
-        });
-    }
-    return freeQuotaUsage;
 }

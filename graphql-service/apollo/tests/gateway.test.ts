@@ -1,12 +1,13 @@
 import { describe, expect, test } from "@jest/globals";
 import { RequestContext, createDefaultContextBatched } from "../RequestContext";
-import { GQLUserIndex } from "../__generated__/resolvers-types";
 import { UserPK } from "../pks/UserPK";
 import { PricingPK } from "../pks/PricingPK";
 import { AlreadyExists } from "../errors";
-import { Subscription, User } from "../dynamoose/models";
+import { App, Subscription, User } from "../dynamoose/models";
 import { gatewayResolvers } from "../resolvers/gateway";
-import { addMoneyForUser } from "./test-utils/account";
+import { addMoneyForUser, getOrCreateTestUser } from "./test-utils";
+import { v4 as uuidv4 } from "uuid";
+import { AppPK } from "../pks/AppPK";
 
 let context: RequestContext = {
     batched: createDefaultContextBatched(),
@@ -16,20 +17,21 @@ let context: RequestContext = {
 };
 // jest.retryTimes(2);
 describe("Gateway API", () => {
-    let user: User;
-    test("Preparation: get test user 1", async () => {
-        user = await context.batched.User.get(
-            { email: "testuser1.fastchargeapi@gmail.com" },
-            { using: GQLUserIndex.IndexByEmailOnlyPk }
-        );
-        expect(user).not.toBe(null);
+    const testUserEmail = `testuser_${uuidv4()}@gmail_mock.com`;
+    const testAppName = `testapp-${uuidv4()}`;
+    let testUser: User;
+    let testApp: App;
+
+    test("Prepare: Create test user and test app", async () => {
+        testUser = await getOrCreateTestUser(context, { email: testUserEmail });
+        testApp = await context.batched.App.getOrCreate({ name: testAppName, owner: UserPK.stringify(testUser) });
     });
 
     test("Preparation: create an App", async () => {
         try {
             let app = await context.batched.App.create({
-                name: "myapp",
-                owner: UserPK.stringify(user),
+                name: AppPK.stringify(testApp),
+                owner: UserPK.stringify(testUser),
             });
         } catch (e) {
             if (e instanceof AlreadyExists) {
@@ -43,7 +45,7 @@ describe("Gateway API", () => {
     let pricingPK: string;
     test("Preparation: create a Pricing or use existing", async () => {
         let pricingRequirement = {
-            app: "myapp",
+            app: AppPK.stringify(testApp),
             name: "Premium",
             minMonthlyCharge: "1",
             chargePerRequest: "0.001",
@@ -58,12 +60,12 @@ describe("Gateway API", () => {
     let subscription: Subscription;
     test("Preparation: subscribe user to this Pricing", async () => {
         let sub = await context.batched.Subscription.getOrNull({
-            subscriber: UserPK.stringify(user),
+            subscriber: UserPK.stringify(testUser),
         });
         if (sub === null) {
             subscription = await context.batched.Subscription.create({
-                app: "myapp",
-                subscriber: UserPK.stringify(user),
+                app: AppPK.stringify(testApp),
+                subscriber: UserPK.stringify(testUser),
                 pricing: pricingPK,
             });
         } else {
@@ -72,15 +74,15 @@ describe("Gateway API", () => {
     });
 
     test("Prepration: Add monty to the account", async () => {
-        await addMoneyForUser(context, { user: UserPK.stringify(user), amount: "10" });
+        await addMoneyForUser(context, { user: UserPK.stringify(testUser), amount: "10" });
     });
 
     test("Call checkUserIsAllowedForGatewayRequest", async () => {
         let result = await gatewayResolvers.Query.checkUserIsAllowedForGatewayRequest!(
             {},
             {
-                user: UserPK.stringify(user),
-                app: "myapp",
+                user: UserPK.stringify(testUser),
+                app: AppPK.stringify(testApp),
                 forceBalanceCheck: true,
                 forceAwait: true,
             },
@@ -88,6 +90,6 @@ describe("Gateway API", () => {
             {} as never
         );
         expect(result.allowed).toBe(true);
-        expect(result.userPK).toBe(UserPK.stringify(user));
+        expect(result.userPK).toBe(UserPK.stringify(testUser));
     });
 });

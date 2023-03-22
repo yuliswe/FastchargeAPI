@@ -242,7 +242,7 @@ async function checkHasSufficientFreeQuota(
     if (pricing == null) {
         return null;
     }
-    let quota = await context.batched.FreeQuotaUsage.get({
+    let quota = await context.batched.FreeQuotaUsage.getOrCreate({
         subscriber: user,
         app,
     });

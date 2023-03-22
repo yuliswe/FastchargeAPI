@@ -8,7 +8,7 @@ import { stripeTransferResolvers } from "../resolvers/transfer";
 import { GraphQLResolveInfo } from "graphql";
 import { GQLUserIndex } from "../__generated__/resolvers-types";
 import { UserPK } from "../pks/UserPK";
-import { addMoneyForUser } from "./test-utils/account";
+import { addMoneyForUser } from "./test-utils";
 
 let context: RequestContext = {
     batched: createDefaultContextBatched(),

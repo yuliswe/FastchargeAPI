@@ -12,7 +12,6 @@ import {
     GQLResolvers,
 } from "../__generated__/resolvers-types";
 import { isValidAppName } from "../functions/app";
-import { AppPK } from "../pks/AppPK";
 import { UserPK } from "../pks/UserPK";
 
 export const appResolvers: GQLResolvers & {

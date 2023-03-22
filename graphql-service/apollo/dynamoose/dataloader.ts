@@ -5,7 +5,6 @@ import { AlreadyExists, NotFound, UpdateContainsPrimaryKey } from "../errors";
 import hash from "object-hash";
 import { ConditionalCheckFailedException } from "@aws-sdk/client-dynamodb";
 import { Query as DynamogooseQuery } from "dynamoose/dist/ItemRetriever";
-import { QueryOptions } from "@apollo/client";
 
 type Optional<T> = T | undefined | null;
 type ConditionQuery<V> = {
@@ -368,6 +367,14 @@ export class Batched<I extends Item> {
         } else {
             return result[0];
         }
+    }
+
+    async getOrCreate(key: GQLPartial<I>, options?: BatchOptions): Promise<I> {
+        let item = await this.getOrNull(key, options);
+        if (item === null) {
+            item = await this.create(key);
+        }
+        return item;
     }
 
     async assertExists(key: Query<I>): Promise<void> {
