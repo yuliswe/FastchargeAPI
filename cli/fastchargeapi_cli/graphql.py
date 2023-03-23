@@ -1,12 +1,11 @@
 from dataclasses import dataclass
 from functools import cache
-from hashlib import md5
 from typing import Optional
 from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
 from gql.transport.exceptions import TransportQueryError
 from .auth_file import AuthFileContent, read_or_refresh_auth_file
-from .exceptions import AlreadyExists, NotFound, TooManyResources
+from .exceptions import AlreadyExists, NotFound, TooManyResources, PermissionDenied
 from click import echo
 from .config import graphql_host
 
@@ -36,6 +35,8 @@ class GQLClient:
                 raise NotFound(str(e))
             elif ext_code == "TOO_MANY_RESOURCES":
                 raise TooManyResources(str(e))
+            elif ext_code == "PERMISSION_DENIED":
+                raise PermissionDenied(str(e))
             else:
                 raise e
 

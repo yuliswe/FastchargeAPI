@@ -1,22 +1,22 @@
 from blessings import Terminal
 
-from .api import do_api_list
 from .fastcharge_app import get_app_or_prompt_exit
 from .graphql import get_client_info
 from .groups import fastcharge
 import click
 from click_aliases import ClickAliasedGroup
-from .exceptions import AlreadyExists, NotFound
+from .exceptions import AlreadyExists, NotFound, PermissionDenied
 from click import echo
 import re
 from .__generated__ import gql_operations as GQL
+from blessed import Terminal
 
 terminal = Terminal()
 
 
 @fastcharge.group("api", cls=ClickAliasedGroup)
 @click.help_option("-h", "--help")
-def fastcharge_dev_api():
+def fastcharge_api():
     """Manage API endpoints for an existing app"""
     pass
 
@@ -43,7 +43,7 @@ def validate_path_or_exit(path: str):
         exit(1)
 
 
-@fastcharge_dev_api.command("add")
+@fastcharge_api.command("add")
 @click.help_option("-h", "--help")
 @click.option(
     "-a",
@@ -109,14 +109,32 @@ def api_add(app_name: str, method: GQL.HTTPMethod, path: str, dest: str, descr: 
         )
 
 
-@fastcharge_dev_api.command("list", aliases=["ls"])
+@fastcharge_api.command("list", aliases=["ls"])
 @click.argument("app_name")
 def api_list(app_name: str):
     """List APIs for [APP_NAME]."""
-    do_api_list(app_name)
+    client, auth = get_client_info()
+    app = get_app_or_prompt_exit(app_name)
+    try:
+        app = GQL.get_app_endpoints_as_owner(client, app_name)
+    except PermissionDenied:
+        echo(terminal.red(f'You do not have permission to manage "{app_name}".'))
+        echo("To view the endpoints as a customer, use `fastapi api list` instead.")
+        exit(1)
+    echo(terminal.blue + terminal.bold + f'"{app.name}" endpoints:\n' + terminal.normal)
+    # echo(f"\n Gateway mode: {app['gatewayMode']}\n")
+    if app.endpoints:
+        for endpoint in app.endpoints:
+            url = f"https://{app.name}.fastchargeapi.com{endpoint.path}"
+            echo(" ID:\t\t" + endpoint.pk)
+            echo(" Endpoint:\t" + f"{url} ~> {endpoint.destination}")
+            echo(terminal.dimgray(f" {endpoint.description or 'No description.'}"))
+            echo()
+    else:
+        echo("No API available.")
 
 
-@fastcharge_dev_api.command("update", aliases=["up"])
+@fastcharge_api.command("update", aliases=["up"])
 @click.help_option("-h", "--help")
 @click.argument("api_id", required=True)
 @click.option("-p", "--path", help="Set a new path.")
@@ -166,7 +184,7 @@ def api_update(api_id: str, path: str, dest: str, descr: str):
         )
 
 
-@fastcharge_dev_api.command("delete", aliases=["del"])
+@fastcharge_api.command("delete", aliases=["del"])
 @click.help_option("-h", "--help")
 @click.argument("api_id", required=True)
 def api_delete(api_id: str):

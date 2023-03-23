@@ -207,3 +207,28 @@ mutation CreateAppPricingPlan(
         name
     }
 }
+
+query GetAppEndpoints($appName: String!) {
+    app(name: $appName) {
+        name
+        endpoints {
+            pk
+            path
+            method
+            description
+        }
+    }
+}
+
+query GetAppEndpointsAsOwner($appName: String!) {
+    app(name: $appName) {
+        name
+        endpoints {
+            pk
+            path
+            method
+            description
+            destination
+        }
+    }
+}

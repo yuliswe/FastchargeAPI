@@ -552,6 +552,55 @@ class CreateAppPricingPlan(BaseModel):
         document = "mutation CreateAppPricingPlan($app: String!, $name: String!, $callToAction: String!, $minMonthlyCharge: String!, $chargePerRequest: String!) {\n  createPricing(\n    app: $app\n    name: $name\n    callToAction: $callToAction\n    minMonthlyCharge: $minMonthlyCharge\n    chargePerRequest: $chargePerRequest\n  ) {\n    name\n  }\n}"
 
 
+class GetAppEndpointsAppEndpoints(BaseModel):
+    typename: Optional[Literal["Endpoint"]] = Field(alias="__typename")
+    pk: str
+    path: str
+    method: HTTPMethod
+    description: Optional[str]
+
+
+class GetAppEndpointsApp(BaseModel):
+    typename: Optional[Literal["App"]] = Field(alias="__typename")
+    name: str
+    endpoints: List[GetAppEndpointsAppEndpoints]
+
+
+class GetAppEndpoints(BaseModel):
+    app: GetAppEndpointsApp
+
+    class Arguments(BaseModel):
+        appName: str
+
+    class Meta:
+        document = "query GetAppEndpoints($appName: String!) {\n  app(name: $appName) {\n    name\n    endpoints {\n      pk\n      path\n      method\n      description\n    }\n  }\n}"
+
+
+class GetAppEndpointsAsOwnerAppEndpoints(BaseModel):
+    typename: Optional[Literal["Endpoint"]] = Field(alias="__typename")
+    pk: str
+    path: str
+    method: HTTPMethod
+    description: Optional[str]
+    destination: Optional[str]
+
+
+class GetAppEndpointsAsOwnerApp(BaseModel):
+    typename: Optional[Literal["App"]] = Field(alias="__typename")
+    name: str
+    endpoints: List[GetAppEndpointsAsOwnerAppEndpoints]
+
+
+class GetAppEndpointsAsOwner(BaseModel):
+    app: GetAppEndpointsAsOwnerApp
+
+    class Arguments(BaseModel):
+        appName: str
+
+    class Meta:
+        document = "query GetAppEndpointsAsOwner($appName: String!) {\n  app(name: $appName) {\n    name\n    endpoints {\n      pk\n      path\n      method\n      description\n      destination\n    }\n  }\n}"
+
+
 def get_current_subscription(
     GQLClient: GQLClient, user: Optional[str] = None, app_name: Optional[str] = None
 ) -> GetCurrentSubscriptionSubscription:
@@ -960,3 +1009,33 @@ def create_app_pricing_plan(
             "chargePerRequest": chargePerRequest,
         },
     ).createPricing
+
+
+def get_app_endpoints(GQLClient: GQLClient, appName: str) -> GetAppEndpointsApp:
+    """GetAppEndpoints
+
+
+
+    Arguments:
+        GQLClient (..graphql.GQLClient): The client we want to use to execute the operation
+        appName (str): appName
+
+    Returns:
+        GetAppEndpointsApp"""
+    return gql_execute(GQLClient, GetAppEndpoints, {"appName": appName}).app
+
+
+def get_app_endpoints_as_owner(
+    GQLClient: GQLClient, appName: str
+) -> GetAppEndpointsAsOwnerApp:
+    """GetAppEndpointsAsOwner
+
+
+
+    Arguments:
+        GQLClient (..graphql.GQLClient): The client we want to use to execute the operation
+        appName (str): appName
+
+    Returns:
+        GetAppEndpointsAsOwnerApp"""
+    return gql_execute(GQLClient, GetAppEndpointsAsOwner, {"appName": appName}).app
