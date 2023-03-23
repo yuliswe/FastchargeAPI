@@ -4,50 +4,46 @@ import styles from "./styles.module.css";
 
 type FeatureItem = {
     title: string;
-    Svg: React.ComponentType<React.ComponentProps<"svg">>;
+    Svg?: React.ComponentType<React.ComponentProps<"svg">>;
+    img?: string;
     description: JSX.Element;
 };
 
 const FeatureList: FeatureItem[] = [
     {
         title: "Easy to Use",
-        Svg: require("@site/static/img/undraw_docusaurus_mountain.svg").default,
-        description: (
-            <>
-                Docusaurus was designed from the ground up to be easily
-                installed and used to get your website up and running quickly.
-            </>
-        ),
+        img: require("@site/static/img/easy-to-use.png").default,
+        description: <>Selling your API only takes 3 commands.</>,
     },
     {
         title: "Focus on What Matters",
-        Svg: require("@site/static/img/undraw_docusaurus_tree.svg").default,
-        description: (
-            <>
-                Docusaurus lets you focus on your docs, and we&apos;ll do the
-                chores. Go ahead and move your docs into the <code>docs</code>{" "}
-                directory.
-            </>
-        ),
+        img: require("@site/static/img/focus-on-what-matters.png").default,
+        description: <>Do not worry about billing and payments. We handle that for you.</>,
     },
     {
-        title: "Powered by React",
-        Svg: require("@site/static/img/undraw_docusaurus_react.svg").default,
-        description: (
-            <>
-                Extend or customize your website layout by reusing React.
-                Docusaurus can be extended while reusing the same header and
-                footer.
-            </>
-        ),
+        title: "Super Fast",
+        img: require("@site/static/img/super-fast.png").default,
+        // Svg: require("@site/static/img/undraw_docusaurus_react.svg").default,
+        description: <>Achieve milli-second response time via the FastchargeAPI gateway.</>,
     },
 ];
 
-function Feature({ title, Svg, description }: FeatureItem) {
+function Feature({ title, Svg, description, img }: FeatureItem) {
     return (
         <div className={clsx("col col--4")}>
             <div className="text--center">
-                <Svg className={styles.featureSvg} role="img" />
+                {Svg && <Svg className={styles.featureSvg} role="img" />}
+                {img && (
+                    <img
+                        src={img}
+                        width={128}
+                        height={128}
+                        style={{
+                            margin: "3rem",
+                        }}
+                        alt={title}
+                    />
+                )}
             </div>
             <div className="text--center padding-horiz--md">
                 <h3>{title}</h3>

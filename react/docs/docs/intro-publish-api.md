@@ -2,7 +2,7 @@
 sidebar_position: 1
 ---
 
-# Tutorial Intro
+# Tutorial - Publish API
 
 FastchargeAPI is an API gateway service that helps meter API usages and charge your customer.
 

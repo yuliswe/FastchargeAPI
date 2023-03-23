@@ -7,7 +7,7 @@ const darkCodeTheme = require("prism-react-renderer/themes/dracula");
 /** @type {import('@docusaurus/types').Config} */
 const config = {
     title: "FastchargeAPI",
-    tagline: "Enpowering developers with the future of payments",
+    tagline: "Publish and sell your APIs in 5 minutes",
     favicon: "img/favicon.ico",
 
     // Set the production url of your site here
@@ -76,7 +76,7 @@ const config = {
                 items: [
                     {
                         type: "doc",
-                        docId: "intro",
+                        docId: "intro-publish-api",
                         position: "left",
                         label: "Tutorial",
                     },
@@ -97,7 +97,7 @@ const config = {
                         items: [
                             {
                                 label: "Tutorial",
-                                to: "/docs/intro",
+                                to: "/docs/intro-publish-api",
                             },
                         ],
                     },
@@ -124,7 +124,7 @@ const config = {
                         ],
                     },
                 ],
-                copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
+                copyright: `Copyright © ${new Date().getFullYear()} FastchargeAPI.com`,
             },
             prism: {
                 theme: lightCodeTheme,
