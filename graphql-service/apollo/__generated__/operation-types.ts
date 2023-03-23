@@ -120,10 +120,12 @@ export type GQLGatewayDecisionResponse = {
 };
 
 export enum GQLGatewayDecisionResponseReason {
+    FailedToCreateResource = "failed_to_create_resource",
     InsufficientBalance = "insufficient_balance",
     NotSubscribed = "not_subscribed",
     OwnerInsufficientBalance = "owner_insufficient_balance",
     TooManyRequests = "too_many_requests",
+    Unknown = "unknown",
 }
 
 export enum GQLGatewayMode {

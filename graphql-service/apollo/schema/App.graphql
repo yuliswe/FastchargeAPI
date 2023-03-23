@@ -41,6 +41,8 @@ enum GatewayDecisionResponseReason {
     owner_insufficient_balance
     not_subscribed
     too_many_requests
+    unknown
+    failed_to_create_resource
 }
 
 type GatewayDecisionResponse {

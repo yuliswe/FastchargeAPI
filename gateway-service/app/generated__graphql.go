@@ -71,6 +71,8 @@ const (
 	GatewayDecisionResponseReasonOwnerInsufficientBalance GatewayDecisionResponseReason = "owner_insufficient_balance"
 	GatewayDecisionResponseReasonNotSubscribed            GatewayDecisionResponseReason = "not_subscribed"
 	GatewayDecisionResponseReasonTooManyRequests          GatewayDecisionResponseReason = "too_many_requests"
+	GatewayDecisionResponseReasonUnknown                  GatewayDecisionResponseReason = "unknown"
+	GatewayDecisionResponseReasonFailedToCreateResource   GatewayDecisionResponseReason = "failed_to_create_resource"
 )
 
 // GetAppRoutesApp includes the requested fields of the GraphQL type App.

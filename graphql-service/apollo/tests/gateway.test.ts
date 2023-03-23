@@ -2,12 +2,12 @@ import { describe, expect, test } from "@jest/globals";
 import { RequestContext, createDefaultContextBatched } from "../RequestContext";
 import { UserPK } from "../pks/UserPK";
 import { PricingPK } from "../pks/PricingPK";
-import { AlreadyExists } from "../errors";
 import { App, Subscription, User } from "../dynamoose/models";
 import { gatewayResolvers } from "../resolvers/gateway";
 import { addMoneyForUser, getOrCreateTestUser } from "./test-utils";
 import { v4 as uuidv4 } from "uuid";
 import { AppPK } from "../pks/AppPK";
+import { GQLGatewayDecisionResponseReason } from "../__generated__/resolvers-types";
 
 let context: RequestContext = {
     batched: createDefaultContextBatched(),
@@ -16,7 +16,7 @@ let context: RequestContext = {
     isAnonymousUser: false,
 };
 // jest.retryTimes(2);
-describe("Gateway API", () => {
+describe("Gateway API success access", () => {
     const testUserEmail = `testuser_${uuidv4()}@gmail_mock.com`;
     const testAppName = `testapp-${uuidv4()}`;
     let testUser: User;
@@ -25,21 +25,6 @@ describe("Gateway API", () => {
     test("Prepare: Create test user and test app", async () => {
         testUser = await getOrCreateTestUser(context, { email: testUserEmail });
         testApp = await context.batched.App.getOrCreate({ name: testAppName, owner: UserPK.stringify(testUser) });
-    });
-
-    test("Preparation: create an App", async () => {
-        try {
-            let app = await context.batched.App.create({
-                name: AppPK.stringify(testApp),
-                owner: UserPK.stringify(testUser),
-            });
-        } catch (e) {
-            if (e instanceof AlreadyExists) {
-                console.log("App already exists");
-            } else {
-                throw e;
-            }
-        }
     });
 
     let pricingPK: string;
@@ -91,5 +76,48 @@ describe("Gateway API", () => {
         );
         expect(result.allowed).toBe(true);
         expect(result.userPK).toBe(UserPK.stringify(testUser));
+    });
+});
+
+describe("Test making an API request when not subscribed", () => {
+    const testUserEmail = `testuser_${uuidv4()}@gmail_mock.com`;
+    const testAppName = `testapp-${uuidv4()}`;
+    let testUser: User;
+    let testApp: App;
+
+    test("Prepare: Create test user and test app", async () => {
+        testUser = await getOrCreateTestUser(context, { email: testUserEmail });
+        testApp = await context.batched.App.getOrCreate({ name: testAppName, owner: UserPK.stringify(testUser) });
+    });
+
+    let pricingPK: string;
+    test("Preparation: create a Pricing or use existing", async () => {
+        let pricingRequirement = {
+            app: AppPK.stringify(testApp),
+            name: "Premium",
+            minMonthlyCharge: "1",
+            chargePerRequest: "0.001",
+        };
+        let pricing = await context.batched.Pricing.getOrNull(pricingRequirement);
+        if (pricing === null) {
+            pricing = await context.batched.Pricing.create(pricingRequirement);
+        }
+        pricingPK = PricingPK.stringify(pricing);
+    });
+
+    test("Call checkUserIsAllowedForGatewayRequest", async () => {
+        let result = await gatewayResolvers.Query.checkUserIsAllowedForGatewayRequest!(
+            {},
+            {
+                user: UserPK.stringify(testUser),
+                app: AppPK.stringify(testApp),
+                forceBalanceCheck: true,
+                forceAwait: true,
+            },
+            context,
+            {} as never
+        );
+        expect(result.allowed).toStrictEqual(false);
+        expect(result.reason).toStrictEqual(GQLGatewayDecisionResponseReason.NotSubscribed);
     });
 });

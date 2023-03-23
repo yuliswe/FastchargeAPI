@@ -13,6 +13,8 @@ class GatewayDecisionResponseReason(str, Enum):
     owner_insufficient_balance = "owner_insufficient_balance"
     not_subscribed = "not_subscribed"
     too_many_requests = "too_many_requests"
+    unknown = "unknown"
+    failed_to_create_resource = "failed_to_create_resource"
 
 
 class UserIndex(str, Enum):
