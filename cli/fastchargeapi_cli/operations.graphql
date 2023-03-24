@@ -193,9 +193,11 @@ query ListAppPricingDetails($app_name: String!) {
 mutation CreateAppPricingPlan(
     $app: String!
     $name: String!
-    $callToAction: String!
     $minMonthlyCharge: String!
     $chargePerRequest: String!
+    $freeQuota: Int!
+    $callToAction: String
+    $visible: Boolean
 ) {
     createPricing(
         app: $app
@@ -203,8 +205,44 @@ mutation CreateAppPricingPlan(
         callToAction: $callToAction
         minMonthlyCharge: $minMonthlyCharge
         chargePerRequest: $chargePerRequest
+        freeQuota: $freeQuota
+        visible: $visible
     ) {
         name
+    }
+}
+
+query UpdateAppPricingPlan(
+    $pk: ID!
+    $name: String
+    $minMonthlyCharge: String
+    $chargePerRequest: String
+    $freeQuota: Int
+    $callToAction: String
+    $visible: Boolean
+) {
+    pricing(pk: $pk) {
+        updatePricing(
+            name: $name
+            callToAction: $callToAction
+            minMonthlyCharge: $minMonthlyCharge
+            chargePerRequest: $chargePerRequest
+            freeQuota: $freeQuota
+            visible: $visible
+        ) {
+            name
+        }
+    }
+}
+
+query GetPricingDetail($pk: ID!) {
+    pricing(pk: $pk) {
+        name
+        callToAction
+        minMonthlyCharge
+        chargePerRequest
+        freeQuota
+        visible
     }
 }
 

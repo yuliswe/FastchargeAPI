@@ -16,6 +16,7 @@ type Query {
     ### Subscriptions API
     subscription(pk: ID, subscriber: ID, app: String): Subscribe!
 
+    pricing(pk: ID): Pricing!
     # accountActivities(
     #     status: AccountActivityStatus
     #     settleAtRange: DateRangeInput
@@ -76,9 +77,11 @@ type Mutation {
     createPricing(
         app: String!
         name: String!
-        callToAction: String!
         minMonthlyCharge: String!
         chargePerRequest: String!
+        freeQuota: Int!
+        visible: Boolean = false
+        callToAction: String
     ): Pricing!
 
     createSubscription(app: ID!, pricing: ID!, subscriber: ID!): Subscribe!

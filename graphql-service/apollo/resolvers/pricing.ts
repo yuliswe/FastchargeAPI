@@ -1,9 +1,10 @@
 import { Pricing } from "../dynamoose/models";
-import { Denied, ImmutableResource, TooManyResources } from "../errors";
+import { BadInput, Denied, ImmutableResource, TooManyResources } from "../errors";
 import { Can } from "../permissions";
 import {
     GQLMutationCreatePricingArgs,
     GQLPricingUpdatePricingArgs,
+    GQLQueryPricingArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
 import "../pks/PricingPK";
@@ -94,13 +95,33 @@ export const pricingResolvers: GQLResolvers = {
             }
         },
     },
-    Query: {},
+    Query: {
+        async pricing(parent: {}, { pk }: GQLQueryPricingArgs, context: RequestContext) {
+            if (!pk) {
+                throw new BadInput("pk is required");
+            }
+            let pricing = await context.batched.Pricing.get(PricingPK.parse(pk));
+            if (!pricing.visible) {
+                if (!(await Can.viewPricingInvisiableAttributes(pricing, context))) {
+                    throw new Denied();
+                }
+            }
+            return pricing;
+        },
+    },
     Mutation: {
         async createPricing(
             parent: {},
-            { app, callToAction, chargePerRequest, minMonthlyCharge, name }: GQLMutationCreatePricingArgs,
-            context,
-            info
+            {
+                app,
+                callToAction,
+                chargePerRequest,
+                minMonthlyCharge,
+                name,
+                visible,
+                freeQuota,
+            }: GQLMutationCreatePricingArgs,
+            context
         ) {
             if (!(await Can.createPricing({ app }, context))) {
                 throw new Denied();
@@ -108,7 +129,7 @@ export const pricingResolvers: GQLResolvers = {
             let existingCount = await context.batched.Pricing.count({
                 app,
             });
-            if (existingCount > 3) {
+            if (existingCount > 100) {
                 throw new TooManyResources("Too many pricings for this app");
             }
             // Update these because the client does not provide them.
@@ -120,6 +141,8 @@ export const pricingResolvers: GQLResolvers = {
                 chargePerRequest,
                 minMonthlyCharge,
                 name,
+                visible,
+                freeQuota,
                 minMonthlyChargeApprox,
                 chargePerRequestApprox,
             });

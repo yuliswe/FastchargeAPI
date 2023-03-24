@@ -5,7 +5,7 @@ import click
 import colorama
 from dataclasses import dataclass
 from click_aliases import ClickAliasedGroup
-from .exceptions import AlreadyExists, NotFound
+from .exceptions import AlreadyExists, ImmutableResource, NotFound, PermissionDenied
 from blessings import Terminal
 from click import echo
 from .__generated__ import gql_operations as GQL
@@ -81,15 +81,35 @@ def pricing_list(app_name: str):
     "-r", "--charge-per-request", type=float, help="Charge per request.", required=True
 )
 @click.option("-c", "--call-to-action", help="Call to action for the pricing plan.")
+@click.option(
+    "--make-visible",
+    type=bool,
+    default=False,
+    is_flag=True,
+    help="Make the pricing plan visible and start accepting subscriptions.",
+)
+@click.option(
+    "--free-quota",
+    type=int,
+    help="Provide free quota to subscribers.",
+)
 @click.help_option("-h", "--help")
 def pricing_add(
     app_name: str,
     name: str,
     call_to_action: str,
-    min_monthly_charge: str,
-    charge_per_request: str,
+    min_monthly_charge: float,
+    charge_per_request: float,
+    make_visible: bool,
+    free_quota: int,
 ):
     """Add a pricing plan to an existing app."""
+    if make_visible:
+        warn_visibility_change(
+            min_monthly_charge=min_monthly_charge,
+            charge_per_request=charge_per_request,
+            free_quota=free_quota,
+        )
     client, auth = get_client_info()
     app = get_app_or_prompt_exit(app_name)
     try:
@@ -100,6 +120,8 @@ def pricing_add(
             callToAction=call_to_action,
             minMonthlyCharge=str(min_monthly_charge),
             chargePerRequest=str(charge_per_request),
+            visible=make_visible,
+            freeQuota=free_quota,
         )
         echo(terminal.green + "Pricing plan added successfully." + terminal.normal)
     except AlreadyExists:
@@ -113,3 +135,80 @@ def pricing_add(
         )
         echo(colorama.Style.RESET_ALL, nl=False)
         return
+
+
+@fastcharge_dev_pricing.command("udpate", aliases=["up"])
+@click.argument("pricing_id", required=True)
+@click.option("-n", "--name", help="Name of the pricing plan.")
+@click.option("-m", "--min-monthly-charge", type=float, help="Minimum monthly charge.")
+@click.option("-r", "--charge-per-request", type=float, help="Charge per request.")
+@click.option("-c", "--call-to-action", help="Call to action for the pricing plan.")
+@click.option(
+    "--make-visible",
+    type=bool,
+    is_flag=True,
+    help="Make the pricing plan visible and start accepting subscriptions.",
+)
+@click.option("--free-quota", type=int, help="Provide free quota to subscribers.")
+@click.help_option("-h", "--help")
+def pricing_update(
+    pricing_id: str,
+    name: str,
+    call_to_action: str,
+    min_monthly_charge: str,
+    charge_per_request: str,
+    make_visible: bool,
+    free_quota: int,
+):
+    """Update an existing pricing plan given its ID."""
+    client, auth = get_client_info()
+    if make_visible:
+        result = GQL.get_pricing_detail(client, pk=pricing_id)
+        warn_visibility_change(
+            min_monthly_charge=float(result.minMonthlyCharge),
+            charge_per_request=float(result.chargePerRequest),
+            free_quota=free_quota,
+        )
+    try:
+        GQL.update_app_pricing_plan(
+            client,
+            pk=pricing_id,
+            name=name,
+            callToAction=call_to_action,
+            minMonthlyCharge=min_monthly_charge,
+            chargePerRequest=charge_per_request,
+            visible=make_visible,
+            freeQuota=free_quota,
+        )
+    except NotFound:
+        echo(terminal.red(f"Pricing plan with ID '{pricing_id}' does not exist."))
+        exit(1)
+    except PermissionDenied:
+        echo(terminal.red(f"You do not have permission to update this pricing object."))
+        exit(1)
+    except ImmutableResource:
+        echo(
+            terminal.red(
+                f"You cannot update this pricing plan's monthly charge, per-request charge, and free quota, as it is already visible and accepting subscriptions."
+            )
+        )
+        exit(1)
+
+
+def warn_visibility_change(
+    min_monthly_charge: float, charge_per_request: float, free_quota: int
+):
+    echo(
+        "Warning: You are about to make the pricing plan visible and start accepting subscriptions."
+    )
+    echo(
+        terminal.yellow(
+            "After making the pricing plan visible, you can no longer modify the monthly charge, per-request charge, free quota, or delete the pricing plan, even if you make it invisible again."
+        )
+    )
+    echo("Confirm the pricing before continuing:")
+    echo(f"  Minimum monthly charge: ${min_monthly_charge:.2f}")
+    echo(f"  Charge per request: ${charge_per_request:.2f}")
+    echo(f"  Free quota: {free_quota}")
+    if not click.confirm("Do you want to continue?"):
+        exit(0)

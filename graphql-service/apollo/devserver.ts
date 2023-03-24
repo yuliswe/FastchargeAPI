@@ -3,6 +3,8 @@ import { server } from "./server";
 import { RequestContext, createDefaultContextBatched } from "./RequestContext";
 import { GQLUserIndex } from "./__generated__/resolvers-types";
 import { createUserWithEmail } from "./functions/user";
+import { UserPK } from "./pks/UserPK";
+import { User } from "./dynamoose/models";
 
 let { url } = await startStandaloneServer<RequestContext>(server, {
     listen: {
@@ -11,27 +13,40 @@ let { url } = await startStandaloneServer<RequestContext>(server, {
     context: async ({ req }) => {
         // Note: You must not trust the header in production. This is just for
         // development.
-        let email = (req.headers["X-User-Email"] || req.headers["x-user-email"]) as string | undefined;
-        let serviceName = (req.headers["X-Service-Name"] || req.headers["x-service-name"]) as string | undefined;
+        let reqHeaders = {} as { [key: string]: string };
+        for (let key in req.headers) {
+            reqHeaders[key.toLowerCase()] = req.headers[key] as string;
+        }
+        let email = reqHeaders["x-user-email"] as string | undefined;
+        let userPK = reqHeaders["x-user-pk"] as string | undefined;
+        let serviceName = reqHeaders["x-service-name"] as string | undefined;
         // The batcher must be created for every request in order for it to
         // function properly.
         let batched = createDefaultContextBatched();
-        if (!email) {
-            throw new Error("X-User-Email header is missing.");
+        if (!email && !userPK) {
+            throw new Error("Need to set X-User-Email or X-User-PK header.");
         }
-        let currentUser = await batched.User.getOrNull(
-            {
-                email: email,
-            },
-            {
-                using: GQLUserIndex.IndexByEmailOnlyPk,
+        let currentUser: User | null = null;
+        if (userPK) {
+            currentUser = await batched.User.getOrNull(UserPK.parse(userPK));
+            if (currentUser === null) {
+                throw new Error("User not found: " + userPK);
             }
-        );
-        if (currentUser === null) {
-            currentUser = await createUserWithEmail(batched, email);
+        } else if (email) {
+            currentUser = await batched.User.getOrNull(
+                {
+                    email: email,
+                },
+                {
+                    using: GQLUserIndex.IndexByEmailOnlyPk,
+                }
+            );
+            if (currentUser === null) {
+                currentUser = await createUserWithEmail(batched, email);
+            }
         }
         return Promise.resolve({
-            currentUser,
+            currentUser: currentUser ?? undefined,
             batched,
             isServiceRequest: serviceName != undefined,
             isSQSMessage: false,

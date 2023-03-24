@@ -72,7 +72,19 @@ def validate_path_or_exit(path: str):
 @click.option(
     "--description", "descr", help="Add a description that is visble to customers."
 )
-def api_add(app_name: str, method: GQL.HTTPMethod, path: str, dest: str, descr: str):
+@click.option(
+    "--free-quota",
+    default=0,
+    help="Set the free quota for the API. (default: 0)",
+)
+def api_add(
+    app_name: str,
+    method: GQL.HTTPMethod,
+    path: str,
+    dest: str,
+    descr: str,
+    free_quota: int,
+):
     """Add an API endpoint to an app.
 
     The API will start forwarding user requests:

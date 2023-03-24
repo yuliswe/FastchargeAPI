@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import dataclasses
+import os
 from typing import Optional
 import requests
 from pathlib import Path
@@ -19,7 +20,16 @@ def get_google_cert() -> dict:
     return google_cert
 
 
-auth_file_path = Path.home() / ".fastcharge/auth.json"
+def get_auth_file_path() -> Path:
+    if profile := os.environ.get("FAPI_PROFILE"):
+        return Path.home() / f".fastcharge/auth.{profile}.json"
+    return Path.home() / ".fastcharge/auth.json"
+
+
+def list_auth_files() -> list[Path]:
+    return list(Path.home().glob(".fastcharge/auth.*.json")) + [
+        Path.home() / ".fastcharge/auth.json"
+    ]
 
 
 @dataclass
@@ -37,6 +47,7 @@ def write_to_auth_file(
     user_pk: Optional[str] = None,
     email: Optional[str] = None,
 ) -> AuthFileContent:
+    auth_file_path = get_auth_file_path()
     auth_file_path.parent.mkdir(exist_ok=True)
     auth_file = _read_auth_file()
     data = dataclasses.asdict(auth_file) if auth_file else {}
@@ -86,7 +97,7 @@ def read_or_refresh_auth_file(
 def _read_auth_file() -> Optional[AuthFileContent]:
     """Read the decoded id token from the auth file. If the file doesn't exist,
     return None."""
-    auth_file = Path.home() / ".fastcharge/auth.json"
+    auth_file = get_auth_file_path()
     if auth_file.exists():
         auth = json.loads(auth_file.read_text())
         return AuthFileContent(**auth)

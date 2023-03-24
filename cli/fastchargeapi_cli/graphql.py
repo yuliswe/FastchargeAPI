@@ -5,7 +5,13 @@ from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
 from gql.transport.exceptions import TransportQueryError
 from .auth_file import AuthFileContent, read_or_refresh_auth_file
-from .exceptions import AlreadyExists, NotFound, TooManyResources, PermissionDenied
+from .exceptions import (
+    AlreadyExists,
+    ImmutableResource,
+    NotFound,
+    TooManyResources,
+    PermissionDenied,
+)
 from click import echo
 from .config import graphql_host
 
@@ -37,6 +43,8 @@ class GQLClient:
                 raise TooManyResources(str(e))
             elif ext_code == "PERMISSION_DENIED":
                 raise PermissionDenied(str(e))
+            elif ext_code == "IMMUTABLE_RESOURCE":
+                raise ImmutableResource(str(e))
             else:
                 raise e
 

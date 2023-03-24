@@ -546,12 +546,60 @@ class CreateAppPricingPlan(BaseModel):
     class Arguments(BaseModel):
         app: str
         name: str
-        callToAction: str
         minMonthlyCharge: str
         chargePerRequest: str
+        freeQuota: int
+        callToAction: Optional[str] = None
+        visible: Optional[bool] = None
 
     class Meta:
-        document = "mutation CreateAppPricingPlan($app: String!, $name: String!, $callToAction: String!, $minMonthlyCharge: String!, $chargePerRequest: String!) {\n  createPricing(\n    app: $app\n    name: $name\n    callToAction: $callToAction\n    minMonthlyCharge: $minMonthlyCharge\n    chargePerRequest: $chargePerRequest\n  ) {\n    name\n  }\n}"
+        document = "mutation CreateAppPricingPlan($app: String!, $name: String!, $minMonthlyCharge: String!, $chargePerRequest: String!, $freeQuota: Int!, $callToAction: String, $visible: Boolean) {\n  createPricing(\n    app: $app\n    name: $name\n    callToAction: $callToAction\n    minMonthlyCharge: $minMonthlyCharge\n    chargePerRequest: $chargePerRequest\n    freeQuota: $freeQuota\n    visible: $visible\n  ) {\n    name\n  }\n}"
+
+
+class UpdateAppPricingPlanPricingUpdatepricing(BaseModel):
+    typename: Optional[Literal["Pricing"]] = Field(alias="__typename")
+    name: str
+
+
+class UpdateAppPricingPlanPricing(BaseModel):
+    typename: Optional[Literal["Pricing"]] = Field(alias="__typename")
+    updatePricing: UpdateAppPricingPlanPricingUpdatepricing
+
+
+class UpdateAppPricingPlan(BaseModel):
+    pricing: UpdateAppPricingPlanPricing
+
+    class Arguments(BaseModel):
+        pk: str
+        name: Optional[str] = None
+        minMonthlyCharge: Optional[str] = None
+        chargePerRequest: Optional[str] = None
+        freeQuota: Optional[int] = None
+        callToAction: Optional[str] = None
+        visible: Optional[bool] = None
+
+    class Meta:
+        document = "query UpdateAppPricingPlan($pk: ID!, $name: String, $minMonthlyCharge: String, $chargePerRequest: String, $freeQuota: Int, $callToAction: String, $visible: Boolean) {\n  pricing(pk: $pk) {\n    updatePricing(\n      name: $name\n      callToAction: $callToAction\n      minMonthlyCharge: $minMonthlyCharge\n      chargePerRequest: $chargePerRequest\n      freeQuota: $freeQuota\n      visible: $visible\n    ) {\n      name\n    }\n  }\n}"
+
+
+class GetPricingDetailPricing(BaseModel):
+    typename: Optional[Literal["Pricing"]] = Field(alias="__typename")
+    name: str
+    callToAction: str
+    minMonthlyCharge: str
+    chargePerRequest: str
+    freeQuota: int
+    visible: bool
+
+
+class GetPricingDetail(BaseModel):
+    pricing: GetPricingDetailPricing
+
+    class Arguments(BaseModel):
+        pk: str
+
+    class Meta:
+        document = "query GetPricingDetail($pk: ID!) {\n  pricing(pk: $pk) {\n    name\n    callToAction\n    minMonthlyCharge\n    chargePerRequest\n    freeQuota\n    visible\n  }\n}"
 
 
 class GetAppEndpointsAppEndpoints(BaseModel):
@@ -982,9 +1030,11 @@ def create_app_pricing_plan(
     GQLClient: GQLClient,
     app: str,
     name: str,
-    callToAction: str,
     minMonthlyCharge: str,
     chargePerRequest: str,
+    freeQuota: int,
+    callToAction: Optional[str] = None,
+    visible: Optional[bool] = None,
 ) -> CreateAppPricingPlanCreatepricing:
     """CreateAppPricingPlan
 
@@ -994,9 +1044,11 @@ def create_app_pricing_plan(
         GQLClient (..graphql.GQLClient): The client we want to use to execute the operation
         app (str): app
         name (str): name
-        callToAction (str): callToAction
         minMonthlyCharge (str): minMonthlyCharge
         chargePerRequest (str): chargePerRequest
+        freeQuota (int): freeQuota
+        callToAction (Optional[str], optional): callToAction.
+        visible (Optional[bool], optional): visible.
 
     Returns:
         CreateAppPricingPlanCreatepricing"""
@@ -1006,11 +1058,68 @@ def create_app_pricing_plan(
         {
             "app": app,
             "name": name,
-            "callToAction": callToAction,
             "minMonthlyCharge": minMonthlyCharge,
             "chargePerRequest": chargePerRequest,
+            "freeQuota": freeQuota,
+            "callToAction": callToAction,
+            "visible": visible,
         },
     ).createPricing
+
+
+def update_app_pricing_plan(
+    GQLClient: GQLClient,
+    pk: str,
+    name: Optional[str] = None,
+    minMonthlyCharge: Optional[str] = None,
+    chargePerRequest: Optional[str] = None,
+    freeQuota: Optional[int] = None,
+    callToAction: Optional[str] = None,
+    visible: Optional[bool] = None,
+) -> UpdateAppPricingPlanPricing:
+    """UpdateAppPricingPlan
+
+
+
+    Arguments:
+        GQLClient (..graphql.GQLClient): The client we want to use to execute the operation
+        pk (str): pk
+        name (Optional[str], optional): name.
+        minMonthlyCharge (Optional[str], optional): minMonthlyCharge.
+        chargePerRequest (Optional[str], optional): chargePerRequest.
+        freeQuota (Optional[int], optional): freeQuota.
+        callToAction (Optional[str], optional): callToAction.
+        visible (Optional[bool], optional): visible.
+
+    Returns:
+        UpdateAppPricingPlanPricing"""
+    return gql_execute(
+        GQLClient,
+        UpdateAppPricingPlan,
+        {
+            "pk": pk,
+            "name": name,
+            "minMonthlyCharge": minMonthlyCharge,
+            "chargePerRequest": chargePerRequest,
+            "freeQuota": freeQuota,
+            "callToAction": callToAction,
+            "visible": visible,
+        },
+    ).pricing
+
+
+def get_pricing_detail(GQLClient: GQLClient, pk: str) -> GetPricingDetailPricing:
+    """GetPricingDetail
+
+
+
+    Arguments:
+        GQLClient (..graphql.GQLClient): The client we want to use to execute the operation
+        pk (str): pk
+
+    Returns:
+        GetPricingDetailPricing"""
+    return gql_execute(GQLClient, GetPricingDetail, {"pk": pk}).pricing
 
 
 def get_app_endpoints(GQLClient: GQLClient, appName: str) -> GetAppEndpointsApp:

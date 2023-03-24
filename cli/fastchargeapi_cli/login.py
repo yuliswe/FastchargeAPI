@@ -8,11 +8,11 @@ from .groups import fastcharge, fastapi
 from . import config
 from click import echo
 from .auth_file import (
+    list_auth_files,
     query_user_pk,
     read_or_refresh_auth_file,
     verify_id_token,
     write_to_auth_file,
-    auth_file_path,
 )
 
 
@@ -80,4 +80,5 @@ def fastcharge_dev_logout():
 
 
 def do_logout():
-    auth_file_path.unlink(missing_ok=True)
+    for file in list_auth_files():
+        file.unlink(missing_ok=True)

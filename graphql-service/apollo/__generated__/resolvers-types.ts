@@ -196,10 +196,12 @@ export type GQLMutationCreateEndpointArgs = {
 
 export type GQLMutationCreatePricingArgs = {
     app: Scalars["String"];
-    callToAction: Scalars["String"];
+    callToAction?: InputMaybe<Scalars["String"]>;
     chargePerRequest: Scalars["String"];
+    freeQuota: Scalars["Int"];
     minMonthlyCharge: Scalars["String"];
     name: Scalars["String"];
+    visible?: InputMaybe<Scalars["Boolean"]>;
 };
 
 export type GQLMutationCreateSecretArgs = {
@@ -277,6 +279,7 @@ export type GQLQuery = {
     checkUserIsAllowedForGatewayRequest: GQLGatewayDecisionResponse;
     endpoint: GQLEndpoint;
     endpoints?: Maybe<Array<Maybe<GQLEndpoint>>>;
+    pricing: GQLPricing;
     secret: GQLSecret;
     stripePaymentAccept: GQLStripePaymentAccept;
     stripeTransfer: GQLStripeTransfer;
@@ -302,6 +305,10 @@ export type GQLQueryCheckUserIsAllowedForGatewayRequestArgs = {
 export type GQLQueryEndpointArgs = {
     app?: InputMaybe<Scalars["String"]>;
     path?: InputMaybe<Scalars["String"]>;
+    pk?: InputMaybe<Scalars["ID"]>;
+};
+
+export type GQLQueryPricingArgs = {
     pk?: InputMaybe<Scalars["ID"]>;
 };
 
@@ -754,7 +761,7 @@ export type GQLMutationResolvers<
         ContextType,
         RequireFields<
             GQLMutationCreatePricingArgs,
-            "app" | "callToAction" | "chargePerRequest" | "minMonthlyCharge" | "name"
+            "app" | "chargePerRequest" | "freeQuota" | "minMonthlyCharge" | "name" | "visible"
         >
     >;
     createSecret?: Resolver<
@@ -853,6 +860,7 @@ export type GQLQueryResolvers<
     >;
     endpoint?: Resolver<GQLResolversTypes["Endpoint"], ParentType, ContextType, Partial<GQLQueryEndpointArgs>>;
     endpoints?: Resolver<Maybe<Array<Maybe<GQLResolversTypes["Endpoint"]>>>, ParentType, ContextType>;
+    pricing?: Resolver<GQLResolversTypes["Pricing"], ParentType, ContextType, Partial<GQLQueryPricingArgs>>;
     secret?: Resolver<GQLResolversTypes["Secret"], ParentType, ContextType, RequireFields<GQLQuerySecretArgs, "key">>;
     stripePaymentAccept?: Resolver<
         GQLResolversTypes["StripePaymentAccept"],
