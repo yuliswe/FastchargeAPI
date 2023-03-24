@@ -75,10 +75,17 @@ const (
 	GatewayDecisionResponseReasonFailedToCreateResource   GatewayDecisionResponseReason = "failed_to_create_resource"
 )
 
+type GatewayMode string
+
+const (
+	GatewayModeProxy    GatewayMode = "proxy"
+	GatewayModeRedirect GatewayMode = "redirect"
+)
+
 // GetAppRoutesApp includes the requested fields of the GraphQL type App.
 type GetAppRoutesApp struct {
 	Name        string                             `json:"name"`
-	GatewayMode string                             `json:"gatewayMode"`
+	GatewayMode GatewayMode                        `json:"gatewayMode"`
 	Endpoints   []GetAppRoutesAppEndpointsEndpoint `json:"endpoints"`
 }
 
@@ -86,16 +93,20 @@ type GetAppRoutesApp struct {
 func (v *GetAppRoutesApp) GetName() string { return v.Name }
 
 // GetGatewayMode returns GetAppRoutesApp.GatewayMode, and is useful for accessing the field via an interface.
-func (v *GetAppRoutesApp) GetGatewayMode() string { return v.GatewayMode }
+func (v *GetAppRoutesApp) GetGatewayMode() GatewayMode { return v.GatewayMode }
 
 // GetEndpoints returns GetAppRoutesApp.Endpoints, and is useful for accessing the field via an interface.
 func (v *GetAppRoutesApp) GetEndpoints() []GetAppRoutesAppEndpointsEndpoint { return v.Endpoints }
 
 // GetAppRoutesAppEndpointsEndpoint includes the requested fields of the GraphQL type Endpoint.
 type GetAppRoutesAppEndpointsEndpoint struct {
-	Path        string `json:"path"`
-	Destination string `json:"destination"`
+	Method      HTTPMethod `json:"method"`
+	Path        string     `json:"path"`
+	Destination string     `json:"destination"`
 }
+
+// GetMethod returns GetAppRoutesAppEndpointsEndpoint.Method, and is useful for accessing the field via an interface.
+func (v *GetAppRoutesAppEndpointsEndpoint) GetMethod() HTTPMethod { return v.Method }
 
 // GetPath returns GetAppRoutesAppEndpointsEndpoint.Path, and is useful for accessing the field via an interface.
 func (v *GetAppRoutesAppEndpointsEndpoint) GetPath() string { return v.Path }
@@ -110,6 +121,18 @@ type GetAppRoutesResponse struct {
 
 // GetApp returns GetAppRoutesResponse.App, and is useful for accessing the field via an interface.
 func (v *GetAppRoutesResponse) GetApp() GetAppRoutesApp { return v.App }
+
+type HTTPMethod string
+
+const (
+	HTTPMethodGet     HTTPMethod = "GET"
+	HTTPMethodPost    HTTPMethod = "POST"
+	HTTPMethodPut     HTTPMethod = "PUT"
+	HTTPMethodPatch   HTTPMethod = "PATCH"
+	HTTPMethodDelete  HTTPMethod = "DELETE"
+	HTTPMethodOptions HTTPMethod = "OPTIONS"
+	HTTPMethodHead    HTTPMethod = "HEAD"
+)
 
 // TriggerBillingResponse is returned by TriggerBilling on success.
 type TriggerBillingResponse struct {
@@ -269,6 +292,7 @@ query GetAppRoutes ($app: String) {
 		name
 		gatewayMode
 		endpoints {
+			method
 			path
 			destination
 		}

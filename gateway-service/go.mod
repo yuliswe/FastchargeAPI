@@ -18,6 +18,7 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.1 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
+	github.com/julienschmidt/httprouter v1.3.0 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/sha1sum/aws_signing_client v0.0.0-20200229211254-f7815c59d5c1 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect

@@ -87,6 +87,7 @@ Resources:
       Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
         Variables:
           TRUST_X_USER_EMAIL_HEADER: "" # Set to 1 to bypass authentication
+          TRUST_X_USER_PK_HEADER: "" # Set to 1 to bypass authentication
           LOCAL_GRAPHQL: "" # Set to 1 to use http://host.docker.internal:4000 as the graphql server
 
 Outputs:

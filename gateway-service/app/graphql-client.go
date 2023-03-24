@@ -13,8 +13,6 @@ import (
 	"github.com/sha1sum/aws_signing_client"
 )
 
-var globalGraphQLClientTransport *CustomTransport
-
 type CustomTransport struct {
 	Headers map[string]string
 }
@@ -32,7 +30,7 @@ func (self *CustomTransport) RoundTrip(req *http.Request) (*http.Response, error
 	return resp, err
 }
 
-func initGraphQLClient() {
+func getGraphQLClient(additionalHeaders map[string]string) *graphql.Client {
 	var graphqlService string
 	if os.Getenv("LOCAL_GRAPHQL") == "1" {
 		graphqlService = "http://host.docker.internal:4000"
@@ -45,31 +43,24 @@ func initGraphQLClient() {
 	sess := session.Must(session.NewSession())
 	credentials := sess.Config.Credentials
 	var signer = v4.NewSigner(credentials)
-	globalGraphQLClientTransport = &CustomTransport{
-		Headers: map[string]string{
-			"X-Service-Name": "gateway",
-		},
+	headers := map[string]string{
+		"X-Service-Name": "gateway",
+	}
+	for k, v := range additionalHeaders {
+		headers[k] = v
 	}
 	baseClient := http.Client{
-		Transport: globalGraphQLClientTransport,
+		Transport: &CustomTransport{
+			Headers: headers,
+		},
 	}
 	if os.Getenv("LOCAL_GRAPHQL") == "1" {
+		fmt.Println(additionalHeaders)
 		gqlClient := graphql.NewClient(graphqlService, &baseClient)
-		globalGqlClient = &gqlClient
+		return &gqlClient
 	} else {
 		awsClient, _ := aws_signing_client.New(signer, &baseClient, "execute-api", "us-east-1")
 		gqlClient := graphql.NewClient(graphqlService, awsClient)
-		globalGqlClient = &gqlClient
+		return &gqlClient
 	}
-}
-
-var globalGqlClient *graphql.Client
-
-func getGraphQLClient() *graphql.Client {
-	return globalGqlClient
-}
-
-func setGraphqlClientUser(userEmail string, userPK string) {
-	globalGraphQLClientTransport.Headers["X-User-Email"] = userEmail
-	globalGraphQLClientTransport.Headers["X-User-PK"] = userPK
 }

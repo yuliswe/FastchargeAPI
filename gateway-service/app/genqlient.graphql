@@ -3,6 +3,7 @@ query GetAppRoutes($app: String) {
         name
         gatewayMode
         endpoints {
+            method
             path
             destination
         }

@@ -8,7 +8,5 @@ package: main
 bindings:
   Email:
     type: string
-  GatewayMode:
-    type: string
   Timestamp:
     type: int64

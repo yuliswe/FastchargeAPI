@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Khan/genqlient/graphql"
 	"github.com/TwiN/go-color"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -20,10 +21,10 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	lru "github.com/hashicorp/golang-lru/v2"
+	httprouter "github.com/julienschmidt/httprouter"
 )
 
 func main() {
-	initGraphQLClient()
 	lambda.Start(lambdaHandler)
 }
 
@@ -45,6 +46,10 @@ func lambdaHandler(request events.APIGatewayProxyRequest) (*events.APIGatewayPro
 }
 
 func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
+	headers := map[string]string{}
+	for k, v := range request.Headers {
+		headers[strings.ToLower(k)] = v
+	}
 	path := request.Path
 	app, errResp := parseAppName(request)
 	if errResp != nil {
@@ -52,21 +57,26 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 	}
 
 	//fmt.Println("Identifying user")
-	userEmail, errResp := parseUserEmail(request)
+	userEmail, errResp := parseUserEmail(headers, request.RequestContext)
 	if errResp != nil {
 		return errResp, nil
 	}
 
-	userPK, errResp := parseUserPK(request)
+	userPK, errResp := parseUserPK(headers, request.RequestContext)
 	if errResp != nil {
 		return errResp, nil
 	}
 
-	setGraphqlClientUser(userEmail, userPK)
+	// This helps development locally by passing the X-User-Email/PK header to
+	// local graphql server
+	gqlClient := getGraphQLClient(map[string]string{
+		"X-User-Email": userEmail,
+		"X-User-PK":    userPK,
+	})
 
 	//fmt.Println("Checking is user is allowed to access app", app, "user:", user)
 	startTimer := time.Now()
-	decision, errorResponse := getGatewayRequestDecision(userPK, app, path)
+	decision, errorResponse := getGatewayRequestDecision(gqlClient, userPK, app, path)
 	if errorResponse != nil {
 		//fmt.Println(color.Red, "User ", user, " is not allowed to access ", app, path, color.Reset)
 		return errorResponse, nil
@@ -81,7 +91,10 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 	// 	panic(fmt.Sprintln("Cannot generate _fct: ", err))
 	// }
 	//fmt.Println("Getting route for app", app, "and path", path)
-	destination, mode, found := getRoute(app, path)
+	startTimer = time.Now()
+	destination, mode, found := getRoute(gqlClient, request.HTTPMethod, app, path)
+	stopTimer = time.Now()
+	fmt.Println(color.Purple, "getRoute took", stopTimer.Sub(startTimer), color.Reset)
 	if !found {
 		response := apiGatewayErrorResponse(404, "NOT_FOUND", "Path Not Found: "+path)
 		return response, nil
@@ -89,12 +102,12 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 
 	fastchargeUserToken := "" // TODO: implement this
 	switch mode {
-	case RedirectMode:
+	case GatewayModeRedirect:
 		if response, err := makeRedirectResponse(destination, request, fastchargeUserToken); err != nil {
 			fmt.Println(color.Red, "Error making a redirect response", err, color.Reset)
 			return &response, err
 		} else {
-			go billUsage(userPK, app, path, decision.PricingPK)
+			go billUsage(gqlClient, userPK, app, path, decision.PricingPK)
 			return &response, nil
 		}
 	default:
@@ -105,7 +118,7 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 		} else {
 			stopTimer := time.Now()
 			fmt.Println(color.Purple, "makeForwardResponse took", stopTimer.Sub(startTimer), color.Reset)
-			go billUsage(userPK, app, path, decision.PricingPK)
+			go billUsage(gqlClient, userPK, app, path, decision.PricingPK)
 			return response, nil
 		}
 	}
@@ -135,46 +148,46 @@ func parseAppName(request events.APIGatewayProxyRequest) (string, *events.APIGat
 	return app, nil
 }
 
-func parseUserEmail(request events.APIGatewayProxyRequest) (string, *events.APIGatewayProxyResponse) {
+func parseUserEmail(headers map[string]string, requestContext events.APIGatewayProxyRequestContext) (string, *events.APIGatewayProxyResponse) {
 	var userEmail string
 	if os.Getenv("TRUST_X_USER_EMAIL_HEADER") == "1" {
 		fmt.Println(color.Red, "TRUST_X_USER_EMAIL_HEADER enabled. Reading user from the X-User-Email header.", color.Reset)
-		userEmail = request.Headers["X-User-Email"]
-		if userEmail == "" {
-			userEmail = request.Headers["x-user-email"]
-		}
+		userEmail = headers["x-user-email"]
 		if userEmail == "" {
 			fmt.Println(color.Red, "TRUST_X_USER_EMAIL_HEADER enabled. But the X-User-Email header is not set.", color.Reset)
-		} else {
-			fmt.Println(color.Blue, "X-User-Email header: ", userEmail, color.Reset)
+			response := apiGatewayErrorResponse(401, "UNAUTHORIZED", "TRUST_X_USER_EMAIL_HEADER enabled. But the X-User-Email header is not set.")
+			return "", response
 		}
+		fmt.Println(color.Blue, "X-User-Email header: ", userEmail, color.Reset)
+		return userEmail, nil
 	}
-	if user, found := request.RequestContext.Authorizer["userEmail"]; found {
+	if user, found := requestContext.Authorizer["userEmail"]; found {
 		userEmail = user.(string)
 		return userEmail, nil
 	} else {
+		fmt.Println(color.Red, "User email is not set by the authorizer", color.Reset)
 		return "", nil
 	}
 }
 
-func parseUserPK(request events.APIGatewayProxyRequest) (string, *events.APIGatewayProxyResponse) {
+func parseUserPK(headers map[string]string, requestContext events.APIGatewayProxyRequestContext) (string, *events.APIGatewayProxyResponse) {
 	var userPK string
 	if os.Getenv("TRUST_X_USER_PK_HEADER") == "1" {
 		fmt.Println(color.Red, "TRUST_X_USER_PK_HEADER enabled. Reading user from the X-User-PK header.", color.Reset)
-		userPK = request.Headers["X-User-PK"]
-		if userPK == "" {
-			userPK = request.Headers["x-user-PK"]
-		}
+		userPK = headers["x-user-pk"]
 		if userPK == "" {
 			fmt.Println(color.Red, "TRUST_X_USER_PK_HEADER enabled. But the X-User-PK header is not set.", color.Reset)
-		} else {
-			fmt.Println(color.Blue, "X-User-PK header: ", userPK, color.Reset)
+			response := apiGatewayErrorResponse(401, "UNAUTHORIZED", "TRUST_X_USER_PK_HEADER enabled. But the X-User-PK header is not set.")
+			return "", response
 		}
+		fmt.Println(color.Blue, "X-User-PK header: ", userPK, color.Reset)
+		return userPK, nil
 	}
-	if user, found := request.RequestContext.Authorizer["userPK"]; found {
+	if user, found := requestContext.Authorizer["userPK"]; found {
 		userPK = user.(string)
 		return userPK, nil
 	} else {
+		fmt.Println(color.Red, "User email is not set by the authorizer", color.Reset)
 		return "", nil
 	}
 }
@@ -234,18 +247,24 @@ func makeForwardResponse(destination string, request events.APIGatewayProxyReque
 
 	// Forward the parameters of the received request to the destination.
 	urlParams := forwardRequest.URL.Query()
-	urlParams.Add("_fct", fastchargeUserToken)
+	// urlParams.Add("_fct", fastchargeUserToken)
 	for key, value := range request.QueryStringParameters {
 		urlParams.Add(key, value)
 	}
+	forwardRequest.URL.RawQuery = urlParams.Encode()
 
 	// Forward the headers of the received request to the destination.
 	for key, value := range request.Headers {
 		forwardRequest.Header.Set(key, value)
 	}
-	forwardRequest.Header.Set("X-FCT", fastchargeUserToken)
+	// forwardRequest.Header.Set("X-FCT", fastchargeUserToken)
 	forwardRequest.Header.Set("Host", destinationUrl.Host)
 	forwardRequest.Header.Set("Accept-Encoding", "identity")
+	for h, _ := range forwardRequest.Header {
+		if strings.ToLower(h) == "x-api-key" {
+			forwardRequest.Header.Del(h)
+		}
+	}
 	if response, err := http.DefaultClient.Do(forwardRequest); err != nil {
 		response := apiGatewayErrorResponse(502, "BAD_GATEWAY", "Bad Gateway: "+err.Error())
 		return response, nil
@@ -289,60 +308,69 @@ func makeForwardResponse(destination string, request events.APIGatewayProxyReque
 	}
 }
 
-type GatewayMode int
-
-const (
-	ProxyMode    GatewayMode = 0
-	RedirectMode             = 1
-)
-
-type AppRouteInfo struct {
-	GatewayMode     GatewayMode
-	PathDestination map[string]string
-}
-
-func parseGatewayMode(mode string) GatewayMode {
-	switch mode {
-	case "proxy":
-		return ProxyMode
-	case "redirect":
-		return RedirectMode
-	default:
-		return ProxyMode
-	}
-}
-
-var getRouteCache, _ = lru.New[string, AppRouteInfo](1000)
+var GetAppRoutesCache, _ = lru.New[string, *GetAppRoutesResponse](1000)
+var getRouterCache, _ = lru.New[string, httprouter.Router](1000)
 
 /*
 Gets the route from the cache. If the route is not in the cache, it will query
 the resource server.
 */
-func getRoute(app string, path string) (destination string, gatewayMode GatewayMode, found bool) {
-	appRoutes, found := getRouteCache.Get(app)
-	if found {
-		if destination, found := appRoutes.PathDestination[path]; found {
-			return destination, appRoutes.GatewayMode, true
+func getRoute(graphqlClient *graphql.Client, method string, app string, path string) (destination string, gatewayMode GatewayMode, found bool) {
+	gatewayMode = GatewayModeProxy // TODO: not implemented
+
+	appRoutes, found := GetAppRoutesCache.Get(app)
+	if !found {
+		routes, err := GetAppRoutes(context.Background(), *graphqlClient, app)
+		appRoutes = routes
+		if err != nil {
+			fmt.Println(color.Red, "Error getting routes for", app, err, color.Reset)
+			return "", gatewayMode, false
+		}
+		GetAppRoutesCache.Add(app, routes)
+	}
+	appRouter := httprouter.Router{}
+	for _, endpoint := range appRoutes.App.Endpoints {
+		// This is a bit of a hack. Calling this function will set the
+		// destination variable to the endpoint's destination.
+		processFn := func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+			destination = endpoint.Destination
+		}
+		switch endpoint.Method {
+		case HTTPMethodGet:
+			appRouter.GET(endpoint.Path, processFn)
+		case HTTPMethodPost:
+			appRouter.POST(endpoint.Path, processFn)
+		case HTTPMethodPut:
+			appRouter.PUT(endpoint.Path, processFn)
+		case HTTPMethodDelete:
+			appRouter.DELETE(endpoint.Path, processFn)
+		case HTTPMethodPatch:
+			appRouter.PATCH(endpoint.Path, processFn)
+		case HTTPMethodHead:
+			appRouter.HEAD(endpoint.Path, processFn)
+		case HTTPMethodOptions:
+			appRouter.OPTIONS(endpoint.Path, processFn)
 		}
 	}
-	fmt.Println(color.Yellow, "Getting route for", app, path, color.Reset)
-	if routes, err := GetAppRoutes(context.Background(), *getGraphQLClient(), app); err != nil {
-		fmt.Println(color.Red, "Error getting routes for", app, err, color.Reset)
-	} else {
-		// fmt.Println(color.Yellow, "Got routes for", app, routes, color.Reset)
-		appRoutes = AppRouteInfo{
-			GatewayMode:     parseGatewayMode(routes.App.GatewayMode),
-			PathDestination: map[string]string{},
-		}
-		for _, endpoint := range routes.App.Endpoints {
-			appRoutes.PathDestination[endpoint.Path] = endpoint.Destination
-		}
-		getRouteCache.Add(app, appRoutes)
+	getRouterCache.Add(app, appRouter)
+	processFn, params, _ := appRouter.Lookup(method, path)
+	if processFn == nil {
+		fmt.Println(color.Yellow, "No match for route", app, method, path, color.Reset)
+		return "", gatewayMode, false
 	}
-	if destination, found := appRoutes.PathDestination[path]; found {
-		return destination, appRoutes.GatewayMode, found
+	// Calling the processFn will set the destination variable to the endpoint's
+	// destination.
+	processFn(nil, nil, params)
+
+	// path can be something like /posts/:id, and in this case, destination
+	// should also have a param named :id, eg,
+	// https://example.com/api/posts/:id. We need to replace the :id with the
+	// value found in the request.
+	for _, param := range params {
+		destination = strings.Replace(destination, ":"+param.Key, param.Value, 1)
 	}
-	return "", ProxyMode, false
+	fmt.Println(color.Green, "Found route", app, method, path, destination, color.Reset)
+	return destination, gatewayMode, true
 }
 
 func createUserUsageToken(app string, user string) (string, error) {
@@ -357,14 +385,14 @@ func createUserUsageToken(app string, user string) (string, error) {
 	return token, err
 }
 
-func billUsage(user string, app string, path string, pricing string) {
+func billUsage(graphqlClient *graphql.Client, user string, app string, path string, pricing string) {
 	//fmt.Println(color.Yellow, "Billing usage for", user, app, path, color.Reset)
 
 	// Creating usage log can be done synchronously. This ensures that when
 	// calling TriggerBilling, the usage log is already created.
 	if _, err := CreateUsageLog(
 		context.Background(),
-		*getGraphQLClient(),
+		*graphqlClient,
 		user,
 		app,
 		path,
@@ -373,13 +401,20 @@ func billUsage(user string, app string, path string, pricing string) {
 		fmt.Println(color.Red, "Error creating UsageLog: ", err, color.Reset)
 	}
 	// Trigger billing must be done on the billing queue.
-	if _, err := TriggerBilling(
-		context.Background(),
-		*getSQSGraphQLClient(SQSGraphQLClientConfig{
+	var billingGQLClient *graphql.Client
+	if os.Getenv("LOCAL_GRAPHQL") == "1" {
+		fmt.Println(color.Red, "Using local GraphQL in place of SQS", color.Reset)
+		billingGQLClient = graphqlClient // Use normal GraphQL client (local in this case)
+	} else {
+		billingGQLClient = getSQSGraphQLClient(SQSGraphQLClientConfig{
 			MessageDeduplicationId: fmt.Sprintf("trigger-billing-%s-%d", user, time.Now().Unix()),
 			MessageGroupId:         "main",
 			QueueUrl:               BillingFifoQueueUrl,
-		}),
+		})
+	}
+	if _, err := TriggerBilling(
+		context.Background(),
+		*billingGQLClient,
 		user,
 		app,
 	); err != nil {
@@ -407,8 +442,8 @@ type GatewayDecisionResponse struct {
 // Checks if the user is allowed to access the endpoint. Caches the result if
 // the user is allowed to access. Otherwise, send queries to the graphql backend
 // to find out if the user is allowed to access.
-func getGatewayRequestDecision(userEmail string, app string, path string) (decision *CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse, errorResponse *events.APIGatewayProxyResponse) {
-	result, err := CheckUserIsAllowedToCallEndpoint(context.Background(), *getGraphQLClient(), userEmail, app)
+func getGatewayRequestDecision(graphqlClient *graphql.Client, userEmail string, app string, path string) (decision *CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse, errorResponse *events.APIGatewayProxyResponse) {
+	result, err := CheckUserIsAllowedToCallEndpoint(context.Background(), *graphqlClient, userEmail, app)
 	decision = &result.CheckUserIsAllowedForGatewayRequest
 	if err != nil {
 		fmt.Println(color.Red, "Error checking if user is allowed to call endpoint:", err, color.Reset)
