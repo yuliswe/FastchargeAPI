@@ -120,10 +120,12 @@ export type GQLGatewayDecisionResponse = {
 };
 
 export enum GQLGatewayDecisionResponseReason {
+    FailedToCreateResource = "failed_to_create_resource",
     InsufficientBalance = "insufficient_balance",
     NotSubscribed = "not_subscribed",
     OwnerInsufficientBalance = "owner_insufficient_balance",
     TooManyRequests = "too_many_requests",
+    Unknown = "unknown",
 }
 
 export enum GQLGatewayMode {
@@ -132,7 +134,6 @@ export enum GQLGatewayMode {
 }
 
 export enum GQLHttpMethod {
-    Any = "ANY",
     Delete = "DELETE",
     Get = "GET",
     Head = "HEAD",
@@ -175,10 +176,12 @@ export type GQLMutationCreateEndpointArgs = {
 
 export type GQLMutationCreatePricingArgs = {
     app: Scalars["String"];
-    callToAction: Scalars["String"];
+    callToAction?: InputMaybe<Scalars["String"]>;
     chargePerRequest: Scalars["String"];
+    freeQuota: Scalars["Int"];
     minMonthlyCharge: Scalars["String"];
     name: Scalars["String"];
+    visible?: InputMaybe<Scalars["Boolean"]>;
 };
 
 export type GQLMutationCreateSecretArgs = {
@@ -256,6 +259,7 @@ export type GQLQuery = {
     checkUserIsAllowedForGatewayRequest: GQLGatewayDecisionResponse;
     endpoint: GQLEndpoint;
     endpoints?: Maybe<Array<Maybe<GQLEndpoint>>>;
+    pricing: GQLPricing;
     secret: GQLSecret;
     stripePaymentAccept: GQLStripePaymentAccept;
     stripeTransfer: GQLStripeTransfer;
@@ -281,6 +285,10 @@ export type GQLQueryCheckUserIsAllowedForGatewayRequestArgs = {
 export type GQLQueryEndpointArgs = {
     app?: InputMaybe<Scalars["String"]>;
     path?: InputMaybe<Scalars["String"]>;
+    pk?: InputMaybe<Scalars["ID"]>;
+};
+
+export type GQLQueryPricingArgs = {
     pk?: InputMaybe<Scalars["ID"]>;
 };
 

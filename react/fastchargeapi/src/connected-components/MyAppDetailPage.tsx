@@ -91,7 +91,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                     To add an endpoint, run the following command:
                 </Typography>
                 <TerminalInput>
-                    {`fastcharge api add --app "${app}" \\\n    --method "ANY" \\\n    --path "/example" \\\n    --destination "https://example.com/"`}
+                    {`fastcharge api add --app "${app}" \\\n    --method "GET" \\\n    --path "/example" \\\n    --destination "https://example.com/"`}
                 </TerminalInput>
             </Terminal>
         );
@@ -156,7 +156,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                     All values are optional:
                 </Typography>
                 <TerminalInput>
-                    {`fastcharge api update "${endpointID}" \\\n    --path "/example" \\\n    --destination "https://example.com/" \\\n    --method "ANY"`}
+                    {`fastcharge api update "${endpointID}" \\\n    --path "/example" \\\n    --destination "https://example.com/" \\\n    --method "GET"`}
                 </TerminalInput>
             </Terminal>
         );
@@ -691,7 +691,6 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                                     "PATCH",
                                                     "OPTIONS",
                                                     "HEAD",
-                                                    "ANY",
                                                 ]}
                                                 defaultValue={api.method}
                                                 disabled

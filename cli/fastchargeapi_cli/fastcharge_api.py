@@ -56,9 +56,7 @@ def validate_path_or_exit(path: str):
     "-m",
     "--method",
     required=True,
-    type=click.Choice(
-        ["ANY", "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]
-    ),
+    type=click.Choice(["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"]),
     help="Set [METHOD] for the API.",
 )
 @click.option("-p", "--path", required=True, help="Set [PATH] for the API.")
@@ -139,6 +137,7 @@ def api_list(app_name: str):
         for endpoint in app.endpoints:
             url = f"https://{app.name}.fastchargeapi.com{endpoint.path}"
             echo(" ID:\t\t" + endpoint.pk)
+            echo(" HTTP Method:\t" + endpoint.method)
             echo(" Endpoint:\t" + f"{url} ~> {endpoint.destination}")
             echo(terminal.dimgray(f" {endpoint.description or 'No description.'}"))
             echo()
@@ -149,10 +148,19 @@ def api_list(app_name: str):
 @fastcharge_api.command("update", aliases=["up"])
 @click.help_option("-h", "--help")
 @click.argument("api_id", required=True)
+@click.option(
+    "-m",
+    "--method",
+    required=True,
+    type=click.Choice(
+        list(GQL.HTTPMethod.__members__.values()),
+    ),
+    help="Set [METHOD] for the API.",
+)
 @click.option("-p", "--path", help="Set a new path.")
 @click.option("-d", "--destination", "dest", help="Set a new destination.")
 @click.option("--description", "descr", help="Set a new description.")
-def api_update(api_id: str, path: str, dest: str, descr: str):
+def api_update(api_id: str, method: GQL.HTTPMethod, path: str, dest: str, descr: str):
     """Update the information of an API.
 
     eg. fastcharge api update [API_ID] -p /new/path -d https://new-destination.com
@@ -168,7 +176,14 @@ def api_update(api_id: str, path: str, dest: str, descr: str):
             "description": descr,
         }
         variable_values = {k: v for k, v in variable_values.items() if v}
-        endpoint = GQL.update_endpoint(client, api_id, **variable_values).updateEndpoint
+        endpoint = GQL.update_endpoint(
+            client,
+            endpoint=api_id,
+            method=method,
+            path=path,
+            destination=dest,
+            description=descr,
+        ).updateEndpoint
     except (NotFound, AlreadyExists) as e:
         if isinstance(e, AlreadyExists):
             echo(

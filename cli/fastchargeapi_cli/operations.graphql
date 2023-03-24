@@ -109,10 +109,10 @@ query GetUserAccountBalance($user: ID!) {
     }
 }
 
-query UpdateEndpoint($endpoint: ID!, $path: String, $destination: String, $description: String) {
+query UpdateEndpoint($endpoint: ID!, $method: HTTPMethod, $path: String, $destination: String, $description: String) {
     endpoint(pk: $endpoint) {
         path
-        updateEndpoint(path: $path, destination: $destination, description: $description) {
+        updateEndpoint(method: $method, path: $path, destination: $destination, description: $description) {
             pk
             path
             description

@@ -33,6 +33,7 @@ def fastapi_api_list(app_name: str):
         for endpoint in app.endpoints:
             url = f"https://{app.name}.fastchargeapi.com{endpoint.path}"
             echo(" ID:\t\t" + endpoint.pk)
+            echo(" HTTP Method:\t" + endpoint.method)
             echo(" Endpoint:\t" + url)
             echo(terminal.dimgray(f" {endpoint.description or 'No description.'}"))
             echo()

@@ -153,7 +153,6 @@ export enum GQLGatewayDecisionResponseReason {
 export { GatewayMode };
 
 export enum GQLHttpMethod {
-    Any = "ANY",
     Delete = "DELETE",
     Get = "GET",
     Head = "HEAD",

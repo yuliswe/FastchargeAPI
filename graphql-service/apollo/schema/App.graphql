@@ -200,7 +200,6 @@ enum AppIndex {
 }
 
 enum HTTPMethod {
-    ANY
     GET
     POST
     PUT

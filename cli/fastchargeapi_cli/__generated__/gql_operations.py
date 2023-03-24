@@ -31,7 +31,6 @@ class AppIndex(str, Enum):
 
 
 class HTTPMethod(str, Enum):
-    ANY = "ANY"
     GET = "GET"
     POST = "POST"
     PUT = "PUT"
@@ -370,12 +369,13 @@ class UpdateEndpoint(BaseModel):
 
     class Arguments(BaseModel):
         endpoint: str
+        method: Optional[HTTPMethod] = None
         path: Optional[str] = None
         destination: Optional[str] = None
         description: Optional[str] = None
 
     class Meta:
-        document = "query UpdateEndpoint($endpoint: ID!, $path: String, $destination: String, $description: String) {\n  endpoint(pk: $endpoint) {\n    path\n    updateEndpoint(\n      path: $path\n      destination: $destination\n      description: $description\n    ) {\n      pk\n      path\n      description\n      destination\n    }\n  }\n}"
+        document = "query UpdateEndpoint($endpoint: ID!, $method: HTTPMethod, $path: String, $destination: String, $description: String) {\n  endpoint(pk: $endpoint) {\n    path\n    updateEndpoint(\n      method: $method\n      path: $path\n      destination: $destination\n      description: $description\n    ) {\n      pk\n      path\n      description\n      destination\n    }\n  }\n}"
 
 
 class DeleteEnpointEndpointDeleteendpoint(BaseModel):
@@ -878,6 +878,7 @@ def get_user_account_balance(
 def update_endpoint(
     GQLClient: GQLClient,
     endpoint: str,
+    method: Optional[HTTPMethod] = None,
     path: Optional[str] = None,
     destination: Optional[str] = None,
     description: Optional[str] = None,
@@ -889,6 +890,7 @@ def update_endpoint(
     Arguments:
         GQLClient (..graphql.GQLClient): The client we want to use to execute the operation
         endpoint (str): endpoint
+        method (Optional[HTTPMethod], optional): method.
         path (Optional[str], optional): path.
         destination (Optional[str], optional): destination.
         description (Optional[str], optional): description.
@@ -900,6 +902,7 @@ def update_endpoint(
         UpdateEndpoint,
         {
             "endpoint": endpoint,
+            "method": method,
             "path": path,
             "destination": destination,
             "description": description,

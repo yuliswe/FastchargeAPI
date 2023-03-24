@@ -139,8 +139,8 @@ const EndpointTableSchema = new dynamoose.Schema(
         },
         method: {
             type: String,
-            default: "ANY",
-            enum: ["ANY", "GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+            default: "GET",
+            enum: ["GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
         },
         path: { ...String_Required_NotEmpty("path") },
         destination: { ...String_Required_NotEmpty("destination") },
@@ -495,7 +495,7 @@ export class App extends Item {
 export class Endpoint extends Item {
     app: string;
     path: string;
-    method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS" | "ANY";
+    method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS";
     destination: string;
     description: string;
     createdAt: number;
