@@ -168,9 +168,22 @@ query DeleteApp($name: String!) {
     }
 }
 
-query UpdateApp($app_name: String!, $description: String, $repository: URL, $homepage: URL, $readme: URL) {
+query UpdateApp(
+    $app_name: String!
+    $description: String
+    $repository: URL
+    $homepage: URL
+    $readme: URL
+    $visibility: AppVisibility
+) {
     app(name: $app_name) {
-        updateApp(description: $description, repository: $repository, homepage: $homepage, readme: $readme) {
+        updateApp(
+            description: $description
+            repository: $repository
+            homepage: $homepage
+            readme: $readme
+            visibility: $visibility
+        ) {
             name
         }
     }

@@ -86,7 +86,7 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                 <Typography variant="body1" sx={{ mb: 2, fontWeight: 700 }}>
                     To subscribe or change to the "{plan}" plan, run the following command:
                 </Typography>
-                <TerminalInput>{`fastapi subscription add "${app}" \\\n    --plan "${plan}"`}</TerminalInput>
+                <TerminalInput>{`fastapi subscription sub "${app}" \\\n    --plan "${plan}"`}</TerminalInput>
                 <Typography variant="body2" mt={2} gutterBottom>
                     For details on switching a subscription plan,{" "}
                     <Link href="/terms-of-service#pricing" target="_blank" color="info.main">
@@ -107,7 +107,7 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                                 <Box>
                                     <Stack direction="row" spacing={1} mt={5} mb={1} alignItems="center">
                                         <Typography variant="h6" id="description">
-                                            {this.appState?.appInfo?.title || "Untitled App"}
+                                            {this.appState?.appInfo?.title || this.appState?.appInfo?.name}
                                         </Typography>
                                         <Typography variant="body1">@{this.appState?.appInfo?.name}</Typography>
                                         {/* <Typography variant="body1">1.3.7</Typography>

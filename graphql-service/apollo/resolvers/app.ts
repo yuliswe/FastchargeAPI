@@ -25,6 +25,8 @@ export const appResolvers: GQLResolvers & {
         pk: (parent) => AppPK.stringify(parent),
         name: (parent) => parent.name,
         title: (parent) => parent.title,
+        createdAt: (parent) => parent.createdAt,
+        updatedAt: (parent) => parent.updatedAt,
         description: (parent) => parent.description,
         repository: (parent) => parent.repository,
         homepage: (parent) => parent.homepage,
@@ -56,14 +58,21 @@ export const appResolvers: GQLResolvers & {
         },
         async updateApp(
             parent: App,
-            { title, description, homepage, repository, readme }: GQLAppUpdateAppArgs,
+            { title, description, homepage, repository, readme, visibility }: GQLAppUpdateAppArgs,
             context: RequestContext,
             info: GraphQLResolveInfo
         ): Promise<App> {
             if (!(await Can.updateApp(parent, { title, description, homepage, repository }, context))) {
                 throw new Denied();
             }
-            return await context.batched.App.update(parent, { title, description, homepage, repository, readme });
+            return await context.batched.App.update(parent, {
+                title,
+                description,
+                homepage,
+                repository,
+                readme,
+                visibility,
+            });
         },
         async deleteApp(parent: App, args: never, context: RequestContext): Promise<App> {
             if (!(await Can.deleteApp(parent, context))) {
@@ -112,7 +121,16 @@ export const appResolvers: GQLResolvers & {
     Mutation: {
         async createApp(
             parent: {},
-            { owner, name, title, description, gatewayMode, homepage, repository }: GQLMutationCreateAppArgs,
+            {
+                owner,
+                name,
+                title,
+                description,
+                gatewayMode,
+                homepage,
+                repository,
+                visibility,
+            }: GQLMutationCreateAppArgs,
             context: RequestContext
         ): Promise<App> {
             if (!(await Can.createApp({ owner }, context))) {
@@ -134,6 +152,7 @@ export const appResolvers: GQLResolvers & {
                 homepage,
                 owner,
                 repository,
+                visibility,
             });
         },
     },

@@ -44,7 +44,7 @@ class _SubscriptionsPage extends React.Component<Props> {
                             <CardContent>
                                 <Stack direction="row" spacing={1}>
                                     <Typography variant="h6" display="flex" alignItems="center">
-                                        {sub.app.title || "Unnamed App"}
+                                        {sub.app.title || sub.app.name}
                                     </Typography>
                                     <Typography variant="body1" display="flex" alignItems="center">
                                         @{sub.app.name}

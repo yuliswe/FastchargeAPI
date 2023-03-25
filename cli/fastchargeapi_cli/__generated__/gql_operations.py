@@ -30,6 +30,11 @@ class AppIndex(str, Enum):
     indexByOwner__onlyPK = "indexByOwner__onlyPK"
 
 
+class AppVisibility(str, Enum):
+    public = "public"
+    private = "private"
+
+
 class HTTPMethod(str, Enum):
     GET = "GET"
     POST = "POST"
@@ -505,9 +510,10 @@ class UpdateApp(BaseModel):
         repository: Optional[str] = None
         homepage: Optional[str] = None
         readme: Optional[str] = None
+        visibility: Optional[AppVisibility] = None
 
     class Meta:
-        document = "query UpdateApp($app_name: String!, $description: String, $repository: URL, $homepage: URL, $readme: URL) {\n  app(name: $app_name) {\n    updateApp(\n      description: $description\n      repository: $repository\n      homepage: $homepage\n      readme: $readme\n    ) {\n      name\n    }\n  }\n}"
+        document = "query UpdateApp($app_name: String!, $description: String, $repository: URL, $homepage: URL, $readme: URL, $visibility: AppVisibility) {\n  app(name: $app_name) {\n    updateApp(\n      description: $description\n      repository: $repository\n      homepage: $homepage\n      readme: $readme\n      visibility: $visibility\n    ) {\n      name\n    }\n  }\n}"
 
 
 class ListAppPricingDetailsAppPricingplans(BaseModel):
@@ -1043,6 +1049,7 @@ def update_app(
     repository: Optional[str] = None,
     homepage: Optional[str] = None,
     readme: Optional[str] = None,
+    visibility: Optional[AppVisibility] = None,
 ) -> UpdateAppApp:
     """UpdateApp
 
@@ -1055,6 +1062,7 @@ def update_app(
         repository (Optional[str], optional): repository.
         homepage (Optional[str], optional): homepage.
         readme (Optional[str], optional): readme.
+        visibility (Optional[AppVisibility], optional): visibility.
 
     Returns:
         UpdateAppApp"""
@@ -1067,6 +1075,7 @@ def update_app(
             "repository": repository,
             "homepage": homepage,
             "readme": readme,
+            "visibility": visibility,
         },
     ).app
 

@@ -51,7 +51,7 @@ fastapi login
 Then, run the following command to subscribe to the `Free` plan:
 
 ```bash
-fastapi subscription add myapp --plan Free
+fastapi subscription sub myapp --plan Free
 ```
 
 

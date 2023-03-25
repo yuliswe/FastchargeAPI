@@ -63,6 +63,7 @@ export type GQLAccountHistory = {
 
 export type GQLApp = {
     __typename?: "App";
+    createdAt: Scalars["Timestamp"];
     deleteApp: GQLApp;
     description?: Maybe<Scalars["String"]>;
     endpoints: Array<GQLEndpoint>;
@@ -76,6 +77,8 @@ export type GQLApp = {
     repository?: Maybe<Scalars["URL"]>;
     title?: Maybe<Scalars["String"]>;
     updateApp: GQLApp;
+    updatedAt: Scalars["Timestamp"];
+    visibility: GQLAppVisibility;
 };
 
 export type GQLAppUpdateAppArgs = {
@@ -84,10 +87,16 @@ export type GQLAppUpdateAppArgs = {
     readme?: InputMaybe<Scalars["URL"]>;
     repository?: InputMaybe<Scalars["URL"]>;
     title?: InputMaybe<Scalars["String"]>;
+    visibility?: InputMaybe<GQLAppVisibility>;
 };
 
 export enum GQLAppIndex {
     IndexByOwnerOnlyPk = "indexByOwner__onlyPK",
+}
+
+export enum GQLAppVisibility {
+    Private = "private",
+    Public = "public",
 }
 
 export type GQLDateRangeInput = {
@@ -168,6 +177,7 @@ export type GQLMutationCreateAppArgs = {
     owner: Scalars["ID"];
     repository?: InputMaybe<Scalars["URL"]>;
     title?: InputMaybe<Scalars["String"]>;
+    visibility?: InputMaybe<GQLAppVisibility>;
 };
 
 export type GQLMutationCreateEndpointArgs = {

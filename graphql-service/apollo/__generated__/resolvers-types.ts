@@ -85,6 +85,7 @@ export type GQLAccountHistory = {
 
 export type GQLApp = {
     __typename?: "App";
+    createdAt: Scalars["Timestamp"];
     deleteApp: GQLApp;
     description?: Maybe<Scalars["String"]>;
     endpoints: Array<GQLEndpoint>;
@@ -98,6 +99,8 @@ export type GQLApp = {
     repository?: Maybe<Scalars["URL"]>;
     title?: Maybe<Scalars["String"]>;
     updateApp: GQLApp;
+    updatedAt: Scalars["Timestamp"];
+    visibility: GQLAppVisibility;
 };
 
 export type GQLAppUpdateAppArgs = {
@@ -106,10 +109,16 @@ export type GQLAppUpdateAppArgs = {
     readme?: InputMaybe<Scalars["URL"]>;
     repository?: InputMaybe<Scalars["URL"]>;
     title?: InputMaybe<Scalars["String"]>;
+    visibility?: InputMaybe<GQLAppVisibility>;
 };
 
 export enum GQLAppIndex {
     IndexByOwnerOnlyPk = "indexByOwner__onlyPK",
+}
+
+export enum GQLAppVisibility {
+    Private = "private",
+    Public = "public",
 }
 
 export type GQLDateRangeInput = {
@@ -187,6 +196,7 @@ export type GQLMutationCreateAppArgs = {
     owner: Scalars["ID"];
     repository?: InputMaybe<Scalars["URL"]>;
     title?: InputMaybe<Scalars["String"]>;
+    visibility?: InputMaybe<GQLAppVisibility>;
 };
 
 export type GQLMutationCreateEndpointArgs = {
@@ -598,6 +608,7 @@ export type GQLResolversTypes = ResolversObject<{
     AccountHistory: ResolverTypeWrapper<AccountHistoryData>;
     App: ResolverTypeWrapper<AppData>;
     AppIndex: GQLAppIndex;
+    AppVisibility: GQLAppVisibility;
     Boolean: ResolverTypeWrapper<Scalars["Boolean"]>;
     DateRangeInput: GQLDateRangeInput;
     Email: ResolverTypeWrapper<Scalars["Email"]>;
@@ -690,6 +701,7 @@ export type GQLAppResolvers<
     ContextType = RequestContext,
     ParentType extends GQLResolversParentTypes["App"] = GQLResolversParentTypes["App"]
 > = ResolversObject<{
+    createdAt?: Resolver<GQLResolversTypes["Timestamp"], ParentType, ContextType>;
     deleteApp?: Resolver<GQLResolversTypes["App"], ParentType, ContextType>;
     description?: Resolver<Maybe<GQLResolversTypes["String"]>, ParentType, ContextType>;
     endpoints?: Resolver<Array<GQLResolversTypes["Endpoint"]>, ParentType, ContextType>;
@@ -703,6 +715,8 @@ export type GQLAppResolvers<
     repository?: Resolver<Maybe<GQLResolversTypes["URL"]>, ParentType, ContextType>;
     title?: Resolver<Maybe<GQLResolversTypes["String"]>, ParentType, ContextType>;
     updateApp?: Resolver<GQLResolversTypes["App"], ParentType, ContextType, Partial<GQLAppUpdateAppArgs>>;
+    updatedAt?: Resolver<GQLResolversTypes["Timestamp"], ParentType, ContextType>;
+    visibility?: Resolver<GQLResolversTypes["AppVisibility"], ParentType, ContextType>;
     __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 }>;
 
@@ -755,7 +769,7 @@ export type GQLMutationResolvers<
         GQLResolversTypes["App"],
         ParentType,
         ContextType,
-        RequireFields<GQLMutationCreateAppArgs, "gatewayMode" | "name" | "owner">
+        RequireFields<GQLMutationCreateAppArgs, "gatewayMode" | "name" | "owner" | "visibility">
     >;
     createEndpoint?: Resolver<
         GQLResolversTypes["Endpoint"],

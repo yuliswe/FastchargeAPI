@@ -31,6 +31,8 @@ class LoadMyApps extends AppEvent<RootAppState> {
                         apps {
                             name
                             description
+                            title
+                            updatedAt
                         }
                     }
                 }

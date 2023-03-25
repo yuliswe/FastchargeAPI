@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import { MyAppDetailAppState } from "../states/MyAppDetailAppState";
 import {
     Autocomplete,
+    AutocompleteRenderInputParams,
     Breadcrumbs,
     Button,
     Checkbox,
@@ -33,6 +34,7 @@ import {
     openDocumentationDialog,
     supportDocumenationDefault,
 } from "../stateless-components/DocumentationDialog";
+import { GQLAppVisibility } from "../__generated__/gql-operations";
 type _Props = {
     appState: MyAppDetailAppState;
 };
@@ -121,6 +123,18 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
         );
     }
 
+    renderModifyAppVisibilityDocumentation({ app }: { app: string }) {
+        return (
+            <Terminal height="9em" colorMode={ColorMode.Light}>
+                <Typography variant="body1">We recommend using the cli tool to modify app information.</Typography>
+                <Typography variant="body1" sx={{ fontWeight: 700 }}>
+                    Run the following command, replacing the value with your own.
+                </Typography>
+                <TerminalInput>{`fastcharge app update "${app}" \\\n    --make-public/--make-private`}</TerminalInput>
+            </Terminal>
+        );
+    }
+
     renderModifyAPIDocumentation({ endpointID }: { endpointID: string }) {
         return (
             <Terminal height="14em" colorMode={ColorMode.Light}>
@@ -201,24 +215,87 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                     <Link underline="hover" color="inherit" href="/account/my-apps">
                         My Apps
                     </Link>
-                    <Stack direction="row" spacing={2} alignItems="center">
-                        <Typography color="text.primary" variant="h6">
-                            {this.getAppName()}
+                    <Stack direction="row" alignItems="center">
+                        <Typography variant="h6" display="flex" alignItems="center" color="text.primary">
+                            {this.appState.appDetail?.title || this.appState.appDetail?.name}
                         </Typography>
-                        <Button variant="contained" color="secondary">
-                            Publish
-                        </Button>
+                        <Typography variant="body1" display="flex" alignItems="center" color="text.primary" ml={1}>
+                            @{this.appState.appDetail?.name}
+                        </Typography>
                     </Stack>
                 </Breadcrumbs>
+                {/* <Button variant="contained" color="secondary" size="small" sx={{ my: 1 }}>
+                    Publish
+                </Button> */}
                 <Divider sx={{ mt: 1, mb: 5 }} />
                 <Stack spacing={10}>
                     <Stack>
                         <Grid container spacing={2}>
                             <Grid item xs={12}>
                                 <Typography mb={1} variant="label">
-                                    App name
+                                    App Name
                                 </Typography>
                                 <TextField variant="standard" value={this.appState.appDetail?.name || ""} disabled />
+                            </Grid>
+                            <Grid item xs={6}>
+                                <Stack direction="row" alignItems="center" mb={1}>
+                                    <Typography variant="label">Title</Typography>
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => {
+                                            openDocumentationDialog(this, () =>
+                                                this.renderModifyAppInfoDocumentation({
+                                                    property: "title",
+                                                    value: "[New Name]",
+                                                    app: this.getAppName(),
+                                                })
+                                            );
+                                        }}
+                                    >
+                                        <EditIcon />
+                                    </IconButton>
+                                </Stack>
+                                <TextField
+                                    fullWidth
+                                    disabled
+                                    placeholder="Display name for this app"
+                                    value={this.appState.appDetail?.title || ""}
+                                />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <Stack direction="row" alignItems="center" mb={1}>
+                                    <Typography variant="label">Visibility</Typography>
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => {
+                                            openDocumentationDialog(this, () =>
+                                                this.renderModifyAppVisibilityDocumentation({
+                                                    app: this.getAppName(),
+                                                })
+                                            );
+                                        }}
+                                    >
+                                        <EditIcon />
+                                    </IconButton>
+                                </Stack>
+                                <Autocomplete<GQLAppVisibility>
+                                    disablePortal
+                                    options={[GQLAppVisibility.Public, GQLAppVisibility.Private]}
+                                    getOptionLabel={(option) =>
+                                        (option[0].toUpperCase() as string) + (option.slice(1) as string)
+                                    }
+                                    // defaultValue={["Public", GQLAppVisibility.Public]}
+                                    value={this.appState.appDetail?.visibility || GQLAppVisibility.Public}
+                                    disabled
+                                    color="secondary"
+                                    sx={{
+                                        maxWidth: 200,
+                                        bgcolor: "background.default",
+                                    }}
+                                    renderInput={(params: AutocompleteRenderInputParams) => (
+                                        <TextField variant="outlined" color="secondary" {...params} />
+                                    )}
+                                />
                             </Grid>
                             <Grid item xs={6}>
                                 <Stack direction="row" alignItems="center" mb={1}>
@@ -241,7 +318,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                 <TextField
                                     fullWidth
                                     disabled
-                                    placeholder="Github URL"
+                                    placeholder="URL to Github repository"
                                     defaultValue={this.appState.appDetail?.repository || ""}
                                 />
                             </Grid>
@@ -254,7 +331,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                             openDocumentationDialog(this, () =>
                                                 this.renderModifyAppInfoDocumentation({
                                                     property: "homepage",
-                                                    value: "https://github.com/username/myapp",
+                                                    value: "https://myproject/docs",
                                                     app: this.getAppName(),
                                                 })
                                             );
@@ -264,6 +341,31 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                     </IconButton>
                                 </Stack>
                                 <TextField fullWidth disabled placeholder="URL to project or documentation." />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <Stack direction="row" alignItems="center" mb={1}>
+                                    <Typography variant="label">README.md</Typography>
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => {
+                                            openDocumentationDialog(this, () =>
+                                                this.renderModifyAppInfoDocumentation({
+                                                    property: "readme",
+                                                    value: "https://github.com/{user}/{repository}/blob/{branch}/README.md",
+                                                    app: this.getAppName(),
+                                                })
+                                            );
+                                        }}
+                                    >
+                                        <EditIcon />
+                                    </IconButton>
+                                </Stack>
+                                <TextField
+                                    fullWidth
+                                    disabled
+                                    placeholder="URL to README.md, eg. https://github.com/{user}/{repository}/blob/{branch}/README.md"
+                                    defaultValue={this.appState.appDetail?.readme || ""}
+                                />
                             </Grid>
                             <Grid item xs={12}>
                                 <Stack direction="row" alignItems="center" mb={1}>
@@ -288,6 +390,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                     rows={4}
                                     fullWidth
                                     defaultValue={this.appState.appDetail?.description || ""}
+                                    placeholder="A short description that is displayed in the search result."
                                     disabled
                                 />
                             </Grid>

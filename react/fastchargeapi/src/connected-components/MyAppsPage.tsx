@@ -46,11 +46,8 @@ class _MyAppsPage extends React.Component<_Props, _State> {
     appsList() {
         return this.props.appState.apps;
     }
-    version(app: UserApp) {
-        return "1.0.0";
-    }
-    published(app: UserApp) {
-        return new Date().toLocaleDateString();
+    updatedOn(app: UserApp) {
+        return new Date(app.updatedAt).toLocaleDateString();
     }
 
     componentDidMount(): void {
@@ -128,14 +125,14 @@ class _MyAppsPage extends React.Component<_Props, _State> {
                             <Card sx={{ p: 3, borderRadius: 5 }}>
                                 <CardContent>
                                     <Stack direction="row" spacing={1}>
-                                        <Typography variant="body1" display="flex" fontWeight={700} alignItems="center">
-                                            {app.name}
+                                        <Typography variant="h6" display="flex" alignItems="center">
+                                            {app.title || app.name}
                                         </Typography>
-                                        <Typography variant="body1" display="flex" fontSize={14} alignItems="center">
-                                            {this.version(app)}
+                                        <Typography variant="body1" display="flex" alignItems="center">
+                                            @{app.name}
                                         </Typography>
                                     </Stack>
-                                    <Typography variant="body1">Published on {this.published(app)}</Typography>
+                                    <Typography variant="body1">Updated on {this.updatedOn(app)}</Typography>
                                     {/* <Typography variant="body1" mt={2}>
                                     {app.endpoints}{" "}
                                     {app.endpoints > 1

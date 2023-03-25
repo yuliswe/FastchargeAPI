@@ -65,6 +65,7 @@ type Mutation {
         description: String
         repository: URL
         homepage: URL
+        visibility: AppVisibility = public
     ): App!
 
     createEndpoint(
@@ -190,16 +191,31 @@ type App {
     repository: URL
     homepage: URL
     readme: URL
+    updatedAt: Timestamp!
+    createdAt: Timestamp!
+    visibility: AppVisibility!
 
     endpoints: [Endpoint!]!
     pricingPlans: [Pricing!]!
 
-    updateApp(title: String, description: String, homepage: URL, repository: URL, readme: URL): App!
+    updateApp(
+        title: String
+        description: String
+        homepage: URL
+        repository: URL
+        readme: URL
+        visibility: AppVisibility
+    ): App!
     deleteApp: App!
 }
 
 enum AppIndex {
     indexByOwner__onlyPK
+}
+
+enum AppVisibility {
+    public
+    private
 }
 
 enum HTTPMethod {

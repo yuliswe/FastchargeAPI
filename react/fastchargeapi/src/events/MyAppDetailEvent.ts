@@ -3,18 +3,12 @@ import { RootAppState } from "../states/RootAppState";
 import { AppContext } from "../AppContext";
 import { getGQLClient } from "../graphql-client";
 import { gql } from "@apollo/client";
-import {
-    GQLMyAppGetDetailQuery,
-    GQLMyAppGetDetailQueryVariables,
-} from "../__generated__/gql-operations";
+import { GQLMyAppGetDetailQuery, GQLMyAppGetDetailQueryVariables } from "../__generated__/gql-operations";
 
 export type MyAppDetail = GQLMyAppGetDetailQuery["app"];
 
 class LoadAppInfo extends AppEvent<RootAppState> {
-    constructor(
-        public readonly context: AppContext,
-        public options: { appName: string }
-    ) {
+    constructor(public readonly context: AppContext, public options: { appName: string }) {
         super();
     }
     reducer(state: RootAppState): RootAppState {
@@ -24,17 +18,17 @@ class LoadAppInfo extends AppEvent<RootAppState> {
     appDetail: MyAppDetail | null = null;
     async *run(state: RootAppState): AppEventStream<RootAppState> {
         let { client, currentUser } = await getGQLClient(this.context);
-        let result = await client.query<
-            GQLMyAppGetDetailQuery,
-            GQLMyAppGetDetailQueryVariables
-        >({
+        let result = await client.query<GQLMyAppGetDetailQuery, GQLMyAppGetDetailQueryVariables>({
             query: gql(`
                     query MyAppGetDetail($appName: String!) {
                         app(name: $appName) {
                             name
+                            title
                             description
                             repository
                             homepage
+                            readme
+                            visibility
                             pricingPlans {
                                 pk
                                 name

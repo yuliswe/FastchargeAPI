@@ -126,6 +126,7 @@ const AppTableSchema = new dynamoose.Schema(
         repository: { type: String },
         homepage: { type: String },
         readme: { type: String },
+        visibility: { type: String, default: "private", enum: ["public", "private"] },
     },
     { timestamps: true }
 );
@@ -482,6 +483,7 @@ const FreeQuotaUsageTableSchema = new dynamoose.Schema(
 
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
+export type AppVisibility = "public" | "private";
 export class App extends Item {
     name: string;
     owner: string;
@@ -491,6 +493,9 @@ export class App extends Item {
     repository: string;
     homepage: string;
     readme: string;
+    updatedAt: number;
+    createdAt: number;
+    visibility: AppVisibility;
 }
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.

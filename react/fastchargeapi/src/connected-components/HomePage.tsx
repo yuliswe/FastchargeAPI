@@ -326,7 +326,7 @@ class _Home extends React.Component<_Props, _State> {
                                         >
                                             <Terminal colorMode={ColorMode.Dark} height="150px">
                                                 <TerminalInput>
-                                                    {`fastapi subscription add \\ \n    --app "myapp" \\ \n    --pricing "Basic Plan"`}
+                                                    {`fastapi subscription sub \\ \n    --app "myapp" \\ \n    --pricing "Basic Plan"`}
                                                 </TerminalInput>
                                                 <TerminalOutput>
                                                     Subscribed to app "myapp" with "Basic plan" pricing.

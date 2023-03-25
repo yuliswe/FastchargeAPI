@@ -118,7 +118,7 @@ const generateAppSearchResultComponents = (searchResults: SearchResult[]): JSX.E
         >
             <Link href={`/app/${result.pk}`} underline="hover">
                 <Stack direction="row" spacing={1} alignItems="center">
-                    <Typography variant="h6">{result.title || "Untitled App"}</Typography>
+                    <Typography variant="h6">{result.title || result.name}</Typography>
                     <Typography variant="body1" color="secondary.main">
                         @{result.name}
                     </Typography>

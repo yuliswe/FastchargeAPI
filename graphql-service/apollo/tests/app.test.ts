@@ -1,10 +1,11 @@
 import { describe, expect, test } from "@jest/globals";
 import { RequestContext, createDefaultContextBatched } from "../RequestContext";
-import { App, GatewayMode, User } from "../dynamoose/models";
+import { GatewayMode, User } from "../dynamoose/models";
 import { appResolvers } from "../resolvers/app";
 import { UserPK } from "../pks/UserPK";
 import { v4 as uuidv4 } from "uuid";
 import { getOrCreateTestUser } from "./test-utils";
+import { GQLAppVisibility } from "../__generated__/resolvers-types";
 
 let context: RequestContext = {
     batched: createDefaultContextBatched(),
@@ -33,6 +34,7 @@ describe("APP API", () => {
                 homepage: "https://fastchargeapi.com",
                 repository: "",
                 gatewayMode: GatewayMode.proxy,
+                visibility: GQLAppVisibility.Public,
             },
             context,
             {} as never

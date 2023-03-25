@@ -148,8 +148,20 @@ class URL(click.ParamType):
 )
 @click.option("--homepage", type=URL(), help="URL to the homepage for the app.")
 @click.option("--readme", type=URL(), help="URL to the README.md file for the app.")
+@click.option(
+    "--make-public/--make-private",
+    "visibility",
+    is_flag=True,
+    help="Set the visibility of the app.",
+    default=None,
+)
 def fastcharge_app_update(
-    app_name: str, description: str, repository: str, homepage: str, readme: str
+    app_name: str,
+    description: str,
+    repository: str,
+    homepage: str,
+    readme: str,
+    visibility: Optional[bool] = None,
 ):
     """Update information for an existing app."""
     client, auth = get_client_info()
@@ -161,6 +173,13 @@ def fastcharge_app_update(
             repository=repository,
             homepage=homepage,
             readme=readme,
+            visibility=(
+                None
+                if visibility is None
+                else GQL.AppVisibility.public
+                if visibility
+                else GQL.AppVisibility.private
+            ),
         )
     except NotFound:
         echo(

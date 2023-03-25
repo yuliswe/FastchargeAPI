@@ -53,7 +53,7 @@ def subscribe_list():
         echo()
 
 
-@fastapi_subscribe.command("add")
+@fastapi_subscribe.command("sub", aliases=["add"])
 @click.argument("app_name", required=True)
 @click.option("-p", "--plan", help="Name of the plan to subscribe to.")
 def subscription_add(app_name: str, plan: Optional[str] = None):
