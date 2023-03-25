@@ -281,9 +281,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                 <Autocomplete<GQLAppVisibility>
                                     disablePortal
                                     options={[GQLAppVisibility.Public, GQLAppVisibility.Private]}
-                                    getOptionLabel={(option) =>
-                                        (option[0].toUpperCase() as string) + (option.slice(1) as string)
-                                    }
+                                    getOptionLabel={(option) => option[0].toUpperCase() + option.slice(1)}
                                     // defaultValue={["Public", GQLAppVisibility.Public]}
                                     value={this.appState.appDetail?.visibility || GQLAppVisibility.Public}
                                     disabled

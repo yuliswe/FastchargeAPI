@@ -449,6 +449,10 @@ class _DashboardPage extends React.Component<Props, State> {
                                     return this.spent(activity);
                                 case "Estimated Completion":
                                     return this.eta(activity);
+                                case "Consumed Free Quota":
+                                    return activity.consumedFreeQuota && activity.consumedFreeQuota > 0
+                                        ? activity.consumedFreeQuota
+                                        : "";
                                 case "Status":
                                     return this.status(activity);
                             }
@@ -468,12 +472,16 @@ class _DashboardPage extends React.Component<Props, State> {
                             },
                             {
                                 title: "Description",
+                                hideByDefault: true,
                             },
                             {
                                 title: "Status",
                             },
                             {
                                 title: "Estimated Completion",
+                            },
+                            {
+                                title: "Consumed Free Quota",
                             },
                             {
                                 title: "Income",

@@ -42,6 +42,7 @@ export type GQLAccountActivity = {
     __typename?: "AccountActivity";
     amount: Scalars["String"];
     billedApp?: Maybe<GQLApp>;
+    consumedFreeQuota?: Maybe<Scalars["Int"]>;
     createdAt: Scalars["Timestamp"];
     description: Scalars["String"];
     pk: Scalars["ID"];
@@ -676,6 +677,7 @@ export type GQLAccountActivityResolvers<
 > = ResolversObject<{
     amount?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
     billedApp?: Resolver<Maybe<GQLResolversTypes["App"]>, ParentType, ContextType>;
+    consumedFreeQuota?: Resolver<Maybe<GQLResolversTypes["Int"]>, ParentType, ContextType>;
     createdAt?: Resolver<GQLResolversTypes["Timestamp"], ParentType, ContextType>;
     description?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
     pk?: Resolver<GQLResolversTypes["ID"], ParentType, ContextType>;

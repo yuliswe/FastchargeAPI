@@ -20,6 +20,7 @@ export type GQLAccountActivity = {
     __typename?: "AccountActivity";
     amount: Scalars["String"];
     billedApp?: Maybe<GQLApp>;
+    consumedFreeQuota?: Maybe<Scalars["Int"]>;
     createdAt: Scalars["Timestamp"];
     description: Scalars["String"];
     pk: Scalars["ID"];
@@ -604,6 +605,7 @@ export type GQLGetAccountActivitiesQuery = {
             description: string;
             status?: GQLAccountActivityStatus | null;
             settleAt: number;
+            consumedFreeQuota?: number | null;
             billedApp?: { __typename?: "App"; name: string } | null;
             usageSummary?: { __typename?: "UsageSummary"; volume: number } | null;
             stripeTransfer?: {

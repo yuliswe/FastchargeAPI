@@ -25,6 +25,7 @@ module.exports = {
         "@typescript-eslint/no-unsafe-member-access": "off",
         "@typescript-eslint/no-non-null-assertion": "off",
         "@typescript-eslint/ban-types": "off",
+        "@typescript-eslint/restrict-plus-operands": "off",
         "unused-imports/no-unused-imports-ts": "warn",
         "require-yield": "off",
         "prefer-const": "off",

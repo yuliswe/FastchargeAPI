@@ -381,6 +381,7 @@ type AccountActivity {
     settleAt: Timestamp!
     billedApp: App
     usageSummary: UsageSummary
+    consumedFreeQuota: Int
 }
 
 type AccountHistory {

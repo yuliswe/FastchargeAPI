@@ -85,6 +85,7 @@ class LoadActivities extends AppEvent<RootAppState> {
                             description
                             status
                             settleAt
+                            consumedFreeQuota
                             billedApp {
                                 name
                             }

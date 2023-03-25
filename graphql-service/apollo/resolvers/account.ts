@@ -43,6 +43,7 @@ export const accountActivityResolvers: GQLResolvers & {
         description: makeOwnerReadable((parent) => parent.description),
         status: makeOwnerReadable((parent) => parent.status as GQLAccountActivityStatus),
         settleAt: makeOwnerReadable((parent) => parent.settleAt),
+        consumedFreeQuota: makeOwnerReadable((parent) => parent.consumedFreeQuota),
         async billedApp(parent: AccountActivity, args: {}, context, info) {
             if (!(await Can.viewAccountActivityPrivateAttributes(parent, context))) {
                 throw new Denied();

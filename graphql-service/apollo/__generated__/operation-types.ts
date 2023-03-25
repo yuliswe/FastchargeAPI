@@ -20,6 +20,7 @@ export type GQLAccountActivity = {
     __typename?: "AccountActivity";
     amount: Scalars["String"];
     billedApp?: Maybe<GQLApp>;
+    consumedFreeQuota?: Maybe<Scalars["Int"]>;
     createdAt: Scalars["Timestamp"];
     description: Scalars["String"];
     pk: Scalars["ID"];

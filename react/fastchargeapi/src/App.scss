@@ -54,3 +54,7 @@ code.hljs {
     background-color: $white;
     border-radius: 0.25em;
 }
+
+.MuiAutocomplete-option[aria-selected="true"] {
+    background-color: unset !important;
+}
