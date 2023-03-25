@@ -77,7 +77,7 @@ export class AppBar extends React.Component<Props, State> {
             <Stack>
                 <MUIAppBar position="static" sx={{ bgcolor: "primary.main" }}>
                     <Container maxWidth="xl">
-                        <Toolbar>
+                        <Toolbar sx={{ px: "0 !important" }}>
                             <Link
                                 sx={{
                                     flexGrow: 1,
@@ -102,8 +102,8 @@ export class AppBar extends React.Component<Props, State> {
                 </MUIAppBar>
                 <MUIAppBar position="static" sx={{ bgcolor: "background.default" }}>
                     <Container maxWidth="xl">
-                        <Toolbar>
-                            <Button href="/" sx={{ p: 2 }}>
+                        <Toolbar sx={{ px: "0 !important" }}>
+                            <Button href="/" sx={{ p: 0 }}>
                                 <Stack direction="row" spacing={1} alignItems="center">
                                     <Icon component="img" src="/logo2.png" />
                                     <Typography

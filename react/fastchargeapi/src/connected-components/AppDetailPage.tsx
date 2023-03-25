@@ -86,7 +86,7 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                                     <Divider sx={{ mb: 3 }} />
                                     <Grid container spacing={3}>
                                         {this.getPricingList().map((pricing: AppDetailPricing) => (
-                                            <Grid item>
+                                            <Grid item xs={12} md={6} lg={4} xl={3}>
                                                 <PricingCard
                                                     {...pricing}
                                                     actionButton={
