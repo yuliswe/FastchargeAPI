@@ -13,6 +13,7 @@ import {
 } from "../__generated__/resolvers-types";
 import { isValidAppName } from "../functions/app";
 import { UserPK } from "../pks/UserPK";
+import { AppPK } from "../pks/AppPK";
 
 export const appResolvers: GQLResolvers & {
     App: GQLAppResolvers;
@@ -21,12 +22,13 @@ export const appResolvers: GQLResolvers & {
         /**************************
          * All public attributes
          **************************/
-
+        pk: (parent) => AppPK.stringify(parent),
         name: (parent) => parent.name,
         title: (parent) => parent.title,
         description: (parent) => parent.description,
         repository: (parent) => parent.repository,
         homepage: (parent) => parent.homepage,
+        readme: (parent) => parent.readme,
         gatewayMode: (parent) => parent.gatewayMode,
         async owner(parent, args, context, info) {
             let user = await context.batched.User.get(UserPK.parse(parent.owner));
@@ -54,14 +56,14 @@ export const appResolvers: GQLResolvers & {
         },
         async updateApp(
             parent: App,
-            { title, description, homepage, repository }: GQLAppUpdateAppArgs,
+            { title, description, homepage, repository, readme }: GQLAppUpdateAppArgs,
             context: RequestContext,
             info: GraphQLResolveInfo
         ): Promise<App> {
             if (!(await Can.updateApp(parent, { title, description, homepage, repository }, context))) {
                 throw new Denied();
             }
-            return await context.batched.App.update(parent, { title, description, homepage, repository });
+            return await context.batched.App.update(parent, { title, description, homepage, repository, readme });
         },
         async deleteApp(parent: App, args: never, context: RequestContext): Promise<App> {
             if (!(await Can.deleteApp(parent, context))) {
@@ -86,9 +88,17 @@ export const appResolvers: GQLResolvers & {
         //     let visableApps = await Can.viewAppFilter(apps, context);
         //     return visableApps;
         // },
-        async app(parent: {}, { name }: GQLQueryAppArgs, context: RequestContext): Promise<App> {
-            let app = await context.batched.App.get({ name });
-            return app;
+        async app(parent: {}, { pk, name }: GQLQueryAppArgs, context: RequestContext): Promise<App> {
+            if (!pk && !name) {
+                throw new BadInput("Must provide either pk or name");
+            }
+            let app: App;
+            if (pk) {
+                app = await context.batched.App.get(AppPK.parse(pk));
+            } else if (name) {
+                app = await context.batched.App.get({ name });
+            }
+            return app!;
         },
         async appFullTextSearch(
             parent: {},

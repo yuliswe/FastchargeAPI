@@ -1,11 +1,12 @@
 scalar Email
 scalar NonNegativeDecimal
 scalar Timestamp
+scalar URL
 
 type Query {
     ### App API
     # apps: [App]
-    app(name: String): App!
+    app(pk: ID, name: String): App!
     appFullTextSearch(query: String!): [App!]!
     ### User API
     # users(pk: [ID!]): [User!]! # Get all users in the system
@@ -62,8 +63,8 @@ type Mutation {
         title: String
         gatewayMode: GatewayMode = proxy
         description: String
-        repository: String
-        homepage: String
+        repository: URL
+        homepage: URL
     ): App!
 
     createEndpoint(
@@ -180,18 +181,20 @@ enum SortDirection {
 }
 
 type App {
+    pk: ID!
     name: String!
     owner: User!
     title: String
     description: String
     gatewayMode: GatewayMode!
-    repository: String
-    homepage: String
+    repository: URL
+    homepage: URL
+    readme: URL
 
     endpoints: [Endpoint!]!
     pricingPlans: [Pricing!]!
 
-    updateApp(title: String, description: String, homepage: String, repository: String): App!
+    updateApp(title: String, description: String, homepage: URL, repository: URL, readme: URL): App!
     deleteApp: App!
 }
 

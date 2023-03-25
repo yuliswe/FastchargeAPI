@@ -5,7 +5,6 @@ import { ApolloClient, createHttpLink, InMemoryCache, gql } from "@apollo/client
 import { setContext } from "@apollo/client/link/context";
 import { AppContext } from "./AppContext";
 import * as jose from "jose";
-import md5 from "md5";
 
 // debug
 const DEBUG_USE_LOCAL_GRAPHQL = false;
@@ -26,7 +25,7 @@ if (DEBUG_USE_LOCAL_GRAPHQL) {
  */
 export async function getGQLClient(
     context: AppContext
-): Promise<{ client: ApolloClient<unknown>; currentUser: string }> {
+): Promise<{ client: ApolloClient<unknown>; currentUser?: string }> {
     const httpLink = createHttpLink({
         uri: graphql_url,
     });
@@ -52,6 +51,10 @@ export async function getGQLClient(
         cache: new InMemoryCache(),
     });
 
+    if (user.isAnonymous) {
+        return { client };
+    }
+
     let response = await client.query({
         query: gql`
             query GetUserPKByEmail($email: Email!) {
@@ -64,7 +67,6 @@ export async function getGQLClient(
             email: user.email,
         },
     });
-
     return { client, currentUser: response.data.user.pk };
 }
 

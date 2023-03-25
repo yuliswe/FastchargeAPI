@@ -38,7 +38,7 @@ class LoadAccontBalance extends AppEvent<RootAppState> {
                 }
             `,
             variables: {
-                user: currentUser,
+                user: currentUser!,
             },
         });
         this.response = result.data;
@@ -99,7 +99,7 @@ class LoadActivities extends AppEvent<RootAppState> {
                 }
             `,
             variables: {
-                user: currentUser,
+                user: currentUser!,
                 dateRange: {
                     end: this.options.beforeDate,
                 },
@@ -148,7 +148,7 @@ class LoadAccountHistory extends AppEvent<RootAppState> {
                 }
             `,
             variables: {
-                user: currentUser,
+                user: currentUser!,
                 dateRange: {
                     end: this.options.beforeDate,
                 },

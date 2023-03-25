@@ -7,10 +7,7 @@ import { GQLAppFullTextSearchQuery, GQLAppFullTextSearchQueryVariables } from ".
 
 export type SearchResult = GQLAppFullTextSearchQuery["appFullTextSearch"][0];
 class SearchResultEvent extends AppEvent<RootAppState> {
-    constructor(
-        public context: AppContext,
-        public keyword: string,
-    ) {
+    constructor(public context: AppContext, public keyword: string) {
         super();
     }
 
@@ -25,26 +22,25 @@ class SearchResultEvent extends AppEvent<RootAppState> {
     public response: SearchResult[] = [];
     async *run(state: RootAppState): AppEventStream<RootAppState> {
         let { client, currentUser } = await getGQLClient(this.context);
-        let result = await client.query<
-            GQLAppFullTextSearchQuery,
-            GQLAppFullTextSearchQueryVariables
-        >({
+        let result = await client.query<GQLAppFullTextSearchQuery, GQLAppFullTextSearchQueryVariables>({
             query: gql`
                 query appFullTextSearch($query: String!) {
                     appFullTextSearch(query: $query) {
+                        pk
                         name
+                        title
                         owner {
                             author
                         }
                         description
                     }
-            }
-        `,
-        variables: {
-            query: this.keyword,
-        },
-    });
-    this.response = result.data.appFullTextSearch;
+                }
+            `,
+            variables: {
+                query: this.keyword,
+            },
+        });
+        this.response = result.data.appFullTextSearch;
     }
 
     reduceAfter(state: RootAppState): RootAppState {

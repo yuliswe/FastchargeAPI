@@ -168,9 +168,9 @@ query DeleteApp($name: String!) {
     }
 }
 
-query UpdateApp($app_name: String!, $description: String, $repository: String, $homepage: String) {
+query UpdateApp($app_name: String!, $description: String, $repository: URL, $homepage: URL, $readme: URL) {
     app(name: $app_name) {
-        updateApp(description: $description, repository: $repository, homepage: $homepage) {
+        updateApp(description: $description, repository: $repository, homepage: $homepage, readme: $readme) {
             name
         }
     }
@@ -268,5 +268,28 @@ query GetAppEndpointsAsOwner($appName: String!) {
             description
             destination
         }
+    }
+}
+
+query GetUserAccountBalanceAndLimit($user: ID!) {
+    user(pk: $user) {
+        balance
+        balanceLimit
+    }
+}
+
+query UpdateUserInfo($user: ID!, $author: String) {
+    user(pk: $user) {
+        updateUser(author: $author) {
+            author
+        }
+    }
+}
+
+query GetUserAccountInfo($user: ID!) {
+    user(pk: $user) {
+        balance
+        author
+        email
     }
 }

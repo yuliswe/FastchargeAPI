@@ -12,10 +12,7 @@ import {
 
 export type AppDetailInfo = GQLAppDetailLoadAppInfoQuery["app"];
 class LoadAppInfo extends AppEvent<RootAppState> {
-    constructor(
-        public context: AppContext,
-        public options: { appName: string }
-    ) {
+    constructor(public context: AppContext, public options: { app: string }) {
         super();
     }
     reducer(state: RootAppState): RootAppState {
@@ -26,17 +23,27 @@ class LoadAppInfo extends AppEvent<RootAppState> {
         });
     }
 
+    async getReadmeFileContent(url: string): Promise<string> {
+        let contentUrl = url.replace(/blob\//, "").replace(/github.com/, "raw.githubusercontent.com");
+        let content = await fetch(contentUrl, { method: "GET" });
+        return content.text();
+    }
+
     appInfo: AppDetailInfo | null = null;
+    appReadmeContent: string | null = null;
     async *run(state: RootAppState): AppEventStream<RootAppState> {
         let { client, currentUser } = await getGQLClient(this.context);
         let result = await client.query({
             query: gql`
-                query AppDetailLoadAppInfo($appName: String!) {
-                    app(name: $appName) {
+                query AppDetailLoadAppInfo($app: ID!) {
+                    app(pk: $app) {
+                        pk
+                        title
                         name
                         description
                         repository
                         homepage
+                        readme
                         owner {
                             author
                         }
@@ -44,10 +51,17 @@ class LoadAppInfo extends AppEvent<RootAppState> {
                 }
             `,
             variables: {
-                appName: this.options.appName,
+                app: this.options.app,
             },
         });
         this.appInfo = result.data.app;
+        if (this.appInfo?.readme) {
+            try {
+                this.appReadmeContent = await this.getReadmeFileContent(this.appInfo?.readme);
+            } catch (e) {
+                console.error(e);
+            }
+        }
     }
 
     reduceAfter(state: RootAppState): RootAppState {
@@ -55,18 +69,15 @@ class LoadAppInfo extends AppEvent<RootAppState> {
             appDetail: mapState({
                 loadingAppInfo: to(false),
                 appInfo: to(this.appInfo),
+                appReadmeContent: to(this.appReadmeContent),
             }),
         });
     }
 }
 
-export type AppDetailPricing =
-    GQLAppDetailLoadPricingsQuery["app"]["pricingPlans"][0];
+export type AppDetailPricing = GQLAppDetailLoadPricingsQuery["app"]["pricingPlans"][0];
 class LoadPricings extends AppEvent<RootAppState> {
-    constructor(
-        public context: AppContext,
-        public options: { appName: string }
-    ) {
+    constructor(public context: AppContext, public options: { app: string }) {
         super();
     }
     reducer(state: RootAppState): RootAppState {
@@ -82,8 +93,8 @@ class LoadPricings extends AppEvent<RootAppState> {
         let { client, currentUser } = await getGQLClient(this.context);
         let result = await client.query({
             query: gql`
-                query AppDetailLoadPricings($appName: String!) {
-                    app(name: $appName) {
+                query AppDetailLoadPricings($app: ID!) {
+                    app(pk: $app) {
                         pricingPlans {
                             name
                             callToAction
@@ -95,7 +106,7 @@ class LoadPricings extends AppEvent<RootAppState> {
                 }
             `,
             variables: {
-                appName: this.options.appName,
+                app: this.options.app,
             },
         });
         this.pricingPlans = result.data.app.pricingPlans;
@@ -111,13 +122,9 @@ class LoadPricings extends AppEvent<RootAppState> {
     }
 }
 
-export type AppDetailEndpoint =
-    GQLAppDetailLoadEndpointsQuery["app"]["endpoints"][0];
+export type AppDetailEndpoint = GQLAppDetailLoadEndpointsQuery["app"]["endpoints"][0];
 class LoadEndpoints extends AppEvent<RootAppState> {
-    constructor(
-        public context: AppContext,
-        public options: { appName: string }
-    ) {
+    constructor(public context: AppContext, public options: { app: string }) {
         super();
     }
     reducer(state: RootAppState): RootAppState {
@@ -131,24 +138,20 @@ class LoadEndpoints extends AppEvent<RootAppState> {
     endpoints: AppDetailEndpoint[] = [];
     async *run(state: RootAppState): AppEventStream<RootAppState> {
         let { client, currentUser } = await getGQLClient(this.context);
-        let result = await client.query<
-            GQLAppDetailLoadEndpointsQuery,
-            GQLAppDetailLoadEndpointsQueryVariables
-        >({
+        let result = await client.query<GQLAppDetailLoadEndpointsQuery, GQLAppDetailLoadEndpointsQueryVariables>({
             query: gql`
-                query AppDetailLoadEndpoints($appName: String!) {
-                    app(name: $appName) {
+                query AppDetailLoadEndpoints($app: ID!) {
+                    app(pk: $app) {
                         endpoints {
                             method
                             path
                             description
-                            destination
                         }
                     }
                 }
             `,
             variables: {
-                appName: this.options.appName,
+                app: this.options.app,
             },
         });
         this.endpoints = result.data.app.endpoints;

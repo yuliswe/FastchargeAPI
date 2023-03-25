@@ -35,6 +35,7 @@ export type Scalars = {
     Email: string;
     NonNegativeDecimal: any;
     Timestamp: number;
+    URL: any;
 };
 
 export type GQLAccountActivity = {
@@ -88,19 +89,22 @@ export type GQLApp = {
     description?: Maybe<Scalars["String"]>;
     endpoints: Array<GQLEndpoint>;
     gatewayMode: GatewayMode;
-    homepage?: Maybe<Scalars["String"]>;
+    homepage?: Maybe<Scalars["URL"]>;
     name: Scalars["String"];
     owner: GQLUser;
+    pk: Scalars["ID"];
     pricingPlans: Array<GQLPricing>;
-    repository?: Maybe<Scalars["String"]>;
+    readme?: Maybe<Scalars["URL"]>;
+    repository?: Maybe<Scalars["URL"]>;
     title?: Maybe<Scalars["String"]>;
     updateApp: GQLApp;
 };
 
 export type GQLAppUpdateAppArgs = {
     description?: InputMaybe<Scalars["String"]>;
-    homepage?: InputMaybe<Scalars["String"]>;
-    repository?: InputMaybe<Scalars["String"]>;
+    homepage?: InputMaybe<Scalars["URL"]>;
+    readme?: InputMaybe<Scalars["URL"]>;
+    repository?: InputMaybe<Scalars["URL"]>;
     title?: InputMaybe<Scalars["String"]>;
 };
 
@@ -178,10 +182,10 @@ export type GQLMutation = {
 export type GQLMutationCreateAppArgs = {
     description?: InputMaybe<Scalars["String"]>;
     gatewayMode?: InputMaybe<GatewayMode>;
-    homepage?: InputMaybe<Scalars["String"]>;
+    homepage?: InputMaybe<Scalars["URL"]>;
     name: Scalars["String"];
     owner: Scalars["ID"];
-    repository?: InputMaybe<Scalars["String"]>;
+    repository?: InputMaybe<Scalars["URL"]>;
     title?: InputMaybe<Scalars["String"]>;
 };
 
@@ -288,6 +292,7 @@ export type GQLQuery = {
 
 export type GQLQueryAppArgs = {
     name?: InputMaybe<Scalars["String"]>;
+    pk?: InputMaybe<Scalars["ID"]>;
 };
 
 export type GQLQueryAppFullTextSearchArgs = {
@@ -617,6 +622,7 @@ export type GQLResolversTypes = ResolversObject<{
     StripeTransferStatus: GQLStripeTransferStatus;
     Subscribe: ResolverTypeWrapper<SubscriptionData>;
     Timestamp: ResolverTypeWrapper<Scalars["Timestamp"]>;
+    URL: ResolverTypeWrapper<Scalars["URL"]>;
     UsageLog: ResolverTypeWrapper<UsageLogData>;
     UsageSummary: ResolverTypeWrapper<UsageSummaryData>;
     User: ResolverTypeWrapper<UserData>;
@@ -646,6 +652,7 @@ export type GQLResolversParentTypes = ResolversObject<{
     StripeTransfer: StripeTransferData;
     Subscribe: SubscriptionData;
     Timestamp: Scalars["Timestamp"];
+    URL: Scalars["URL"];
     UsageLog: UsageLogData;
     UsageSummary: UsageSummaryData;
     User: UserData;
@@ -687,11 +694,13 @@ export type GQLAppResolvers<
     description?: Resolver<Maybe<GQLResolversTypes["String"]>, ParentType, ContextType>;
     endpoints?: Resolver<Array<GQLResolversTypes["Endpoint"]>, ParentType, ContextType>;
     gatewayMode?: Resolver<GQLResolversTypes["GatewayMode"], ParentType, ContextType>;
-    homepage?: Resolver<Maybe<GQLResolversTypes["String"]>, ParentType, ContextType>;
+    homepage?: Resolver<Maybe<GQLResolversTypes["URL"]>, ParentType, ContextType>;
     name?: Resolver<GQLResolversTypes["String"], ParentType, ContextType>;
     owner?: Resolver<GQLResolversTypes["User"], ParentType, ContextType>;
+    pk?: Resolver<GQLResolversTypes["ID"], ParentType, ContextType>;
     pricingPlans?: Resolver<Array<GQLResolversTypes["Pricing"]>, ParentType, ContextType>;
-    repository?: Resolver<Maybe<GQLResolversTypes["String"]>, ParentType, ContextType>;
+    readme?: Resolver<Maybe<GQLResolversTypes["URL"]>, ParentType, ContextType>;
+    repository?: Resolver<Maybe<GQLResolversTypes["URL"]>, ParentType, ContextType>;
     title?: Resolver<Maybe<GQLResolversTypes["String"]>, ParentType, ContextType>;
     updateApp?: Resolver<GQLResolversTypes["App"], ParentType, ContextType, Partial<GQLAppUpdateAppArgs>>;
     __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
@@ -952,6 +961,10 @@ export interface GQLTimestampScalarConfig extends GraphQLScalarTypeConfig<GQLRes
     name: "Timestamp";
 }
 
+export interface GQLUrlScalarConfig extends GraphQLScalarTypeConfig<GQLResolversTypes["URL"], any> {
+    name: "URL";
+}
+
 export type GQLUsageLogResolvers<
     ContextType = RequestContext,
     ParentType extends GQLResolversParentTypes["UsageLog"] = GQLResolversParentTypes["UsageLog"]
@@ -1073,6 +1086,7 @@ export type GQLResolvers<ContextType = RequestContext> = ResolversObject<{
     StripeTransfer?: GQLStripeTransferResolvers<ContextType>;
     Subscribe?: GQLSubscribeResolvers<ContextType>;
     Timestamp?: GraphQLScalarType;
+    URL?: GraphQLScalarType;
     UsageLog?: GQLUsageLogResolvers<ContextType>;
     UsageSummary?: GQLUsageSummaryResolvers<ContextType>;
     User?: GQLUserResolvers<ContextType>;

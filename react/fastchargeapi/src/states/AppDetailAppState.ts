@@ -1,9 +1,5 @@
 import { AppState, PartialProps } from "react-appevent-redux";
-import {
-    AppDetailEndpoint,
-    AppDetailInfo,
-    AppDetailPricing,
-} from "../events/AppDetailEvent";
+import { AppDetailEndpoint, AppDetailInfo, AppDetailPricing } from "../events/AppDetailEvent";
 
 export class AppDetailAppState extends AppState {
     loadingAppInfo = true;
@@ -13,6 +9,7 @@ export class AppDetailAppState extends AppState {
     pricings: AppDetailPricing[] = [];
     endpoints: AppDetailEndpoint[] = [];
     appInfo: AppDetailInfo | null = null;
+    appReadmeContent: string | null = null;
 
     constructor(props: PartialProps<AppDetailAppState>) {
         super();

@@ -1,9 +1,10 @@
 from typing import Optional
+from urllib.parse import urlparse
 
 from blessings import Terminal
 from .groups import fastcharge
 import click
-from .exceptions import NotFound
+from .exceptions import BadUserInput, NotFound
 from .graphql import get_client_info
 from dataclasses import dataclass
 import colorama
@@ -124,18 +125,43 @@ def validate_gateway_mode_or_exit(mode: str):
         exit(1)
 
 
+class URL(click.ParamType):
+    name = "url"
+
+    def convert(self, value, param, ctx):
+        if not isinstance(value, tuple):
+            url = urlparse(value)
+            if url.scheme != "https":
+                self.fail(
+                    f"invalid URL. Only HTTPS URLs are allowed.",
+                    param,
+                    ctx,
+                )
+        return value
+
+
 @fastcharge_dev_app.command("update", aliases=["up"])
 @click.argument("app_name", required=True)
 @click.option("--description", help="Description of the app. (100 characters max)")
-@click.option("--repository", help="URL to the (Github) repository for the app.")
-@click.option("--homepage", help="URL to the homepage for the app.")
+@click.option(
+    "--repository", type=URL(), help="URL to the (Github) repository for the app."
+)
+@click.option("--homepage", type=URL(), help="URL to the homepage for the app.")
+@click.option("--readme", type=URL(), help="URL to the README.md file for the app.")
 def fastcharge_app_update(
-    app_name: str, description: str, repository: str, homepage: str
+    app_name: str, description: str, repository: str, homepage: str, readme: str
 ):
     """Update information for an existing app."""
     client, auth = get_client_info()
     try:
-        GQL.update_app(client, app_name, description, repository, homepage)
+        GQL.update_app(
+            client,
+            app_name=app_name,
+            description=description,
+            repository=repository,
+            homepage=homepage,
+            readme=readme,
+        )
     except NotFound:
         echo(
             terminal.red

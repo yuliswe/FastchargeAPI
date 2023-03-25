@@ -83,7 +83,7 @@ class LoadUserSubscription extends AppEvent<RootAppState> {
             `,
             variables: {
                 appName: this.options.appName,
-                user: currentUser,
+                user: currentUser!,
             },
         });
         this.subscriptionDetail = result.data.subscription;
@@ -166,7 +166,7 @@ class LoadUsageSummary extends AppEvent<RootAppState> {
                 }
             `,
             variables: {
-                user: currentUser,
+                user: currentUser!,
                 appName: this.options.appName,
                 dateRange: this.options.dateRange,
             },

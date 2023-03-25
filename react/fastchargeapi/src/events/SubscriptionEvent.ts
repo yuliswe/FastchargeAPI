@@ -39,7 +39,7 @@ class LoadSubscriptions extends AppEvent<RootAppState> {
                 }
             `,
             variables: {
-                user: currentUser,
+                user: currentUser!,
             },
         });
         this.subscriptions = result.data.user.subscriptions;

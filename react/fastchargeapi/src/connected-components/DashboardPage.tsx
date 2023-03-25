@@ -310,6 +310,7 @@ class _DashboardPage extends React.Component<Props, State> {
         return (
             <React.Fragment>
                 <Stack spacing={6}>
+                    <Typography variant="h5">Welcome, {this._context.firebase.user?.email}!</Typography>
                     <Grid container>
                         <Grid item md={8} flexGrow={1}>
                             <Typography variant="h6">Account</Typography>

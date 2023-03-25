@@ -1,3 +1,9 @@
+$blue: #3772ff;
+$white: #e8e9eb;
+$yellow: #ffc100;
+$black: #313638;
+$red: #df2935;
+
 @font-face {
     font-family: "Roboto";
     src: url(../fonts/Roboto/Roboto-Regular.ttf);
@@ -42,4 +48,10 @@ html {
         max-width: unset;
         border-radius: 0.5rem;
     }
+}
+
+code.hljs {
+    background-color: $white;
+    display: block;
+    border-radius: 0.25em;
 }

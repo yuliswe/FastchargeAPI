@@ -9,6 +9,24 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 
+declare module "@mui/material/styles" {
+    interface TypographyVariants {
+        label: React.CSSProperties;
+    }
+
+    // allow configuration using `createTheme`
+    interface TypographyVariantsOptions {
+        label?: React.CSSProperties;
+    }
+}
+
+// Update the Typography's variant prop options
+declare module "@mui/material/Typography" {
+    interface TypographyPropsVariantOverrides {
+        label: true;
+    }
+}
+
 export function getTheme() {
     const blue = "#3772FF";
     const white = "#E8E9EB";
@@ -34,6 +52,12 @@ export function getTheme() {
         // spacing: [0, 4, 8, 16, 32, 64],
         // spacing: (factor: number) => `${0.25 * factor}rem`,
         // spacing: mediaQuerySm ? 2 : mediaQueryMd ? 4 : 8,
+        typography: {
+            label: {
+                fontSize: 16,
+                fontWeight: 500,
+            },
+        },
         palette: {
             background: {
                 default: "#fff",
@@ -107,6 +131,11 @@ export function getTheme() {
                     },
                     body1: {
                         fontFamily: "Roboto",
+                    },
+                },
+                defaultProps: {
+                    variantMapping: {
+                        label: "h6",
                     },
                 },
             },

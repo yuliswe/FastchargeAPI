@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from functools import cache
+import json
 from typing import Optional
 from gql import gql, Client
 from gql.transport.aiohttp import AIOHTTPTransport
@@ -11,6 +12,7 @@ from .exceptions import (
     NotFound,
     TooManyResources,
     PermissionDenied,
+    BadUserInput,
 )
 from click import echo
 from .config import graphql_host
@@ -45,6 +47,8 @@ class GQLClient:
                 raise PermissionDenied(str(e))
             elif ext_code == "IMMUTABLE_RESOURCE":
                 raise ImmutableResource(str(e))
+            elif ext_code == "BAD_USER_INPUT":
+                raise BadUserInput(str(e))
             else:
                 raise e
 

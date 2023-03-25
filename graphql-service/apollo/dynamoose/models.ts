@@ -98,7 +98,7 @@ const UserTableSchema = new dynamoose.Schema(
                 project: ["uid"],
             },
         },
-        author: { type: String, default: "" },
+        author: { type: String, default: () => `user_${Math.floor(Math.random() * 10000000)}` },
         stripeCustomerId: { type: String, required: false }, // Available after the user first tops up their account
         stripeConnectAccountId: { type: String, required: false }, // Available after the user first onboards their Stripe account
         balanceLimit: { type: String, default: "100", validate: validateStringDecimal("accountLimit") },
@@ -122,9 +122,10 @@ const AppTableSchema = new dynamoose.Schema(
         },
         title: { type: String, required: false },
         gatewayMode: { type: String, default: "proxy", enum: ["proxy", "redirect"] },
-        description: { default: "", type: String },
-        repository: { default: "", type: String },
-        homepage: { default: "", type: String },
+        description: { type: String },
+        repository: { type: String },
+        homepage: { type: String },
+        readme: { type: String },
     },
     { timestamps: true }
 );
@@ -489,6 +490,7 @@ export class App extends Item {
     gatewayMode: GatewayMode;
     repository: string;
     homepage: string;
+    readme: string;
 }
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import textwrap
+from typing import Optional
 from .remote_secret import interact_with_react
 
 from .graphql import get_client_info
@@ -8,6 +9,7 @@ from . import config
 from blessings import Terminal
 import webbrowser
 from gql import gql
+from .__generated__ import gql_operations as GQL
 
 terminal = Terminal()
 
@@ -25,7 +27,8 @@ def do_account_topup(amount: float):
         echo(terminal.red + f"Minimum topup amount is $1." + terminal.normal)
         exit(1)
 
-    account_balance = get_account_balance()
+    client, auth = get_client_info()
+    account_balance = GQL.get_user_account_balance_and_limit(client, user=auth.user_pk)
     if float(account_balance.balance) + amount > float(account_balance.balanceLimit):
         echo(
             terminal.red
@@ -62,92 +65,29 @@ def do_account_topup(amount: float):
         echo(terminal.red + "Payment canceled." + terminal.normal)
 
 
-@dataclass
-class GetUserAccountResult:
-    balance: str
-    balanceLimit: str
-
-
-def get_account_balance() -> GetUserAccountResult:
-    client, user_email = get_client_info()
-    user = client.execute(
-        gql(
-            """
-            query GetUserAccount($user_email: Email!) {
-                user(email: $user_email) {
-                    balance
-                    balanceLimit
-                }
-            }
-            """
-        ),
-        variable_values={"user_email": user_email},
-    )["user"]
-    return GetUserAccountResult(**user)
-
-
 def do_account_info():
-    client, user_email = get_client_info()
-    echo(f"Account: {user_email}")
-    user = client.execute(
-        gql(
-            """
-            query GetUserAccount($user_email: Email!) {
-                user(email: $user_email) {
-                    balance
-                    stripeConnectAccountId
-                }
-            }
-            """
-        ),
-        variable_values={"user_email": user_email},
-    )["user"]
+    client, auth = get_client_info()
+    user = GQL.get_user_account_info(client, user=auth.user_pk)
+    echo(f"Account:\t{user.email}")
+    echo(f"Author:\t\t{user.author or '<Not set>'}")
     # login_link = "https://connect.stripe.com/app/express"
-    login_link = "https://connect.stripe.com/express_login"
-    if user["stripeConnectAccountId"]:
-        echo(
-            terminal.green
-            + terminal.bold
-            + f"Stripe account is active."
-            + terminal.normal
-        )
-        echo(f" Login to Stripe to view your account:")
-        echo(terminal.cyan + f"  {login_link}" + terminal.normal)
-    echo()
+    # login_link = "https://connect.stripe.com/express_login"
+    # if user["stripeConnectAccountId"]:
+    #     echo(
+    #         terminal.green
+    #         + terminal.bold
+    #         + f"Stripe account is active."
+    #         + terminal.normal
+    #     )
+    #     echo(f" Login to Stripe to view your account:")
+    #     echo(terminal.cyan + f"  {login_link}" + terminal.normal)
     echo(
-        terminal.yellow
-        + terminal.bold
-        + f"Your Fastchage account balance is: ${float(user['balance']):.2f}"
-        + terminal.normal
-    )
-    echo(
-        "\n".join(
-            textwrap.wrap(
-                f"You can either use the balance to pay for API calls that are made by other developers, or withdraw it to your Stripe account.",
-                initial_indent=" ",
-                subsequent_indent=" ",
-            )
+        terminal.yellow(
+            f"Your Fastchage account balance is: ${float(user.balance):.2f}"
         )
     )
-    echo()
 
 
-def do_account_update(author: str):
-    client, user_email = get_client_info()
-    user = client.execute(
-        gql(
-            """
-            query UpdateUserInfo($email: Email!, $author: String!) {
-                user(email: $email) {
-                    updateUser(author: $author) {
-                        updatedAt
-                    }
-                }
-            }
-            """
-        ),
-        variable_values={
-            "email": user_email,
-            "author": author,
-        },
-    )
+def do_account_update(author: Optional[str] = None):
+    client, auth = get_client_info()
+    GQL.update_user_info(client, user=auth.user_pk, author=author)

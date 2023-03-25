@@ -14,9 +14,7 @@ import { MyAppDetailPage } from "./connected-components/MyAppDetailPage";
 import { SubscriptionDetailPage } from "./connected-components/SubscriptionDetailPage";
 import { TermsPage } from "./connected-components/TermsPage";
 
-export function createRouter(
-    WithContext: (props: React.PropsWithChildren) => React.ReactElement
-) {
+export function createRouter(WithContext: (props: React.PropsWithChildren) => React.ReactElement) {
     const router = createBrowserRouter([
         {
             path: "/auth",
@@ -39,7 +37,7 @@ export function createRouter(
             element: <WithContext children={<SearchResultPage />} />,
         },
         {
-            path: "/apis/:app",
+            path: "/app/:app",
             element: <WithContext children={<AppDetailPage />} />,
         },
         {
@@ -64,9 +62,7 @@ export function createRouter(
                 },
                 {
                     path: "subscriptions/:app",
-                    element: (
-                        <WithContext children={<SubscriptionDetailPage />} />
-                    ),
+                    element: <WithContext children={<SubscriptionDetailPage />} />,
                 },
             ],
         },

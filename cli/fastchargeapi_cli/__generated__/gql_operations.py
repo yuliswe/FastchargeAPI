@@ -504,9 +504,10 @@ class UpdateApp(BaseModel):
         description: Optional[str] = None
         repository: Optional[str] = None
         homepage: Optional[str] = None
+        readme: Optional[str] = None
 
     class Meta:
-        document = "query UpdateApp($app_name: String!, $description: String, $repository: String, $homepage: String) {\n  app(name: $app_name) {\n    updateApp(\n      description: $description\n      repository: $repository\n      homepage: $homepage\n    ) {\n      name\n    }\n  }\n}"
+        document = "query UpdateApp($app_name: String!, $description: String, $repository: URL, $homepage: URL, $readme: URL) {\n  app(name: $app_name) {\n    updateApp(\n      description: $description\n      repository: $repository\n      homepage: $homepage\n      readme: $readme\n    ) {\n      name\n    }\n  }\n}"
 
 
 class ListAppPricingDetailsAppPricingplans(BaseModel):
@@ -649,6 +650,60 @@ class GetAppEndpointsAsOwner(BaseModel):
 
     class Meta:
         document = "query GetAppEndpointsAsOwner($appName: String!) {\n  app(name: $appName) {\n    name\n    endpoints {\n      pk\n      path\n      method\n      description\n      destination\n    }\n  }\n}"
+
+
+class GetUserAccountBalanceAndLimitUser(BaseModel):
+    typename: Optional[Literal["User"]] = Field(alias="__typename")
+    balance: str
+    balanceLimit: str
+
+
+class GetUserAccountBalanceAndLimit(BaseModel):
+    user: GetUserAccountBalanceAndLimitUser
+
+    class Arguments(BaseModel):
+        user: str
+
+    class Meta:
+        document = "query GetUserAccountBalanceAndLimit($user: ID!) {\n  user(pk: $user) {\n    balance\n    balanceLimit\n  }\n}"
+
+
+class UpdateUserInfoUserUpdateuser(BaseModel):
+    typename: Optional[Literal["User"]] = Field(alias="__typename")
+    author: str
+
+
+class UpdateUserInfoUser(BaseModel):
+    typename: Optional[Literal["User"]] = Field(alias="__typename")
+    updateUser: Optional[UpdateUserInfoUserUpdateuser]
+
+
+class UpdateUserInfo(BaseModel):
+    user: UpdateUserInfoUser
+
+    class Arguments(BaseModel):
+        user: str
+        author: Optional[str] = None
+
+    class Meta:
+        document = "query UpdateUserInfo($user: ID!, $author: String) {\n  user(pk: $user) {\n    updateUser(author: $author) {\n      author\n    }\n  }\n}"
+
+
+class GetUserAccountInfoUser(BaseModel):
+    typename: Optional[Literal["User"]] = Field(alias="__typename")
+    balance: str
+    author: str
+    email: str
+
+
+class GetUserAccountInfo(BaseModel):
+    user: GetUserAccountInfoUser
+
+    class Arguments(BaseModel):
+        user: str
+
+    class Meta:
+        document = "query GetUserAccountInfo($user: ID!) {\n  user(pk: $user) {\n    balance\n    author\n    email\n  }\n}"
 
 
 def get_current_subscription(
@@ -987,6 +1042,7 @@ def update_app(
     description: Optional[str] = None,
     repository: Optional[str] = None,
     homepage: Optional[str] = None,
+    readme: Optional[str] = None,
 ) -> UpdateAppApp:
     """UpdateApp
 
@@ -998,6 +1054,7 @@ def update_app(
         description (Optional[str], optional): description.
         repository (Optional[str], optional): repository.
         homepage (Optional[str], optional): homepage.
+        readme (Optional[str], optional): readme.
 
     Returns:
         UpdateAppApp"""
@@ -1009,6 +1066,7 @@ def update_app(
             "description": description,
             "repository": repository,
             "homepage": homepage,
+            "readme": readme,
         },
     ).app
 
@@ -1153,3 +1211,50 @@ def get_app_endpoints_as_owner(
     Returns:
         GetAppEndpointsAsOwnerApp"""
     return gql_execute(GQLClient, GetAppEndpointsAsOwner, {"appName": appName}).app
+
+
+def get_user_account_balance_and_limit(
+    GQLClient: GQLClient, user: str
+) -> GetUserAccountBalanceAndLimitUser:
+    """GetUserAccountBalanceAndLimit
+
+
+
+    Arguments:
+        GQLClient (..graphql.GQLClient): The client we want to use to execute the operation
+        user (str): user
+
+    Returns:
+        GetUserAccountBalanceAndLimitUser"""
+    return gql_execute(GQLClient, GetUserAccountBalanceAndLimit, {"user": user}).user
+
+
+def update_user_info(
+    GQLClient: GQLClient, user: str, author: Optional[str] = None
+) -> UpdateUserInfoUser:
+    """UpdateUserInfo
+
+
+
+    Arguments:
+        GQLClient (..graphql.GQLClient): The client we want to use to execute the operation
+        user (str): user
+        author (Optional[str], optional): author.
+
+    Returns:
+        UpdateUserInfoUser"""
+    return gql_execute(GQLClient, UpdateUserInfo, {"user": user, "author": author}).user
+
+
+def get_user_account_info(GQLClient: GQLClient, user: str) -> GetUserAccountInfoUser:
+    """GetUserAccountInfo
+
+
+
+    Arguments:
+        GQLClient (..graphql.GQLClient): The client we want to use to execute the operation
+        user (str): user
+
+    Returns:
+        GetUserAccountInfoUser"""
+    return gql_execute(GQLClient, GetUserAccountInfo, {"user": user}).user

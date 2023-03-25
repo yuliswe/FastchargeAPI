@@ -84,9 +84,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
     renderAddAPIDocumentation({ app }: { app: string }) {
         return (
             <Terminal height="12em" colorMode={ColorMode.Light}>
-                <Typography variant="body1">
-                    We recommend using the cli tool to add an API endpoint.
-                </Typography>
+                <Typography variant="body1">We recommend using the cli tool to add an API endpoint.</Typography>
                 <Typography variant="body1" sx={{ mb: 2, fontWeight: 700 }}>
                     To add an endpoint, run the following command:
                 </Typography>
@@ -100,12 +98,9 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
     renderAddPricingDocumentation({ app }: { app: string }) {
         return (
             <Terminal height="12em" colorMode={ColorMode.Light}>
-                <Typography variant="body1">
-                    We recommend using the cli tool to add a pricing plan.
-                </Typography>
+                <Typography variant="body1">We recommend using the cli tool to add a pricing plan.</Typography>
                 <Typography variant="body1" sx={{ mb: 2, fontWeight: 700 }}>
-                    To add a pricing, run the following command, replacing the
-                    values with your own:
+                    To add a pricing, run the following command, replacing the values with your own:
                 </Typography>
                 <TerminalInput>
                     {`fastcharge pricing add --app "${app}" \\\n    --name "Premium" \\\n    --charge-per-request 0.001 \\\n    --min-monthly-charge 15 \\\n    --free-quota 1000`}
@@ -114,27 +109,14 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
         );
     }
 
-    renderModifyAppInfoDocumentation({
-        app,
-        property,
-        value,
-    }: {
-        app: string;
-        property: string;
-        value: string;
-    }) {
+    renderModifyAppInfoDocumentation({ app, property, value }: { app: string; property: string; value: string }) {
         return (
             <Terminal height="9em" colorMode={ColorMode.Light}>
-                <Typography variant="body1">
-                    We recommend using the cli tool to modify app information.
-                </Typography>
+                <Typography variant="body1">We recommend using the cli tool to modify app information.</Typography>
                 <Typography variant="body1" sx={{ fontWeight: 700 }}>
-                    Run the following command, replacing the value with your
-                    own.
+                    Run the following command, replacing the value with your own.
                 </Typography>
-                <TerminalInput>
-                    {`fastcharge app update "${app}" \\\n    --${property} "${value}"`}
-                </TerminalInput>
+                <TerminalInput>{`fastcharge app update "${app}" \\\n    --${property} "${value}"`}</TerminalInput>
             </Terminal>
         );
     }
@@ -142,15 +124,12 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
     renderModifyAPIDocumentation({ endpointID }: { endpointID: string }) {
         return (
             <Terminal height="14em" colorMode={ColorMode.Light}>
-                <Typography variant="body1">
-                    We recommend using the cli tool to modify the endpoint.
-                </Typography>
+                <Typography variant="body1">We recommend using the cli tool to modify the endpoint.</Typography>
                 <Typography variant="body1">
                     This endpoint has ID: <b>{endpointID}</b>
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 700 }}>
-                    To update the endpoint, run the following command, replacing
-                    the values with your own.
+                    To update the endpoint, run the following command, replacing the values with your own.
                 </Typography>
                 <Typography variant="body1" sx={{ mb: 2 }}>
                     All values are optional:
@@ -165,15 +144,12 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
     renderModifyPricingDocumentation({ pricingID }: { pricingID: string }) {
         return (
             <Terminal height="14em" colorMode={ColorMode.Light}>
-                <Typography variant="body1">
-                    We recommend using the cli tool to modify the pricing plan.
-                </Typography>
+                <Typography variant="body1">We recommend using the cli tool to modify the pricing plan.</Typography>
                 <Typography variant="body1">
                     This pricing has ID: <b>{pricingID}</b>
                 </Typography>
                 <Typography variant="body1" sx={{ fontWeight: 700 }}>
-                    To update the pricing, run the following command, replacing
-                    the values with your own.
+                    To update the pricing, run the following command, replacing the values with your own.
                 </Typography>
                 <Typography variant="body1" sx={{ mb: 2 }}>
                     All values are optional:
@@ -188,18 +164,14 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
     renderDeleteAPIDocumentation({ endpointIDs }: { endpointIDs: string[] }) {
         return (
             <Terminal height="14em" colorMode={ColorMode.Light}>
-                <Typography variant="body1">
-                    We recommend using the cli tool to delete the endpoint.
-                </Typography>
+                <Typography variant="body1">We recommend using the cli tool to delete the endpoint.</Typography>
                 <Typography variant="body1" sx={{ fontWeight: 700 }}>
                     To delete the endpoint, run the following command:
                 </Typography>
                 <TerminalInput>
                     {endpointIDs.map(
                         (id: string, idx: number) =>
-                            `fastcharge api delete "${id}" ${
-                                idx === endpointIDs.length - 1 ? "" : "\\\n"
-                            }`
+                            `fastcharge api delete "${id}" ${idx === endpointIDs.length - 1 ? "" : "\\\n"}`
                     )}
                 </TerminalInput>
             </Terminal>
@@ -209,18 +181,14 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
     renderDeletePricingDocumentation({ pricingIDs }: { pricingIDs: string[] }) {
         return (
             <Terminal height="14em" colorMode={ColorMode.Light}>
-                <Typography variant="body1">
-                    We recommend using the cli tool to delete the pricing.
-                </Typography>
+                <Typography variant="body1">We recommend using the cli tool to delete the pricing.</Typography>
                 <Typography variant="body1" sx={{ fontWeight: 700 }}>
                     To delete the pricing, run the following command:
                 </Typography>
                 <TerminalInput>
                     {pricingIDs.map(
                         (id: string, idx: number) =>
-                            `fastcharge api delete "${id}" ${
-                                idx === pricingIDs.length - 1 ? "" : "\\\n"
-                            }`
+                            `fastcharge api delete "${id}" ${idx === pricingIDs.length - 1 ? "" : "\\\n"}`
                     )}
                 </TerminalInput>
             </Terminal>
@@ -230,11 +198,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
         return (
             <React.Fragment>
                 <Breadcrumbs aria-label="breadcrumb">
-                    <Link
-                        underline="hover"
-                        color="inherit"
-                        href="/account/my-apps"
-                    >
+                    <Link underline="hover" color="inherit" href="/account/my-apps">
                         My Apps
                     </Link>
                     <Stack direction="row" spacing={2} alignItems="center">
@@ -251,35 +215,23 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                     <Stack>
                         <Grid container spacing={2}>
                             <Grid item xs={12}>
-                                <Typography mb={1} fontSize={14} variant="h6">
+                                <Typography mb={1} variant="label">
                                     App name
                                 </Typography>
-                                <TextField
-                                    variant="standard"
-                                    value={this.appState.appDetail?.name || ""}
-                                    disabled
-                                />
+                                <TextField variant="standard" value={this.appState.appDetail?.name || ""} disabled />
                             </Grid>
                             <Grid item xs={6}>
-                                <Stack
-                                    direction="row"
-                                    alignItems="center"
-                                    mb={1}
-                                >
-                                    <Typography fontSize={14} variant="h6">
-                                        Repository
-                                    </Typography>
+                                <Stack direction="row" alignItems="center" mb={1}>
+                                    <Typography variant="label">Repository</Typography>
                                     <IconButton
                                         size="small"
                                         onClick={() => {
                                             openDocumentationDialog(this, () =>
-                                                this.renderModifyAppInfoDocumentation(
-                                                    {
-                                                        property: "repository",
-                                                        value: "https://github.com/username/myapp",
-                                                        app: this.getAppName(),
-                                                    }
-                                                )
+                                                this.renderModifyAppInfoDocumentation({
+                                                    property: "repository",
+                                                    value: "https://github.com/username/myapp",
+                                                    app: this.getAppName(),
+                                                })
                                             );
                                         }}
                                     >
@@ -290,64 +242,41 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                     fullWidth
                                     disabled
                                     placeholder="Github URL"
-                                    defaultValue={
-                                        this.appState.appDetail?.repository ||
-                                        ""
-                                    }
+                                    defaultValue={this.appState.appDetail?.repository || ""}
                                 />
                             </Grid>
                             <Grid item xs={6}>
-                                <Stack
-                                    direction="row"
-                                    alignItems="center"
-                                    mb={1}
-                                >
-                                    <Typography fontSize={14} variant="h6">
-                                        Homepage
-                                    </Typography>
+                                <Stack direction="row" alignItems="center" mb={1}>
+                                    <Typography variant="label">Homepage</Typography>
                                     <IconButton
                                         size="small"
                                         onClick={() => {
                                             openDocumentationDialog(this, () =>
-                                                this.renderModifyAppInfoDocumentation(
-                                                    {
-                                                        property: "homepage",
-                                                        value: "https://github.com/username/myapp",
-                                                        app: this.getAppName(),
-                                                    }
-                                                )
+                                                this.renderModifyAppInfoDocumentation({
+                                                    property: "homepage",
+                                                    value: "https://github.com/username/myapp",
+                                                    app: this.getAppName(),
+                                                })
                                             );
                                         }}
                                     >
                                         <EditIcon />
                                     </IconButton>
                                 </Stack>
-                                <TextField
-                                    fullWidth
-                                    disabled
-                                    placeholder="URL to project or documentation."
-                                />
+                                <TextField fullWidth disabled placeholder="URL to project or documentation." />
                             </Grid>
                             <Grid item xs={12}>
-                                <Stack
-                                    direction="row"
-                                    alignItems="center"
-                                    mb={1}
-                                >
-                                    <Typography fontSize={14} variant="h6">
-                                        Description
-                                    </Typography>
+                                <Stack direction="row" alignItems="center" mb={1}>
+                                    <Typography variant="label">Description</Typography>
                                     <IconButton
                                         size="small"
                                         onClick={() => {
                                             openDocumentationDialog(this, () =>
-                                                this.renderModifyAppInfoDocumentation(
-                                                    {
-                                                        property: "description",
-                                                        value: "My App description",
-                                                        app: this.getAppName(),
-                                                    }
-                                                )
+                                                this.renderModifyAppInfoDocumentation({
+                                                    property: "description",
+                                                    value: "My App description",
+                                                    app: this.getAppName(),
+                                                })
                                             );
                                         }}
                                     >
@@ -358,10 +287,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                     multiline
                                     rows={4}
                                     fullWidth
-                                    defaultValue={
-                                        this.appState.appDetail?.description ||
-                                        ""
-                                    }
+                                    defaultValue={this.appState.appDetail?.description || ""}
                                     disabled
                                 />
                             </Grid>
@@ -389,15 +315,11 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                 variant="contained"
                                 color="secondary"
                                 size="small"
-                                disabled={
-                                    this.state.pricingCheckboxes.size == 0
-                                }
+                                disabled={this.state.pricingCheckboxes.size == 0}
                                 onClick={() => {
                                     openDocumentationDialog(this, () =>
                                         this.renderDeletePricingDocumentation({
-                                            pricingIDs: [
-                                                ...this.state.pricingCheckboxes,
-                                            ],
+                                            pricingIDs: [...this.state.pricingCheckboxes],
                                         })
                                     );
                                 }}
@@ -414,18 +336,13 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                             onChange={(e, checked) => {
                                                 if (checked) {
                                                     this.setState({
-                                                        pricingCheckboxes:
-                                                            new Set(
-                                                                this.getPricingList().map(
-                                                                    (pricing) =>
-                                                                        pricing.pk
-                                                                )
-                                                            ),
+                                                        pricingCheckboxes: new Set(
+                                                            this.getPricingList().map((pricing) => pricing.pk)
+                                                        ),
                                                     });
                                                 } else {
                                                     this.setState({
-                                                        pricingCheckboxes:
-                                                            new Set(),
+                                                        pricingCheckboxes: new Set(),
                                                     });
                                                 }
                                             }}
@@ -444,28 +361,18 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                         <TableCell width={50}>
                                             <Checkbox
                                                 color="secondary"
-                                                checked={this.state.pricingCheckboxes.has(
-                                                    pricing.pk
-                                                )}
+                                                checked={this.state.pricingCheckboxes.has(pricing.pk)}
                                                 onChange={(e, checked) => {
-                                                    let newState = new Set(
-                                                        this.state.pricingCheckboxes
-                                                    );
+                                                    let newState = new Set(this.state.pricingCheckboxes);
                                                     if (checked) {
-                                                        newState.add(
-                                                            pricing.pk
-                                                        );
+                                                        newState.add(pricing.pk);
                                                         this.setState({
-                                                            pricingCheckboxes:
-                                                                newState,
+                                                            pricingCheckboxes: newState,
                                                         });
                                                     } else {
-                                                        newState.delete(
-                                                            pricing.pk
-                                                        );
+                                                        newState.delete(pricing.pk);
                                                         this.setState({
-                                                            pricingCheckboxes:
-                                                                newState,
+                                                            pricingCheckboxes: newState,
                                                         });
                                                     }
                                                 }}
@@ -474,9 +381,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                         <TableCell>
                                             <IconButton
                                                 onClick={() => {
-                                                    void window.navigator.clipboard.writeText(
-                                                        pricing.pk
-                                                    );
+                                                    void window.navigator.clipboard.writeText(pricing.pk);
                                                 }}
                                             >
                                                 <CopyIcon />
@@ -490,8 +395,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                                 color="secondary"
                                                 defaultValue={pricing.name}
                                                 sx={{
-                                                    bgcolor:
-                                                        "background.default",
+                                                    bgcolor: "background.default",
                                                 }}
                                             />
                                         </TableCell>
@@ -503,12 +407,9 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                                 fullWidth
                                                 type="number"
                                                 color="secondary"
-                                                defaultValue={
-                                                    pricing.chargePerRequest
-                                                }
+                                                defaultValue={pricing.chargePerRequest}
                                                 sx={{
-                                                    bgcolor:
-                                                        "background.default",
+                                                    bgcolor: "background.default",
                                                 }}
                                             />
                                         </TableCell>
@@ -522,8 +423,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                                 color="secondary"
                                                 // defaultValue={api.destination}
                                                 sx={{
-                                                    bgcolor:
-                                                        "background.default",
+                                                    bgcolor: "background.default",
                                                 }}
                                             />
                                         </TableCell>
@@ -534,27 +434,19 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                                 fullWidth
                                                 type="number"
                                                 color="secondary"
-                                                defaultValue={
-                                                    pricing.freeQuota || 0
-                                                }
+                                                defaultValue={pricing.freeQuota || 0}
                                                 sx={{
-                                                    bgcolor:
-                                                        "background.default",
+                                                    bgcolor: "background.default",
                                                 }}
                                             />
                                         </TableCell>
                                         <TableCell>
                                             <IconButton
                                                 onClick={() => {
-                                                    openDocumentationDialog(
-                                                        this,
-                                                        () =>
-                                                            this.renderModifyPricingDocumentation(
-                                                                {
-                                                                    pricingID:
-                                                                        pricing.pk,
-                                                                }
-                                                            )
+                                                    openDocumentationDialog(this, () =>
+                                                        this.renderModifyPricingDocumentation({
+                                                            pricingID: pricing.pk,
+                                                        })
                                                     );
                                                 }}
                                             >
@@ -590,16 +482,11 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                 variant="contained"
                                 size="small"
                                 color="secondary"
-                                disabled={
-                                    this.state.endpointCheckboxes.size == 0
-                                }
+                                disabled={this.state.endpointCheckboxes.size == 0}
                                 onClick={() => {
                                     openDocumentationDialog(this, () =>
                                         this.renderDeleteAPIDocumentation({
-                                            endpointIDs: [
-                                                ...this.state
-                                                    .endpointCheckboxes,
-                                            ],
+                                            endpointIDs: [...this.state.endpointCheckboxes],
                                         })
                                     );
                                 }}
@@ -616,18 +503,13 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                             onChange={(e, checked) => {
                                                 if (checked) {
                                                     this.setState({
-                                                        endpointCheckboxes:
-                                                            new Set(
-                                                                this.getAPIList().map(
-                                                                    (api) =>
-                                                                        api.pk
-                                                                )
-                                                            ),
+                                                        endpointCheckboxes: new Set(
+                                                            this.getAPIList().map((api) => api.pk)
+                                                        ),
                                                     });
                                                 } else {
                                                     this.setState({
-                                                        endpointCheckboxes:
-                                                            new Set(),
+                                                        endpointCheckboxes: new Set(),
                                                     });
                                                 }
                                             }}
@@ -646,24 +528,18 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                         <TableCell width={50}>
                                             <Checkbox
                                                 color="secondary"
-                                                checked={this.state.endpointCheckboxes.has(
-                                                    api.pk
-                                                )}
+                                                checked={this.state.endpointCheckboxes.has(api.pk)}
                                                 onChange={(e, checked) => {
-                                                    let newState = new Set(
-                                                        this.state.endpointCheckboxes
-                                                    );
+                                                    let newState = new Set(this.state.endpointCheckboxes);
                                                     if (checked) {
                                                         newState.add(api.pk);
                                                         this.setState({
-                                                            endpointCheckboxes:
-                                                                newState,
+                                                            endpointCheckboxes: newState,
                                                         });
                                                     } else {
                                                         newState.delete(api.pk);
                                                         this.setState({
-                                                            endpointCheckboxes:
-                                                                newState,
+                                                            endpointCheckboxes: newState,
                                                         });
                                                     }
                                                 }}
@@ -672,9 +548,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                         <TableCell>
                                             <IconButton
                                                 onClick={() => {
-                                                    void window.navigator.clipboard.writeText(
-                                                        api.pk
-                                                    );
+                                                    void window.navigator.clipboard.writeText(api.pk);
                                                 }}
                                             >
                                                 <CopyIcon />
@@ -683,28 +557,15 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                         <TableCell width={200}>
                                             <Autocomplete
                                                 disablePortal
-                                                options={[
-                                                    "GET",
-                                                    "POST",
-                                                    "PUT",
-                                                    "DELETE",
-                                                    "PATCH",
-                                                    "OPTIONS",
-                                                    "HEAD",
-                                                ]}
+                                                options={["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"]}
                                                 defaultValue={api.method}
                                                 disabled
                                                 color="secondary"
                                                 sx={{
-                                                    bgcolor:
-                                                        "background.default",
+                                                    bgcolor: "background.default",
                                                 }}
                                                 renderInput={(params) => (
-                                                    <TextField
-                                                        variant="standard"
-                                                        color="secondary"
-                                                        {...params}
-                                                    />
+                                                    <TextField variant="standard" color="secondary" {...params} />
                                                 )}
                                             />
                                         </TableCell>
@@ -716,8 +577,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                                 defaultValue={api.path}
                                                 disabled
                                                 sx={{
-                                                    bgcolor:
-                                                        "background.default",
+                                                    bgcolor: "background.default",
                                                 }}
                                             />
                                         </TableCell>
@@ -729,23 +589,17 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                                 defaultValue={api.destination}
                                                 disabled
                                                 sx={{
-                                                    bgcolor:
-                                                        "background.default",
+                                                    bgcolor: "background.default",
                                                 }}
                                             />
                                         </TableCell>
                                         <TableCell>
                                             <IconButton
                                                 onClick={() => {
-                                                    openDocumentationDialog(
-                                                        this,
-                                                        () =>
-                                                            this.renderModifyAPIDocumentation(
-                                                                {
-                                                                    endpointID:
-                                                                        api.pk,
-                                                                }
-                                                            )
+                                                    openDocumentationDialog(this, () =>
+                                                        this.renderModifyAPIDocumentation({
+                                                            endpointID: api.pk,
+                                                        })
                                                     );
                                                 }}
                                             >
@@ -764,8 +618,6 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
     }
 }
 
-export const MyAppDetailPage = connect<_Props, {}, {}, RootAppState>(
-    (rootAppState: RootAppState) => ({
-        appState: rootAppState.myAppDetail,
-    })
-)(_MyAppDetailPage);
+export const MyAppDetailPage = connect<_Props, {}, {}, RootAppState>((rootAppState: RootAppState) => ({
+    appState: rootAppState.myAppDetail,
+}))(_MyAppDetailPage);

@@ -20,12 +20,14 @@ class LoadMyApps extends AppEvent<RootAppState> {
     }
 
     apps: UserApp[] = [];
+    authorName = "";
     async *run(state: RootAppState): AppEventStream<RootAppState> {
         let { client, currentUser } = await getGQLClient(this.context);
         let result = await client.query<GQLGetUserAppsQuery, GQLGetUserAppsQueryVariables>({
             query: gql`
                 query GetUserApps($user: ID!) {
                     user(pk: $user) {
+                        author
                         apps {
                             name
                             description
@@ -34,10 +36,11 @@ class LoadMyApps extends AppEvent<RootAppState> {
                 }
             `,
             variables: {
-                user: currentUser,
+                user: currentUser!,
             },
         });
         this.apps = result.data.user.apps;
+        this.authorName = result.data.user.author;
     }
 
     reduceAfter(state: RootAppState): RootAppState {
@@ -45,6 +48,7 @@ class LoadMyApps extends AppEvent<RootAppState> {
             myApps: mapState({
                 loading: to(false),
                 apps: to(this.apps),
+                authorName: to(this.authorName),
             }),
         });
     }

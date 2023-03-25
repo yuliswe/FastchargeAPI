@@ -13,6 +13,7 @@ export type Scalars = {
     Email: string;
     NonNegativeDecimal: any;
     Timestamp: number;
+    URL: any;
 };
 
 export type GQLAccountActivity = {
@@ -66,19 +67,22 @@ export type GQLApp = {
     description?: Maybe<Scalars["String"]>;
     endpoints: Array<GQLEndpoint>;
     gatewayMode: GQLGatewayMode;
-    homepage?: Maybe<Scalars["String"]>;
+    homepage?: Maybe<Scalars["URL"]>;
     name: Scalars["String"];
     owner: GQLUser;
+    pk: Scalars["ID"];
     pricingPlans: Array<GQLPricing>;
-    repository?: Maybe<Scalars["String"]>;
+    readme?: Maybe<Scalars["URL"]>;
+    repository?: Maybe<Scalars["URL"]>;
     title?: Maybe<Scalars["String"]>;
     updateApp: GQLApp;
 };
 
 export type GQLAppUpdateAppArgs = {
     description?: InputMaybe<Scalars["String"]>;
-    homepage?: InputMaybe<Scalars["String"]>;
-    repository?: InputMaybe<Scalars["String"]>;
+    homepage?: InputMaybe<Scalars["URL"]>;
+    readme?: InputMaybe<Scalars["URL"]>;
+    repository?: InputMaybe<Scalars["URL"]>;
     title?: InputMaybe<Scalars["String"]>;
 };
 
@@ -159,10 +163,10 @@ export type GQLMutation = {
 export type GQLMutationCreateAppArgs = {
     description?: InputMaybe<Scalars["String"]>;
     gatewayMode?: InputMaybe<GQLGatewayMode>;
-    homepage?: InputMaybe<Scalars["String"]>;
+    homepage?: InputMaybe<Scalars["URL"]>;
     name: Scalars["String"];
     owner: Scalars["ID"];
-    repository?: InputMaybe<Scalars["String"]>;
+    repository?: InputMaybe<Scalars["URL"]>;
     title?: InputMaybe<Scalars["String"]>;
 };
 
@@ -269,6 +273,7 @@ export type GQLQuery = {
 
 export type GQLQueryAppArgs = {
     name?: InputMaybe<Scalars["String"]>;
+    pk?: InputMaybe<Scalars["ID"]>;
 };
 
 export type GQLQueryAppFullTextSearchArgs = {

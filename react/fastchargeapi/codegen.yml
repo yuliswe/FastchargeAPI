@@ -13,3 +13,4 @@ generates:
       typesPrefix: GQL
       scalars:
         Timestamp: number
+        URL: string

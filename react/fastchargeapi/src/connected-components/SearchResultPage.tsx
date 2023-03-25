@@ -116,18 +116,21 @@ const generateAppSearchResultComponents = (searchResults: SearchResult[]): JSX.E
                 bgcolor: "transparent",
             }}
         >
-            <Link href={`/apis/appname`} underline="hover">
-                <Typography variant="h6" my={2}>
-                    {result.name}
-                </Typography>
+            <Link href={`/app/${result.pk}`} underline="hover">
+                <Stack direction="row" spacing={1} alignItems="center">
+                    <Typography variant="h6">{result.title || "Untitled App"}</Typography>
+                    <Typography variant="body1" color="secondary.main">
+                        @{result.name}
+                    </Typography>
+                </Stack>
             </Link>
             <Typography variant="body1" my={2}>
-                {result.description}
+                {result.description || "The author did not provide a description for this app."}
             </Typography>
             <Stack direction="row" spacing={1} alignItems="center">
                 <Avatar src="./logo192.png" />
                 <Typography variant="body1" fontWeight={500}>
-                    {result.owner.author}
+                    {result.owner.author || "Anonymous author"}
                 </Typography>
             </Stack>
         </Paper>
