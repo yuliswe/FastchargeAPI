@@ -587,15 +587,11 @@ export class Batched<I extends Item> {
             returnUndefined: true,
         })!;
 
-        if (newVals === undefined) {
-            return await this.get(keys);
-        }
-
         // Extract keys to ingore extra properties
         const query = extractKeysFromItems(this.model, keys);
 
         let hashKeyName = this.model.table().hashKey;
-        if (hashKeyName in newVals) {
+        if (newVals && hashKeyName in newVals) {
             throw new UpdateContainsPrimaryKey(this.model.name, hashKeyName, newVals);
         }
         if (!(hashKeyName in query)) {
@@ -607,6 +603,10 @@ export class Batched<I extends Item> {
         }
         if (rangeKeyName && !(rangeKeyName in query)) {
             throw new Error(`Query must contain range key ${rangeKeyName}`);
+        }
+
+        if (newVals === undefined) {
+            return await this.get(query);
         }
 
         let result: I;
