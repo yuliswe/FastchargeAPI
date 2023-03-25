@@ -567,11 +567,14 @@ export type GQLAppFullTextSearchQuery = {
     }>;
 };
 
-export type GQLGetAccountBalanceQueryVariables = Exact<{
+export type GQLGetAccountInfoQueryVariables = Exact<{
     user: Scalars["ID"];
 }>;
 
-export type GQLGetAccountBalanceQuery = { __typename?: "Query"; user: { __typename?: "User"; balance: string } };
+export type GQLGetAccountInfoQuery = {
+    __typename?: "Query";
+    user: { __typename?: "User"; balance: string; author: string };
+};
 
 export type GQLGetAccountActivitiesQueryVariables = Exact<{
     user: Scalars["ID"];
@@ -696,7 +699,7 @@ export type GQLGetSubscriptionDetailAppInfoQueryVariables = Exact<{
 
 export type GQLGetSubscriptionDetailAppInfoQuery = {
     __typename?: "Query";
-    app: { __typename?: "App"; name: string; description?: string | null };
+    app: { __typename?: "App"; name: string; title?: string | null; description?: string | null };
 };
 
 export type GQLGetUsageSummaryQueryVariables = Exact<{
@@ -729,8 +732,14 @@ export type GQLGetUserSubscriptionsQuery = {
         subscriptions: Array<{
             __typename?: "Subscribe";
             pk: string;
+            updatedAt: number;
             pricing: { __typename?: "Pricing"; name: string };
-            app: { __typename?: "App"; name: string; owner: { __typename?: "User"; author: string } };
+            app: {
+                __typename?: "App";
+                title?: string | null;
+                name: string;
+                owner: { __typename?: "User"; author: string };
+            };
         }>;
     };
 };

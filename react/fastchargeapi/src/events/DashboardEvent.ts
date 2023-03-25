@@ -4,8 +4,8 @@ import { getGQLClient } from "../graphql-client";
 import { AppContext } from "../AppContext";
 import { gql } from "graphql-tag";
 import {
-    GQLGetAccountBalanceQuery,
-    GQLGetAccountBalanceQueryVariables,
+    GQLGetAccountInfoQuery,
+    GQLGetAccountInfoQueryVariables,
     GQLGetAccountActivitiesQuery,
     GQLGetAccountActivitiesQueryVariables,
     GQLGetAccountHistoriesQuery,
@@ -13,7 +13,8 @@ import {
 } from "../__generated__/gql-operations";
 import { fetchWithAuth } from "../fetch";
 
-class LoadAccontBalance extends AppEvent<RootAppState> {
+export type UserAccountInfo = GQLGetAccountInfoQuery["user"];
+class LoadUserInfo extends AppEvent<RootAppState> {
     constructor(public context: AppContext) {
         super();
     }
@@ -21,19 +22,19 @@ class LoadAccontBalance extends AppEvent<RootAppState> {
         return state.mapState({
             dashboard: mapState({
                 loadingBalance: to(true),
-                accountBalance: to("Loading..."),
             }),
         });
     }
 
-    public response: GQLGetAccountBalanceQuery | null = null;
+    accountInfo: UserAccountInfo | null = null;
     async *run(state: RootAppState): AppEventStream<RootAppState> {
         let { client, currentUser } = await getGQLClient(this.context);
-        let result = await client.query<GQLGetAccountBalanceQuery, GQLGetAccountBalanceQueryVariables>({
+        let result = await client.query<GQLGetAccountInfoQuery, GQLGetAccountInfoQueryVariables>({
             query: gql`
-                query GetAccountBalance($user: ID!) {
+                query GetAccountInfo($user: ID!) {
                     user(pk: $user) {
                         balance
+                        author
                     }
                 }
             `,
@@ -41,14 +42,14 @@ class LoadAccontBalance extends AppEvent<RootAppState> {
                 user: currentUser!,
             },
         });
-        this.response = result.data;
+        this.accountInfo = result.data.user;
     }
 
     reduceAfter(state: RootAppState): RootAppState {
         return state.mapState({
             dashboard: mapState({
                 loadingBalance: to(false),
-                accountBalance: to(this.response?.user?.balance || "Error"),
+                userAccountInfo: to(this.accountInfo),
             }),
         });
     }
@@ -221,7 +222,7 @@ class StripeLinkReady extends AppEvent<RootAppState> {
 }
 
 export const DashboardEvent = {
-    LoadAccontBalance,
+    LoadUserInfo,
     LoadActivities,
     LoadAccountHistory,
     SendStripeLoginLink,

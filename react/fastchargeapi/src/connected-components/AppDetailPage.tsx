@@ -15,15 +15,29 @@ import rehypeHighlight from "rehype-highlight";
 import remarkGithub from "remark-github";
 import rehypeRemoveComments from "rehype-remove-comments";
 import "highlight.js/styles/github.css";
+import {
+    DocumentationDialog,
+    SupportDocumentation,
+    openDocumentationDialog,
+    supportDocumenationDefault,
+} from "../stateless-components/DocumentationDialog";
+import Terminal, { ColorMode, TerminalInput } from "react-terminal-ui";
 
 type _Props = {
     appState: AppDetailAppState;
 };
-type _State = {};
+type _State = {} & SupportDocumentation;
 class _AppDetailPage extends React.Component<_Props, _State> {
     static contextType = ReactAppContextType;
     get _context() {
         return this.context as AppContext;
+    }
+
+    constructor(props: _Props) {
+        super(props);
+        this.state = {
+            ...supportDocumenationDefault,
+        };
     }
 
     getPricingList(): AppDetailPricing[] {
@@ -36,6 +50,14 @@ class _AppDetailPage extends React.Component<_Props, _State> {
 
     getAppPK(): string {
         return this._context.route.params["app"]!;
+    }
+
+    getAppNameFromUrl(): string {
+        let app = this._context.route.params["app"];
+        if (!app) {
+            throw new Error("App name is missing from url");
+        }
+        return app;
     }
 
     componentDidMount(): void {
@@ -57,6 +79,24 @@ class _AppDetailPage extends React.Component<_Props, _State> {
         );
     }
 
+    renderChangeSubscriptionDocumentation({ plan, app }: { plan: string; app: string }) {
+        return (
+            <Terminal height="10em" colorMode={ColorMode.Light}>
+                <Typography variant="body1">We recommend changing the subscription plan with the cli tool.</Typography>
+                <Typography variant="body1" sx={{ mb: 2, fontWeight: 700 }}>
+                    To subscribe or change to the "{plan}" plan, run the following command:
+                </Typography>
+                <TerminalInput>{`fastapi subscription add "${app}" \\\n    --plan "${plan}"`}</TerminalInput>
+                <Typography variant="body2" mt={2} gutterBottom>
+                    For details on switching a subscription plan,{" "}
+                    <Link href="/terms-of-service#pricing" target="_blank" color="info.main">
+                        see the pricing documentation.
+                    </Link>
+                </Typography>
+            </Terminal>
+        );
+    }
+
     render() {
         return (
             <SiteLayout>
@@ -70,8 +110,8 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                                             {this.appState?.appInfo?.title || "Untitled App"}
                                         </Typography>
                                         <Typography variant="body1">@{this.appState?.appInfo?.name}</Typography>
-                                        <Typography variant="body1">1.3.7</Typography>
-                                        <Typography variant="body1">Published 10 months ago</Typography>
+                                        {/* <Typography variant="body1">1.3.7</Typography>
+                                        <Typography variant="body1">Published 10 months ago</Typography> */}
                                     </Stack>
                                     <Divider sx={{ mb: 3 }} />
                                     <Typography variant="body1">
@@ -90,7 +130,18 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                                                 <PricingCard
                                                     {...pricing}
                                                     actionButton={
-                                                        <Button variant="outlined" color="secondary">
+                                                        <Button
+                                                            variant="outlined"
+                                                            color="secondary"
+                                                            onClick={() =>
+                                                                openDocumentationDialog(this, () =>
+                                                                    this.renderChangeSubscriptionDocumentation({
+                                                                        app: this.getAppNameFromUrl(),
+                                                                        plan: pricing.name,
+                                                                    })
+                                                                )
+                                                            }
+                                                        >
                                                             Subscribe
                                                         </Button>
                                                     }
@@ -287,6 +338,7 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                         </Grid>
                     </Grid>
                 </Container>
+                <DocumentationDialog parent={this} />
             </SiteLayout>
         );
     }

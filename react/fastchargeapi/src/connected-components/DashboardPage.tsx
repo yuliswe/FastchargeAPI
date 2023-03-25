@@ -75,7 +75,7 @@ class _DashboardPage extends React.Component<Props, State> {
     };
 
     componentDidMount() {
-        appStore.dispatch(new DashboardEvent.LoadAccontBalance(this._context));
+        appStore.dispatch(new DashboardEvent.LoadUserInfo(this._context));
         appStore.dispatch(
             new DashboardEvent.LoadActivities(this._context, {
                 beforeDate: this.activityRange(),
@@ -310,13 +310,15 @@ class _DashboardPage extends React.Component<Props, State> {
         return (
             <React.Fragment>
                 <Stack spacing={6}>
-                    <Typography variant="h5">Welcome, {this._context.firebase.user?.email}!</Typography>
+                    <Typography variant="h5">
+                        Welcome, {this.appState.userAccountInfo?.author || "Anonymous User"}!
+                    </Typography>
                     <Grid container>
                         <Grid item md={8} flexGrow={1}>
                             <Typography variant="h6">Account</Typography>
                             <Divider sx={{ mb: 1 }} />
                             <Typography variant="body1" fontSize={30} fontWeight={700}>
-                                ${this.appState.accountBalance}{" "}
+                                ${this.appState.userAccountInfo?.balance || "..."}
                             </Typography>
                         </Grid>
                         <Grid

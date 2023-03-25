@@ -2,28 +2,12 @@ import React from "react";
 import { RootAppState } from "../states/RootAppState";
 import { connect } from "react-redux";
 import { SubscriptionDetailAppState } from "../states/SubscriptionDetailAppState";
-import {
-    Box,
-    Breadcrumbs,
-    Button,
-    Divider,
-    Grid,
-    Link,
-    Stack,
-    Typography,
-} from "@mui/material";
+import { Box, Breadcrumbs, Button, Divider, Grid, Link, Stack, Typography } from "@mui/material";
 import { PricingCard } from "../stateless-components/PricingCard";
-import {
-    AvailablePlan,
-    SubscriotionDetailEvent,
-    UsageSummary,
-} from "../events/SubscriptionDetailEvent";
+import { AvailablePlan, SubscriotionDetailEvent, UsageSummary } from "../events/SubscriptionDetailEvent";
 import { appStore } from "../store-config";
 import { AppContext, ReactAppContextType } from "../AppContext";
-import {
-    LogTable,
-    LogTableOnChangeHandler,
-} from "../stateless-components/LogTable";
+import { LogTable, LogTableOnChangeHandler } from "../stateless-components/LogTable";
 import {
     DocumentationDialog,
     SupportDocumentation,
@@ -58,32 +42,6 @@ class _SubscriptionDetailPage extends React.Component<_Props, _State> {
 
     availablePlans(): AvailablePlan[] {
         return this.appState.availablePlans;
-        // return [
-        //     {
-        //         name: "Basic",
-        //         description: "Basic description",
-        //         minMonthlyCharge: "0.01",
-        //         chargePerCall: "0.01",
-        //         freeQuota: 1000,
-        //         isActive: false,
-        //     },
-        //     {
-        //         name: "Standard",
-        //         description: "Standard description",
-        //         minMonthlyCharge: "0.02",
-        //         chargePerCall: "0.02",
-        //         freeQuota: 1000,
-        //         isActive: true,
-        //     },
-        //     {
-        //         name: "Premium",
-        //         description: "Premium description",
-        //         minMonthlyCharge: "0.03",
-        //         chargePerCall: "0.03",
-        //         freeQuota: 1000,
-        //         isActive: false,
-        //     },
-        // ];
     }
 
     subscriptionDetail() {
@@ -138,10 +96,7 @@ class _SubscriptionDetailPage extends React.Component<_Props, _State> {
         return log.billingAccountActivity?.amount.toString() ?? "";
     }
 
-    handleSummaryPageChange: LogTableOnChangeHandler = ({
-        page,
-        dateRange,
-    }) => {
+    handleSummaryPageChange: LogTableOnChangeHandler = ({ page, dateRange }) => {
         appStore.dispatch(
             new SubscriotionDetailEvent.LoadUsageSummary(this._context, {
                 appName: this.getAppNameFromUrl(),
@@ -150,38 +105,19 @@ class _SubscriptionDetailPage extends React.Component<_Props, _State> {
         );
     };
 
-    renderChangeSubscriptionDocumentation({
-        plan,
-        app,
-    }: {
-        plan: string;
-        app: string;
-    }) {
+    renderChangeSubscriptionDocumentation({ plan, app }: { plan: string; app: string }) {
         return (
-            <Terminal height="13em" colorMode={ColorMode.Light}>
-                <Typography variant="body1">
-                    We recommend changing the subscription plan with the cli
-                    tool.
-                </Typography>
+            <Terminal height="10em" colorMode={ColorMode.Light}>
+                <Typography variant="body1">We recommend changing the subscription plan with the cli tool.</Typography>
                 <Typography variant="body1" sx={{ mb: 2, fontWeight: 700 }}>
-                    To subscribe or change to the "{plan}" plan, run the
-                    following command:
+                    To subscribe or change to the "{plan}" plan, run the following command:
                 </Typography>
-                <TerminalInput>
-                    {`fastapi subscription add "${app}" \\\n    --plan "${plan}"`}
-                </TerminalInput>
-                <Typography variant="caption" mt={2} gutterBottom>
-                    If you are currently subscribed to a plan, and you need to
-                    switch to a new plan that has a higher monthly fee from, you
-                    will only be charged the difference between your current
-                    plan and the new plan.
-                </Typography>
-                <Typography variant="caption">
-                    If you are switching to a cheaper plan, you will not be
-                    charged for the remaining period of the month, but the
-                    difference is not refunded. If you ever switch back to the
-                    premium plan again, you will not be charged again for the
-                    same month.
+                <TerminalInput>{`fastapi subscription add "${app}" \\\n    --plan "${plan}"`}</TerminalInput>
+                <Typography variant="body2" mt={2} gutterBottom>
+                    For details on switching a subscription plan,{" "}
+                    <Link href="/terms-of-service#pricing" target="_blank" color="info.main">
+                        see the pricing documentation.
+                    </Link>
                 </Typography>
             </Terminal>
         );
@@ -190,20 +126,15 @@ class _SubscriptionDetailPage extends React.Component<_Props, _State> {
     renderUnsubscribeDocumentation({ app }: { app: string }) {
         return (
             <Terminal height="10em" colorMode={ColorMode.Light}>
-                <Typography variant="body1">
-                    We recommend using the cli tool to unsubscribe the app.
-                </Typography>
+                <Typography variant="body1">We recommend using the cli tool to unsubscribe the app.</Typography>
                 <Typography variant="body1" sx={{ mb: 2, fontWeight: 700 }}>
                     To unsubscribe from the app, run the following command:
                 </Typography>
-                <TerminalInput>
-                    {`fastapi subscription remove "${app}"`}
-                </TerminalInput>
+                <TerminalInput>{`fastapi subscription remove "${app}"`}</TerminalInput>
 
                 <Typography variant="caption" mt={2}>
-                    After unsubscribing, if you ever subscribe to this app again
-                    in the remaining period of your billing month, you will not
-                    be charged again.
+                    After unsubscribing, if you ever subscribe to this app again in the remaining period of your billing
+                    month, you will not be charged again.
                 </Typography>
             </Terminal>
         );
@@ -213,36 +144,22 @@ class _SubscriptionDetailPage extends React.Component<_Props, _State> {
             <React.Fragment>
                 <Stack spacing={10}>
                     <Stack>
-                        <Breadcrumbs
-                            aria-label="breadcrumb"
-                            sx={{ display: "flex", alignItems: "center" }}
-                        >
-                            <Link
-                                underline="hover"
-                                color="inherit"
-                                href="/account/subscriptions"
-                            >
+                        <Breadcrumbs aria-label="breadcrumb" sx={{ display: "flex", alignItems: "center" }}>
+                            <Link underline="hover" color="inherit" href="/account/subscriptions">
                                 Subscriptions
                             </Link>
                             {/* <Typography color="text.primary">
                         {this.getAppNameFromUrl()}
                     </Typography> */}
-                            <Stack
-                                direction="row"
-                                spacing={1}
-                                alignItems="center"
-                            >
-                                <Typography
-                                    variant="h6"
-                                    display="flex"
-                                    alignItems="center"
-                                >
-                                    {this.appState.appInfo?.name}
+                            <Stack direction="row" spacing={1} alignItems="center">
+                                <Typography variant="h6" display="flex" alignItems="center">
+                                    {this.appState.appInfo?.title || "Unnamed App"}
                                 </Typography>
-                                <Typography variant="body1">1.3.7</Typography>
-                                <Typography variant="body1">
-                                    Published 10 months ago
+                                <Typography variant="body1" display="flex" alignItems="center">
+                                    @{this.appState.appInfo?.name}
                                 </Typography>
+                                {/* <Typography variant="body1">1.3.7</Typography>
+                                <Typography variant="body1">Published 10 months ago</Typography> */}
                                 <Box width={4}></Box>
                                 <Button
                                     variant="outlined"
@@ -250,11 +167,9 @@ class _SubscriptionDetailPage extends React.Component<_Props, _State> {
                                     size="small"
                                     onClick={() =>
                                         openDocumentationDialog(this, () =>
-                                            this.renderUnsubscribeDocumentation(
-                                                {
-                                                    app: this.getAppNameFromUrl(),
-                                                }
-                                            )
+                                            this.renderUnsubscribeDocumentation({
+                                                app: this.getAppNameFromUrl(),
+                                            })
                                         )
                                     }
                                 >
@@ -273,38 +188,23 @@ class _SubscriptionDetailPage extends React.Component<_Props, _State> {
                         <Divider sx={{ mb: 5 }} />
                         <Grid container spacing={2}>
                             {this.availablePlans().map((pricing, index) => (
-                                <Grid
-                                    item
-                                    xs={3}
-                                    key={index}
-                                    sx={{ minWidth: 300 }}
-                                >
+                                <Grid item xs={3} key={index} sx={{ minWidth: 300 }}>
                                     <PricingCard
                                         {...pricing}
                                         actionButton={
                                             <Button
-                                                variant={
-                                                    this.isActivePlan(pricing)
-                                                        ? "contained"
-                                                        : "outlined"
-                                                }
+                                                variant={this.isActivePlan(pricing) ? "contained" : "outlined"}
                                                 color="secondary"
                                                 onClick={() =>
-                                                    openDocumentationDialog(
-                                                        this,
-                                                        () =>
-                                                            this.renderChangeSubscriptionDocumentation(
-                                                                {
-                                                                    app: this.getAppNameFromUrl(),
-                                                                    plan: pricing.name,
-                                                                }
-                                                            )
+                                                    openDocumentationDialog(this, () =>
+                                                        this.renderChangeSubscriptionDocumentation({
+                                                            app: this.getAppNameFromUrl(),
+                                                            plan: pricing.name,
+                                                        })
                                                     )
                                                 }
                                             >
-                                                {this.isActivePlan(pricing)
-                                                    ? "Subscribed"
-                                                    : "Change"}
+                                                {this.isActivePlan(pricing) ? "Subscribed" : "Change"}
                                             </Button>
                                         }
                                     ></PricingCard>
@@ -349,8 +249,6 @@ class _SubscriptionDetailPage extends React.Component<_Props, _State> {
     }
 }
 
-export const SubscriptionDetailPage = connect<_Props, {}, {}, RootAppState>(
-    (rootAppState: RootAppState) => ({
-        appState: rootAppState.subscriptionDetail,
-    })
-)(_SubscriptionDetailPage);
+export const SubscriptionDetailPage = connect<_Props, {}, {}, RootAppState>((rootAppState: RootAppState) => ({
+    appState: rootAppState.subscriptionDetail,
+}))(_SubscriptionDetailPage);

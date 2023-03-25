@@ -1,22 +1,10 @@
 import React from "react";
 import { RootAppState } from "../states/RootAppState";
 import { connect } from "react-redux";
-import {
-    Button,
-    Card,
-    CardActions,
-    CardContent,
-    Grid,
-    Stack,
-    Typography,
-    Link,
-} from "@mui/material";
+import { Button, Card, CardActions, CardContent, Grid, Stack, Typography, Link } from "@mui/material";
 import { SubscriptionsAppState } from "../states/SubscriptionsAppState";
 import { AppContext, ReactAppContextType } from "../AppContext";
-import {
-    SubscriptionEvent,
-    UserSubscription,
-} from "../events/SubscriptionEvent";
+import { SubscriptionEvent, UserSubscription } from "../events/SubscriptionEvent";
 import { appStore } from "../store-config";
 type Props = {
     appState: SubscriptionsAppState;
@@ -35,8 +23,8 @@ class _SubscriptionsPage extends React.Component<Props> {
         return this.appState.subscriptions;
     }
 
-    publishedOn(sub: UserSubscription): string {
-        return new Date().toLocaleDateString();
+    subscribedSince(sub: UserSubscription): string {
+        return new Date(sub.updatedAt).toLocaleDateString();
     }
 
     plan(sub: UserSubscription): string {
@@ -44,9 +32,7 @@ class _SubscriptionsPage extends React.Component<Props> {
     }
 
     componentDidMount(): void {
-        appStore.dispatch(
-            new SubscriptionEvent.LoadSubscriptions(this._context)
-        );
+        appStore.dispatch(new SubscriptionEvent.LoadSubscriptions(this._context));
     }
 
     render() {
@@ -57,45 +43,26 @@ class _SubscriptionsPage extends React.Component<Props> {
                         <Card sx={{ p: 3, borderRadius: 5 }}>
                             <CardContent>
                                 <Stack direction="row" spacing={1}>
-                                    <Typography
-                                        variant="body1"
-                                        display="flex"
-                                        fontWeight={700}
-                                        alignItems="center"
-                                    >
-                                        {sub.app.name}
+                                    <Typography variant="h6" display="flex" alignItems="center">
+                                        {sub.app.title || "Unnamed App"}
                                     </Typography>
-                                    <Typography
-                                        variant="body1"
-                                        display="flex"
-                                        fontSize={14}
-                                        alignItems="center"
-                                    >
+                                    <Typography variant="body1" display="flex" alignItems="center">
+                                        @{sub.app.name}
+                                    </Typography>
+                                    {/* <Typography variant="body1" display="flex" fontSize={14} alignItems="center">
                                         {"v1.0.0"}
-                                    </Typography>
-                                    <Typography
-                                        variant="body1"
-                                        fontSize={14}
-                                        display="flex"
-                                        alignItems="center"
-                                    >
-                                        {sub.app.owner.author}
-                                    </Typography>
+                                    </Typography> */}
                                 </Stack>
-                                <Typography variant="body1">
-                                    Published on {this.publishedOn(sub)}
+                                <Typography variant="body1" display="flex" alignItems="center">
+                                    Published by {sub.app.owner.author}
                                 </Typography>
                                 <Typography variant="body1" mt={2}>
-                                    Plan: {this.plan(sub)}
+                                    Subscribed since {this.subscribedSince(sub)}
                                 </Typography>
+                                <Typography variant="body1">Current plan: {this.plan(sub)}</Typography>
                             </CardContent>
                             <CardActions>
-                                <Button
-                                    variant="contained"
-                                    color="secondary"
-                                    LinkComponent={Link}
-                                    href={sub.app.name}
-                                >
+                                <Button variant="contained" color="secondary" LinkComponent={Link} href={sub.app.name}>
                                     View
                                 </Button>
                             </CardActions>
@@ -107,8 +74,6 @@ class _SubscriptionsPage extends React.Component<Props> {
     }
 }
 
-export const SubscriptionsPage = connect<Props, {}, {}, RootAppState>(
-    (rootAppState: RootAppState) => ({
-        appState: rootAppState.subscriptions,
-    })
-)(_SubscriptionsPage);
+export const SubscriptionsPage = connect<Props, {}, {}, RootAppState>((rootAppState: RootAppState) => ({
+    appState: rootAppState.subscriptions,
+}))(_SubscriptionsPage);

@@ -25,10 +25,12 @@ class LoadSubscriptions extends AppEvent<RootAppState> {
                     user(pk: $user) {
                         subscriptions {
                             pk
+                            updatedAt
                             pricing {
                                 name
                             }
                             app {
+                                title
                                 name
                                 owner {
                                     author

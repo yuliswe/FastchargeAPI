@@ -118,6 +118,7 @@ class LoadAppInfo extends AppEvent<RootAppState> {
                 query GetSubscriptionDetailAppInfo($appName: String!) {
                     app(name: $appName) {
                         name
+                        title
                         description
                     }
                 }

@@ -10,6 +10,7 @@ export class AppDetailAppState extends AppState {
     endpoints: AppDetailEndpoint[] = [];
     appInfo: AppDetailInfo | null = null;
     appReadmeContent: string | null = null;
+    appAuthor = "";
 
     constructor(props: PartialProps<AppDetailAppState>) {
         super();

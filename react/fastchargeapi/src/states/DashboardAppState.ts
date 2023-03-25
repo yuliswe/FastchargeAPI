@@ -1,8 +1,7 @@
 import { AppState, PartialProps } from "react-appevent-redux";
-import { AccountActivity, AccountHistory } from "../events/DashboardEvent";
+import { AccountActivity, AccountHistory, UserAccountInfo } from "../events/DashboardEvent";
 
 export class DashboardAppState extends AppState {
-    accountBalance = "0";
     loadingBalance = true;
     loadingActivities = true;
     activities: AccountActivity[] = [];
@@ -10,6 +9,7 @@ export class DashboardAppState extends AppState {
     accountHistories: AccountHistory[] = [];
     loadingStripeLoginLink = false;
     stripeLoginLink = "";
+    userAccountInfo: UserAccountInfo | null = null;
 
     constructor(props: PartialProps<DashboardAppState>) {
         super();
