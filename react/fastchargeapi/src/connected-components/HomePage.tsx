@@ -92,7 +92,7 @@ class _Home extends React.Component<_Props, _State> {
                                         <TerminalInput>fastcharge app create "myapp"</TerminalInput>
                                         <TerminalOutput>Created app "myapp".</TerminalOutput>
                                         <TerminalInput>
-                                            {`fastcharge api add --app "myapp" --path "/google" \\ \n    --destination "https://google.com"`}
+                                            {`fastcharge api add "myapp" --path "/google" \\ \n    --destination "https://google.com"`}
                                         </TerminalInput>
                                         <TerminalOutput>
                                             {`Created endpoint: \n  App:   myapp\n  Path:  /google \n  https://myapp.fastchargeapi.com/google ~> https://google.com`}
@@ -120,8 +120,7 @@ class _Home extends React.Component<_Props, _State> {
                                         <b>--charge-per-request:</b> How much the customer pays per request.
                                     </Typography>
                                     <Typography variant="body1">
-                                        <b>--monthly-charge:</b> How much the customer pays for the first request in 30
-                                        days.
+                                        <b>--monthly-charge:</b> How much the customer pays every 30 days.
                                     </Typography>
                                     <Typography variant="body1">
                                         <b>--free-quota:</b> How many requests can a new customer use without paying.
@@ -149,7 +148,7 @@ class _Home extends React.Component<_Props, _State> {
                                         >
                                             <Terminal colorMode={ColorMode.Dark} height="200px">
                                                 <TerminalInput>
-                                                    {`fastcharge pricing add \\ \n    --name "Basic Plan" \\ \n    --app "myapp" \\ \n    --charge-per-request 0.0001 \\ \n    --monthly-charge 1 \\ \n    --free-quota 1000`}
+                                                    {`fastcharge pricing add "myapp" \\ \n    --name "Basic Plan" \\ \n    --charge-per-request 0.0001 \\ \n    --monthly-charge 1.50 \\ \n    --free-quota 1000`}
                                                 </TerminalInput>
                                                 <TerminalOutput>Pricing plan created.</TerminalOutput>
                                             </Terminal>
@@ -326,7 +325,7 @@ class _Home extends React.Component<_Props, _State> {
                                         >
                                             <Terminal colorMode={ColorMode.Dark} height="150px">
                                                 <TerminalInput>
-                                                    {`fastapi subscription sub \\ \n    --app "myapp" \\ \n    --pricing "Basic Plan"`}
+                                                    {`fastapi subscription sub "myapp" \\ \n    --pricing "Basic Plan"`}
                                                 </TerminalInput>
                                                 <TerminalOutput>
                                                     Subscribed to app "myapp" with "Basic plan" pricing.
@@ -359,7 +358,7 @@ class _Home extends React.Component<_Props, _State> {
                                             }}
                                         >
                                             <Terminal colorMode={ColorMode.Dark} height="50px">
-                                                <TerminalInput>{`fastapi token create --app "myapp"`}</TerminalInput>
+                                                <TerminalInput>{`fastapi token create "myapp"`}</TerminalInput>
                                                 <TerminalOutput>Token: xxxxxxxxxxxxxxxxxxxx</TerminalOutput>
                                             </Terminal>
                                         </Paper>
