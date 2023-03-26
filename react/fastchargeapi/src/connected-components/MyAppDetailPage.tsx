@@ -105,7 +105,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                     To add a pricing, run the following command, replacing the values with your own:
                 </Typography>
                 <TerminalInput>
-                    {`fastcharge pricing add --app "${app}" \\\n    --name "Premium" \\\n    --charge-per-request 0.001 \\\n    --min-monthly-charge 15 \\\n    --free-quota 1000`}
+                    {`fastcharge pricing add --app "${app}" \\\n    --name "Premium" \\\n    --charge-per-request 0.001 \\\n    --monthly-charge 15 \\\n    --free-quota 1000`}
                 </TerminalInput>
             </Terminal>
         );
@@ -169,7 +169,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                     All values are optional:
                 </Typography>
                 <TerminalInput>
-                    {`fastcharge pricing update "${pricingID}" \\\n    --name "Premium" \\\n    --charge-per-request 0.001 \\\n    --min-monthly-charge 15 \\\n    --free-quota 1000`}
+                    {`fastcharge pricing update "${pricingID}" \\\n    --name "Premium" \\\n    --charge-per-request 0.001 \\\n    --monthly-charge 15 \\\n    --free-quota 1000`}
                 </TerminalInput>
             </Terminal>
         );

@@ -28,7 +28,7 @@ Specify a name for the pricing plan. For examples, "Free", "Advanced" or "Premiu
 --name "Free"
 ```
 
-### --min-monthly-charge, -m FLOAT
+### --monthly-charge, -m FLOAT
 
 Type: float. Required.
 
@@ -39,7 +39,7 @@ Set a monthly charge in USD for this subscription plan.
 To charge a $10.50 monthly fee:
 
 ```bash
---min-monthly-charge 10.5
+--monthly-charge 10.5
 ```
 
 

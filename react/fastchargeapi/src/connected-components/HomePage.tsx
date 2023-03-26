@@ -117,11 +117,11 @@ class _Home extends React.Component<_Props, _State> {
                                         <b>--app:</b> Specify app to which the pricing plan belongs.
                                     </Typography>
                                     <Typography variant="body1">
-                                        <b>--price-per-request:</b> How much the customer pays per request.
+                                        <b>--charge-per-request:</b> How much the customer pays per request.
                                     </Typography>
                                     <Typography variant="body1">
-                                        <b>--min-monthly-charge:</b> How much the customer pays for the first request in
-                                        30 days.
+                                        <b>--monthly-charge:</b> How much the customer pays for the first request in 30
+                                        days.
                                     </Typography>
                                     <Typography variant="body1">
                                         <b>--free-quota:</b> How many requests can a new customer use without paying.
@@ -149,7 +149,7 @@ class _Home extends React.Component<_Props, _State> {
                                         >
                                             <Terminal colorMode={ColorMode.Dark} height="200px">
                                                 <TerminalInput>
-                                                    {`fastcharge pricing add \\ \n    --name "Basic Plan" \\ \n    --app "myapp" \\ \n    --price-per-request 0.0001 \\ \n    --min-monthly-charge 1 \\ \n    --free-quota 1000`}
+                                                    {`fastcharge pricing add \\ \n    --name "Basic Plan" \\ \n    --app "myapp" \\ \n    --charge-per-request 0.0001 \\ \n    --monthly-charge 1 \\ \n    --free-quota 1000`}
                                                 </TerminalInput>
                                                 <TerminalOutput>Pricing plan created.</TerminalOutput>
                                             </Terminal>

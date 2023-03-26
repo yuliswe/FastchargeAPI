@@ -70,9 +70,9 @@ def pricing_list(app_name: str):
 @click.option("-n", "--name", help="Name of the pricing plan.", required=True)
 @click.option(
     "-m",
-    "--min-monthly-charge",
+    "--monthly-charge",
     type=float,
-    help="Minimum monthly charge.",
+    help="Active monthly charge.",
     required=True,
 )
 @click.option(
@@ -96,7 +96,7 @@ def pricing_add(
     app_name: str,
     name: str,
     call_to_action: str,
-    min_monthly_charge: float,
+    monthly_charge: float,
     charge_per_request: float,
     make_visible: bool,
     free_quota: int,
@@ -104,7 +104,7 @@ def pricing_add(
     """Add a pricing plan to an existing app."""
     if make_visible:
         warn_visibility_change(
-            min_monthly_charge=min_monthly_charge,
+            min_monthly_charge=monthly_charge,
             charge_per_request=charge_per_request,
             free_quota=free_quota,
         )
@@ -116,7 +116,7 @@ def pricing_add(
             app=app_name,
             name=name,
             callToAction=call_to_action,
-            minMonthlyCharge=str(min_monthly_charge),
+            minMonthlyCharge=str(monthly_charge),
             chargePerRequest=str(charge_per_request),
             visible=make_visible,
             freeQuota=free_quota,
@@ -138,7 +138,7 @@ def pricing_add(
 @fastcharge_dev_pricing.command("udpate", aliases=["up"])
 @click.argument("pricing_id", required=True)
 @click.option("-n", "--name", help="Name of the pricing plan.")
-@click.option("-m", "--min-monthly-charge", type=float, help="Minimum monthly charge.")
+@click.option("-m", "--monthly-charge", type=float, help="Minimum monthly charge.")
 @click.option("-r", "--charge-per-request", type=float, help="Charge per request.")
 @click.option("-c", "--call-to-action", help="Call to action for the pricing plan.")
 @click.option(

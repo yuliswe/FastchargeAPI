@@ -25,7 +25,7 @@ fastcharge api add [APP_NAME] --path "/" --destination "https://example.com"
 fastcharge api add [APP_NAME] --path "/someresource/:id" --destination "https://example.com/someresource/:id" 
 
 # Create a pricing plan named "Free" that gives 100 free quota to each new user
-fastcharge pricing add [APP_NAME] --name Free --min-monthly-charge 0 --per-request-charge 0 --free-quota 100 --make-visible 
+fastcharge pricing add [APP_NAME] --name Free --monthly-charge 0 --charge-per-request 0 --free-quota 100 --make-visible 
 
 # Congrats, that's all!
 ```
@@ -134,13 +134,13 @@ paying.
 
 
 ```bash
-fastcharge pricing add myapp --name Free --free-quota 100 --min-monthly-charge 0 --per-request-charge 0 --make-visible
+fastcharge pricing add myapp --name Free --free-quota 100 --monthly-charge 0 --charge-per-request 0 --make-visible
 ```
 
 Here, `--name Free` sets the name of the pricing plan to "Free". `--free-quota
 100` means that each new user can make 100 request for free.
-`--min-monthly-charge 0` means that there is no monthly fee for this app.
-`--per-request-charge 0` means that there is no per-request fee for this app.
+`--monthly-charge 0` means that there is no monthly fee for this app.
+`--charge-per-request 0` means that there is no per-request fee for this app.
 `--make-visible` means that the pricing plan is now visible and can be
 subscribed by everyone.
 
