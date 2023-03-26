@@ -5,7 +5,27 @@ sidebar_position: 1
 # Tutorial - Use API
 
 In this tutorial, you will learn how to use an API published on FastchargeAPI by
-someone else.
+someone else **in less than 5 minutes**.
+
+## TLDR
+
+```bash
+
+pip install -U fastchargeapi-cli # install cli
+
+fastapi login
+
+# Subscribe to an app and specify the pricing plan by name, eg. "Free"
+fastapi subscription add [APP_NAME] --plan Free
+
+# Create an API token to authenticate the request
+fastapi token create [APP_NAME]
+
+# Make a request with the API token
+curl "https://[APP_NAME].fastchargeapi.com/someresource" -H "X-Fast-API-KEY: [Your Token]"
+```
+
+# Continued
 
 For the purpose of this tutorial, we will use the official `myapp` example
 that's created in the previous tutorial: [Publish API](./intro-publish-api).
@@ -72,9 +92,13 @@ eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9************************************
 
 ## Make request to the app
 
+When sending a request, make sure that you include a HTTP header named
+`X-Fast-API-KEY` with the token.
+
 ### List endpoints
 
-Discover available endpoints for this app:
+You may want to check out all endpoints provided by this app. To discover
+available endpoints for this app:
 
 ```bash
 fastapi api ls myapp
@@ -85,7 +109,7 @@ fastapi api ls myapp
 
  ID:            endp_WyJteWFwcCIsMTY3NzgwMzUxOTA0NF0
  Endpoint:      https://myapp.fastchargeapi.com/google
- Redirects to google search.
+ Google search.
 ```
 
 Congratulation, now you can use the endpoint in your own applications.

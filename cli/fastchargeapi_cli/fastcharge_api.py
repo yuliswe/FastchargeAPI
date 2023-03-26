@@ -45,13 +45,7 @@ def validate_path_or_exit(path: str):
 
 @fastcharge_api.command("add")
 @click.help_option("-h", "--help")
-@click.option(
-    "-a",
-    "--app",
-    "app_name",
-    required=True,
-    help="Add the API to the app with [APP_NAME].",
-)
+@click.argument("app_name", required=True)
 @click.option(
     "-m",
     "--method",
@@ -70,18 +64,12 @@ def validate_path_or_exit(path: str):
 @click.option(
     "--description", "descr", help="Add a description that is visble to customers."
 )
-@click.option(
-    "--free-quota",
-    default=0,
-    help="Set the free quota for the API. (default: 0)",
-)
 def api_add(
     app_name: str,
     method: GQL.HTTPMethod,
     path: str,
     dest: str,
     descr: str,
-    free_quota: int,
 ):
     """Add an API endpoint to an app.
 

@@ -66,9 +66,7 @@ def pricing_list(app_name: str):
 
 
 @fastcharge_dev_pricing.command("add")
-@click.option(
-    "-a", "--app", "app_name", help="Show pricing for a specific app.", required=True
-)
+@click.argument("app_name", required=True)
 @click.option("-n", "--name", help="Name of the pricing plan.", required=True)
 @click.option(
     "-m",
