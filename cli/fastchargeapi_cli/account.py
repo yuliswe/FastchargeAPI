@@ -81,11 +81,7 @@ def do_account_info():
     #     )
     #     echo(f" Login to Stripe to view your account:")
     #     echo(terminal.cyan + f"  {login_link}" + terminal.normal)
-    echo(
-        terminal.yellow(
-            f"Your Fastchage account balance is: ${float(user.balance):.2f}"
-        )
-    )
+    echo(terminal.yellow(f"Your account balance is: ${float(user.balance):.2f}"))
 
 
 def do_account_update(author: Optional[str] = None):

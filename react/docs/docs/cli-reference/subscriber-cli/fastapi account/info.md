@@ -1,14 +1,14 @@
 # info
 
-View and manage your publisher account. Shows the account email and balance.
+View your account information.
 
 ## Usage
 
-    fastcharge account info
+    fastapi account info
 
 ## Example output:
     
-    $ fastcharge account info
+    $ fastapi account info
     Account:        xxxxxx@gmail.com
     Author:         xxxxxx
     Your account balance is: $0.00
