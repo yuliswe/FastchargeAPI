@@ -251,6 +251,11 @@ func makeForwardResponse(destination string, request events.APIGatewayProxyReque
 	for key, value := range request.QueryStringParameters {
 		urlParams.Add(key, value)
 	}
+	for key, valueList := range request.MultiValueQueryStringParameters {
+		for _, value := range valueList {
+			urlParams.Add(key, value)
+		}
+	}
 	forwardRequest.URL.RawQuery = urlParams.Encode()
 
 	// Forward the headers of the received request to the destination.
@@ -260,11 +265,8 @@ func makeForwardResponse(destination string, request events.APIGatewayProxyReque
 	// forwardRequest.Header.Set("X-FCT", fastchargeUserToken)
 	forwardRequest.Header.Set("Host", destinationUrl.Host)
 	forwardRequest.Header.Set("Accept-Encoding", "identity")
-	for h, _ := range forwardRequest.Header {
-		if strings.ToLower(h) == "x-api-key" {
-			forwardRequest.Header.Del(h)
-		}
-	}
+	// Delete accept key in CanonicalHeaderKey form. See go's http package documentation.
+	forwardRequest.Header.Del("X-Api-Key")
 	if response, err := http.DefaultClient.Do(forwardRequest); err != nil {
 		response := apiGatewayErrorResponse(502, "BAD_GATEWAY", "Bad Gateway: "+err.Error())
 		return response, nil
@@ -294,15 +296,21 @@ func makeForwardResponse(destination string, request events.APIGatewayProxyReque
 			}
 		}
 		headers := map[string]string{}
-		for key := range response.Header {
-			headers[key] = response.Header.Get(key)
+		mutiValueHeaders := map[string][]string{}
+		for key, value := range response.Header {
+			if len(value) == 1 {
+				headers[key] = response.Header[key][0]
+			} else if len(value) > 1 {
+				mutiValueHeaders[key] = response.Header[key]
+			}
 		}
 		headers["Content-Encoding"] = "identity"
 		delete(headers, "Content-Length")
 		response := events.APIGatewayProxyResponse{
-			StatusCode: response.StatusCode,
-			Headers:    headers,
-			Body:       string(body[:]),
+			StatusCode:        response.StatusCode,
+			Headers:           headers,
+			MultiValueHeaders: mutiValueHeaders,
+			Body:              string(body[:]),
 		}
 		return &response, nil
 	}
