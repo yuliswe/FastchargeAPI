@@ -60,7 +60,7 @@ def pricing_list(app_name: str):
             + f"${float(plan.chargePerRequest):.2f}".rstrip("0").rstrip(".")
             + " per request"
         )
-        echo("  First 1000 requests are free of charge.")
+        echo(f"  First {plan.freeQuota} requests are free of charge.")
         echo(colorama.Style.DIM + "  Call of action." + colorama.Style.RESET_ALL)
         echo()
 
@@ -87,8 +87,10 @@ def pricing_list(app_name: str):
     help="Make the pricing plan visible and start accepting subscriptions.",
 )
 @click.option(
+    "-f",
     "--free-quota",
     type=int,
+    required=True,
     help="Provide free quota to subscribers.",
 )
 @click.help_option("-h", "--help")
@@ -109,7 +111,6 @@ def pricing_add(
             free_quota=free_quota,
         )
     client, auth = get_client_info()
-    app = get_app_or_prompt_exit(app_name)
     try:
         result = GQL.create_app_pricing_plan(
             client,
@@ -147,35 +148,27 @@ def pricing_add(
     is_flag=True,
     help="Make the pricing plan visible and start accepting subscriptions.",
 )
-@click.option("--free-quota", type=int, help="Provide free quota to subscribers.")
+@click.option("-f", "--free-quota", type=int, help="Provide free quota to subscribers.")
 @click.help_option("-h", "--help")
 def pricing_update(
     pricing_id: str,
     name: str,
     call_to_action: str,
-    min_monthly_charge: str,
+    monthly_charge: str,
     charge_per_request: str,
     make_visible: bool,
     free_quota: int,
 ):
     """Update an existing pricing plan given its ID."""
     client, auth = get_client_info()
-    if make_visible:
-        result = GQL.get_pricing_detail(client, pk=pricing_id)
-        warn_visibility_change(
-            min_monthly_charge=float(result.minMonthlyCharge),
-            charge_per_request=float(result.chargePerRequest),
-            free_quota=free_quota,
-        )
     try:
         GQL.update_app_pricing_plan(
             client,
             pk=pricing_id,
             name=name,
             callToAction=call_to_action,
-            minMonthlyCharge=min_monthly_charge,
+            minMonthlyCharge=monthly_charge,
             chargePerRequest=charge_per_request,
-            visible=make_visible,
             freeQuota=free_quota,
         )
     except NotFound:
@@ -192,6 +185,19 @@ def pricing_update(
         )
         exit(1)
 
+    if make_visible:
+        result = GQL.get_pricing_detail(client, pk=pricing_id)
+        warn_visibility_change(
+            min_monthly_charge=float(result.minMonthlyCharge),
+            charge_per_request=float(result.chargePerRequest),
+            free_quota=int(result.freeQuota),
+        )
+        GQL.update_app_pricing_plan(
+            client,
+            pk=pricing_id,
+            visible=make_visible,
+        )
+
 
 def warn_visibility_change(
     min_monthly_charge: float, charge_per_request: float, free_quota: int
@@ -205,8 +211,8 @@ def warn_visibility_change(
         )
     )
     echo("Confirm the pricing before continuing:")
-    echo(f"  Minimum monthly charge: ${min_monthly_charge:.2f}")
-    echo(f"  Charge per request: ${charge_per_request:.2f}")
+    echo(f"  Minimum monthly charge: ${min_monthly_charge}")
+    echo(f"  Charge per request: ${charge_per_request}")
     echo(f"  Free quota: {free_quota}")
     if not click.confirm("Do you want to continue?"):
         exit(0)
