@@ -21,6 +21,14 @@ import { accountHistoryResolvers } from "./resolvers/account-history";
 import { accountActivityResolvers } from "./resolvers/account";
 import { gatewayResolvers } from "./resolvers/gateway";
 import { userAppTokenResolvers } from "./resolvers/token";
+import process from "node:process";
+
+// This will prevent NodeJS from crashing when an unhandled promise rejection
+// occurs.
+process.on("uncaughtException", (err, origin) => {
+    console.error(err);
+    console.error(origin);
+});
 
 initializeDB();
 

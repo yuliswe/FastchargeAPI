@@ -121,3 +121,31 @@ describe("Test making an API request when not subscribed", () => {
         expect(result.reason).toStrictEqual(GQLGatewayDecisionResponseReason.NotSubscribed);
     });
 });
+
+describe("Calling checkUserIsAllowedForGatewayRequest with an invalid app name shouldn't crash", () => {
+    const testUserEmail = `testuser_${uuidv4()}@gmail_mock.com`;
+    const testAppName = `testapp-${uuidv4()}`;
+    let testUser: User;
+    let testApp: App;
+
+    test("Prepare: Create test user and test app", async () => {
+        testUser = await getOrCreateTestUser(context, { email: testUserEmail });
+        testApp = await context.batched.App.getOrCreate({ name: testAppName, owner: UserPK.stringify(testUser) });
+    });
+
+    test("Call checkUserIsAllowedForGatewayRequest with invalid app", async () => {
+        let result = await gatewayResolvers.Query.checkUserIsAllowedForGatewayRequest!(
+            {},
+            {
+                user: UserPK.stringify(testUser),
+                app: "???????",
+                forceBalanceCheck: false,
+                forceAwait: false,
+            },
+            context,
+            {} as never
+        );
+        console.log(result);
+        expect(result.allowed).toStrictEqual(false);
+    });
+});

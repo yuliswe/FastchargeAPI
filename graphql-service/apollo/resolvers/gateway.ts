@@ -55,7 +55,11 @@ export const gatewayResolvers: GQLResolvers & {
             // let startTimer = Date.now();
 
             // Increment the request counter, or create it if it doesn't exist
-            let globalRequestCounterPromise = incrementOrCreateRequestCounter(context, { user });
+            let globalRequestCounterPromise = incrementOrCreateRequestCounter(context, { user }).catch((e) => {
+                console.error(chalk.red("Error incrementing request counter:"));
+                console.error(e);
+                return null;
+            });
 
             // Get the decision cache, or create it if it doesn't exist. The
             // decision cash helps us decide whether we should check the user's
@@ -64,6 +68,18 @@ export const gatewayResolvers: GQLResolvers & {
                 user,
                 app,
                 globalRequestCounterPromise,
+            }).catch((e) => {
+                console.error(chalk.red("Error getting gateway decision cache:"));
+                console.error(e);
+                return {
+                    result: null,
+                    error: {
+                        allowed: false,
+                        reason: GQLGatewayDecisionResponseReason.Unknown,
+                        pricingPK: null,
+                        userPK: null,
+                    },
+                };
             });
 
             let globalRequestCounter = await globalRequestCounterPromise;
@@ -106,9 +122,15 @@ export const gatewayResolvers: GQLResolvers & {
             }
 
             let userPromise = context.batched.User.get(UserPK.parse(user));
-            let pricingPromise = userPromise.then((user) =>
-                findUserSubscriptionPricing(context, { app, user: UserPK.stringify(user) })
-            );
+            let pricingPromise = userPromise.then(async (user) => {
+                try {
+                    return await findUserSubscriptionPricing(context, { app, user: UserPK.stringify(user) });
+                } catch (e) {
+                    console.error(chalk.red("Error finding user subscription pricing:"));
+                    console.error(e);
+                    return null;
+                }
+            });
 
             // Recompute the decision when there're 10 requests left, or there's
             // 10 minutes left, asynchronously. The is effectially running in
@@ -123,6 +145,9 @@ export const gatewayResolvers: GQLResolvers & {
                     app,
                     globalRequestCounterPromise,
                     pricingPromise,
+                }).catch((e) => {
+                    console.error(chalk.red("Error creating or updating gateway decision cache:"));
+                    console.error(e);
                 });
                 if (forceAwait) {
                     await promise;
@@ -157,6 +182,10 @@ export const gatewayResolvers: GQLResolvers & {
                 app,
                 userPromise,
                 pricingPromise,
+            }).catch((e) => {
+                console.error(chalk.red("Error checking should charge monthly fee:"));
+                console.error(e);
+                return null;
             });
             let hasSufficientFreeQuotaPromise = checkHasSufficientFreeQuota(context, { app, user, pricingPromise });
             let hasSufficientBalancePromise = checkHasSufficientBalance(context, {
@@ -316,13 +345,30 @@ async function checkOwnerHasSufficientBalance(
         shouldCollectMonthlyChargePromise: Promise<ShouldCollectMonthlyChargePromiseResult | null>;
     }
 ): Promise<boolean | null> {
-    let balancePromise = context.batched.App.get({ name: app }).then((app) => getUserBalance(context, app.owner));
+    let balancePromise = context.batched.App.get({ name: app })
+        .then(async (app) => {
+            try {
+                return await getUserBalance(context, app.owner);
+            } catch (e) {
+                console.error(chalk.red("Failed to get app owner balance:"));
+                console.error(e);
+                return null;
+            }
+        })
+        .catch((e) => {
+            console.error(chalk.red("Failed to get app:"));
+            console.error(e);
+            return null;
+        });
     let amountPromise = shouldCollectMonthlyChargePromise.then((x) => x && x.amount);
     let amount = await amountPromise;
     if (amount == null) {
         return null;
     }
     let balance = await balancePromise;
+    if (balance == null) {
+        return null;
+    }
     return new Decimal(balance).gte(amount);
 }
 
@@ -608,20 +654,25 @@ async function incrementOrCreateRequestCounter(
 
     // If the counter should be reset, then reset it, but do it without
     // await. We reset the counter every 60 seconds.
-    void counterPromise.then(async (counter) => {
-        if (counter == null) {
-            return;
-        }
-        if (counter.lastResetTime < Date.now() - 1000 * 60) {
-            // Reset the counter, don't wait for it to complete
-            await context.batched.GatewayRequestCounter.update(counter, {
-                $SET: {
-                    lastResetTime: Date.now(),
-                    counterSinceLastReset: 0,
-                },
-            });
-        }
-    });
+    void counterPromise
+        .then(async (counter) => {
+            if (counter == null) {
+                return;
+            }
+            if (counter.lastResetTime < Date.now() - 1000 * 60) {
+                // Reset the counter, don't wait for it to complete
+                await context.batched.GatewayRequestCounter.update(counter, {
+                    $SET: {
+                        lastResetTime: Date.now(),
+                        counterSinceLastReset: 0,
+                    },
+                });
+            }
+        })
+        .catch((e) => {
+            console.error(chalk.red("Error while incrementing request counter"));
+            console.error(e);
+        });
 
     return counterPromise;
 }
