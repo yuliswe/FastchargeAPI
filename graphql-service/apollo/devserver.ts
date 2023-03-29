@@ -5,12 +5,13 @@ import { GQLUserIndex } from "./__generated__/resolvers-types";
 import { createUserWithEmail } from "./functions/user";
 import { UserPK } from "./pks/UserPK";
 import { User } from "./dynamoose/models";
+import { IncomingMessage } from "http";
 
 let { url } = await startStandaloneServer<RequestContext>(server, {
     listen: {
         port: process.env.PORT ? Number.parseInt(process.env.PORT) : 4000,
     },
-    context: async ({ req }) => {
+    context: async ({ req }: { req: IncomingMessage }) => {
         // Note: You must not trust the header in production. This is just for
         // development.
         let reqHeaders = {} as { [key: string]: string };
@@ -23,7 +24,7 @@ let { url } = await startStandaloneServer<RequestContext>(server, {
         // The batcher must be created for every request in order for it to
         // function properly.
         let batched = createDefaultContextBatched();
-        if (!email && !userPK) {
+        if (!email && !userPK && (req as any)?.body.operationName !== "IntrospectionQuery") {
             throw new Error("Need to set X-User-Email or X-User-PK header.");
         }
         let currentUser: User | null = null;

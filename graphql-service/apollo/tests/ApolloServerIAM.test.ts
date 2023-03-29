@@ -106,7 +106,7 @@ const lambdaEvent: LambdaEvent = {
         operationName: "CheckUserIsAllowedToCallEndpoint",
     }),
     isBase64Encoded: false,
-} as any;
+} as unknown as LambdaEvent;
 
 describe("Test a request from the gateway", () => {
     const testUserEmail = `testuser_${uuidv4()}@gmail_mock.com`;
@@ -139,9 +139,9 @@ describe("Test a request from the gateway", () => {
                 }),
             },
             {} as never,
-            (_err: any, _res: any) => {
+            ((_err: never, _res: never) => {
                 // nothing
-            }
+            }) as never
         );
         for (let i = 0; i < 3; i++) {
             // Wait for the balance check to complete

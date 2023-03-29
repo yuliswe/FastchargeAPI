@@ -145,7 +145,6 @@ describe("Calling checkUserIsAllowedForGatewayRequest with an invalid app name s
             context,
             {} as never
         );
-        console.log(result);
         expect(result.allowed).toStrictEqual(false);
     });
 });

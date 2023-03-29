@@ -18,8 +18,7 @@ import {
 } from "../__generated__/resolvers-types";
 import { UserPK } from "../pks/UserPK";
 import { getUserBalance, settleAccountActivities } from "../functions/account";
-import { makeAppTokenForUser } from "../functions/token";
-import { AppPK } from "../pks/AppPK";
+import { createUserAppToken } from "../functions/token";
 
 function makePrivate<T>(
     getter: (parent: User, args: {}, context: RequestContext) => T
@@ -231,11 +230,6 @@ export const userResolvers: GQLResolvers & {
             if (!(await Can.createUserPrivateResources(parent, context))) {
                 throw new Denied();
             }
-            await context.batched.App.get(AppPK.parse(app)); // check that the app exists
-            let { token: tokenString, signature } = await makeAppTokenForUser(context, {
-                user: UserPK.stringify(parent),
-                app,
-            });
             let existing = await context.batched.UserAppToken.getOrNull({
                 subscriber: UserPK.stringify(parent),
                 app,
@@ -243,13 +237,9 @@ export const userResolvers: GQLResolvers & {
             if (existing) {
                 throw new TooManyResources("A token already exists for this user and app.");
             }
-            let token = await context.batched.UserAppToken.create({
-                subscriber: UserPK.stringify(parent),
-                app,
-                signature,
-            });
-            token.token = tokenString; // Do not store the token string in the database.
-            return token;
+            let { userAppToken, token } = await createUserAppToken(context, { user: UserPK.stringify(parent), app });
+            userAppToken.token = token; // Do not store the token string in the database.
+            return userAppToken;
         },
     },
     Query: {

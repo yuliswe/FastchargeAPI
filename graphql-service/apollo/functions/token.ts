@@ -3,8 +3,37 @@ import { PRIVATE_KEY_PARAM_NAME } from "../resolvers/constants";
 import { getParameterFromAWSSystemsManager } from "./aws";
 import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
+import { UserAppToken } from "../dynamoose/models";
 
-export async function makeAppTokenForUser(
+export async function createUserAppToken(
+    context: RequestContext,
+    {
+        user,
+        app,
+    }: {
+        user: string;
+        app: string;
+    }
+): Promise<{
+    userAppToken: UserAppToken;
+    token: string;
+}> {
+    let { token, signature } = await makeAppTokenForUser(context, {
+        user,
+        app,
+    });
+    let userAppToken = await context.batched.UserAppToken.create({
+        subscriber: user,
+        app,
+        signature,
+    });
+    return {
+        userAppToken,
+        token,
+    };
+}
+
+async function makeAppTokenForUser(
     context: RequestContext,
     {
         user,

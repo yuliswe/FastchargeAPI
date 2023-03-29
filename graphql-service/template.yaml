@@ -15,11 +15,8 @@ Globals:
   Function:
     Timeout: 3
     MemorySize: 3008
-    Tracing: Active
     Tags:
       service-name: graphql-service
-  Api:
-    TracingEnabled: true
 
 Resources:
   # This is a custom build layer. See:
@@ -33,15 +30,6 @@ Resources:
     Metadata:
       BuildMethod: makefile # Required to have AWS SAM build this layer
 
-  GenerateCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain
-    Type: AWS::CertificateManager::Certificate
-    Properties:
-      DomainName: "api.graphql.fastchargeapi.com"
-      ValidationMethod: DNS
-      DomainValidationOptions:
-        - DomainName: "api.graphql.fastchargeapi.com"
-          HostedZoneId: Z0358815GI2I8U5CTHXW
-
   GenerateIAMCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain
     Type: AWS::CertificateManager::Certificate
     Properties:
@@ -49,6 +37,59 @@ Resources:
       ValidationMethod: DNS
       DomainValidationOptions:
         - DomainName: "api.iam.graphql.fastchargeapi.com"
+          HostedZoneId: Z0358815GI2I8U5CTHXW
+
+  # Create another gateway with IAM based authentication
+  APIGatewayIAM:
+    Type: AWS::Serverless::Api
+    Properties:
+      Domain:
+        DomainName: "api.iam.graphql.fastchargeapi.com"
+        CertificateArn: !Ref GenerateIAMCertificate
+        Route53:
+          HostedZoneId: Z0358815GI2I8U5CTHXW
+      StageName: !Ref Stage
+      MethodSettings:
+        - LoggingLevel: INFO
+          MetricsEnabled: True
+          ResourcePath: "/*" # allows for logging on any resource
+          HttpMethod: "*" # allows for logging on any method
+      Auth:
+        DefaultAuthorizer: AWS_IAM
+
+  ApolloServerIAM:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: ./apollo
+      Handler: lambdaHandler.lambdaHandler
+      Runtime: nodejs18.x
+      Architectures:
+        - arm64
+      Policies:
+        - AWSLambdaRole
+        - AmazonDynamoDBFullAccess # Give the Lambda service access to poll your DynamoDB Stream
+        - AmazonSSMReadOnlyAccess # Allows getting private key from System Manager
+      Events:
+        PostIAM:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /
+            Method: post
+            RestApiId: !Ref APIGatewayIAM
+    Metadata: # Manage esbuild properties
+      BuildMethod: esbuild
+      BuildProperties:
+        Target: "es2022"
+        EntryPoints:
+          - lambdaHandler.ts
+
+  GenerateCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: "api.graphql.fastchargeapi.com"
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: "api.graphql.fastchargeapi.com"
           HostedZoneId: Z0358815GI2I8U5CTHXW
 
   APIGateway:
@@ -90,24 +131,6 @@ Resources:
       Tags:
         service-name: graphql-service
 
-  # Create another gateway with IAM based authentication
-  APIGatewayIAM:
-    Type: AWS::Serverless::Api
-    Properties:
-      Domain:
-        DomainName: "api.iam.graphql.fastchargeapi.com"
-        CertificateArn: !Ref GenerateIAMCertificate
-        Route53:
-          HostedZoneId: Z0358815GI2I8U5CTHXW
-      StageName: !Ref Stage
-      MethodSettings:
-        - LoggingLevel: INFO
-          MetricsEnabled: True
-          ResourcePath: "/*" # allows for logging on any resource
-          HttpMethod: "*" # allows for logging on any method
-      Auth:
-        DefaultAuthorizer: AWS_IAM
-
   ApolloServer:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -135,34 +158,10 @@ Resources:
             RestApiId: !Ref APIGateway
       Environment:
         Variables:
-          TRUST_X_USER_EMAIL_HEADER: "" # WARNING: X-User-Email must not be trusted in production.
+          TRUST_X_USER_EMAIL_HEADER: "" # WARNING: Must not be trusted in production.
+          TRUST_X_USER_PK_HEADER: "" # WARNING: Must not be trusted in production.
+          TRUST_X_IS_SERVICE_REQUEST_HEADER: "" # WARNING: Must not be trusted in production.
           # AWS_LAMBDA_EXEC_WRAPPER: ""
-    Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        Target: "es2022"
-        EntryPoints:
-          - lambdaHandler.ts
-
-  ApolloServerIAM:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-    Properties:
-      CodeUri: ./apollo
-      Handler: lambdaHandler.lambdaHandler
-      Runtime: nodejs18.x
-      Architectures:
-        - arm64
-      Policies:
-        - AWSLambdaRole
-        - AmazonDynamoDBFullAccess # Give the Lambda service access to poll your DynamoDB Stream
-        - AmazonSSMReadOnlyAccess # Allows getting private key from System Manager
-      Events:
-        PostIAM:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            Path: /
-            Method: post
-            RestApiId: !Ref APIGatewayIAM
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:

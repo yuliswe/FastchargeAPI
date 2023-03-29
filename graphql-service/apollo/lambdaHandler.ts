@@ -8,13 +8,14 @@ import {
 } from "aws-lambda";
 import { createRequestHandler, RequestHandler } from "@as-integrations/aws-lambda/dist/request-handlers/_create";
 import { HeaderMap } from "@apollo/server";
-import { BadInput, Unauthorized } from "./errors";
+import { BadInput } from "./errors";
 import { RequestContext, RequestService, createDefaultContextBatched } from "./RequestContext";
 import { Chalk } from "chalk";
 import { LambdaRequest, LambdaResponse } from "@as-integrations/aws-lambda/dist/middleware";
 import { createUserWithEmail } from "./functions/user";
 import { GQLUserIndex } from "./__generated__/resolvers-types";
 import { User } from "./dynamoose/models";
+import { UserPK } from "./pks/UserPK";
 
 export type LambdaEvent = APIGatewayProxyEventBase<APIGatewayEventRequestContextV2 | undefined>;
 export type LambdaResult = APIGatewayProxyResult;
@@ -112,7 +113,15 @@ let handle = startServerAndCreateLambdaHandler<RequestHandler<LambdaEvent, Lambd
     ),
     {
         async context({ event }: { event: APIGatewayProxyEvent }): Promise<RequestContext> {
-            let userEmail: string | undefined = undefined;
+            // let userEmail: string | undefined = undefined;
+            // let userPK: string | undefined = undefined;
+            let headers: { [header: string]: string } = {};
+            for (const [key, value] of Object.entries(event.headers ?? {})) {
+                if (value) {
+                    headers[key.toLowerCase()] = value;
+                }
+            }
+            let currentUser: User | undefined = undefined;
             let domain = event.requestContext.domainName || "";
             let serviceName: RequestService | undefined = undefined;
             let isServiceRequest = false;
@@ -121,7 +130,7 @@ let handle = startServerAndCreateLambdaHandler<RequestHandler<LambdaEvent, Lambd
             // example, when the gateway service sends a graphql request, it
             // must include the X-Service-Name header.
             if (domain === "api.iam.graphql.fastchargeapi.com") {
-                serviceName = (event.headers["X-Service-Name"] || event.headers["x-service-name"]) as RequestService;
+                serviceName = headers["x-service-name"] as RequestService;
                 let valid: RequestService[] = ["payment", "gateway", "internal"];
                 if (!valid.includes(serviceName)) {
                     console.error(chalk.red("X-Service-Name header is missing."));
@@ -130,28 +139,41 @@ let handle = startServerAndCreateLambdaHandler<RequestHandler<LambdaEvent, Lambd
                     );
                 }
                 isServiceRequest = true;
-            } else if (process.env.TRUST_X_USER_EMAIL_HEADER) {
-                console.warn(chalk.yellow("TRUST_X_USER_EMAIL_HEADER is enabled. Do not use this in production!"));
-                userEmail = event.headers["X-User-ID"] || event.headers["x-user-id"] || "";
-                if (!userEmail) {
-                    console.error(chalk.red("X-User-ID header is missing."));
-                    throw new BadInput(chalk.red("X-User-ID header is missing."));
-                }
-                isServiceRequest = false;
-            } else if (event.requestContext.authorizer?.["isAnonymousUser"] === "true") {
-                userEmail = undefined;
-            } else {
-                userEmail = event.requestContext.authorizer?.["userEmail"];
-                if (!userEmail) {
-                    console.error(chalk.red("Cannot determine userEmail."));
-                    throw new Unauthorized();
-                }
-                isServiceRequest = false;
-            }
-            let currentUser: User | undefined = undefined;
-            if (userEmail) {
                 // When the request is from a service to IAM, there's no user.
+            } else if (process.env.TRUST_X_IS_SERVICE_REQUEST_HEADER === "1") {
+                console.warn(
+                    chalk.yellow("TRUST_X_IS_SERVICE_REQUEST_HEADER is enabled. Do not use this in production!")
+                );
+                if (headers["x-is-service-request"] === "true") {
+                    isServiceRequest = true;
+                }
+            } else if (process.env.TRUST_X_USER_PK_HEADER === "1") {
+                console.warn(chalk.yellow("TRUST_X_USER_PK_HEADER is enabled. Do not use this in production!"));
+                let userPK = headers["x-user-pk"] || "";
+                if (!userPK) {
+                    console.error(chalk.red("X-User-PK header is missing."));
+                    throw new BadInput(chalk.red("X-User-PK header is missing."));
+                }
+                currentUser = (await batched.User.getOrNull(UserPK.parse(userPK))) ?? undefined;
+            } else if (process.env.TRUST_X_USER_EMAIL_HEADER === "1") {
+                console.warn(chalk.yellow("TRUST_X_USER_EMAIL_HEADER is enabled. Do not use this in production!"));
+                let userPK = headers["x-user-email"] || "";
+                if (!userPK) {
+                    console.error(chalk.red("X-User-Email header is missing."));
+                    throw new BadInput(chalk.red("X-User-Email header is missing."));
+                }
+                currentUser = (await batched.User.getOrNull(UserPK.parse(userPK))) ?? undefined;
+            } else if (event.requestContext.authorizer?.["isAnonymousUser"] === "true") {
+                currentUser = undefined;
+            } else if (event.requestContext.authorizer?.["userEmail"]) {
+                let userEmail = event.requestContext.authorizer?.["userEmail"];
                 currentUser = await getOrCreateUserFromEmail(userEmail);
+            } else if (event.requestContext.authorizer?.["userPK"]) {
+                let userPK = event.requestContext.authorizer?.["userPK"];
+                currentUser = await batched.User.get(UserPK.parse(userPK));
+            }
+            if (currentUser == undefined) {
+                console.warn(chalk.yellow("User is anonymous"));
             }
             return Promise.resolve({
                 currentUser,
@@ -159,7 +181,7 @@ let handle = startServerAndCreateLambdaHandler<RequestHandler<LambdaEvent, Lambd
                 isServiceRequest,
                 batched: createDefaultContextBatched(),
                 isSQSMessage: false,
-                isAnonymousUser: userEmail == undefined,
+                isAnonymousUser: currentUser == undefined,
             });
         },
         middleware: [corsMiddleware],
@@ -181,7 +203,7 @@ async function getOrCreateUserFromEmail(email: string) {
     return currentUser;
 }
 
-export const lambdaHandler = async (event: LambdaEvent, context: any, callback: any): Promise<LambdaResult> => {
+export const lambdaHandler = async (event: LambdaEvent, context: never, callback: never): Promise<LambdaResult> => {
     try {
         // console.log(chalk.blue(JSON.stringify(event)));
         return await handle(event, context, callback)!;
