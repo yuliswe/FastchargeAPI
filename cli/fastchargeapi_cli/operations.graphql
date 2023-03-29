@@ -199,6 +199,7 @@ query ListAppPricingDetails($app_name: String!) {
             callToAction
             minMonthlyCharge
             chargePerRequest
+            freeQuota
         }
     }
 }

@@ -523,6 +523,7 @@ class ListAppPricingDetailsAppPricingplans(BaseModel):
     callToAction: str
     minMonthlyCharge: str
     chargePerRequest: str
+    freeQuota: int
 
 
 class ListAppPricingDetailsApp(BaseModel):
@@ -539,7 +540,7 @@ class ListAppPricingDetails(BaseModel):
         app_name: str
 
     class Meta:
-        document = "query ListAppPricingDetails($app_name: String!) {\n  app(name: $app_name) {\n    name\n    description\n    pricingPlans {\n      pk\n      name\n      callToAction\n      minMonthlyCharge\n      chargePerRequest\n    }\n  }\n}"
+        document = "query ListAppPricingDetails($app_name: String!) {\n  app(name: $app_name) {\n    name\n    description\n    pricingPlans {\n      pk\n      name\n      callToAction\n      minMonthlyCharge\n      chargePerRequest\n      freeQuota\n    }\n  }\n}"
 
 
 class CreateAppPricingPlanCreatepricing(BaseModel):

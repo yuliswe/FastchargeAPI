@@ -13,12 +13,14 @@ export type Scalars = {
     Email: any;
     NonNegativeDecimal: any;
     Timestamp: number;
+    URL: any;
 };
 
 export type GQLAccountActivity = {
     __typename?: "AccountActivity";
     amount: Scalars["String"];
     billedApp?: Maybe<GQLApp>;
+    consumedFreeQuota?: Maybe<Scalars["Int"]>;
     createdAt: Scalars["Timestamp"];
     description: Scalars["String"];
     pk: Scalars["ID"];
@@ -62,28 +64,40 @@ export type GQLAccountHistory = {
 
 export type GQLApp = {
     __typename?: "App";
+    createdAt: Scalars["Timestamp"];
     deleteApp: GQLApp;
     description?: Maybe<Scalars["String"]>;
     endpoints: Array<GQLEndpoint>;
     gatewayMode: GQLGatewayMode;
-    homepage?: Maybe<Scalars["String"]>;
+    homepage?: Maybe<Scalars["URL"]>;
     name: Scalars["String"];
     owner: GQLUser;
+    pk: Scalars["ID"];
     pricingPlans: Array<GQLPricing>;
-    repository?: Maybe<Scalars["String"]>;
+    readme?: Maybe<Scalars["URL"]>;
+    repository?: Maybe<Scalars["URL"]>;
     title?: Maybe<Scalars["String"]>;
     updateApp: GQLApp;
+    updatedAt: Scalars["Timestamp"];
+    visibility: GQLAppVisibility;
 };
 
 export type GQLAppUpdateAppArgs = {
     description?: InputMaybe<Scalars["String"]>;
-    homepage?: InputMaybe<Scalars["String"]>;
-    repository?: InputMaybe<Scalars["String"]>;
+    homepage?: InputMaybe<Scalars["URL"]>;
+    readme?: InputMaybe<Scalars["URL"]>;
+    repository?: InputMaybe<Scalars["URL"]>;
     title?: InputMaybe<Scalars["String"]>;
+    visibility?: InputMaybe<GQLAppVisibility>;
 };
 
 export enum GQLAppIndex {
     IndexByOwnerOnlyPk = "indexByOwner__onlyPK",
+}
+
+export enum GQLAppVisibility {
+    Private = "private",
+    Public = "public",
 }
 
 export type GQLDateRangeInput = {
@@ -159,11 +173,12 @@ export type GQLMutation = {
 export type GQLMutationCreateAppArgs = {
     description?: InputMaybe<Scalars["String"]>;
     gatewayMode?: InputMaybe<GQLGatewayMode>;
-    homepage?: InputMaybe<Scalars["String"]>;
+    homepage?: InputMaybe<Scalars["URL"]>;
     name: Scalars["String"];
     owner: Scalars["ID"];
-    repository?: InputMaybe<Scalars["String"]>;
+    repository?: InputMaybe<Scalars["URL"]>;
     title?: InputMaybe<Scalars["String"]>;
+    visibility?: InputMaybe<GQLAppVisibility>;
 };
 
 export type GQLMutationCreateEndpointArgs = {
@@ -269,6 +284,7 @@ export type GQLQuery = {
 
 export type GQLQueryAppArgs = {
     name?: InputMaybe<Scalars["String"]>;
+    pk?: InputMaybe<Scalars["ID"]>;
 };
 
 export type GQLQueryAppFullTextSearchArgs = {
