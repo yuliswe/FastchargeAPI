@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  echo-service
+
+  Sample SAM Template for echo-service
+
+Parameters:
+  Stage:
+    Type: String
+    Default: DEV
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 1
+    MemorySize: 128
+
+Resources:
+  GenerateCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: "api.echo.fastchargeapi.com"
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: "api.echo.fastchargeapi.com"
+          HostedZoneId: Z0358815GI2I8U5CTHXW
+
+  EchoAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      Domain: # Configure the domain of the API
+        DomainName: "api.echo.fastchargeapi.com"
+        CertificateArn: !Ref GenerateCertificate
+        Route53:
+          HostedZoneId: Z0358815GI2I8U5CTHXW
+      StageName: !Ref Stage
+      Auth: # Uses the UserAppTokenAuthorizer to identify the session user.
+        ApiKeyRequired: false
+        DefaultAuthorizer: NONE
+
+  EchoGo:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Metadata:
+      BuildMethod: go1.x
+    Properties:
+      CodeUri: ./go
+      Handler: bootstrap
+      Runtime: provided.al2
+      Architectures:
+        - arm64
+      Events:
+        AnyRoot:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /
+            Method: ANY
+            RestApiId: !Ref EchoAPI
+        Any:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+            RestApiId: !Ref EchoAPI
+
+Outputs:
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  EchoAPI:
+    Description: "API Echo endpoint URL for Prod environment for First Function"
+    Value: !Sub "https://${EchoAPI}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
+  EchoGo:
+    Description: "First Lambda Function ARN"
+    Value: !GetAtt EchoGo.Arn
+  EchoGoIamRole:
+    Description: "Implicit IAM Role created for Hello World function"
+    Value: !GetAtt EchoGoRole.Arn
