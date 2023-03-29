@@ -12,6 +12,7 @@ import { AppPK } from "graphql-service/pks/AppPK";
 import { PricingPK } from "graphql-service/pks/PricingPK";
 import { createUserAppToken } from "graphql-service/functions/token";
 import { Chalk } from "chalk";
+import { APIGatewayProxyEvent } from "aws-lambda";
 
 const chalk = new Chalk({ level: 3 });
 
@@ -70,8 +71,6 @@ describe("Test request authentication", () => {
         let result = await createUserAndSubscribeToExampleApp(context);
         testUser = result.testUser;
         authToken = result.token;
-        console.log("testUser", chalk.blue(UserPK.stringify(testUser)));
-        console.log("authToken", chalk.blue(authToken));
     });
 
     let sam: SAM | undefined;
@@ -111,7 +110,7 @@ describe("Test request authentication", () => {
     });
 });
 
-describe("Test request header passthrough", () => {
+describe.only("Test request header passthrough", () => {
     let testUser: User;
     let authToken: string;
 
@@ -121,17 +120,41 @@ describe("Test request header passthrough", () => {
         authToken = result.token;
     });
 
-    test("Prepare: Subscribe to the example app", async () => {
-        let pricing = await context.batched.Pricing.get({
-            app: AppPK.stringify({
-                name: "example",
-            }),
-            name: "Free",
+    let sam: SAM | undefined;
+    test("Start local SAM", async () => {
+        sam = await startLocalSAM();
+    });
+
+    // http://example.localhost/echo is an endpoint that simply echos the lambda event in the response
+    test("Mock request to http://example.localhost/echo and check the headers are passed through", async () => {
+        let requestUrl = new URL(sam!.url.href);
+        requestUrl.pathname = "/echo";
+        requestUrl.host = "127.0.0.1";
+        let resp = await fetch(requestUrl.href, {
+            method: "POST",
+            headers: {
+                Host: "example.localhost",
+                "X-User-PK": UserPK.stringify(testUser), // trust user pk header test mode enabled
+                "X-FAST-API-KEY": "X-FAST-API-KEY",
+                "Custom-Header": "Custom-Header",
+            },
         });
-        await context.batched.Subscription.getOrCreate({
-            subscriber: UserPK.stringify(testUser),
-            pricing: PricingPK.stringify(pricing),
-        });
+        expect(resp.status).toEqual(200);
+        const lambdaEvent: APIGatewayProxyEvent = await resp.json();
+        const headersLowerCased: { [header: string]: string } = {};
+        for (const [header, value] of Object.entries(lambdaEvent.headers)) {
+            if (value) {
+                headersLowerCased[header.toLowerCase()] = value;
+            }
+        }
+        expect(headersLowerCased["x-fast-user"]).toStrictEqual(UserPK.stringify(testUser)); // Check that X-Fast-User is set
+        expect(headersLowerCased["x-user-pk"]).toStrictEqual(undefined);
+        expect(headersLowerCased["x-fast-api-key"]).toStrictEqual(undefined); // Check that X-FAST-API-KEY is not leaked
+        expect(headersLowerCased["custom-header"]).toStrictEqual("Custom-Header"); // Any custom header should be kept
+    });
+
+    test("Stop SAM", async () => {
+        sam!.stop();
     });
 });
 
@@ -154,11 +177,9 @@ async function startLocalSAM(): Promise<SAM> {
         console.log(`SAM: ${data}`);
     });
 
-    sam.on("close", (code) => {
-        console.log(`SAM exited with code ${code}`);
-    });
-
-    for (let i = 0; i < 4; i++) {
+    const maxRetries = 4;
+    let i = 0;
+    for (i = 0; i < maxRetries; i++) {
         console.log("Waiting for SAM to start...");
         await new Promise((resolve) => setTimeout(resolve, 5000));
         try {
@@ -169,6 +190,10 @@ async function startLocalSAM(): Promise<SAM> {
         } catch (error) {
             // ignore
         }
+    }
+
+    if (i === maxRetries) {
+        throw new Error("SAM failed to start");
     }
 
     return {

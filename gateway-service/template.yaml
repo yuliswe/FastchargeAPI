@@ -65,7 +65,7 @@ Resources:
       Architectures:
         - arm64
       Events:
-        CORS_ROOT:
+        CorsRoot:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Auth:
@@ -73,7 +73,7 @@ Resources:
             Path: /
             Method: OPTIONS
             RestApiId: !Ref GatewayAPI
-        CORS:
+        CorsAny:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Auth:
@@ -93,17 +93,17 @@ Resources:
       Architectures:
         - arm64
       Events:
-        ANY_ROOT:
+        AnyRoot:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Path: /
-            Method: GET
+            Method: Any
             RestApiId: !Ref GatewayAPI
-        ANY:
+        Any:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Path: /{proxy+}
-            Method: GET
+            Method: Any
             RestApiId: !Ref GatewayAPI
       Policies:
         - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api

@@ -124,7 +124,7 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 		}
 	default:
 		startTimer := time.Now()
-		if response, err := makeForwardResponse(destination, request, fastchargeUserToken); err != nil {
+		if response, err := makeForwardResponse(destination, request, fastchargeUserToken, userPK); err != nil {
 			fmt.Println(color.Red, "Error making a forward response", err, color.Reset)
 			return response, err
 		} else {
@@ -229,7 +229,7 @@ func makeRedirectResponse(destination string, request events.APIGatewayProxyRequ
 /*
 Handles the request when the app route uses the proxy mode.
 */
-func makeForwardResponse(destination string, request events.APIGatewayProxyRequest, fastchargeUserToken string) (*events.APIGatewayProxyResponse, error) {
+func makeForwardResponse(destination string, request events.APIGatewayProxyRequest, fastchargeUserToken string, userPK string) (*events.APIGatewayProxyResponse, error) {
 	//fmt.Println(color.Yellow, "Forwarding to", destination, color.Reset)
 	var destinationUrl *url.URL
 	if url, err := url.Parse(destination); err != nil {
@@ -275,7 +275,9 @@ func makeForwardResponse(destination string, request events.APIGatewayProxyReque
 	forwardRequest.Header.Set("Host", destinationUrl.Host)
 	forwardRequest.Header.Set("Accept-Encoding", "identity")
 	// Delete accept key in CanonicalHeaderKey form. See go's http package documentation.
-	forwardRequest.Header.Del("X-Api-Key")
+	forwardRequest.Header.Del("X-User-Pk") // Rename the header to X-Fast-User
+	forwardRequest.Header.Set("X-Fast-User", userPK)
+	forwardRequest.Header.Del("X-Fast-Api-Key")
 	if response, err := http.DefaultClient.Do(forwardRequest); err != nil {
 		response := apiGatewayErrorResponse(502, "BAD_GATEWAY", "Bad Gateway: "+err.Error())
 		return response, nil
