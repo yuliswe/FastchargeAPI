@@ -2,5 +2,7 @@ go 1.19
 
 use (
 	./auth-service
-	./gateway-service
+	./gateway-service/gateway
+	./gateway-service/cors
+	./echo-service/go
 )

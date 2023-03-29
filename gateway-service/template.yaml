@@ -53,32 +53,57 @@ Resources:
             Identity:
               ReauthorizeEvery: 300
               Headers: ["X-FAST-API-KEY"]
-      # GatewayResponses:
-      #   UNAUTHORIZED: # This block allows customizing the message shown to user that are not logged in.
-      #     StatusCode: 401
-      #     ResponseTemplates:
-      #       "application/json": '{ "message": "Please login." }'
-      #   ACCESS_DENIED: # This block allows customizing the message shown to user denied.
-      #     StatusCode: 403
-      #     ResponseTemplates:
-      #       "application/json": '{ "message": "Authorization expired." }'
+
+  CorsFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Metadata:
+      BuildMethod: go1.x
+    Properties:
+      CodeUri: ./cors
+      Handler: bootstrap
+      Runtime: provided.al2
+      Architectures:
+        - arm64
+      Events:
+        CORS_ROOT:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Auth:
+              Authorizer: NONE
+            Path: /
+            Method: OPTIONS
+            RestApiId: !Ref GatewayAPI
+        CORS:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Auth:
+              Authorizer: NONE
+            Path: /{proxy+}
+            Method: OPTIONS
+            RestApiId: !Ref GatewayAPI
 
   GatewayFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Metadata:
       BuildMethod: go1.x
     Properties:
-      CodeUri: ./app
+      CodeUri: ./gateway
       Handler: bootstrap
       Runtime: provided.al2
       Architectures:
         - arm64
       Events:
+        ANY_ROOT:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /
+            Method: GET
+            RestApiId: !Ref GatewayAPI
         ANY:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Path: /{proxy+}
-            Method: ANY
+            Method: GET
             RestApiId: !Ref GatewayAPI
       Policies:
         - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api

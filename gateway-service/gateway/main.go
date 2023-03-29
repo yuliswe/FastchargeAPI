@@ -46,12 +46,23 @@ func lambdaHandler(request events.APIGatewayProxyRequest) (*events.APIGatewayPro
 }
 
 func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
+	if request.HTTPMethod == "OPTIONS" {
+		return &events.APIGatewayProxyResponse{
+			StatusCode: 200,
+			Headers: map[string]string{
+				"Access-Control-Allow-Origin":  "*",
+				"Access-Control-Allow-Methods": "*",
+				"Access-Control-Allow-Headers": "*",
+			},
+		}, nil
+	}
+
 	headers := map[string]string{}
 	for k, v := range request.Headers {
 		headers[strings.ToLower(k)] = v
 	}
 	path := request.Path
-	app, errResp := parseAppName(request)
+	app, errResp := parseAppName(headers, request.RequestContext)
 	if errResp != nil {
 		return errResp, nil
 	}
@@ -70,8 +81,9 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 	// This helps development locally by passing the X-User-Email/PK header to
 	// local graphql server
 	gqlClient := getGraphQLClient(map[string]string{
-		"X-User-Email": userEmail,
-		"X-User-PK":    userPK,
+		"X-User-Email":         userEmail,
+		"X-User-PK":            userPK,
+		"X-Is-Service-Request": "true",
 	})
 
 	//fmt.Println("Checking is user is allowed to access app", app, "user:", user)
@@ -124,13 +136,10 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 	}
 }
 
-func parseAppName(request events.APIGatewayProxyRequest) (string, *events.APIGatewayProxyResponse) {
-	host := request.Headers["host"]
+func parseAppName(headers map[string]string, requestContext events.APIGatewayProxyRequestContext) (string, *events.APIGatewayProxyResponse) {
+	host := requestContext.DomainName
 	if host == "" {
-		host = request.Headers["Host"]
-	}
-	if host == "" {
-		host = request.RequestContext.DomainName
+		host = headers["host"]
 	}
 	if host == "" {
 		response := apiGatewayErrorResponse(404, "NOT_FOUND", "Host header is missing")
@@ -142,7 +151,7 @@ func parseAppName(request events.APIGatewayProxyRequest) (string, *events.APIGat
 		return "", response
 	}
 	if app == "api" { // this is reserved for our internal api
-		response := apiGatewayErrorResponse(404, "NOT_FOUND", "App Not Found: "+app)
+		response := apiGatewayErrorResponse(404, "NOT_FOUND", "App Name Not Allowed: "+app)
 		return "", response
 	}
 	return app, nil

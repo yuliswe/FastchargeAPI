@@ -2,8 +2,8 @@
 # https://github.com/Khan/genqlient/blob/main/docs/genqlient.yaml
 schema: ../graphql-service/apollo/schema/App.graphql
 operations:
-  - ./app/genqlient.graphql
-generated: ./app/generated__graphql.go
+  - ./gateway/genqlient.graphql
+generated: ./gateway/generated__graphql.go
 package: main
 bindings:
   Email:

@@ -4,14 +4,30 @@
   "description": "This is a sample template for gateway-service - Below is a brief explanation of what we have generated for you:",
   "main": "index.js",
   "scripts": {
+    "symlink": "mkdir -p .symlinks && ln -sFh \"$(realpath ${PWD}/../graphql-service/apollo)\" .symlinks/graphql-service",
     "gen": "go run github.com/Khan/genqlient",
-    "try-build-go": "cd app && go build && rm app",
-    "build": "(npm run gen) && (npm run try-build-go) && sam build",
+    "try-build-gateway": "cd gateway && go build && rm gateway",
+    "try-build-cors": "cd cors && go build && rm cors",
+    "try-build-all": "(npm run try-build-gateway) && (npm run try-build-cors)",
+    "build": "(npm run symlink) && (npm run gen) && (npm run try-build-all) && (sam build)",
     "start": "npm run build && sam local start-api -p 6000 --warm-containers eager --env-vars ./devenv.json",
     "watch": "nodemon -e go,graphql,yaml -i generated__graphql.go --signal SIGINT -x 'npm run start || exit 1'",
     "logs": "sam logs --stack-name gateway-service --tail",
     "deploy": "npm run build && sam deploy",
-    "typecheck": "npm run gen && npm run try-build-go"
+    "typecheck": "(npm run gen) && (npm run try-build-all)",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@types/node-fetch": "^2.6.2",
+    "@types/uuid": "^9.0.1",
+    "aws-sdk": "^2.1343.0",
+    "chalk": "^5.2.0",
+    "jest": "^29.4.3",
+    "node-fetch": "^2.6.9",
+    "ts-jest": "^29.0.5",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.5",
+    "uuid": "^9.0.0"
   },
   "author": "",
   "license": "ISC"

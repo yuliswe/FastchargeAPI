@@ -1,8 +1,8 @@
-module fastcharge.com/gateway-service
+module fastchargeapi.com/gateway
 
 go 1.19
 
-replace fastcharge.com/gateway-service => ./
+replace fastcharge.com/gateway-service/gateway => ./
 
 require github.com/aws/aws-sdk-go v1.44.204
 

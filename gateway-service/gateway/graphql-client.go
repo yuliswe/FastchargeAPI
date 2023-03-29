@@ -55,7 +55,6 @@ func getGraphQLClient(additionalHeaders map[string]string) *graphql.Client {
 		},
 	}
 	if os.Getenv("LOCAL_GRAPHQL") == "1" {
-		fmt.Println(additionalHeaders)
 		gqlClient := graphql.NewClient(graphqlService, &baseClient)
 		return &gqlClient
 	} else {
