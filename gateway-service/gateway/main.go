@@ -257,9 +257,6 @@ func makeForwardResponse(destination string, request events.APIGatewayProxyReque
 	// Forward the parameters of the received request to the destination.
 	urlParams := forwardRequest.URL.Query()
 	// urlParams.Add("_fct", fastchargeUserToken)
-	for key, value := range request.QueryStringParameters {
-		urlParams.Add(key, value)
-	}
 	for key, valueList := range request.MultiValueQueryStringParameters {
 		for _, value := range valueList {
 			urlParams.Add(key, value)
@@ -268,8 +265,10 @@ func makeForwardResponse(destination string, request events.APIGatewayProxyReque
 	forwardRequest.URL.RawQuery = urlParams.Encode()
 
 	// Forward the headers of the received request to the destination.
-	for key, value := range request.Headers {
-		forwardRequest.Header.Set(key, value)
+	for key, valueList := range request.MultiValueHeaders {
+		for _, value := range valueList {
+			forwardRequest.Header.Add(key, value)
+		}
 	}
 	// forwardRequest.Header.Set("X-FCT", fastchargeUserToken)
 	forwardRequest.Header.Set("Host", destinationUrl.Host)
@@ -278,6 +277,7 @@ func makeForwardResponse(destination string, request events.APIGatewayProxyReque
 	forwardRequest.Header.Del("X-User-Pk") // Rename the header to X-Fast-User
 	forwardRequest.Header.Set("X-Fast-User", userPK)
 	forwardRequest.Header.Del("X-Fast-Api-Key")
+	forwardRequest.Header.Del("X-Amzn-Trace-Id")
 	if response, err := http.DefaultClient.Do(forwardRequest); err != nil {
 		response := apiGatewayErrorResponse(502, "BAD_GATEWAY", "Bad Gateway: "+err.Error())
 		return response, nil

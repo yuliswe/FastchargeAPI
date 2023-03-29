@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"os"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -28,10 +29,26 @@ func lambdaHandler(request events.APIGatewayProxyRequest) (*events.APIGatewayPro
 	}
 }
 
+type EchoResponse = struct {
+	Body        string              `json:"body"`
+	Headers     map[string][]string `json:"headers"`
+	QueryParams map[string][]string `json:"queryParams"`
+}
+
 func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
 	// body := string[]string
 	// json.Unmarshal([]byte(request.Body), &body)
-	bytes, err := json.Marshal(request)
+	var bytes []byte
+	var err error
+	if os.Getenv("ECHO_EVENT") == "1" {
+		bytes, err = json.Marshal(request)
+	} else {
+		bytes, err = json.Marshal(EchoResponse{
+			Body:        request.Body,
+			Headers:     request.MultiValueHeaders,
+			QueryParams: request.MultiValueQueryStringParameters,
+		})
+	}
 	if err != nil {
 		return nil, err
 	}

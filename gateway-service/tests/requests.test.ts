@@ -12,7 +12,6 @@ import { AppPK } from "graphql-service/pks/AppPK";
 import { PricingPK } from "graphql-service/pks/PricingPK";
 import { createUserAppToken } from "graphql-service/functions/token";
 import { Chalk } from "chalk";
-import { APIGatewayProxyEvent } from "aws-lambda";
 
 const chalk = new Chalk({ level: 3 });
 
@@ -110,6 +109,12 @@ describe("Test request authentication", () => {
     });
 });
 
+type EchoEndpointResponse = {
+    headers: { [header: string]: string };
+    body: string;
+    queryParams: { [param: string]: string };
+};
+
 describe.only("Test request header passthrough", () => {
     let testUser: User;
     let authToken: string;
@@ -138,19 +143,57 @@ describe.only("Test request header passthrough", () => {
                 "X-FAST-API-KEY": "X-FAST-API-KEY",
                 "Custom-Header": "Custom-Header",
             },
+            timeout: 10_000,
         });
         expect(resp.status).toEqual(200);
-        const lambdaEvent: APIGatewayProxyEvent = await resp.json();
+        const echo: EchoEndpointResponse = await resp.json();
         const headersLowerCased: { [header: string]: string } = {};
-        for (const [header, value] of Object.entries(lambdaEvent.headers)) {
+        for (const [header, value] of Object.entries(echo.headers)) {
             if (value) {
                 headersLowerCased[header.toLowerCase()] = value;
             }
         }
-        expect(headersLowerCased["x-fast-user"]).toStrictEqual(UserPK.stringify(testUser)); // Check that X-Fast-User is set
+        expect(headersLowerCased["x-fast-user"]).toStrictEqual([UserPK.stringify(testUser)]); // Check that X-Fast-User is set
         expect(headersLowerCased["x-user-pk"]).toStrictEqual(undefined);
         expect(headersLowerCased["x-fast-api-key"]).toStrictEqual(undefined); // Check that X-FAST-API-KEY is not leaked
-        expect(headersLowerCased["custom-header"]).toStrictEqual("Custom-Header"); // Any custom header should be kept
+        expect(headersLowerCased["custom-header"]).toStrictEqual(["Custom-Header"]); // Any custom header should be kept
+    });
+
+    test("Mock request to http://example.localhost/echo and check the body is passed", async () => {
+        let requestUrl = new URL(sam!.url.href);
+        requestUrl.pathname = "/echo";
+        requestUrl.host = "127.0.0.1";
+        let resp = await fetch(requestUrl.href, {
+            method: "POST",
+            headers: {
+                Host: "example.localhost",
+                "X-User-PK": UserPK.stringify(testUser), // trust user pk header test mode enabled
+            },
+            body: JSON.stringify({ a: 1, b: 2 }),
+            timeout: 10_000,
+        });
+        expect(resp.status).toEqual(200);
+        const echo: EchoEndpointResponse = await resp.json();
+        const body = JSON.parse(echo.body!);
+        expect(body).toStrictEqual({ a: 1, b: 2 });
+    });
+
+    test("Mock request to http://example.localhost/echo?a=1&a=2&b=3&c and check the URL query is passed", async () => {
+        let requestUrl = new URL(sam!.url.href);
+        requestUrl.pathname = "/echo";
+        requestUrl.search = "a=1&a=2&b=3&c";
+        requestUrl.host = "127.0.0.1";
+        let resp = await fetch(requestUrl.href, {
+            method: "POST",
+            headers: {
+                Host: "example.localhost",
+                "X-User-PK": UserPK.stringify(testUser), // trust user pk header test mode enabled
+            },
+            timeout: 10_000,
+        });
+        expect(resp.status).toEqual(200);
+        const echo: EchoEndpointResponse = await resp.json();
+        expect(echo.queryParams).toStrictEqual({ a: ["1", "2"], b: ["3"], c: [""] });
     });
 
     test("Stop SAM", async () => {

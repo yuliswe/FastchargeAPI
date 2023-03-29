@@ -172,9 +172,6 @@ let handle = startServerAndCreateLambdaHandler<RequestHandler<LambdaEvent, Lambd
                 let userPK = event.requestContext.authorizer?.["userPK"];
                 currentUser = await batched.User.get(UserPK.parse(userPK));
             }
-            if (currentUser == undefined) {
-                console.warn(chalk.yellow("User is anonymous"));
-            }
             return Promise.resolve({
                 currentUser,
                 service: serviceName,
