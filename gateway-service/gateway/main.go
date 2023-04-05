@@ -22,6 +22,8 @@ import (
 	"github.com/google/uuid"
 	lru "github.com/hashicorp/golang-lru/v2"
 	httprouter "github.com/julienschmidt/httprouter"
+
+	GQL "fastchargeapi.com/gateway/__generated__"
 )
 
 func main() {
@@ -114,7 +116,7 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 
 	fastchargeUserToken := "" // TODO: implement this
 	switch mode {
-	case GatewayModeRedirect:
+	case GQL.GatewayModeRedirect:
 		if response, err := makeRedirectResponse(destination, request, fastchargeUserToken); err != nil {
 			fmt.Println(color.Red, "Error making a redirect response", err, color.Reset)
 			return &response, err
@@ -327,19 +329,19 @@ func makeForwardResponse(destination string, request events.APIGatewayProxyReque
 	}
 }
 
-var GetAppRoutesCache, _ = lru.New[string, *GetAppRoutesResponse](1000)
+var GetAppRoutesCache, _ = lru.New[string, *GQL.GetAppRoutesResponse](1000)
 var getRouterCache, _ = lru.New[string, httprouter.Router](1000)
 
 /*
 Gets the route from the cache. If the route is not in the cache, it will query
 the resource server.
 */
-func getRoute(graphqlClient *graphql.Client, method string, app string, path string) (destination string, gatewayMode GatewayMode, found bool) {
-	gatewayMode = GatewayModeProxy // TODO: not implemented
+func getRoute(graphqlClient *graphql.Client, method string, app string, path string) (destination string, gatewayMode GQL.GatewayMode, found bool) {
+	gatewayMode = GQL.GatewayModeProxy // TODO: not implemented
 
 	appRoutes, found := GetAppRoutesCache.Get(app)
 	if !found {
-		routes, err := GetAppRoutes(context.Background(), *graphqlClient, app)
+		routes, err := GQL.GetAppRoutes(context.Background(), *graphqlClient, app)
 		appRoutes = routes
 		if err != nil {
 			fmt.Println(color.Red, "Error getting routes for", app, err, color.Reset)
@@ -355,19 +357,19 @@ func getRoute(graphqlClient *graphql.Client, method string, app string, path str
 			destination = endpoint.Destination
 		}
 		switch endpoint.Method {
-		case HTTPMethodGet:
+		case GQL.HTTPMethodGet:
 			appRouter.GET(endpoint.Path, processFn)
-		case HTTPMethodPost:
+		case GQL.HTTPMethodPost:
 			appRouter.POST(endpoint.Path, processFn)
-		case HTTPMethodPut:
+		case GQL.HTTPMethodPut:
 			appRouter.PUT(endpoint.Path, processFn)
-		case HTTPMethodDelete:
+		case GQL.HTTPMethodDelete:
 			appRouter.DELETE(endpoint.Path, processFn)
-		case HTTPMethodPatch:
+		case GQL.HTTPMethodPatch:
 			appRouter.PATCH(endpoint.Path, processFn)
-		case HTTPMethodHead:
+		case GQL.HTTPMethodHead:
 			appRouter.HEAD(endpoint.Path, processFn)
-		case HTTPMethodOptions:
+		case GQL.HTTPMethodOptions:
 			appRouter.OPTIONS(endpoint.Path, processFn)
 		}
 	}
@@ -409,7 +411,7 @@ func billUsage(graphqlClient *graphql.Client, user string, app string, path stri
 
 	// Creating usage log can be done synchronously. This ensures that when
 	// calling TriggerBilling, the usage log is already created.
-	if _, err := CreateUsageLog(
+	if _, err := GQL.CreateUsageLog(
 		context.Background(),
 		*graphqlClient,
 		user,
@@ -431,7 +433,7 @@ func billUsage(graphqlClient *graphql.Client, user string, app string, path stri
 			QueueUrl:               BillingFifoQueueUrl,
 		})
 	}
-	if _, err := TriggerBilling(
+	if _, err := GQL.TriggerBilling(
 		context.Background(),
 		*billingGQLClient,
 		user,
@@ -461,8 +463,8 @@ type GatewayDecisionResponse struct {
 // Checks if the user is allowed to access the endpoint. Caches the result if
 // the user is allowed to access. Otherwise, send queries to the graphql backend
 // to find out if the user is allowed to access.
-func getGatewayRequestDecision(graphqlClient *graphql.Client, userEmail string, app string, path string) (decision *CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse, errorResponse *events.APIGatewayProxyResponse) {
-	result, err := CheckUserIsAllowedToCallEndpoint(context.Background(), *graphqlClient, userEmail, app)
+func getGatewayRequestDecision(graphqlClient *graphql.Client, userEmail string, app string, path string) (decision *GQL.CheckUserIsAllowedToCallEndpointCheckUserIsAllowedForGatewayRequestGatewayDecisionResponse, errorResponse *events.APIGatewayProxyResponse) {
+	result, err := GQL.CheckUserIsAllowedToCallEndpoint(context.Background(), *graphqlClient, userEmail, app)
 	decision = &result.CheckUserIsAllowedForGatewayRequest
 	if err != nil {
 		fmt.Println(color.Red, "Error checking if user is allowed to call endpoint:", err, color.Reset)
@@ -474,16 +476,16 @@ func getGatewayRequestDecision(graphqlClient *graphql.Client, userEmail string, 
 	}
 	if result.CheckUserIsAllowedForGatewayRequest.Allowed == false {
 		switch result.CheckUserIsAllowedForGatewayRequest.Reason {
-		case GatewayDecisionResponseReasonTooManyRequests:
+		case GQL.GatewayDecisionResponseReasonTooManyRequests:
 			errorResponse := apiGatewayErrorResponse(429, "TOO_MANY_REQUESTS", "You have made too many requests to this endpoint.")
 			return decision, errorResponse
-		case GatewayDecisionResponseReasonNotSubscribed:
+		case GQL.GatewayDecisionResponseReasonNotSubscribed:
 			errorResponse := apiGatewayErrorResponse(402, "NOT_SUBSCRIBED", "You are not subscribed to this app.")
 			return decision, errorResponse
-		case GatewayDecisionResponseReasonInsufficientBalance:
+		case GQL.GatewayDecisionResponseReasonInsufficientBalance:
 			errorResponse := apiGatewayErrorResponse(402, "INSUFFICIENT_BALANCE", "Your account balance is too low to make this request.")
 			return decision, errorResponse
-		case GatewayDecisionResponseReasonOwnerInsufficientBalance:
+		case GQL.GatewayDecisionResponseReasonOwnerInsufficientBalance:
 			errorResponse := apiGatewayErrorResponse(402, "OWNER_INSUFFICIENT_BALANCE", "The owner of this app does not have enough balance to pay for the free quota used by this request.")
 			return decision, errorResponse
 		}

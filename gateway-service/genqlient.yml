@@ -3,8 +3,8 @@
 schema: ../graphql-service/apollo/schema/App.graphql
 operations:
   - ./gateway/genqlient.graphql
-generated: ./gateway/generated__graphql.go
-package: main
+generated: ./gateway/__generated__/gql-operations.go
+package: __generated__
 bindings:
   Email:
     type: string
