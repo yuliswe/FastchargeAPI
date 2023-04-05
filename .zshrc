@@ -3,4 +3,4 @@
 #   source ./.zshrc
 # fi
 export PS1='%F{004}%~%f$ '
-source devenv.bash
+source "$(dirname $0/)/devenv.bash"

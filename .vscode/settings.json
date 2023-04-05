@@ -3,14 +3,16 @@
     "bash": {
       "path": "bash",
       "args": [
-        "-l"
+        "-l",
+        "--init-file",
+        "${workspaceFolder}/devenv.bash"
       ],
       "icon": "terminal-bash"
     },
     "zsh": {
       "path": "zsh",
       "args": [
-        "-l"
+        "-l",
       ],
       "env": {
         "ZDOTDIR": "${workspaceFolder}"
@@ -31,6 +33,7 @@
       "icon": "terminal-powershell"
     }
   },
+  "terminal.integrated.defaultProfile.osx": "zsh",
   "files.exclude": {
     ".nodevenv": true,
     ".venv": true,
@@ -49,5 +52,5 @@
   "python.analysis.importFormat": "relative",
   "explorerExclude.backup": {},
   "python.formatting.provider": "black",
-  "python.analysis.typeCheckingMode": "basic"
+  "python.analysis.typeCheckingMode": "basic",
 }
