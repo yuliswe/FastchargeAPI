@@ -6,13 +6,14 @@ import {
     GQLAccountActivityReason,
     GQLAccountActivityStatus,
 } from "../__generated__/resolvers-types";
-import { AccountActivity, AccountActivityModel } from "../dynamoose/models";
+import { AccountActivity, AccountActivityModel, User } from "../dynamoose/models";
 import { AppPK } from "../pks/AppPK";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { StripeTransferPK } from "../pks/StripeTransferPK";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
 import { Denied } from "../errors";
 import { Can } from "../permissions";
+import { UserPK } from "../pks/UserPK";
 
 function makeOwnerReadable<T>(
     getter: (parent: AccountActivity, args: {}, context: RequestContext) => T
@@ -44,6 +45,12 @@ export const accountActivityResolvers: GQLResolvers & {
         status: makeOwnerReadable((parent) => parent.status as GQLAccountActivityStatus),
         settleAt: makeOwnerReadable((parent) => parent.settleAt),
         consumedFreeQuota: makeOwnerReadable((parent) => parent.consumedFreeQuota),
+        async user(parent, args: {}, context: RequestContext): Promise<User> {
+            if (!(await Can.viewAccountActivityPrivateAttributes(parent, context))) {
+                throw new Denied();
+            }
+            return await context.batched.User.get(UserPK.parse(parent.user));
+        },
         async billedApp(parent: AccountActivity, args: {}, context, info) {
             if (!(await Can.viewAccountActivityPrivateAttributes(parent, context))) {
                 throw new Denied();

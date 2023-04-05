@@ -2,6 +2,7 @@ import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
 import { TableClass } from "dynamoose/dist/Table/types";
 import { isValidAppName } from "../functions/app";
+import { ModelType } from "dynamoose/dist/General";
 
 let MAKE_TABLE = false;
 
@@ -724,6 +725,9 @@ export class FreeQuotaUsage extends Item {
     app: string;
     usage: number;
 }
+
+export type Model<T extends Item> = ModelType<T>;
+export { Item } from "dynamoose/dist/Item";
 
 export const AppModel = dynamoose.model<App>("App", AppTableSchema, {
     ...tableConfigs,

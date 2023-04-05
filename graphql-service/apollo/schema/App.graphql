@@ -371,6 +371,7 @@ enum AccountActivityIndex {
 }
 type AccountActivity {
     pk: ID!
+    user: User!
     createdAt: Timestamp!
     type: AccountActivityType!
     amount: String!
