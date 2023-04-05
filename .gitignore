@@ -12,3 +12,4 @@ build
 **/.symlinks/
 **/.aws-sam/
 **/__pycache__/
+**/__generated__/
