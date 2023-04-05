@@ -14,13 +14,14 @@ const chalk = new Chalk({ level: 3 });
  * Make is so that only the owner can read the private attributes.
  */
 function makePrivate<T>(
-    getter: (parent: UsageSummary, args: {}, context: RequestContext) => T
+    { allowAppOwner = false }: { allowAppOwner?: boolean } = {},
+    getter: (parent: UsageSummary) => T
 ): (parent: UsageSummary, args: {}, context: RequestContext) => Promise<T> {
     return async (parent: UsageSummary, args: {}, context: RequestContext): Promise<T> => {
-        if (!(await Can.viewUsageSummaryPrivateAttributes(parent, context))) {
+        if (!(await Can.viewUsageSummaryPrivateAttributes(parent, context, { allowAppOwner }))) {
             throw new Denied();
         }
-        return getter(parent, args, context);
+        return getter(parent);
     };
 }
 
@@ -29,10 +30,12 @@ export const usageSummaryResolvers: GQLResolvers & {
 } = {
     UsageSummary: {
         __isTypeOf: (parent) => parent instanceof UsageSummaryModel,
-        createdAt: makePrivate((parent) => parent.createdAt),
-        billedAt: makePrivate((parent) => parent.billedAt),
-        billed: makePrivate((parent) => parent.billedAt !== undefined),
-        volume: makePrivate((parent) => parent.volume),
+        createdAt: makePrivate({}, (parent) => parent.createdAt),
+        billedAt: makePrivate({}, (parent) => parent.billedAt),
+        billed: makePrivate({}, (parent) => parent.billedAt !== undefined),
+        // The volume is made viewable to the app owner so that in the app
+        // owner's dashboard they can see they much their users are using.
+        volume: makePrivate({ allowAppOwner: true }, (parent) => parent.volume),
         async subscriber(parent: UsageSummary, args: {}, context: RequestContext) {
             if (!(await Can.viewUsageSummaryPrivateAttributes(parent, context))) {
                 throw new Denied();

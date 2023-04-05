@@ -362,12 +362,22 @@ export const Can = {
     async createStripeTransfer(context: RequestContext): Promise<boolean> {
         return Promise.resolve(context.isSQSMessage && context.isServiceRequest);
     },
-    async viewUsageSummaryPrivateAttributes(parent: UsageSummary, context: RequestContext): Promise<boolean> {
+    async viewUsageSummaryPrivateAttributes(
+        parent: UsageSummary,
+        context: RequestContext,
+        { allowAppOwner = false }: { allowAppOwner?: boolean } = {}
+    ): Promise<boolean> {
         if (context.isServiceRequest) {
             return true;
         }
         if (!context.currentUser) {
             return false;
+        }
+        if (allowAppOwner) {
+            let app = await context.batched.App.get(AppPK.parse(parent.app));
+            if (app.owner === UserPK.stringify(context.currentUser)) {
+                return true;
+            }
         }
         return await Promise.resolve(parent.subscriber === UserPK.stringify(context.currentUser));
     },
