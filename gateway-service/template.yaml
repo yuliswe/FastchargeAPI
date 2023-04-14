@@ -9,6 +9,9 @@ Parameters:
   Stage:
     Type: String
     Default: DEV
+  Architecture:
+    Type: String
+    Default: arm64
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -63,7 +66,7 @@ Resources:
       Handler: bootstrap
       Runtime: provided.al2
       Architectures:
-        - arm64
+        - !Ref Architecture
       Events:
         CorsRoot:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -91,7 +94,7 @@ Resources:
       Handler: bootstrap
       Runtime: provided.al2
       Architectures:
-        - arm64
+        - !Ref Architecture
       Events:
         AnyRoot:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api

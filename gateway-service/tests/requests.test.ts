@@ -1,12 +1,12 @@
-import { afterAll, describe, expect, jest, test } from "@jest/globals";
+import { describe, expect, jest, test } from "@jest/globals";
 import { RequestContext } from "graphql-service/RequestContext";
 import { createDefaultContextBatched } from "graphql-service/RequestContext";
 import { getOrCreateTestUser } from "graphql-service/tests/test-utils";
 import { spawn } from "child_process";
 import path from "path";
-import fetch from "node-fetch";
+import fetchNative, { Response } from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
-import { App, User, UserAppToken } from "graphql-service/dynamoose/models";
+import { User } from "graphql-service/dynamoose/models";
 import { UserPK } from "graphql-service/pks/UserPK";
 import { AppPK } from "graphql-service/pks/AppPK";
 import { PricingPK } from "graphql-service/pks/PricingPK";
@@ -23,9 +23,29 @@ let context: RequestContext = {
 };
 
 jest.setTimeout(60_000);
+const gatewayHost = "localhost";
+
+// graphql-service lambda cold start can take a while, causing occasional HTTP
+// 502 failures. This function retries the request with exponential backoff.
+async function fetch(url: URL | string, options: any): Promise<Response> {
+    const maxAttempts = 5;
+    let result: Response;
+    for (let i = 0; i < maxAttempts; i++) {
+        result = await fetchNative(url, options);
+        if (result.status === 502 && i < maxAttempts - 1) {
+            await new Promise((resolve) => setTimeout(resolve, 2 ** i * 1000));
+            continue;
+        }
+    }
+    return result!;
+}
+
+// beforeAll(async () => {
+//     await buildSAM();
+// }, 180_000);
 
 describe("Test CORS requests", () => {
-    let sam: SAM | undefined;
+    let sam: SAM;
     test("Start local SAM", async () => {
         sam = await startLocalSAM();
     });
@@ -58,7 +78,7 @@ describe("Test CORS requests", () => {
     });
 
     test("Stop SAM", async () => {
-        sam!.stop();
+        await sam!.stop();
     });
 });
 
@@ -72,7 +92,7 @@ describe("Test request authentication", () => {
         authToken = result.token;
     });
 
-    let sam: SAM | undefined;
+    let sam: SAM;
     test("Start local SAM", async () => {
         sam = await startLocalSAM();
     });
@@ -84,7 +104,7 @@ describe("Test request authentication", () => {
         let resp = await fetch(requestUrl.href, {
             method: "GET",
             headers: {
-                Host: "example.localhost",
+                Host: `example.${gatewayHost}`,
             },
         });
         expect(resp.status).toEqual(401);
@@ -97,7 +117,7 @@ describe("Test request authentication", () => {
         let resp = await fetch(requestUrl.href, {
             method: "GET",
             headers: {
-                Host: "example.localhost",
+                Host: `example.${gatewayHost}`,
                 "X-User-PK": UserPK.stringify(testUser), // trust user pk header test mode enabled
             },
         });
@@ -105,7 +125,7 @@ describe("Test request authentication", () => {
     });
 
     test("Stop SAM", async () => {
-        sam!.stop();
+        await sam.stop();
     });
 });
 
@@ -115,7 +135,7 @@ type EchoEndpointResponse = {
     queryParams: { [param: string]: string };
 };
 
-describe.only("Test request header passthrough", () => {
+describe("Test request header passthrough", () => {
     let testUser: User;
     let authToken: string;
 
@@ -125,20 +145,20 @@ describe.only("Test request header passthrough", () => {
         authToken = result.token;
     });
 
-    let sam: SAM | undefined;
+    let sam: SAM;
     test("Start local SAM", async () => {
         sam = await startLocalSAM();
     });
 
-    // http://example.localhost/echo is an endpoint that simply echos the lambda event in the response
-    test("Mock request to http://example.localhost/echo and check the headers are passed through", async () => {
+    // http://example.${gatewayHost}/echo is an endpoint that simply echos the lambda event in the response
+    test(`Send request to http://example.${gatewayHost}/echo and check the headers are passed through`, async () => {
         let requestUrl = new URL(sam!.url.href);
         requestUrl.pathname = "/echo";
         requestUrl.host = "127.0.0.1";
         let resp = await fetch(requestUrl.href, {
             method: "POST",
             headers: {
-                Host: "example.localhost",
+                Host: `example.${gatewayHost}`,
                 "X-User-PK": UserPK.stringify(testUser), // trust user pk header test mode enabled
                 "X-FAST-API-KEY": "X-FAST-API-KEY",
                 "Custom-Header": "Custom-Header",
@@ -159,14 +179,14 @@ describe.only("Test request header passthrough", () => {
         expect(headersLowerCased["custom-header"]).toStrictEqual(["Custom-Header"]); // Any custom header should be kept
     });
 
-    test("Mock request to http://example.localhost/echo and check the body is passed", async () => {
+    test(`Send request to http://example.${gatewayHost}/echo and check the body is passed`, async () => {
         let requestUrl = new URL(sam!.url.href);
         requestUrl.pathname = "/echo";
         requestUrl.host = "127.0.0.1";
         let resp = await fetch(requestUrl.href, {
             method: "POST",
             headers: {
-                Host: "example.localhost",
+                Host: `example.${gatewayHost}`,
                 "X-User-PK": UserPK.stringify(testUser), // trust user pk header test mode enabled
             },
             body: JSON.stringify({ a: 1, b: 2 }),
@@ -178,7 +198,7 @@ describe.only("Test request header passthrough", () => {
         expect(body).toStrictEqual({ a: 1, b: 2 });
     });
 
-    test("Mock request to http://example.localhost/echo?a=1&a=2&b=3&c and check the URL query is passed", async () => {
+    test(`Send request to http://example.${gatewayHost}/echo?a=1&a=2&b=3&c and check the URL query is passed`, async () => {
         let requestUrl = new URL(sam!.url.href);
         requestUrl.pathname = "/echo";
         requestUrl.search = "a=1&a=2&b=3&c";
@@ -186,7 +206,7 @@ describe.only("Test request header passthrough", () => {
         let resp = await fetch(requestUrl.href, {
             method: "POST",
             headers: {
-                Host: "example.localhost",
+                Host: `example.${gatewayHost}`,
                 "X-User-PK": UserPK.stringify(testUser), // trust user pk header test mode enabled
             },
             timeout: 10_000,
@@ -197,20 +217,44 @@ describe.only("Test request header passthrough", () => {
     });
 
     test("Stop SAM", async () => {
-        sam!.stop();
+        await sam.stop();
     });
 });
 
+function getArch(): string {
+    switch (process.arch) {
+        case "x64":
+            return "x86_64";
+        default:
+            return "arm64";
+    }
+}
+
 type SAM = {
     url: URL;
-    stop: () => void;
+    stop: () => Promise<void>;
 };
 async function startLocalSAM(): Promise<SAM> {
     const port = 6001 + Math.floor(998 * Math.random());
     const url = `http://127.0.0.1:${port}`;
-    const sam = spawn("sam", ["local", "start-api", "--port", port.toString(), "-n", "./testenv.json"], {
-        cwd: path.join(__dirname, ".."),
-    });
+    const sam = spawn(
+        "sam",
+        [
+            "local",
+            "start-api",
+            "--warm-containers=eager",
+            "--port",
+            port.toString(),
+            "-n",
+            "./testenv.json",
+            "--parameter-overrides",
+            `Architecture=${getArch()}`,
+            ...platformRunOptions(),
+        ],
+        {
+            cwd: path.join(__dirname, ".."),
+        }
+    );
 
     sam.stdout.on("data", (data) => {
         console.log(`SAM: ${data}`);
@@ -241,8 +285,12 @@ async function startLocalSAM(): Promise<SAM> {
 
     return {
         url: new URL(url),
-        stop: () => {
-            sam.kill();
+        stop: async (): Promise<void> => {
+            sam.stdout.destroy();
+            sam.stderr.destroy();
+            let ret = new Promise<void>((resolve) => sam.on("close", resolve));
+            sam.kill("SIGINT");
+            return ret;
         },
     };
 }
@@ -274,4 +322,13 @@ async function createUserAndSubscribeToExampleApp(context: RequestContext) {
         testUser,
         token,
     };
+}
+
+function platformRunOptions(): string[] {
+    switch (getArch()) {
+        case "x86_64":
+            return [];
+        default:
+            return [];
+    }
 }

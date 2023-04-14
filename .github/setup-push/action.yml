@@ -1,0 +1,29 @@
+name: "Setup"
+inputs:
+  AWS_GITHUBACTIONROLE_ARN:
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - run: pipx install poetry
+      shell: bash
+    - uses: actions/setup-python@v3
+      with:
+        python-version: "3.9"
+        cache: "poetry"
+    - uses: actions/setup-node@v3
+      with:
+        node-version: lts/*
+        cache: "npm"
+    - uses: aws-actions/setup-sam@v2
+      with:
+        use-installer: true
+    - uses: aws-actions/configure-aws-credentials@master
+      with:
+        aws-region: us-east-1
+        role-to-assume: ${{ inputs.AWS_GITHUBACTIONROLE_ARN }}
+    - name: Install
+      run: |
+        npm i -g prettier
+        npm ci
+      shell: bash

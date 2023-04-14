@@ -1,4 +1,4 @@
 poetry env use python3.9
 poetry install
 poetry run nodeenv -n lts .nodevenv
-npm install
+npx -y npm@8 install
