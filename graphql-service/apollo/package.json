@@ -6,7 +6,8 @@
   "main": "index.ts",
   "scripts": {
     "gen": "graphql-codegen --config codegen.yml && prettier -w ./__generated__",
-    "build": "npm run gen && tsc",
+    "prebuild": "npm run gen",
+    "build": "(npm run prebuild) && tsc",
     "start": "node --experimental-specifier-resolution=node ./dist/devserver.js",
     "watch": "npx nodemon -e yml,ts,graphql,json -i ./__generated__ --signal SIGINT -x \"npm run build && npm run start || exit 1\"",
     "test": "jest",

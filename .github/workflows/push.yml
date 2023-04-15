@@ -25,7 +25,7 @@ jobs:
           AWS_GITHUBACTIONROLE_ARN: ${{ secrets.AWS_GITHUBACTIONROLE_ARN }}
       - name: Build
         run: |
-          (cd graphql-service/apollo && npm ci && npm run build)
+          (cd graphql-service/apollo && npm ci && npm run prebuild)
       - name: Test
         run: |
           cd graphql-service/apollo
@@ -40,7 +40,7 @@ jobs:
           AWS_GITHUBACTIONROLE_ARN: ${{ secrets.AWS_GITHUBACTIONROLE_ARN }}
       - name: Build
         run: |
-          (cd graphql-service/apollo && npm ci && npm run build)
+          (cd graphql-service/apollo && npm ci && npm run prebuild)
           (cd gateway-service && npm ci && npm run build:x86)
       - name: Test
         run: |
@@ -56,8 +56,8 @@ jobs:
           AWS_GITHUBACTIONROLE_ARN: ${{ secrets.AWS_GITHUBACTIONROLE_ARN }}
       - name: Build
         run: |
-          (cd graphql-service/apollo && npm ci && npm run build)
-          (cd payment-service && npm ci && npm run build:x86)
+          (cd graphql-service/apollo && npm ci && npm run prebuild)
+          (cd payment-service && npm ci && npm run prebuild)
       - name: Test
         run: |
           cd payment-service
