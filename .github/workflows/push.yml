@@ -12,6 +12,9 @@ defaults:
   run:
     shell: bash
 
+env:
+  NODE_OPTIONS: "--max_old_space_size=6144"
+
 jobs:
   test-graphql-service:
     runs-on: ubuntu-latest
@@ -42,4 +45,20 @@ jobs:
       - name: Test
         run: |
           cd gateway-service
+          npm run test
+
+  test-payment-service:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/setup-push
+        with:
+          AWS_GITHUBACTIONROLE_ARN: ${{ secrets.AWS_GITHUBACTIONROLE_ARN }}
+      - name: Build
+        run: |
+          (cd graphql-service/apollo && npm ci && npm run build)
+          (cd payment-service && npm ci && npm run build:x86)
+      - name: Test
+        run: |
+          cd payment-service
           npm run test

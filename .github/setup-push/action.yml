@@ -24,6 +24,6 @@ runs:
         role-to-assume: ${{ inputs.AWS_GITHUBACTIONROLE_ARN }}
     - name: Install
       run: |
-        npm i -g prettier
+        npm i -g prettier esbuild
         npm ci
       shell: bash

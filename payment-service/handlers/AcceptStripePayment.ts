@@ -1,24 +1,24 @@
+import { gql } from "@apollo/client";
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { Chalk } from "chalk";
-import { LambdaEventV2, LambdaHandlerV2 } from "../utils/LambdaContext";
-import { RequestContext, UserPK, createDefaultContextBatched, sqsGQLClient } from "graphql-service";
-import { parseStripeWebhookEvent } from "../utils/stripe-client";
-import { StripePaymentAccept, User } from "graphql-service/dynamoose/models";
-import { SQSQueueUrl } from "graphql-service/cron-jobs/sqsClient";
-import { gql } from "@apollo/client";
+import crypto from "crypto";
 import Decimal from "decimal.js-light";
+import { RequestContext, UserPK, createDefaultContextBatched, sqsGQLClient } from "graphql-service";
+import { SQSQueueUrl } from "graphql-service/cron-jobs/sqsClient";
+import { StripePaymentAccept, User } from "graphql-service/dynamoose/models";
+import { Stripe } from "stripe";
 import {
     GQLFulfillUserStripePaymentAcceptQuery,
     GQLFulfillUserStripePaymentAcceptQueryVariables,
     GQLMutationCreateStripePaymentAcceptArgs,
     GQLUserIndex,
 } from "../__generated__/gql-operations";
-import { Stripe } from "stripe";
-import crypto from "crypto";
+import { LambdaEventV2, LambdaHandlerV2 } from "../utils/LambdaContext";
+import { parseStripeWebhookEvent } from "../utils/stripe-client";
 
 const chalk = new Chalk({ level: 3 });
 
-export const context: RequestContext = {
+const context: RequestContext = {
     service: "payment",
     isServiceRequest: true,
     isSQSMessage: false,
@@ -154,7 +154,7 @@ async function createAndFufillOrder({
 }): Promise<void> {
     let billingQueueClient = sqsGQLClient({
         queueUrl: SQSQueueUrl.BillingFifoQueue,
-        dedupId: md5(`${UserPK.stringify(user)}-createAndFufillOrder-${session.id}`),
+        dedupId: `createAndFufillOrder-${UserPK.stringify(user)}-${md5(session.id)}`,
     });
     await billingQueueClient.mutate<void, GQLMutationCreateStripePaymentAcceptArgs>({
         mutation: gql(`

@@ -1,5 +1,11 @@
-import { Context as LambdaContext, APIGatewayProxyStructuredResultV2 } from "aws-lambda";
+import { gql } from "@apollo/client";
+import { GQLUserIndex } from "__generated__/gql-operations";
+import { APIGatewayProxyStructuredResultV2, Context as LambdaContext } from "aws-lambda";
 import { Chalk } from "chalk";
+import Decimal from "decimal.js-light";
+import { UserPK, createDefaultContextBatched, getUserBalance, sqsGQLClient } from "graphql-service";
+import { RequestContext } from "graphql-service/RequestContext";
+import { SQSQueueUrl } from "graphql-service/cron-jobs/sqsClient";
 import {
     LambdaCallbackV2,
     LambdaEventV2,
@@ -7,12 +13,6 @@ import {
     LambdaResultV2,
     getUserEmailFromEvent,
 } from "../utils/LambdaContext";
-import { UserPK, createDefaultContextBatched, getUserBalance, sqsGQLClient } from "graphql-service";
-import { RequestContext } from "graphql-service/RequestContext";
-import Decimal from "decimal.js-light";
-import { SQSQueueUrl } from "graphql-service/cron-jobs/sqsClient";
-import { gql } from "@apollo/client";
-import { GQLUserIndex } from "__generated__/gql-operations";
 
 const chalk = new Chalk({ level: 3 });
 
@@ -86,7 +86,7 @@ export async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStruc
 
     let billingQueueClient = sqsGQLClient({
         queueUrl: SQSQueueUrl.BillingFifoQueue,
-        dedupId: `createStripeTransfer-${UserPK.stringify(user)}-${Date.now()}`,
+        dedupId: `createStripeTransfer-${UserPK.stringify(user)}-${event.requestContext.requestId}`,
     });
     await billingQueueClient.mutate({
         mutation: gql(`

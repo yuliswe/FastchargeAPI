@@ -57,7 +57,6 @@ let lambdaEvent: LambdaEventV2 = {
 describe("Create a Stripe checkout session", () => {
     test("A successful topup", async () => {
         let response = await Checkout(lambdaEvent, { skipBalanceCheck: true });
-        console.log(response);
         expect(response.statusCode).toBe(200);
         let body = JSON.parse(response.body!);
         expect(body).toHaveProperty("location");
