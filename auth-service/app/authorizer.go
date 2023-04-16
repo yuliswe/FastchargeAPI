@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/TwiN/go-color"
@@ -90,6 +91,7 @@ func allowed(user *UserClaims) *events.APIGatewayV2CustomAuthorizerIAMPolicyResp
 			},
 		},
 		Context: map[string]interface{}{
+			"isAdminUser":     strconv.FormatBool(user.Email == "fastchargeapi@gmail.com"),
 			"isAnonymousUser": "false",
 			"userEmail":       user.Email,
 			"userPK":          user.UserPK,

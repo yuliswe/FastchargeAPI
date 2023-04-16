@@ -1,28 +1,29 @@
 import { BaseContext } from "@apollo/server";
 import { Batched } from "./dynamoose/dataloader";
 import {
-    UserModel,
+    AccountActivityModel,
+    AccountHistoryModel,
     AppModel,
     EndpointModel,
+    FreeQuotaUsageModel,
+    GatewayRequestCounterModel,
+    GatewayRequestDecisionCacheModel,
     PricingModel,
+    SecretModel,
+    StripePaymentAcceptModel,
+    StripeTransferModel,
     SubscriptionModel,
     UsageLogModel,
     UsageSummaryModel,
-    StripePaymentAcceptModel,
-    AccountActivityModel,
-    AccountHistoryModel,
-    SecretModel,
-    StripeTransferModel,
-    GatewayRequestCounterModel,
-    GatewayRequestDecisionCacheModel,
-    UserAppTokenModel,
     User,
-    FreeQuotaUsageModel,
+    UserAppTokenModel,
+    UserModel,
 } from "./dynamoose/models";
 
 export type RequestService = "payment" | "gateway" | "internal";
 export interface RequestContext extends BaseContext {
     currentUser?: User;
+    isAdminUser?: boolean;
     isAnonymousUser?: boolean;
     service?: RequestService;
     isServiceRequest: boolean;

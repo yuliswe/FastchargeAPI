@@ -1,21 +1,21 @@
+import { HeaderMap } from "@apollo/server";
 import { startServerAndCreateLambdaHandler } from "@as-integrations/aws-lambda";
-import { server } from "./server";
+import { LambdaRequest, LambdaResponse } from "@as-integrations/aws-lambda/dist/middleware";
+import { RequestHandler, createRequestHandler } from "@as-integrations/aws-lambda/dist/request-handlers/_create";
 import {
+    APIGatewayEventRequestContextV2,
     APIGatewayProxyEvent,
     APIGatewayProxyEventBase,
-    APIGatewayEventRequestContextV2,
     APIGatewayProxyResult,
 } from "aws-lambda";
-import { createRequestHandler, RequestHandler } from "@as-integrations/aws-lambda/dist/request-handlers/_create";
-import { HeaderMap } from "@apollo/server";
-import { BadInput } from "./errors";
-import { RequestContext, RequestService, createDefaultContextBatched } from "./RequestContext";
 import { Chalk } from "chalk";
-import { LambdaRequest, LambdaResponse } from "@as-integrations/aws-lambda/dist/middleware";
-import { createUserWithEmail } from "./functions/user";
+import { RequestContext, RequestService, createDefaultContextBatched } from "./RequestContext";
 import { GQLUserIndex } from "./__generated__/resolvers-types";
 import { User } from "./dynamoose/models";
+import { BadInput } from "./errors";
+import { createUserWithEmail } from "./functions/user";
 import { UserPK } from "./pks/UserPK";
+import { server } from "./server";
 
 export type LambdaEvent = APIGatewayProxyEventBase<APIGatewayEventRequestContextV2 | undefined>;
 export type LambdaResult = APIGatewayProxyResult;
@@ -125,6 +125,7 @@ let handle = startServerAndCreateLambdaHandler<RequestHandler<LambdaEvent, Lambd
             let domain = event.requestContext.domainName || "";
             let serviceName: RequestService | undefined = undefined;
             let isServiceRequest = false;
+            let isAdminUser = event.requestContext.authorizer?.["isAdminUser"] === "true";
             // This domain is authenticated with AWS IAM. Only internal services
             // can access it. Therefore we can trust the X-Service-Name header. For
             // example, when the gateway service sends a graphql request, it
@@ -179,6 +180,7 @@ let handle = startServerAndCreateLambdaHandler<RequestHandler<LambdaEvent, Lambd
                 batched: createDefaultContextBatched(),
                 isSQSMessage: false,
                 isAnonymousUser: currentUser == undefined,
+                isAdminUser,
             });
         },
         middleware: [corsMiddleware],

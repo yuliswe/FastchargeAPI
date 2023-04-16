@@ -1,11 +1,11 @@
 import { startStandaloneServer } from "@apollo/server/standalone";
-import { server } from "./server";
+import { IncomingMessage } from "http";
 import { RequestContext, createDefaultContextBatched } from "./RequestContext";
 import { GQLUserIndex } from "./__generated__/resolvers-types";
+import { User } from "./dynamoose/models";
 import { createUserWithEmail } from "./functions/user";
 import { UserPK } from "./pks/UserPK";
-import { User } from "./dynamoose/models";
-import { IncomingMessage } from "http";
+import { server } from "./server";
 
 let { url } = await startStandaloneServer<RequestContext>(server, {
     listen: {
@@ -51,7 +51,8 @@ let { url } = await startStandaloneServer<RequestContext>(server, {
             batched,
             isServiceRequest: serviceName != undefined,
             isSQSMessage: false,
-            isAnonymousUser: email == undefined,
+            isAnonymousUser: currentUser == undefined,
+            isAdminUser: currentUser?.email === "fastchargeapi@gmail.com",
         });
     },
 });
