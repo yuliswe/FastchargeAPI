@@ -1,8 +1,8 @@
-import { Context as LambdaContext, APIGatewayProxyStructuredResultV2 } from "aws-lambda";
+import { APIGatewayProxyStructuredResultV2, Context as LambdaContext } from "aws-lambda";
 import { Chalk } from "chalk";
-import { LambdaCallbackV2, LambdaEventV2, LambdaHandlerV2 } from "../utils/LambdaContext";
 import { getParameterFromAWSSystemsManager } from "graphql-service";
 import fetch from "node-fetch";
+import { LambdaCallbackV2, LambdaEventV2, LambdaHandlerV2 } from "../utils/LambdaContext";
 
 const chalk = new Chalk({ level: 3 });
 
@@ -40,6 +40,12 @@ async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredRe
             refresh_token: refreshToken,
         }),
     });
+    if (!response.ok) {
+        return {
+            statusCode: 400,
+            body: "Invalid Request: Refresh token is invalid.",
+        };
+    }
     let data = (await response.json()) as RefreshTokenResponse;
     return {
         statusCode: 200,
