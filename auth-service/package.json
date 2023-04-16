@@ -15,7 +15,7 @@
     "build": "npm run build-go && npm run build-node && npm run build-sam",
     "deploy": "npm run build && sam deploy",
     "logs": "sam logs --stack-name auth-service --tail",
-    "start": "npm run build && sam local start-api -p 7000",
+    "start": "(npm run build) && (sam local start-api -p 7000 --warm-containers=EAGER)",
     "watch": "nodemon -e go,graphql,yaml.json,ts -i generated__graphql.go -i __generated__ --signal SIGINT -x 'npm run start || exit 1'",
     "test": "jest --runInBand",
     "fix": "eslint --fix ./",

@@ -1,10 +1,10 @@
-import { startServerAndCreateLambdaHandler } from "@as-integrations/aws-lambda";
-import { server } from "./server";
-import { SQSRecord, SQSEvent, SQSBatchResponse, SQSBatchItemFailure } from "aws-lambda";
-import { RequestHandler } from "@as-integrations/aws-lambda/dist/request-handlers/_create";
 import { HTTPGraphQLResponse, HeaderMap } from "@apollo/server";
+import { startServerAndCreateLambdaHandler } from "@as-integrations/aws-lambda";
+import { RequestHandler } from "@as-integrations/aws-lambda/dist/request-handlers/_create";
+import { SQSBatchItemFailure, SQSBatchResponse, SQSEvent, SQSRecord } from "aws-lambda";
 import { Chalk } from "chalk";
 import { RequestContext, RequestService, createDefaultContextBatched } from "./RequestContext";
+import { server } from "./server";
 
 const chalk = new Chalk({ level: 3 });
 
@@ -58,6 +58,8 @@ let handle = startServerAndCreateLambdaHandler<RequestHandler<SQSRecord, void>, 
                 isSQSMessage: true,
                 batched: createDefaultContextBatched(),
                 isAnonymousUser: userEmail == undefined,
+                sqsMessageGroupId: event.attributes.MessageGroupId,
+                sqsQueueName: event.eventSourceARN.split(":").at(-1),
             });
         },
     }

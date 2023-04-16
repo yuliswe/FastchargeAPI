@@ -55,7 +55,7 @@ type GatewayDecisionResponse {
 }
 
 type Mutation {
-    # createUser(email: Email!): User!
+    createUser(email: Email!): User!
 
     createApp(
         name: String!
@@ -112,6 +112,15 @@ type Mutation {
     triggerBilling(user: ID!, app: ID!): [UsageSummary!]!
 
     createSecret(key: String!, value: String!, description: String, expireAt: Timestamp): Secret!
+
+    createAccountActivity(
+        user: ID!
+        type: AccountActivityType!
+        reason: AccountActivityReason!
+        amount: NonNegativeDecimal!
+        description: String!
+        settleAt: Timestamp
+    ): AccountActivity!
 }
 
 type Secret {
@@ -165,6 +174,10 @@ type User {
     appToken(app: ID!): UserAppToken!
 
     stripePaymentAccept(stripeSessionId: String): StripePaymentAccept!
+
+    updateBalance: User!
+
+    getFastchargeAPIIdToken(expireInSeconds: Int = 3600): String!
 }
 
 enum UserIndex {

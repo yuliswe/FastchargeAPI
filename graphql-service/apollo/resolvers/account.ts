@@ -1,18 +1,19 @@
 import { RequestContext } from "../RequestContext";
 import {
-    GQLResolvers,
-    GQLAccountActivityResolvers,
-    GQLAccountActivityType,
     GQLAccountActivityReason,
+    GQLAccountActivityResolvers,
     GQLAccountActivityStatus,
+    GQLAccountActivityType,
+    GQLMutationCreateAccountActivityArgs,
+    GQLResolvers,
 } from "../__generated__/resolvers-types";
 import { AccountActivity, AccountActivityModel, User } from "../dynamoose/models";
-import { AppPK } from "../pks/AppPK";
-import { AccountActivityPK } from "../pks/AccountActivityPK";
-import { StripeTransferPK } from "../pks/StripeTransferPK";
-import { UsageSummaryPK } from "../pks/UsageSummaryPK";
 import { Denied } from "../errors";
 import { Can } from "../permissions";
+import { AccountActivityPK } from "../pks/AccountActivityPK";
+import { AppPK } from "../pks/AppPK";
+import { StripeTransferPK } from "../pks/StripeTransferPK";
+import { UsageSummaryPK } from "../pks/UsageSummaryPK";
 import { UserPK } from "../pks/UserPK";
 
 function makeOwnerReadable<T>(
@@ -94,5 +95,23 @@ export const accountActivityResolvers: GQLResolvers & {
         //     return activities;
         // },
     },
-    Mutation: {},
+    Mutation: {
+        async createAccountActivity(
+            parent: {},
+            { user, amount, description, reason, settleAt, type }: GQLMutationCreateAccountActivityArgs,
+            context: RequestContext
+        ) {
+            if (!(await Can.createAccountActivity(context))) {
+                throw new Denied();
+            }
+            return await context.batched.AccountActivity.create({
+                user,
+                amount,
+                description,
+                reason,
+                settleAt: settleAt ?? Date.now(),
+                type,
+            });
+        },
+    },
 };

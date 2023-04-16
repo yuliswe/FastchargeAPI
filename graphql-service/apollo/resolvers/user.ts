@@ -1,14 +1,14 @@
+import { Chalk } from "chalk";
 import { GraphQLResolveInfo } from "graphql";
-import { AccountActivity, App, Subscription, User, UserAppToken, UserModel } from "../dynamoose/models";
-import { BadInput, Denied, TooManyResources } from "../errors";
-import { Can } from "../permissions";
 import { RequestContext } from "../RequestContext";
 import {
     GQLAppIndex,
+    GQLMutationCreateUserArgs,
     GQLQueryUserArgs,
     GQLResolvers,
     GQLUserAccountActivitiesArgs,
     GQLUserCreateAppTokenArgs,
+    GQLUserGetFastchargeApiIdTokenArgs,
     GQLUserIndex,
     GQLUserResolvers,
     GQLUserStripePaymentAcceptArgs,
@@ -16,9 +16,14 @@ import {
     GQLUserUsageLogsArgs,
     GQLUserUsageSummariesArgs,
 } from "../__generated__/resolvers-types";
-import { UserPK } from "../pks/UserPK";
+import { AccountActivity, App, Subscription, User, UserAppToken, UserModel } from "../dynamoose/models";
+import { BadInput, Denied, TooManyResources } from "../errors";
 import { getUserBalance, settleAccountActivities } from "../functions/account";
 import { createUserAppToken } from "../functions/token";
+import { createUserWithEmail, makeFastchargeAPIIdTokenForUser } from "../functions/user";
+import { Can } from "../permissions";
+import { UserPK } from "../pks/UserPK";
+const chalk = new Chalk({ level: 3 });
 
 function makePrivate<T>(
     getter: (parent: User, args: {}, context: RequestContext) => T
@@ -241,6 +246,47 @@ export const userResolvers: GQLResolvers & {
             userAppToken.token = token; // Do not store the token string in the database.
             return userAppToken;
         },
+
+        /**
+         * Collect any account activities that are in the pending status, and have the
+         * settleAt property in the past. Create a new account AccountHistory for the
+         * collected activities, effectively updating the user's balance.
+         */
+        async updateBalance(parent: User, args: {}, context: RequestContext) {
+            if (
+                !context.isSQSMessage ||
+                context.sqsQueueName !== "graphql-service-billing-queue.fifo" ||
+                context.sqsMessageGroupId !== UserPK.stringify(parent)
+            ) {
+                if (!process.env.UNSAFE_BILLING) {
+                    console.error(
+                        chalk.red(
+                            `updateBalance must be called from the graphql-service-billing-queue.fifo Queue, and use the user pk as the MessageGroupId. If you are not running in production, you can set the UNSAFE_BILLING=1 environment variable to bypass this check.`
+                        )
+                    );
+                    console.error(chalk.red("Current context:"));
+                    console.error(chalk.red(`isSQSMessage: ${context.isSQSMessage.toString()}`));
+                    console.error(chalk.red(`sqsQueueName: ${context.sqsQueueName || "undefined"}`));
+                    console.error(chalk.red(`sqsMessageGroupId: ${context.sqsMessageGroupId || "undefined"}`));
+                    throw new Error("updateBalance must be called from an SQS message");
+                }
+            }
+            await settleAccountActivities(context, UserPK.stringify(parent), {
+                consistentReadAccountActivities: true,
+            });
+            return parent;
+        },
+
+        async getFastchargeAPIIdToken(
+            parent: User,
+            { expireInSeconds }: GQLUserGetFastchargeApiIdTokenArgs,
+            context: RequestContext
+        ): Promise<string> {
+            if (!(await Can.createUserPrivateResources(parent, context))) {
+                throw new Denied();
+            }
+            return makeFastchargeAPIIdTokenForUser({ user: parent, expireInSeconds: expireInSeconds || 3600 });
+        },
     },
     Query: {
         // async users(parent: {}, args: {}, context: RequestContext): Promise<User[]> {
@@ -274,17 +320,17 @@ export const userResolvers: GQLResolvers & {
         },
     },
     Mutation: {
-        // async createUser(
-        //     parent: {},
-        //     { email }: GQLMutationCreateUserArgs,
-        //     context: RequestContext,
-        //     info: GraphQLResolveInfo
-        // ): Promise<User> {
-        //     if (!(await Can.createUser({ email }, context))) {
-        //         throw new Denied();
-        //     }
-        //     let user = await createUserWithEmail(context.batched, email);
-        //     return user;
-        // },
+        async createUser(
+            parent: {},
+            { email }: GQLMutationCreateUserArgs,
+            context: RequestContext,
+            info: GraphQLResolveInfo
+        ): Promise<User> {
+            if (!(await Can.createUser(context))) {
+                throw new Denied();
+            }
+            let user = await createUserWithEmail(context.batched, email);
+            return user;
+        },
     },
 };

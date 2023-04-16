@@ -1,3 +1,13 @@
+import { RequestContext } from "./RequestContext";
+import {
+    GQLAppUpdateAppArgs,
+    GQLEndpointUpdateEndpointArgs,
+    GQLMutationCreateEndpointArgs,
+    GQLMutationCreateSubscriptionArgs,
+    GQLQuerySubscriptionArgs,
+    GQLSubscribeUpdateSubscriptionArgs,
+    GQLUserUpdateUserArgs,
+} from "./__generated__/resolvers-types";
 import {
     AccountActivity,
     AccountHistory,
@@ -12,22 +22,12 @@ import {
     User,
     UserAppToken,
 } from "./dynamoose/models";
-import { RequestContext } from "./RequestContext";
-import {
-    GQLAppUpdateAppArgs,
-    GQLEndpointUpdateEndpointArgs,
-    GQLMutationCreateEndpointArgs,
-    GQLMutationCreateSubscriptionArgs,
-    GQLQuerySubscriptionArgs,
-    GQLSubscribeUpdateSubscriptionArgs,
-    GQLUserUpdateUserArgs,
-} from "./__generated__/resolvers-types";
 import { AppPK } from "./pks/AppPK";
 import { UserPK } from "./pks/UserPK";
 
 export const Can = {
     async viewUserPrivateAttributes(user: User, context: RequestContext): Promise<boolean> {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -36,7 +36,7 @@ export const Can = {
         return await Promise.resolve(user.uid === context.currentUser.uid);
     },
     async createUserPrivateResources(user: User, context: RequestContext): Promise<boolean> {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -49,7 +49,7 @@ export const Can = {
         { author, stripeCustomerId, stripeConnectAccountId }: GQLUserUpdateUserArgs,
         context: RequestContext
     ): Promise<boolean> {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (stripeCustomerId || stripeConnectAccountId) {
@@ -72,9 +72,9 @@ export const Can = {
     // async viewApp({ owner }: { owner: string }, context: RequestContext): Promise<boolean> {
     //     return await Promise.resolve(true);
     // },
-    // async createUser({ email }: { email: string }, context: RequestContext) {
-    //     return await Promise.resolve(context.isServiceRequest);
-    // },
+    async createUser(context: RequestContext): Promise<boolean> {
+        return await Promise.resolve(context.isServiceRequest || context.isAdminUser || false);
+    },
     async createApp({ owner }: { owner: string }, context: RequestContext): Promise<boolean> {
         return await Promise.resolve(true);
     },
@@ -83,7 +83,7 @@ export const Can = {
         { title, description, homepage, repository }: GQLAppUpdateAppArgs,
         context: RequestContext
     ): Promise<boolean> {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -92,7 +92,7 @@ export const Can = {
         return await Promise.resolve(parent.owner === UserPK.stringify(context.currentUser));
     },
     async deleteApp(parent: App, context: RequestContext): Promise<boolean> {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -107,7 +107,7 @@ export const Can = {
         return await Promise.resolve(true);
     },
     async viewPricingInvisiableAttributes(pricing: Pricing, context: RequestContext): Promise<boolean> {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -117,7 +117,7 @@ export const Can = {
         return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
     },
     async createPricing({ app: appPK }: { app: string }, context: RequestContext): Promise<boolean> {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -127,7 +127,7 @@ export const Can = {
         return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
     },
     async deletePricing(parent: Pricing, args: never, context: RequestContext): Promise<boolean> {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -137,7 +137,7 @@ export const Can = {
         return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
     },
     async updatePricing(parent: Pricing, context: RequestContext): Promise<boolean> {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -147,7 +147,7 @@ export const Can = {
         return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
     },
     async viewSubscriptionPrivateAttributes(parent: Subscription, context: RequestContext): Promise<boolean> {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -166,7 +166,7 @@ export const Can = {
         { app, pricing, subscriber }: GQLMutationCreateSubscriptionArgs,
         context: RequestContext
     ): Promise<boolean> {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -182,7 +182,7 @@ export const Can = {
         { pricing }: GQLSubscribeUpdateSubscriptionArgs,
         context: RequestContext
     ): Promise<boolean> {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -194,7 +194,7 @@ export const Can = {
         return Promise.resolve(false);
     },
     async deleteSubscription(parent: Subscription, args: {}, context: RequestContext): Promise<boolean> {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -210,7 +210,7 @@ export const Can = {
         args: GQLQuerySubscriptionArgs,
         context: RequestContext
     ): Promise<boolean> {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -229,7 +229,7 @@ export const Can = {
         { app: appPK, method, path, description, destination }: GQLMutationCreateEndpointArgs,
         context: RequestContext
     ): Promise<boolean> {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -243,7 +243,7 @@ export const Can = {
         { method, path, description, destination }: GQLEndpointUpdateEndpointArgs,
         context: RequestContext
     ): Promise<boolean> {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -253,7 +253,7 @@ export const Can = {
         return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
     },
     async viewPrivateEndpointArributes(parent: Endpoint, context: RequestContext): Promise<boolean> {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -263,7 +263,7 @@ export const Can = {
         return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
     },
     async deleteEndpoint(parent: Endpoint, args: never, context: RequestContext): Promise<boolean> {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -276,7 +276,7 @@ export const Can = {
         return await Promise.resolve(context.isServiceRequest);
     },
     async viewUsageLogPrivateAttributes(parent: UsageLog, context: RequestContext) {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -285,7 +285,7 @@ export const Can = {
         return await Promise.resolve(parent.subscriber === UserPK.stringify(context.currentUser));
     },
     async viewStripePaymentAcceptPrivateAttributes(parent: StripePaymentAccept, context: RequestContext) {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -294,7 +294,7 @@ export const Can = {
         return await Promise.resolve(parent.user === UserPK.stringify(context.currentUser));
     },
     async viewStripePaymentAccept(item: StripePaymentAccept, context: RequestContext) {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -306,7 +306,7 @@ export const Can = {
         return Promise.resolve(context.isSQSMessage && context.isServiceRequest);
     },
     async viewAccountActivityPrivateAttributes(parent: AccountActivity, context: RequestContext): Promise<boolean> {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -315,7 +315,7 @@ export const Can = {
         return await Promise.resolve(parent.user === UserPK.stringify(context.currentUser));
     },
     async viewAccountHistoryPrivateAttributes(parent: AccountHistory, context: RequestContext): Promise<boolean> {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -324,7 +324,7 @@ export const Can = {
         return await Promise.resolve(parent.user === UserPK.stringify(context.currentUser));
     },
     async viewUserAppTokenPrivateAttributes(parent: UserAppToken, context: RequestContext): Promise<boolean> {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -333,7 +333,7 @@ export const Can = {
         return await Promise.resolve(parent.subscriber === UserPK.stringify(context.currentUser));
     },
     async deleteUserAppToken(parent: UserAppToken, context: RequestContext): Promise<boolean> {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -342,7 +342,7 @@ export const Can = {
         return await Promise.resolve(parent.subscriber === UserPK.stringify(context.currentUser));
     },
     async viewStripeTransferPrivateAttributes(parent: StripeTransfer, context: RequestContext): Promise<boolean> {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -351,7 +351,7 @@ export const Can = {
         return await Promise.resolve(parent.receiver === UserPK.stringify(context.currentUser));
     },
     async viewStripeTransfer(parent: StripeTransfer, context: RequestContext): Promise<boolean> {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -367,7 +367,7 @@ export const Can = {
         context: RequestContext,
         { allowAppOwner = false }: { allowAppOwner?: boolean } = {}
     ): Promise<boolean> {
-        if (context.isServiceRequest) {
+        if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
         if (!context.currentUser) {
@@ -380,6 +380,9 @@ export const Can = {
             }
         }
         return await Promise.resolve(parent.subscriber === UserPK.stringify(context.currentUser));
+    },
+    async createAccountActivity(context: RequestContext): Promise<boolean> {
+        return Promise.resolve(context.isServiceRequest || context.isAdminUser || false);
     },
     // async *viewAppIter<App extends { owner: string }>(
     //     arr: App[],

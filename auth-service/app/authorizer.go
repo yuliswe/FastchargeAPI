@@ -32,8 +32,11 @@ func lambdaHandler(request events.APIGatewayV2CustomAuthorizerV2Request) (*event
 	}
 
 	if os.Getenv("AllowAnonymousUser") == "1" {
-		if isAnonymous, _ := isAnonymousUser(auth); isAnonymous {
+		fmt.Println(color.Yellow + "Try parsing as anonymous user:" + color.Reset)
+		if isAnonymous, err := isAnonymousUser(auth); isAnonymous {
 			return allowedAnonymousUser(), nil
+		} else {
+			fmt.Println(color.Red, "This is not an anonymous user. Reason:", err, color.Reset)
 		}
 	}
 
@@ -42,6 +45,7 @@ func lambdaHandler(request events.APIGatewayV2CustomAuthorizerV2Request) (*event
 		if apiKey == "" {
 			apiKey = request.Headers["x-fast-api-key"]
 		}
+		fmt.Println(color.Yellow + "Try parsing as an app token:" + color.Reset)
 		if user, err := verifyUserAppToken(apiKey); err == nil {
 			return allowed(user), nil
 		} else {
@@ -49,10 +53,18 @@ func lambdaHandler(request events.APIGatewayV2CustomAuthorizerV2Request) (*event
 		}
 	}
 
+	fmt.Println(color.Yellow + "Try parsing as a Firebase token:" + color.Reset)
 	if user, err := verifyFirebaseIdToken(auth); err == nil {
 		return allowed(user), nil
 	} else {
 		fmt.Println(color.Red, "This is not a valid firebase token. Reason:", err, color.Reset)
+	}
+
+	fmt.Println(color.Yellow + "Try parsing as a token signed by us:" + color.Reset)
+	if user, err := verifyFastchargeAPISignedIdToken(auth); err == nil {
+		return allowed(user), nil
+	} else {
+		fmt.Println(color.Red, "This is not a token signed by us. Reason:", err, color.Reset)
 	}
 
 	return denied(), nil
@@ -207,24 +219,19 @@ func isAnonymousUser(idToken string) (bool, error) {
 func getSignInProvider(idToken string) (string, error) {
 	tokenUnchecked, _, err := jwt.NewParser().ParseUnverified(idToken, jwt.MapClaims{})
 	if err != nil {
-		fmt.Println(color.Red + "Error parsing id token: " + err.Error() + color.Reset)
 		return "", err
 	}
-
 	claims, ok := tokenUnchecked.Claims.(jwt.MapClaims)
 	if !ok {
-		fmt.Println(color.Yellow + "Parsing id token:  claims is not a map." + color.Reset)
-		return "", errors.New("Parsing id token: claims is not a map.")
+		return "", errors.New(fmt.Sprint("Parsing id token: claims is not a map. Got: ", tokenUnchecked.Claims))
 	}
 	firebase, ok := claims["firebase"].(map[string]interface{})
 	if !ok {
-		fmt.Println(color.Yellow+"Parsing id token: firebase is not a map."+color.Reset, claims["firebase"])
-		return "", errors.New("Parsing id token: firebase is not a map.")
+		return "", errors.New(fmt.Sprint("Parsing id token: firebase is not a map. Got: ", claims["firebase"]))
 	}
 	provider, ok := firebase["sign_in_provider"].(string)
 	if !ok {
-		fmt.Println(color.Yellow+"Parsing id token: sign_in_provider is not a string."+color.Reset, firebase["sign_in_provider"])
-		return "", errors.New("Parsing id token: sign_in_provider is not a string.")
+		return "", errors.New(fmt.Sprint("Parsing id token: sign_in_provider is not a string."+color.Reset, "Got: ", firebase["sign_in_provider"]))
 	}
 	return provider, nil
 }
@@ -241,22 +248,18 @@ func verifyFirebaseIdToken(idToken string) (*UserClaims, error) {
 	// idToken header.
 	tokenUnchecked, _, err := jwt.NewParser().ParseUnverified(idToken, jwt.MapClaims{})
 	if err != nil {
-		fmt.Println(color.Red + "Error parsing id token: " + err.Error() + color.Reset)
-		return nil, err
+		return nil, errors.New(fmt.Sprint("Parsing id token: ", err.Error()))
 	}
 	if tokenUnchecked.Header["kid"] == nil {
-		fmt.Println(color.Red + "Error parsing id token: " + "kid is nil" + color.Reset)
-		return nil, errors.New("kid is nil")
+		return nil, errors.New(fmt.Sprint("Parsing id token: kid is nil"))
 	}
 	kid, ok := tokenUnchecked.Header["kid"].(string)
 	if !ok {
-		fmt.Println(color.Red + "Error parsing id token: " + "kid is not a string" + color.Reset)
-		return nil, errors.New("kid is not a string")
+		return nil, errors.New(fmt.Sprint("Parsing id token: kid is not a string"))
 	}
 	googleCert, err := getGoogleCert(kid)
 	if googleCert == nil {
-		fmt.Println(color.Red + "Error getting google cert (not found kid): " + kid + " " + err.Error() + color.Reset)
-		return nil, err
+		return nil, errors.New(fmt.Sprint("Error getting google cert (not found kid):", "kid: ", kid, "err: ", err.Error()))
 	}
 	token, err := jwt.NewParser(
 		jwt.WithAudience("fastchargeapi"),
@@ -269,24 +272,20 @@ func verifyFirebaseIdToken(idToken string) (*UserClaims, error) {
 			return googleCert.rsaKey, nil
 		})
 	if err != nil {
-		fmt.Println(color.Red + "Error verifying id token: " + err.Error() + color.Reset)
-		return nil, err
+		return nil, errors.New(fmt.Sprint("Verifying id token: ", err.Error()))
 	}
 	// Verify the token is valid
 	if !token.Valid {
-		fmt.Println(color.Red + "Invalid token" + color.Reset)
 		return nil, errors.New("Invalid token")
 	}
 	claims := token.Claims.(jwt.MapClaims)
 	email, ok := claims["email"].(string)
 	if !ok {
-		fmt.Println(color.Red + "Error parsing id token: email is not a string" + color.Reset)
-		return nil, errors.New("Error parsing id token: email is not a string")
+		return nil, errors.New("Parsing id token: email is not a string")
 	}
 	sub, ok := claims["sub"].(string)
 	if !ok {
-		fmt.Println(color.Red + "Error parsing id token: sub is not a string" + color.Reset)
-		return nil, errors.New("Error parsing id token: sub is not a string")
+		return nil, errors.New("Parsing id token: sub is not a string")
 	}
 	firebaseClaim := UserClaims{
 		Email: email,
@@ -295,7 +294,18 @@ func verifyFirebaseIdToken(idToken string) (*UserClaims, error) {
 	return &firebaseClaim, nil
 }
 
+// Used for testing function to log in a user without using Firebase. This
+// essentially allows us to log in as any user we want, using a token that's
+// signed by us.
+func verifyFastchargeAPISignedIdToken(idToken string) (*UserClaims, error) {
+	return verifyUserAppTokenWithPubKey(idToken, getFastchargeAPISignedIdTokenPublicKey())
+}
+
 func verifyUserAppToken(idToken string) (*UserClaims, error) {
+	return verifyUserAppTokenWithPubKey(idToken, getUserAppTokenPublicKey())
+}
+
+func verifyUserAppTokenWithPubKey(idToken string, pubkey string) (*UserClaims, error) {
 	// To verify the signature, first find out which public key certificate was
 	// used to sign the JWT. The key is identified by the key ID (kid) in the
 	// idToken header.
@@ -306,21 +316,18 @@ func verifyUserAppToken(idToken string) (*UserClaims, error) {
 	).Parse(idToken,
 		// Find the public key certificate corresponding to the key ID (kid)
 		func(token *jwt.Token) (interface{}, error) {
-			pem := getUserAppTokenPublicKey()
+			pem := pubkey
 			if key, err := jwt.ParseECPublicKeyFromPEM([]byte(pem)); err != nil {
-				fmt.Println(color.Red + "Error decoding google cert: " + err.Error() + color.Reset)
-				return nil, err
+				return nil, errors.New(fmt.Sprint("Error decoding google cert: ", err.Error()))
 			} else {
 				return key, nil
 			}
 		})
 	if err != nil {
-		fmt.Println(color.Red + "Error verifying id token: " + err.Error() + color.Reset)
-		return nil, err
+		return nil, errors.New(fmt.Sprint("Error verifying id token: ", err.Error()))
 	}
 	// Verify the token is valid
 	if !token.Valid {
-		fmt.Println(color.Red + "Invalid token" + color.Reset)
 		return nil, errors.New("Invalid token")
 	}
 	claims := token.Claims
@@ -333,4 +340,8 @@ func verifyUserAppToken(idToken string) (*UserClaims, error) {
 
 func getUserAppTokenPublicKey() string {
 	return "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE9CR7SW0cTqQBG1vxWnkjk5dO7zfv\nUeueXgubjSD6i6vcmHdetZ25/ItESQDBmX0LL2qYaPzqTJHbWKxqL+6CtA==\n-----END PUBLIC KEY-----\n"
+}
+
+func getFastchargeAPISignedIdTokenPublicKey() string {
+	return "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEeaXYnU+ciCdZ2MgYmT3soYlmJbQX\n1obNviKMHV1G6CTilMFht5XGfnsu32nMfWobAzxE5IZcbX/dV3okT56p4A==\n-----END PUBLIC KEY-----\n"
 }
