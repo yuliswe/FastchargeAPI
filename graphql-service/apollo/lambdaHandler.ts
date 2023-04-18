@@ -1,6 +1,5 @@
 import { HeaderMap } from "@apollo/server";
 import { startServerAndCreateLambdaHandler } from "@as-integrations/aws-lambda";
-import { LambdaRequest, LambdaResponse } from "@as-integrations/aws-lambda/dist/middleware";
 import { RequestHandler, createRequestHandler } from "@as-integrations/aws-lambda/dist/request-handlers/_create";
 import {
     APIGatewayEventRequestContextV2,
@@ -21,28 +20,18 @@ export type LambdaEvent = APIGatewayProxyEventBase<APIGatewayEventRequestContext
 export type LambdaResult = APIGatewayProxyResult;
 const chalk = new Chalk({ level: 3 });
 
-const corsMiddleware: LambdaRequest<APIGatewayProxyEvent, APIGatewayProxyResult> = async (
-    event: APIGatewayProxyEvent
-    // eslint-disable-next-line @typescript-eslint/require-await
-): Promise<LambdaResponse<APIGatewayProxyResult>> => {
-    let origin = event.headers.origin || "";
-    let cors: { [key: string]: string } = {};
-    if ([/^http:\/\/localhost:?\d*/, /^https:\/\/fastchargeapi.com/i].some((x) => x.test(origin))) {
-        cors = {
-            "Access-Control-Allow-Origin": origin,
+function addCors(event: APIGatewayProxyEvent, result: APIGatewayProxyResult): void {
+    let origin = event.headers["Origin"] || event.headers["origin"];
+    if (origin && [/^http:\/\/localhost(:\\d+)?/, /^https:\/\/fastchargeapi.com/i].some((x) => x.test(origin!))) {
+        result.headers = {
+            ...(result.headers ?? {}),
             "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
             "Access-Control-Allow-Headers": "*",
+            "Access-Control-Allow-Origin": origin,
             Vary: "Origin",
         };
     }
-    // eslint-disable-next-line @typescript-eslint/require-await
-    return async (result: APIGatewayProxyResult): Promise<void> => {
-        result.headers = {
-            ...result.headers,
-            ...cors,
-        };
-    };
-};
+}
 
 const batched = createDefaultContextBatched();
 
@@ -148,30 +137,36 @@ let handle = startServerAndCreateLambdaHandler<RequestHandler<LambdaEvent, Lambd
                 if (headers["x-is-service-request"] === "true") {
                     isServiceRequest = true;
                 }
-            } else if (process.env.TRUST_X_USER_PK_HEADER === "1") {
-                console.warn(chalk.yellow("TRUST_X_USER_PK_HEADER is enabled. Do not use this in production!"));
-                let userPK = headers["x-user-pk"] || "";
-                if (!userPK) {
-                    console.error(chalk.red("X-User-PK header is missing."));
-                    throw new BadInput(chalk.red("X-User-PK header is missing."));
+            }
+            if (process.env.TRUST_X_USER_PK_HEADER == "1" || process.env.TRUST_X_USER_EMAIL_HEADER == "1") {
+                if (process.env.TRUST_X_USER_PK_HEADER === "1") {
+                    const userPK = headers["x-user-pk"] || "";
+                    console.warn(chalk.yellow("TRUST_X_USER_PK_HEADER is enabled. Do not use this in production!"));
+                    if (userPK) {
+                        currentUser = (await batched.User.getOrNull(UserPK.parse(userPK))) ?? undefined;
+                    } else {
+                        console.warn(chalk.yellow("X-User-PK header is missing."));
+                    }
                 }
-                currentUser = (await batched.User.getOrNull(UserPK.parse(userPK))) ?? undefined;
-            } else if (process.env.TRUST_X_USER_EMAIL_HEADER === "1") {
-                console.warn(chalk.yellow("TRUST_X_USER_EMAIL_HEADER is enabled. Do not use this in production!"));
-                let userPK = headers["x-user-email"] || "";
-                if (!userPK) {
-                    console.error(chalk.red("X-User-Email header is missing."));
-                    throw new BadInput(chalk.red("X-User-Email header is missing."));
+                if (process.env.TRUST_X_USER_EMAIL_HEADER === "1") {
+                    const userEmail = headers["x-user-email"] || "";
+                    console.warn(chalk.yellow("TRUST_X_USER_EMAIL_HEADER is enabled. Do not use this in production!"));
+                    if (userEmail) {
+                        currentUser = await getOrCreateUserFromEmail(userEmail);
+                    } else {
+                        console.warn(chalk.yellow("X-User-Email header is missing."));
+                    }
                 }
-                currentUser = (await batched.User.getOrNull(UserPK.parse(userPK))) ?? undefined;
-            } else if (event.requestContext.authorizer?.["isAnonymousUser"] === "true") {
-                currentUser = undefined;
-            } else if (event.requestContext.authorizer?.["userEmail"]) {
+            }
+            if (event.requestContext.authorizer?.["userEmail"]) {
                 let userEmail = event.requestContext.authorizer?.["userEmail"];
                 currentUser = await getOrCreateUserFromEmail(userEmail);
             } else if (event.requestContext.authorizer?.["userPK"]) {
                 let userPK = event.requestContext.authorizer?.["userPK"];
                 currentUser = await batched.User.get(UserPK.parse(userPK));
+            }
+            if (currentUser?.email == "fastchargeapi@gmail.com") {
+                isAdminUser = true;
             }
             return Promise.resolve({
                 currentUser,
@@ -183,7 +178,6 @@ let handle = startServerAndCreateLambdaHandler<RequestHandler<LambdaEvent, Lambd
                 isAdminUser,
             });
         },
-        middleware: [corsMiddleware],
     }
 );
 
@@ -203,18 +197,20 @@ async function getOrCreateUserFromEmail(email: string) {
 }
 
 export const lambdaHandler = async (event: LambdaEvent, context: never, callback: never): Promise<LambdaResult> => {
+    let response: LambdaResult;
     try {
-        // console.log(chalk.blue(JSON.stringify(event)));
-        return await handle(event, context, callback)!;
+        response = await handle(event, context, callback)!;
     } catch (error) {
         try {
             console.error(chalk.red(JSON.stringify(error)));
         } catch (jsonError) {
             // ignore
         }
-        return {
+        response = {
             statusCode: 500,
             body: "Internal Server Error",
         };
     }
+    addCors(event, response);
+    return response;
 };
