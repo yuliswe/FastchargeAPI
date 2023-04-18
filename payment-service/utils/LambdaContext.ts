@@ -1,12 +1,16 @@
+import { GQLUserIndex } from "__generated__/gql-operations";
 import {
     APIGatewayProxyEventV2WithLambdaAuthorizer,
     APIGatewayProxyHandlerV2WithLambdaAuthorizer,
     APIGatewayProxyStructuredResultV2,
     Callback as LmabdaCallback,
 } from "aws-lambda";
+import { UserPK, createDefaultContextBatched } from "graphql-service";
+import { User } from "graphql-service/dynamoose/models";
 
 export type AuthorizerContext = {
-    userPK: string;
+    userPK?: string;
+    userEmail?: string;
 };
 
 export type LambdaEventV2 = APIGatewayProxyEventV2WithLambdaAuthorizer<AuthorizerContext>;
@@ -24,10 +28,16 @@ export function getAuthorizerContext(event: LambdaEventV2): AuthorizerContext {
     return event.requestContext.authorizer.lambda;
 }
 
-export function getUserPKFromEvent(event: LambdaEventV2): string {
-    let userPK = event.requestContext.authorizer.lambda.userPK;
-    if (!userPK) {
-        throw new Error("User PK not found in authorizer context.");
+export async function getCurrentUserFromEvent(event: LambdaEventV2): Promise<User> {
+    const userPK = event.requestContext.authorizer.lambda.userPK;
+    const userEmail = event.requestContext.authorizer.lambda.userEmail;
+    if (!userPK && !userEmail) {
+        throw new Error("Neither userPK nor userEmail is present in the authorizer context");
     }
-    return userPK;
+    const batched = createDefaultContextBatched();
+    if (userPK) {
+        return await batched.User.get(UserPK.parse(userPK));
+    } else {
+        return await batched.User.get({ email: userEmail }, { using: GQLUserIndex.IndexByEmailOnlyPk });
+    }
 }

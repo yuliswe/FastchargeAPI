@@ -1,16 +1,9 @@
-import { Context as LambdaContext, APIGatewayProxyStructuredResultV2 } from "aws-lambda";
+import { APIGatewayProxyStructuredResultV2, Context as LambdaContext } from "aws-lambda";
 import { Chalk } from "chalk";
-import {
-    LambdaCallbackV2,
-    LambdaEventV2,
-    LambdaHandlerV2,
-    getAuthorizerContext,
-    getUserPKFromEvent,
-} from "../utils/LambdaContext";
-import { getStripeClient } from "../utils/stripe-client";
-import { RequestContext, UserPK, createDefaultContextBatched, getUserBalance } from "graphql-service";
 import { Decimal } from "decimal.js-light";
-import { GQLUserIndex } from "__generated__/gql-operations";
+import { RequestContext, UserPK, createDefaultContextBatched, getUserBalance } from "graphql-service";
+import { LambdaCallbackV2, LambdaEventV2, LambdaHandlerV2, getCurrentUserFromEvent } from "../utils/LambdaContext";
+import { getStripeClient } from "../utils/stripe-client";
 
 const chalk = new Chalk({ level: 3 });
 const batched = createDefaultContextBatched();
@@ -44,9 +37,8 @@ export async function handle(
             }),
         };
     }
-    const userPK = getUserPKFromEvent(event);
     // Check if the account balance is too high
-    const user = await batched.User.get(UserPK.parse(userPK));
+    const user = await getCurrentUserFromEvent(event);
     const curentBalance = new Decimal(await getUserBalance(createRequestContext(), UserPK.stringify(user)));
     const newBalance = curentBalance.plus(amount);
     if (!skipBalanceCheck && newBalance.greaterThan(user.balanceLimit)) {

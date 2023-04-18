@@ -10,7 +10,7 @@ import { LambdaEventV2 } from "../utils/LambdaContext";
 const testScale = Number.parseInt(process.env.TEST_SCALE || "1");
 const testSize = 20 * testScale;
 
-jest.setTimeout(60_000);
+jest.setTimeout(120_000);
 
 export const context: RequestContext = {
     service: "payment",

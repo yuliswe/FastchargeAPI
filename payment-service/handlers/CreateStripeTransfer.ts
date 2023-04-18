@@ -10,7 +10,7 @@ import {
     LambdaEventV2,
     LambdaHandlerV2,
     LambdaResultV2,
-    getUserPKFromEvent,
+    getCurrentUserFromEvent,
 } from "../utils/LambdaContext";
 
 const chalk = new Chalk({ level: 3 });
@@ -53,7 +53,7 @@ export const context: RequestContext = {
  *      substract the amount from the API publisher's FastchargeAPI account.
  */
 export async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredResultV2> {
-    const userPK = getUserPKFromEvent(event);
+    const user = await getCurrentUserFromEvent(event);
     const { bodyData, errorResponse } = parseBody(event);
     if (errorResponse) {
         return errorResponse;
@@ -72,7 +72,6 @@ export async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStruc
         };
     }
 
-    const user = await context.batched.User.get(UserPK.parse(userPK));
     const userAccountBalance = new Decimal(await getUserBalance(context, UserPK.stringify(user)));
     if (userAccountBalance.lessThan(withdraw)) {
         return {

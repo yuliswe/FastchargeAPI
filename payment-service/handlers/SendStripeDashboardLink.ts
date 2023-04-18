@@ -1,9 +1,9 @@
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { SES } from "aws-sdk";
 import { Chalk } from "chalk";
-import { UserPK, createDefaultContextBatched } from "graphql-service";
+import { createDefaultContextBatched } from "graphql-service";
 import Stripe from "stripe";
-import { LambdaEventV2, LambdaHandlerV2, getUserPKFromEvent } from "../utils/LambdaContext";
+import { LambdaEventV2, LambdaHandlerV2, getCurrentUserFromEvent } from "../utils/LambdaContext";
 import { getStripeClient } from "../utils/stripe-client";
 
 const chalk = new Chalk({ level: 3 });
@@ -16,8 +16,7 @@ const batched = createDefaultContextBatched();
 async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredResultV2> {
     const stripeClient = await getStripeClient();
 
-    const userPK = getUserPKFromEvent(event);
-    const user = await batched.User.get(UserPK.parse(userPK));
+    const user = await getCurrentUserFromEvent(event);
     if (!user.stripeConnectAccountId) {
         throw new Error("User stripeConnectAccountId not found");
     }
