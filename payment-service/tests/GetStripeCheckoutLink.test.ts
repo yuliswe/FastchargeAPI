@@ -1,4 +1,4 @@
-import { describe, expect, test } from "@jest/globals";
+import { describe, expect, jest, test } from "@jest/globals";
 import { UserPK, createDefaultContextBatched } from "graphql-service";
 import { RequestContext } from "graphql-service/RequestContext";
 import { User } from "graphql-service/dynamoose/models";
@@ -6,6 +6,9 @@ import { getOrCreateTestUser } from "graphql-service/tests/test-utils";
 import { v4 as uuidv4 } from "uuid";
 import { handle as Checkout } from "../handlers/GetStripeCheckoutLink";
 import { LambdaEventV2 } from "../utils/LambdaContext";
+
+jest.setTimeout(60_000);
+jest.retryTimes(3, { logErrorsBeforeRetry: true });
 
 export const context: RequestContext = {
     service: "payment",

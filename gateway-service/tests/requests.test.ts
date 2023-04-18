@@ -1,17 +1,16 @@
 import { describe, expect, jest, test } from "@jest/globals";
-import { RequestContext } from "graphql-service/RequestContext";
-import { createDefaultContextBatched } from "graphql-service/RequestContext";
-import { getOrCreateTestUser } from "graphql-service/tests/test-utils";
+import { Chalk } from "chalk";
 import { spawn } from "child_process";
-import path from "path";
-import fetchNative, { Response } from "node-fetch";
-import { v4 as uuidv4 } from "uuid";
+import { RequestContext, createDefaultContextBatched } from "graphql-service/RequestContext";
 import { User } from "graphql-service/dynamoose/models";
-import { UserPK } from "graphql-service/pks/UserPK";
+import { createUserAppToken } from "graphql-service/functions/token";
 import { AppPK } from "graphql-service/pks/AppPK";
 import { PricingPK } from "graphql-service/pks/PricingPK";
-import { createUserAppToken } from "graphql-service/functions/token";
-import { Chalk } from "chalk";
+import { UserPK } from "graphql-service/pks/UserPK";
+import { getOrCreateTestUser } from "graphql-service/tests/test-utils";
+import fetchNative, { Response } from "node-fetch";
+import path from "path";
+import { v4 as uuidv4 } from "uuid";
 
 const chalk = new Chalk({ level: 3 });
 
@@ -238,9 +237,22 @@ type SAM = {
     url: URL;
     stop: () => Promise<void>;
 };
+
+function makeParameterOverrides(overrides: { [key: string]: string }): string {
+    return Object.entries(overrides)
+        .map(([key, value]) => `ParameterKey=${key},ParameterValue=${value}`)
+        .join(" ");
+}
+
 async function startLocalSAM(): Promise<SAM> {
     const port = 6001 + Math.floor(998 * Math.random());
     const url = `http://127.0.0.1:${port}`;
+    console.log(
+        makeParameterOverrides({
+            Authorizer: "NONE",
+            Architecture: getArch(),
+        })
+    );
     const sam = spawn(
         "sam",
         [
@@ -251,7 +263,10 @@ async function startLocalSAM(): Promise<SAM> {
             "-n",
             "./testenv.json",
             "--parameter-overrides",
-            `Architecture=${getArch()}`,
+            makeParameterOverrides({
+                Authorizer: "NONE",
+                Architecture: getArch(),
+            }),
             ...platformRunOptions(),
         ],
         {

@@ -1,4 +1,4 @@
-export WS_DIR="$(dirname $(./wsdir.bash)/)"
+export WS_DIR=${WS_DIR:-"$(./wsdir.bash)"}
 unset npm_config_prefix NPM_CONFIG_PREFIX
 
 VIRTUAL_ENV_DISABLE_PROMPT=1

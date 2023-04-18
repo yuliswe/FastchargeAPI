@@ -5,12 +5,12 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - run: pipx install poetry
+    - run: pip install poetry
       shell: bash
     - uses: actions/setup-python@v3
       with:
         python-version: "3.9"
-        cache: "poetry"
+        # cache: "poetry"
     - uses: actions/setup-node@v3
       with:
         node-version: lts/*
@@ -26,4 +26,5 @@ runs:
       run: |
         npm i -g prettier esbuild
         npm ci
+        pip install isort
       shell: bash

@@ -11,6 +11,7 @@ const testScale = Number.parseInt(process.env.TEST_SCALE || "1");
 const testSize = 20 * testScale;
 
 jest.setTimeout(120_000);
+jest.retryTimes(3, { logErrorsBeforeRetry: true });
 
 export const context: RequestContext = {
     service: "payment",

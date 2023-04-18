@@ -73,7 +73,7 @@ jobs:
       - name: Build
         run: |
           poetry install
-          npm run build
+          poetry run npm run build
         working-directory: cli
       - name: Test
         run: |

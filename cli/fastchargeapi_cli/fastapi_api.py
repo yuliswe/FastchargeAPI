@@ -1,5 +1,4 @@
 import click
-from blessed import Terminal
 from blessings import Terminal
 from click import echo
 from click_aliases import ClickAliasedGroup

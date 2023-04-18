@@ -50,7 +50,6 @@
     "**/Thumbs.db": true
   },
   "python.analysis.importFormat": "relative",
-  "explorerExclude.backup": {},
   "python.formatting.provider": "none",
   "python.analysis.typeCheckingMode": "basic",
   "editor.codeActionsOnSave": {

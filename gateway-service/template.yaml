@@ -12,6 +12,9 @@ Parameters:
   Architecture:
     Type: String
     Default: arm64
+  Authorizer:
+    Type: String
+    Default: UserAppTokenAuthorizer
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -48,7 +51,7 @@ Resources:
           HttpMethod: "*" # allows for logging on any method
       Auth: # Uses the UserAppTokenAuthorizer to identify the session user.
         ApiKeyRequired: false
-        DefaultAuthorizer: UserAppTokenAuthorizer
+        DefaultAuthorizer: !Ref Authorizer
         Authorizers:
           UserAppTokenAuthorizer:
             FunctionPayloadType: REQUEST
