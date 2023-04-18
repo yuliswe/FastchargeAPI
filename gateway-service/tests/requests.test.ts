@@ -118,7 +118,8 @@ describe("Test request authentication", () => {
             method: "GET",
             headers: {
                 Host: `example.${gatewayHost}`,
-                "X-User-PK": UserPK.stringify(testUser), // trust user pk header test mode enabled
+                "X-User-PK": UserPK.stringify(testUser), // requires trust user pk header test mode enabled
+                "X-User-Email": testUser.email, // requires trust user email header test mode enabled
             },
         });
         expect(resp.status).toEqual(200);
@@ -159,7 +160,8 @@ describe("Test request header passthrough", () => {
             method: "POST",
             headers: {
                 Host: `example.${gatewayHost}`,
-                "X-User-PK": UserPK.stringify(testUser), // trust user pk header test mode enabled
+                "X-User-PK": UserPK.stringify(testUser), // requires trust user pk header test mode enabled
+                "X-User-Email": testUser.email, // requires trust user email header test mode enabled
                 "X-FAST-API-KEY": "X-FAST-API-KEY",
                 "Custom-Header": "Custom-Header",
             },
@@ -187,7 +189,8 @@ describe("Test request header passthrough", () => {
             method: "POST",
             headers: {
                 Host: `example.${gatewayHost}`,
-                "X-User-PK": UserPK.stringify(testUser), // trust user pk header test mode enabled
+                "X-User-PK": UserPK.stringify(testUser), // requires trust user pk header test mode enabled
+                "X-User-Email": testUser.email, // requires trust user email header test mode enabled
             },
             body: JSON.stringify({ a: 1, b: 2 }),
             timeout: 10_000,
@@ -207,7 +210,8 @@ describe("Test request header passthrough", () => {
             method: "POST",
             headers: {
                 Host: `example.${gatewayHost}`,
-                "X-User-PK": UserPK.stringify(testUser), // trust user pk header test mode enabled
+                "X-User-PK": UserPK.stringify(testUser), // requires trust user pk header test mode enabled
+                "X-User-Email": testUser.email, // requires trust user email header test mode enabled
             },
             timeout: 10_000,
         });
@@ -242,7 +246,6 @@ async function startLocalSAM(): Promise<SAM> {
         [
             "local",
             "start-api",
-            "--warm-containers=eager",
             "--port",
             port.toString(),
             "-n",
