@@ -1,6 +1,12 @@
 import { Context as LambdaContext, APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { Chalk } from "chalk";
-import { LambdaCallbackV2, LambdaEventV2, LambdaHandlerV2, getAuthorizerContext } from "../utils/LambdaContext";
+import {
+    LambdaCallbackV2,
+    LambdaEventV2,
+    LambdaHandlerV2,
+    getAuthorizerContext,
+    getUserPKFromEvent,
+} from "../utils/LambdaContext";
 import { getStripeClient } from "../utils/stripe-client";
 import { RequestContext, UserPK, createDefaultContextBatched, getUserBalance } from "graphql-service";
 import { Decimal } from "decimal.js-light";
@@ -24,12 +30,12 @@ export async function handle(
         skipBalanceCheck: false,
     }
 ): Promise<APIGatewayProxyStructuredResultV2> {
-    let { params, error } = parseParams(event);
+    const { params, error } = parseParams(event);
     if (error) {
         return error;
     }
-    let { amount, successUrl, cancelUrl } = params!;
-    let topUpAmount = new Decimal(amount);
+    const { amount, successUrl, cancelUrl } = params!;
+    const topUpAmount = new Decimal(amount);
     if (!skipBalanceCheck && topUpAmount.lessThan(1)) {
         return {
             statusCode: 400,
@@ -38,14 +44,11 @@ export async function handle(
             }),
         };
     }
-    let userEmail = getAuthorizerContext(event).userEmail;
-    if (!userEmail) {
-        throw new Error("User email is not set");
-    }
+    const userPK = getUserPKFromEvent(event);
     // Check if the account balance is too high
-    let user = await batched.User.get({ email: userEmail }, { using: GQLUserIndex.IndexByEmailOnlyPk });
-    let curentBalance = new Decimal(await getUserBalance(createRequestContext(), UserPK.stringify(user)));
-    let newBalance = curentBalance.plus(amount);
+    const user = await batched.User.get(UserPK.parse(userPK));
+    const curentBalance = new Decimal(await getUserBalance(createRequestContext(), UserPK.stringify(user)));
+    const newBalance = curentBalance.plus(amount);
     if (!skipBalanceCheck && newBalance.greaterThan(user.balanceLimit)) {
         return {
             statusCode: 400,
@@ -55,15 +58,15 @@ export async function handle(
         };
     }
 
-    let stripeClient = await getStripeClient();
-    let existingCustomerId = await identifyExistingCustomerId(userEmail);
-    let session = await stripeClient.checkout.sessions.create({
+    const stripeClient = await getStripeClient();
+    const existingCustomerId = await identifyExistingCustomerId(user.email);
+    const session = await stripeClient.checkout.sessions.create({
         line_items: [
             {
                 price_data: {
                     currency: "usd",
                     product_data: {
-                        name: `Top up your FastchargeAPI account: ${userEmail}`,
+                        name: `Top up your FastchargeAPI account: ${user.email}`,
                     },
                     unit_amount: topUpAmount.mul(100).toInteger().toNumber(), // Stripe expects the amount in cents
                     tax_behavior: "exclusive",
@@ -76,7 +79,7 @@ export async function handle(
         },
         currency: "usd",
         customer: existingCustomerId,
-        customer_email: existingCustomerId ? undefined : userEmail,
+        customer_email: existingCustomerId ? undefined : user.email,
         mode: "payment",
         success_url: successUrl,
         cancel_url: cancelUrl,

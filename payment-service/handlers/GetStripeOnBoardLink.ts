@@ -1,9 +1,8 @@
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { Chalk } from "chalk";
-import { LambdaEventV2, LambdaHandlerV2, getAuthorizerContext } from "../utils/LambdaContext";
 import { UserPK, createDefaultContextBatched } from "graphql-service";
+import { LambdaEventV2, LambdaHandlerV2, getUserPKFromEvent } from "../utils/LambdaContext";
 import { getStripeClient } from "../utils/stripe-client";
-import { GQLUserIndex } from "__generated__/gql-operations";
 
 const chalk = new Chalk({ level: 3 });
 const batched = createDefaultContextBatched();
@@ -11,11 +10,9 @@ const batched = createDefaultContextBatched();
 async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredResultV2> {
     const stripeClient = await getStripeClient();
 
-    let userEmail = getAuthorizerContext(event).userEmail;
-    if (!userEmail) {
-        throw new Error("User email is not set");
-    }
-    let returnUrl = event.queryStringParameters?.return_url;
+    const userPK = getUserPKFromEvent(event);
+
+    const returnUrl = event.queryStringParameters?.return_url;
     if (!returnUrl) {
         return {
             statusCode: 400,
@@ -24,7 +21,7 @@ async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredRe
             }),
         };
     }
-    let refreshUrl = event.queryStringParameters?.refresh_url;
+    const refreshUrl = event.queryStringParameters?.refresh_url;
     if (!refreshUrl) {
         return {
             statusCode: 400,
@@ -36,21 +33,21 @@ async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredRe
     // It may happen that the user has already onboarded and has a Stripe
     // account, but is revisiting the page becuase they didn't complete the
     // onboarding the previous time.
-    let user = await batched.User.get({ email: userEmail }, { using: GQLUserIndex.IndexByEmailOnlyPk });
+    const user = await batched.User.get(UserPK.parse(userPK));
     let accountId = user.stripeConnectAccountId;
     if (!accountId) {
-        let result = await stripeClient.accounts.create({
+        const result = await stripeClient.accounts.create({
             type: "express",
-            email: userEmail,
+            email: user.email,
             metadata: {
                 userPK: UserPK.stringify(user),
-                email: userEmail,
+                email: user.email,
             },
         });
         accountId = result.id;
         await batched.User.update(user, { stripeConnectAccountId: accountId });
     }
-    let link = await stripeClient.accountLinks.create({
+    const link = await stripeClient.accountLinks.create({
         account: accountId,
         refresh_url: refreshUrl,
         return_url: returnUrl,

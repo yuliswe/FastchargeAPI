@@ -1,12 +1,12 @@
 import {
     APIGatewayProxyEventV2WithLambdaAuthorizer,
     APIGatewayProxyHandlerV2WithLambdaAuthorizer,
-    Callback as LmabdaCallback,
     APIGatewayProxyStructuredResultV2,
+    Callback as LmabdaCallback,
 } from "aws-lambda";
 
 export type AuthorizerContext = {
-    userEmail: string | undefined;
+    userPK: string;
 };
 
 export type LambdaEventV2 = APIGatewayProxyEventV2WithLambdaAuthorizer<AuthorizerContext>;
@@ -24,10 +24,10 @@ export function getAuthorizerContext(event: LambdaEventV2): AuthorizerContext {
     return event.requestContext.authorizer.lambda;
 }
 
-export function getUserEmailFromEvent(event: LambdaEventV2): string {
-    let email = event.requestContext.authorizer.lambda.userEmail;
-    if (!email) {
-        throw new Error("User email not found in authorizer context.");
+export function getUserPKFromEvent(event: LambdaEventV2): string {
+    let userPK = event.requestContext.authorizer.lambda.userPK;
+    if (!userPK) {
+        throw new Error("User PK not found in authorizer context.");
     }
-    return email;
+    return userPK;
 }

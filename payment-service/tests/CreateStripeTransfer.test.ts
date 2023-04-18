@@ -20,7 +20,7 @@ export const context: RequestContext = {
     batched: createDefaultContextBatched(),
 };
 
-function makeLambdaEvent({ userEmail, body }: { userEmail: string; body: string }): LambdaEventV2 {
+function makeLambdaEvent({ userPK, body }: { userPK: string; body: string }): LambdaEventV2 {
     return {
         version: "2.0",
         routeKey: "POST /accept-payment",
@@ -48,7 +48,7 @@ function makeLambdaEvent({ userEmail, body }: { userEmail: string; body: string 
             domainPrefix: "api",
             authorizer: {
                 lambda: {
-                    userEmail,
+                    userPK,
                 },
             },
             http: {
@@ -87,7 +87,7 @@ describe("Test a succesful withdraw to Stripe", () => {
     test("Create a StripeTransfer via SQS", async () => {
         let response = await CreateStripeTransfer(
             makeLambdaEvent({
-                userEmail: testUserEmail,
+                userPK: UserPK.stringify(testUser),
                 body: JSON.stringify({
                     withdraw: "3",
                 }),
@@ -171,7 +171,7 @@ describe(`Test that the creation of StripeTransfer is properly queued, by making
             for (let j = 0; j < size; j++) {
                 let p = CreateStripeTransfer(
                     makeLambdaEvent({
-                        userEmail: testUserEmail,
+                        userPK: UserPK.stringify(testUser),
                         body: JSON.stringify({
                             withdraw: "3",
                         }),

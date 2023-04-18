@@ -1,5 +1,4 @@
 import { gql } from "@apollo/client";
-import { GQLUserIndex } from "__generated__/gql-operations";
 import { APIGatewayProxyStructuredResultV2, Context as LambdaContext } from "aws-lambda";
 import { Chalk } from "chalk";
 import Decimal from "decimal.js-light";
@@ -11,7 +10,7 @@ import {
     LambdaEventV2,
     LambdaHandlerV2,
     LambdaResultV2,
-    getUserEmailFromEvent,
+    getUserPKFromEvent,
 } from "../utils/LambdaContext";
 
 const chalk = new Chalk({ level: 3 });
@@ -54,8 +53,8 @@ export const context: RequestContext = {
  *      substract the amount from the API publisher's FastchargeAPI account.
  */
 export async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredResultV2> {
-    let userEmail = getUserEmailFromEvent(event);
-    let { bodyData, errorResponse } = parseBody(event);
+    const userPK = getUserPKFromEvent(event);
+    const { bodyData, errorResponse } = parseBody(event);
     if (errorResponse) {
         return errorResponse;
     }
@@ -73,8 +72,8 @@ export async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStruc
         };
     }
 
-    let user = await context.batched.User.get({ email: userEmail }, { using: GQLUserIndex.IndexByEmailOnlyPk });
-    let userAccountBalance = new Decimal(await getUserBalance(context, UserPK.stringify(user)));
+    const user = await context.batched.User.get(UserPK.parse(userPK));
+    const userAccountBalance = new Decimal(await getUserBalance(context, UserPK.stringify(user)));
     if (userAccountBalance.lessThan(withdraw)) {
         return {
             statusCode: 400,
@@ -84,7 +83,7 @@ export async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStruc
         };
     }
 
-    let billingQueueClient = sqsGQLClient({
+    const billingQueueClient = sqsGQLClient({
         queueUrl: SQSQueueUrl.BillingFifoQueue,
         dedupId: `createStripeTransfer-${UserPK.stringify(user)}-${event.requestContext.requestId}`,
     });

@@ -1,14 +1,13 @@
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
-import { createDefaultContextBatched } from "graphql-service";
-import { Chalk } from "chalk";
-import { getStripeClient } from "../utils/stripe-client";
-import { LambdaEventV2, LambdaHandlerV2, getAuthorizerContext } from "../utils/LambdaContext";
 import { SES } from "aws-sdk";
-import { GQLUserIndex } from "__generated__/gql-operations";
+import { Chalk } from "chalk";
+import { UserPK, createDefaultContextBatched } from "graphql-service";
 import Stripe from "stripe";
+import { LambdaEventV2, LambdaHandlerV2, getUserPKFromEvent } from "../utils/LambdaContext";
+import { getStripeClient } from "../utils/stripe-client";
 
 const chalk = new Chalk({ level: 3 });
-let ses = new SES({ region: "us-east-1" });
+const ses = new SES({ region: "us-east-1" });
 const batched = createDefaultContextBatched();
 
 /**
@@ -17,11 +16,8 @@ const batched = createDefaultContextBatched();
 async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredResultV2> {
     const stripeClient = await getStripeClient();
 
-    let userEmail = getAuthorizerContext(event).userEmail;
-    if (!userEmail) {
-        throw new Error("User email is not set");
-    }
-    let user = await batched.User.get({ email: userEmail }, { using: GQLUserIndex.IndexByEmailOnlyPk });
+    const userPK = getUserPKFromEvent(event);
+    const user = await batched.User.get(UserPK.parse(userPK));
     if (!user.stripeConnectAccountId) {
         throw new Error("User stripeConnectAccountId not found");
     }
@@ -30,7 +26,7 @@ async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredRe
         link = await stripeClient.accounts.createLoginLink(user.stripeConnectAccountId);
     } catch (e) {
         if (e instanceof Stripe.errors.StripeInvalidRequestError) {
-            await sendOnboardingEmail({ email: userEmail });
+            await sendOnboardingEmail({ email: user.email });
             return {
                 statusCode: 400,
                 body: JSON.stringify({ error: "Bad Request" }),
@@ -43,7 +39,7 @@ async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredRe
             isBase64Encoded: false,
         };
     }
-    await sendEmail({ email: userEmail, link: link.url });
+    await sendEmail({ email: user.email, link: link.url });
     return {
         statusCode: 200,
         body: JSON.stringify({}),

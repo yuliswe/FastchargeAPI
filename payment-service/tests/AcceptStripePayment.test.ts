@@ -19,7 +19,7 @@ export const context: RequestContext = {
     batched: createDefaultContextBatched(),
 };
 
-function makeLambdaEvent({ userEmail }: { userEmail: string }): LambdaEventV2 {
+function makeLambdaEvent({ userEmail, userPK }: { userEmail: string; userPK: string }): LambdaEventV2 {
     return {
         version: "2.0",
         routeKey: "POST /accept-payment",
@@ -47,7 +47,7 @@ function makeLambdaEvent({ userEmail }: { userEmail: string }): LambdaEventV2 {
             domainPrefix: "api",
             authorizer: {
                 lambda: {
-                    userEmail,
+                    userPK,
                 },
             },
             http: {
@@ -166,6 +166,7 @@ describe("Test create order and fulfill immediately", () => {
         async () => {
             await AcceptPayment(
                 makeLambdaEvent({
+                    userPK: UserPK.stringify(testUser),
                     userEmail: testUserEmail,
                 }),
                 {
@@ -219,6 +220,7 @@ describe("Test AcceptPayment is idempotent by invoking the handler with the same
             for (let i = 0; i < size; i++) {
                 let p = AcceptPayment(
                     makeLambdaEvent({
+                        userPK: UserPK.stringify(testUser),
                         userEmail: testUserEmail,
                     }),
                     {
@@ -281,6 +283,7 @@ describe(`Test AcceptPayment is queued properly by invoking the handler ${testSi
             for (let i = 0; i < size; i++) {
                 let p = AcceptPayment(
                     makeLambdaEvent({
+                        userPK: UserPK.stringify(testUser),
                         userEmail: testUserEmail,
                     }),
                     {
