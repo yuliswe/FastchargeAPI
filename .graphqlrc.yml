@@ -1,1 +1,2 @@
 schema: "graphql-service/apollo/schema/App.graphql"
+documents: "**/*.graphql"

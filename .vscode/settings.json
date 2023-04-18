@@ -51,6 +51,13 @@
   },
   "python.analysis.importFormat": "relative",
   "explorerExclude.backup": {},
-  "python.formatting.provider": "black",
+  "python.formatting.provider": "none",
   "python.analysis.typeCheckingMode": "basic",
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": true,
+    "source.fixAll.eslint": true
+  },
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
 }
