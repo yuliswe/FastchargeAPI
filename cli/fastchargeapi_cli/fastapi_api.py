@@ -1,14 +1,14 @@
-from blessings import Terminal
-
-from .groups import fastapi
 import click
+from blessed import Terminal
+from blessings import Terminal
+from click import echo
 from click_aliases import ClickAliasedGroup
 
-from blessed import Terminal
-from .fastcharge_app import get_app_or_prompt_exit
-from .graphql import get_client_info
-from click import echo
 from .__generated__ import gql_operations as GQL
+from .context_obj import ContextObject
+from .fastcharge_app import get_app_or_prompt_exit
+from .graphql_client import get_client_info
+from .groups import fastapi
 
 terminal = Terminal()
 
@@ -22,10 +22,11 @@ def fastapi_api():
 
 @fastapi_api.command("list", aliases=["ls"])
 @click.argument("app_name")
-def fastapi_api_list(app_name: str):
+@click.pass_obj
+def fastapi_api_list(ctx_obj: ContextObject, app_name: str):
     """List APIs for [APP_NAME]."""
-    client, auth = get_client_info()
-    app = get_app_or_prompt_exit(app_name)
+    client, auth = get_client_info(ctx_obj.profile)
+    app = get_app_or_prompt_exit(client, app_name)
     app = GQL.get_app_endpoints(client, app_name)
     echo(terminal.blue + terminal.bold + f'"{app.name}" endpoints:\n' + terminal.normal)
     # echo(f"\n Gateway mode: {app['gatewayMode']}\n")

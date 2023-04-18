@@ -5,7 +5,6 @@ projects:
     extensions:
       turms:
         out_dir: fastchargeapi_cli/__generated__
-
         # stylers:
         #   - type: turms.stylers.capitalize.CapitalizeStyler
         #   - type: turms.stylers.snake_case.SnakeCaseStyler
@@ -16,23 +15,20 @@ projects:
           - type: turms.plugins.operations.OperationsPlugin
           - type: turms.plugins.funcs.FuncsPlugin
             global_args: # global arguments that we want to pass to all functions (here a reference to the gql client)
-              - type: ..graphql.GQLClient
-                key: GQLClient
+              - type: gql.Client
+                key: client
                 description: "The client we want to use to execute the operation"
             definitions:
               # - type: subscription # The type of operation we want to generate a function for
               #   use: your_library.proxies.subscribe # The proxy function we want to use to execute the operation
               - type: query
-                use: fastchargeapi_cli.graphql.gql_execute
+                use: fastchargeapi_cli.graphql_client.gql_execute
               - type: mutation
-                use: fastchargeapi_cli.graphql.gql_execute
-
+                use: fastchargeapi_cli.graphql_client.gql_execute
         processors:
           - type: turms.processors.black.BlackProcessor
           - type: turms.processors.isort.IsortProcessor
-
         generated_name: gql_operations.py
-
         scalar_definitions:
           uuid: str
           UUID: str
@@ -43,3 +39,4 @@ projects:
           Timestamp: int
           Email: str
           URL: str
+          NonNegativeDecimal: str

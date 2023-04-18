@@ -31,7 +31,12 @@ black = "^23.1.0"
 turms = "^0.3.1"
 pydantic = "^1.10.6"
 pyright = "^1.1.299"
+boto3 = "^1.26.114"
+pytest-xdist = "^3.2.1"
+pytest = "^7.3.1"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pyright]

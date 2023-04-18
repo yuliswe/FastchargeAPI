@@ -1,17 +1,16 @@
 from typing import Optional
 
-from blessings import Terminal
-
-from .validate import validate_app_exists
-
-from .graphql import get_client_info
-from .groups import fastapi
 import click
 import colorama
-from click_aliases import ClickAliasedGroup
+from blessings import Terminal
 from click import echo
-from .exceptions import NotFound
+from click_aliases import ClickAliasedGroup
+
 from .__generated__ import gql_operations as GQL
+from .context_obj import ContextObject
+from .exceptions import NotFound
+from .graphql_client import get_client_info
+from .groups import fastapi
 
 terminal = Terminal()
 
@@ -24,9 +23,10 @@ def fastapi_subscribe():
 
 
 @fastapi_subscribe.command("list", aliases=["ls"])
-def subscribe_list():
+@click.pass_obj
+def subscribe_list(ctx_obj: ContextObject):
     """List your subscriptions."""
-    client, auth = get_client_info()
+    client, auth = get_client_info(ctx_obj.profile)
     subscriptions = GQL.list_all_subscriptions_for_user(
         client, user=auth.user_pk
     ).subscriptions
@@ -56,10 +56,10 @@ def subscribe_list():
 @fastapi_subscribe.command("sub", aliases=["add"])
 @click.argument("app_name", required=True)
 @click.option("-p", "--plan", help="Name of the plan to subscribe to.")
-def subscription_add(app_name: str, plan: Optional[str] = None):
+@click.pass_obj
+def subscription_add(ctx_obj: ContextObject, app_name: str, plan: Optional[str] = None):
     """Subscribe to an app."""
-    client, auth = get_client_info()
-    validate_app_exists(app_name)
+    client, auth = get_client_info(ctx_obj.profile)
     # Get the pricing plan the user is currently subscribed to, to provide a better output.
     try:
         current_sub = GQL.get_current_subscription(
@@ -129,10 +129,11 @@ def subscription_add(app_name: str, plan: Optional[str] = None):
 
 @fastapi_subscribe.command("remove", aliases=["rm"])
 @click.argument("app_name", required=True)
-def subscription_remove(app_name: str):
+@click.pass_obj
+def subscription_remove(ctx_obj: ContextObject, app_name: str):
     """Unsubscribe from an app."""
     try:
-        client, auth = get_client_info()
+        client, auth = get_client_info(ctx_obj.profile)
         GQL.unsubscribe_from_app(client, subscriber=auth.user_pk, app=app_name)
     except NotFound:
         echo(

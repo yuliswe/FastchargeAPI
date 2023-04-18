@@ -1,15 +1,17 @@
-from blessings import Terminal
-
-from .fastcharge_app import get_app_or_prompt_exit
-from .graphql import get_client_info
-from .groups import fastcharge
-import click
-from click_aliases import ClickAliasedGroup
-from .exceptions import AlreadyExists, NotFound, PermissionDenied
-from click import echo
 import re
-from .__generated__ import gql_operations as GQL
+
+import click
 from blessed import Terminal
+from blessings import Terminal
+from click import echo
+from click_aliases import ClickAliasedGroup
+
+from .__generated__ import gql_operations as GQL
+from .context_obj import ContextObject
+from .exceptions import AlreadyExists, NotFound, PermissionDenied
+from .fastcharge_app import get_app_or_prompt_exit
+from .graphql_client import get_client_info
+from .groups import fastcharge
 
 terminal = Terminal()
 
@@ -64,7 +66,9 @@ def validate_path_or_exit(path: str):
 @click.option(
     "--description", "descr", help="Add a description that is visble to customers."
 )
+@click.pass_obj
 def api_add(
+    ctx_obj: ContextObject,
     app_name: str,
     method: GQL.HTTPMethod,
     path: str,
@@ -77,8 +81,8 @@ def api_add(
 
     \thttps://[APP_NAME].fastchargeapi.com/[PATH] ~> [DESTINATION]
     """
-    client, auth = get_client_info()
-    app = get_app_or_prompt_exit(app_name)
+    client, auth = get_client_info(ctx_obj.profile)
+    app = get_app_or_prompt_exit(client, app_name)
     if dest is not None:
         validate_dest_or_exit(dest)
     if path is not None:
@@ -109,10 +113,11 @@ def api_add(
 
 @fastcharge_api.command("list", aliases=["ls"])
 @click.argument("app_name")
-def api_list(app_name: str):
+@click.pass_obj
+def api_list(ctx_obj: ContextObject, app_name: str):
     """List APIs for [APP_NAME]."""
-    client, auth = get_client_info()
-    app = get_app_or_prompt_exit(app_name)
+    client, auth = get_client_info(ctx_obj.profile)
+    app = get_app_or_prompt_exit(client, app_name)
     try:
         app = GQL.get_app_endpoints_as_owner(client, app_name)
     except PermissionDenied:
@@ -148,14 +153,22 @@ def api_list(app_name: str):
 @click.option("-p", "--path", help="Set a new path.")
 @click.option("-d", "--destination", "dest", help="Set a new destination.")
 @click.option("--description", "descr", help="Set a new description.")
-def api_update(api_id: str, method: GQL.HTTPMethod, path: str, dest: str, descr: str):
+@click.pass_obj
+def api_update(
+    ctx_obj: ContextObject,
+    api_id: str,
+    method: GQL.HTTPMethod,
+    path: str,
+    dest: str,
+    descr: str,
+):
     """Update the information of an API.
 
     eg. fastcharge api update [API_ID] -p /new/path -d https://new-destination.com
 
     To find the API_IDs, see `fastcharge api list`.
     """
-    client, auth = get_client_info()
+    client, auth = get_client_info(ctx_obj.profile)
     try:
         variable_values = {
             "api_id": api_id,
@@ -202,14 +215,15 @@ def api_update(api_id: str, method: GQL.HTTPMethod, path: str, dest: str, descr:
 @fastcharge_api.command("delete", aliases=["del"])
 @click.help_option("-h", "--help")
 @click.argument("api_id", required=True)
-def api_delete(api_id: str):
+@click.pass_obj
+def api_delete(ctx_obj: ContextObject, api_id: str):
     """Delete an API.
 
     eg. fastcharge api delete [api_id]
 
     To find the api_ids, see `fastcharge api list`.
     """
-    client, auth = get_client_info()
+    client, auth = get_client_info(ctx_obj.profile)
     try:
         result = GQL.delete_enpoint(client, api_id).deleteEndpoint
         echo(

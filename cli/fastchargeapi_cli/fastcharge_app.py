@@ -1,16 +1,18 @@
+from dataclasses import dataclass
 from typing import Optional
 from urllib.parse import urlparse
 
-from blessings import Terminal
-from .groups import fastcharge
 import click
-from .exceptions import BadUserInput, NotFound
-from .graphql import get_client_info
-from dataclasses import dataclass
 import colorama
-from click_aliases import ClickAliasedGroup
+from blessings import Terminal
 from click import echo
+from click_aliases import ClickAliasedGroup
+
 from .__generated__ import gql_operations as GQL
+from .context_obj import ContextObject
+from .exceptions import AlreadyExists, NotFound
+from .graphql_client import GQLClient, get_client_info
+from .groups import fastcharge
 
 terminal = Terminal()
 
@@ -24,30 +26,33 @@ def fastcharge_dev_app():
 
 @fastcharge_dev_app.command("create", aliases=["new"])
 @click.argument("name", required=True)
-def fastcharge_app_create(name: str):
+@click.pass_obj
+def fastcharge_app_create(ctx_obj: ContextObject, name: str):
     """Create a new app with [NAME]."""
-    if get_app(name) is not None:
+    client, auth = get_client_info(ctx_obj.profile)
+    try:
+        GQL.create_app(client, name=name, owner=auth.user_pk)
+    except AlreadyExists:
         echo(
             terminal.red
             + terminal.bold
             + f'An app with the name "{name}" has already been registered.\n'
             "Please use a different name." + terminal.normal
         )
-        return
-    client, auth = get_client_info()
-    GQL.create_app(client, name=name, owner=auth.user_pk)
-    echo(
-        terminal.green
-        + terminal.bold
-        + f'App "{name}" created successfully.'
-        + terminal.normal
-    )
+    else:
+        echo(
+            terminal.green
+            + terminal.bold
+            + f'App "{name}" created successfully.'
+            + terminal.normal
+        )
 
 
 @fastcharge_dev_app.command("list", aliases=["ls"])
-def fastcharge_app_list():
+@click.pass_obj
+def fastcharge_app_list(ctx_obj: ContextObject):
     """List your apps."""
-    client, auth = get_client_info()
+    client, auth = get_client_info(ctx_obj.profile)
     apps = GQL.list_apps_owned_by_user(client, user=auth.user_pk).apps
     for app in apps:
         echo(terminal.blue + terminal.bold + f"{app.name}:" + terminal.normal)
@@ -62,13 +67,17 @@ def fastcharge_app_list():
 
 @fastcharge_dev_app.command("delete", aliases=["del"])
 @click.argument("name", required=True)
-def fastcharge_app_delete(name: str):
+@click.pass_obj
+def fastcharge_app_delete(ctx_obj: ContextObject, name: str):
     """Delete an app with [NAME]."""
-    if get_app(name) is None:
+    client, auth = get_client_info(ctx_obj.profile)
+    try:
+        result = GQL.delete_app(client, name=name)
+    except NotFound:
         echo(f'An app with the name "{name}" does not exist.')
-        return
-    delete_app(name)
-    echo(f"App {name} deleted.")
+        exit(1)
+    else:
+        echo(f"App {name} deleted.")
 
 
 @dataclass
@@ -89,23 +98,13 @@ class AppInfo:
         echo()
 
 
-def get_app(name: str) -> Optional[GQL.GetAppDetailApp]:
-    client, auth = get_client_info()
-    try:
-        app = GQL.get_app_detail(client, name=name)
-        return app
-    except NotFound:
-        return None
-
-
-def delete_app(name: str):
-    client, auth = get_client_info()
-    result = GQL.delete_app(client, name=name)
-
-
-def get_app_or_prompt_exit(app_name: str) -> Optional[GQL.GetAppDetailApp]:
+def get_app_or_prompt_exit(
+    client: GQLClient, app_name: str
+) -> Optional[GQL.GetAppDetailApp]:
     """Get an app by name, or prompt the user it doesn't exist."""
-    if (app := get_app(app_name)) is None:
+    try:
+        app = GQL.get_app_detail(client, name=app_name)
+    except NotFound:
         echo(colorama.Fore.RED + f'An app with the name "{app_name}" does not exist.')
         echo(colorama.Fore.YELLOW + "Run `fastcharge app list` to see all apps.")
         echo(colorama.Fore.YELLOW + "Run `fastcharge app create` to register an app.")
@@ -155,7 +154,9 @@ class URL(click.ParamType):
     help="Set the visibility of the app.",
     default=None,
 )
+@click.pass_obj
 def fastcharge_app_update(
+    ctx_obj: ContextObject,
     app_name: str,
     description: str,
     repository: str,
@@ -164,7 +165,7 @@ def fastcharge_app_update(
     visibility: Optional[bool] = None,
 ):
     """Update information for an existing app."""
-    client, auth = get_client_info()
+    client, auth = get_client_info(ctx_obj.profile)
     try:
         GQL.update_app(
             client,

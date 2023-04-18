@@ -1,14 +1,17 @@
-from .fastcharge_app import get_app_or_prompt_exit
-from .graphql import get_client_info
-from .groups import fastcharge
+from dataclasses import dataclass
+
 import click
 import colorama
-from dataclasses import dataclass
-from click_aliases import ClickAliasedGroup
-from .exceptions import AlreadyExists, ImmutableResource, NotFound, PermissionDenied
 from blessings import Terminal
 from click import echo
+from click_aliases import ClickAliasedGroup
+
 from .__generated__ import gql_operations as GQL
+from .context_obj import ContextObject
+from .exceptions import AlreadyExists, ImmutableResource, NotFound, PermissionDenied
+from .fastcharge_app import get_app_or_prompt_exit
+from .graphql_client import get_client_info
+from .groups import fastcharge
 
 terminal = Terminal()
 
@@ -31,10 +34,11 @@ def fastcharge_dev_pricing():
 @fastcharge_dev_pricing.command("list", aliases=["ls"])
 @click.argument("app_name", required=True)
 @click.help_option("-h", "--help")
-def pricing_list(app_name: str):
+@click.pass_obj
+def pricing_list(ctx_obj: ContextObject, app_name: str):
     """List pricing plans for [APP]."""
-    client, auth = get_client_info()
-    if get_app_or_prompt_exit(app_name) is None:
+    client, auth = get_client_info(ctx_obj.profile)
+    if get_app_or_prompt_exit(client, app_name) is None:
         return
     app = GQL.list_app_pricing_details(client, app_name=app_name)
     echo(terminal.blue + terminal.bold + f"app: {app.name}" + terminal.normal)
@@ -94,7 +98,9 @@ def pricing_list(app_name: str):
     help="Provide free quota to subscribers.",
 )
 @click.help_option("-h", "--help")
+@click.pass_obj
 def pricing_add(
+    ctx_obj: ContextObject,
     app_name: str,
     name: str,
     call_to_action: str,
@@ -110,7 +116,7 @@ def pricing_add(
             charge_per_request=charge_per_request,
             free_quota=free_quota,
         )
-    client, auth = get_client_info()
+    client, auth = get_client_info(ctx_obj.profile)
     try:
         result = GQL.create_app_pricing_plan(
             client,
@@ -150,7 +156,9 @@ def pricing_add(
 )
 @click.option("-f", "--free-quota", type=int, help="Provide free quota to subscribers.")
 @click.help_option("-h", "--help")
+@click.pass_obj
 def pricing_update(
+    ctx_obj: ContextObject,
     pricing_id: str,
     name: str,
     call_to_action: str,
@@ -160,7 +168,7 @@ def pricing_update(
     free_quota: int,
 ):
     """Update an existing pricing plan given its ID."""
-    client, auth = get_client_info()
+    client, auth = get_client_info(ctx_obj.profile)
     try:
         GQL.update_app_pricing_plan(
             client,

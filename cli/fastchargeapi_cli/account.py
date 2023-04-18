@@ -1,20 +1,22 @@
-from dataclasses import dataclass
 import textwrap
-from typing import Optional
-from .remote_secret import interact_with_react
-
-from .graphql import get_client_info
-from click import echo
-from . import config
-from blessings import Terminal
 import webbrowser
+from dataclasses import dataclass
+from typing import Optional
+
+from blessings import Terminal
+from click import echo
 from gql import gql
+
+from . import config
 from .__generated__ import gql_operations as GQL
+from .context_obj import ContextObject
+from .graphql_client import get_client_info
+from .remote_secret import interact_with_react
 
 terminal = Terminal()
 
 
-def do_account_topup(amount: float):
+def do_account_topup(ctx_obj: ContextObject, amount: float):
     """Top up your FastchargeAPI account.
 
     Amount in USD.
@@ -27,7 +29,7 @@ def do_account_topup(amount: float):
         echo(terminal.red + f"Minimum topup amount is $1." + terminal.normal)
         exit(1)
 
-    client, auth = get_client_info()
+    client, auth = get_client_info(ctx_obj.profile)
     account_balance = GQL.get_user_account_balance_and_limit(client, user=auth.user_pk)
     if float(account_balance.balance) + amount > float(account_balance.balanceLimit):
         echo(
@@ -47,9 +49,10 @@ def do_account_topup(amount: float):
         echo("Aborted.")
         exit(1)
 
-    client, user_email = get_client_info()
+    client, user_email = get_client_info(ctx_obj.profile)
 
     query, result = interact_with_react(
+        client=client,
         poll_max_count=10,
         poll_max_reached_prompt="Press enter after completing in browser.",
     )
@@ -65,8 +68,8 @@ def do_account_topup(amount: float):
         echo(terminal.red + "Payment canceled." + terminal.normal)
 
 
-def do_account_info():
-    client, auth = get_client_info()
+def do_account_info(ctx_obj: ContextObject):
+    client, auth = get_client_info(ctx_obj.profile)
     user = GQL.get_user_account_info(client, user=auth.user_pk)
     echo(f"Account:\t{user.email}")
     echo(f"Author:\t\t{user.author or '<Not set>'}")
@@ -84,6 +87,6 @@ def do_account_info():
     echo(terminal.yellow(f"Your account balance is: ${float(user.balance):.2f}"))
 
 
-def do_account_update(author: Optional[str] = None):
-    client, auth = get_client_info()
+def do_account_update(ctx_obj: ContextObject, author: Optional[str] = None):
+    client, auth = get_client_info(ctx_obj.profile)
     GQL.update_user_info(client, user=auth.user_pk, author=author)

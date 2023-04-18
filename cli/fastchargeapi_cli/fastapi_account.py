@@ -1,10 +1,10 @@
 import click
+from blessings import Terminal
+from click_aliases import ClickAliasedGroup
 
 from .account import do_account_info, do_account_topup, do_account_update
-
+from .context_obj import ContextObject
 from .groups import fastapi
-from click_aliases import ClickAliasedGroup
-from blessings import Terminal
 
 terminal = Terminal()
 
@@ -19,24 +19,27 @@ def fastapi_account():
 @fastapi_account.command("topup")
 @click.help_option("-h", "--help")
 @click.argument("amount", type=float, required=True)
-def fastapi_account_topup(amount: float):
+@click.pass_obj
+def fastapi_account_topup(ctx_obj: ContextObject, amount: float):
     """Top up your FastchargeAPI account.
 
     Amount in USD.
     """
-    do_account_topup(amount)
+    do_account_topup(ctx_obj, amount)
 
 
 @fastapi_account.command("info")
 @click.help_option("-h", "--help")
-def fastapi_account_info():
+@click.pass_obj
+def fastapi_account_info(ctx_obj: ContextObject):
     """Show account information."""
-    do_account_info()
+    do_account_info(ctx_obj)
 
 
 @fastapi_account.command("update", aliases=["up"])
 @click.help_option("-h", "--help")
 @click.option("--author")
-def fastapi_account_update(author: str):
+@click.pass_obj
+def fastapi_account_update(ctx_obj: ContextObject, author: str):
     """Update account information."""
-    do_account_update(author)
+    do_account_update(ctx_obj, author)

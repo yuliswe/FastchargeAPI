@@ -1,11 +1,13 @@
-from .exceptions import NotFound, TooManyResources
-from .graphql import get_client_info
-from .groups import fastapi
+import click
 from blessings import Terminal
 from click import echo
 from click_aliases import ClickAliasedGroup
-import click
+
 from .__generated__ import gql_operations as GQL
+from .context_obj import ContextObject
+from .exceptions import NotFound, TooManyResources
+from .graphql_client import get_client_info
+from .groups import fastapi
 
 terminal = Terminal()
 
@@ -19,10 +21,11 @@ def fastcharge_token():
 
 @fastcharge_token.command("create", aliases=["new", "add"])
 @click.argument("app_name", required=True)
-def create_app_user_token(app_name):
+@click.pass_obj
+def create_app_user_token(ctx_obj: ContextObject, app_name: str):
     """Create an API token for the specified app."""
 
-    client, auth = get_client_info()
+    client, auth = get_client_info(ctx_obj.profile)
     try:
         response = GQL.create_user_app_token(client, user=auth.user_pk, app=app_name)
         echo(terminal.green("Token created successfully."))
@@ -44,9 +47,10 @@ def create_app_user_token(app_name):
 
 @fastcharge_token.command("revoke", aliases=["rm", "del"])
 @click.argument("app_name", required=True)
-def revoke_app_user_token(app_name):
+@click.pass_obj
+def revoke_app_user_token(ctx_obj: ContextObject, app_name: str):
     """Revoke the API token for the specified app."""
-    client, auth = get_client_info()
+    client, auth = get_client_info(ctx_obj.profile)
     try:
         response = GQL.delete_user_app_tpken(client, user=auth.user_pk, app=app_name)
         echo(

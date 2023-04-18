@@ -62,3 +62,20 @@ jobs:
         run: |
           cd payment-service
           npm run test
+
+  test-cli:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/setup-push
+        with:
+          AWS_GITHUBACTIONROLE_ARN: ${{ secrets.AWS_GITHUBACTIONROLE_ARN }}
+      - name: Build
+        run: |
+          poetry install
+          npm run build
+        working-directory: cli
+      - name: Test
+        run: |
+          poetry run npm run test
+        working-directory: cli

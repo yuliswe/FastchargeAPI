@@ -1,3 +1,4 @@
+from typing import Optional
 from click import echo
 import requests
 
@@ -5,9 +6,10 @@ from .login import read_or_refresh_auth_file
 
 
 class HttpClient:
-    def __init__(self):
+    def __init__(self, profile: Optional[str]):
         self.session = requests.Session()
-        auth = read_or_refresh_auth_file()
+        self.profile = profile
+        auth = read_or_refresh_auth_file(profile)
         if auth is None:
             echo("You must be logged in.")
             exit(1)

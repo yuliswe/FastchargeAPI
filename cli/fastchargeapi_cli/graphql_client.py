@@ -1,36 +1,42 @@
 from dataclasses import dataclass
-from functools import cache
-import json
 from typing import Optional
-from gql import gql, Client
+
+from click import echo
+from gql import Client, gql
 from gql.transport.aiohttp import AIOHTTPTransport
 from gql.transport.exceptions import TransportQueryError
+
 from .auth_file import AuthFileContent, read_or_refresh_auth_file
+from .config import graphql_host
 from .exceptions import (
     AlreadyExists,
+    BadUserInput,
     ImmutableResource,
     NotFound,
-    TooManyResources,
     PermissionDenied,
-    BadUserInput,
+    TooManyResources,
 )
-from click import echo
-from .config import graphql_host
 
 
-class GQLClient:
+class GQLClient(Client):
     def __init__(
-        self, *, id_token: Optional[str] = None, user_email: Optional[str] = None
+        self,
+        *,
+        id_token: Optional[str] = None,
+        user_email: Optional[str] = None,
+        user_pk: Optional[str] = None
     ):
         transport = AIOHTTPTransport(
             graphql_host,
             headers={
                 "Authorization": id_token or "",
                 "X-User-Email": user_email or "",
+                "X-User-PK": user_pk or "",
             },
         )
         self.client = Client(transport=transport, fetch_schema_from_transport=False)
         self.user_email = user_email
+        self.user_pk = user_pk
 
     def execute(self, *args, **kwargs) -> dict:
         try:
@@ -64,14 +70,16 @@ class User:
     pk: str
 
 
-@cache
-def get_client_info() -> tuple[GQLClient, AuthFileContent]:
+def get_client_info(profile: Optional[str]) -> tuple[GQLClient, AuthFileContent]:
     """This function returns a tuple of (client, user_email). Is it root
     function that identifies the user for the cli."""
-    auth = read_or_refresh_auth_file()
+    auth = read_or_refresh_auth_file(profile)
 
     if auth is None:
         echo("You must be logged in.")
         exit(1)
 
-    return GQLClient(id_token=auth.id_token, user_email=auth.email), auth
+    return (
+        GQLClient(id_token=auth.id_token, user_email=auth.email, user_pk=auth.user_pk),
+        auth,
+    )

@@ -1,18 +1,17 @@
 import textwrap
 
-from blessings import Terminal
-
-from .account import do_account_info, do_account_topup, do_account_update
-
-
-from .http import HttpClient
-from .graphql import get_client_info
-from .groups import fastcharge
 import click
+from blessings import Terminal
 from click import echo
 from click_aliases import ClickAliasedGroup
+
 from . import config
 from .__generated__ import gql_operations as GQL
+from .account import do_account_info, do_account_topup, do_account_update
+from .context_obj import ContextObject
+from .graphql_client import get_client_info
+from .groups import fastcharge
+from .http import HttpClient
 
 terminal = Terminal()
 
@@ -26,31 +25,34 @@ def fastcharge_account():
 @fastcharge_account.command("update", aliases=["up"])
 @click.help_option("-h", "--help")
 @click.option("--author")
-def fastcharge_account_update(author: str):
+@click.pass_obj
+def fastcharge_account_update(ctx_obj: ContextObject, author: str):
     """Update account information."""
-    do_account_update(author)
+    do_account_update(ctx_obj, author)
 
 
 @fastcharge_account.command("info")
 @click.help_option("-h", "--help")
-def fastcharge_account_info():
+@click.pass_obj
+def fastcharge_account_info(ctx_obj: ContextObject):
     """Show account information."""
-    do_account_info()
+    do_account_info(ctx_obj)
 
 
 @fastcharge_account.command("withdraw")
 @click.help_option("-h", "--help")
 @click.argument("amount", type=float, required=True)
-def fastcharge_account_withdraw(amount: str):
+@click.option("-y", "--yes", is_flag=True, help="Skip confirmation prompt.")
+@click.pass_obj
+def fastcharge_account_withdraw(ctx_obj: ContextObject, amount: str, yes: bool):
     """Withdraw account balance to your Stripe account.
 
     Amount in USD.
     """
-    client, auth = get_client_info()
-    user = GQL.get_user_account_balance(client, user=auth.user_pk)
+    client, auth = get_client_info(ctx_obj.profile)
+    user = GQL.get_user_account_balance_for_withdrawl(client, user=auth.user_pk)
     balance = float(user.balance)
     withdraw = float(amount)
-    withdraw_cents = int(withdraw * 100)
     if withdraw > balance:
         echo(
             terminal.red
@@ -114,17 +116,13 @@ def fastcharge_account_withdraw(amount: str):
         + terminal.normal
     )
     echo()
-    if input("Continue? (y/N)").strip().lower() == "y":
-        response = HttpClient().post(
+    if yes or input("Continue? (y/N)").strip().lower() == "y":
+        response = HttpClient(ctx_obj.profile).post(
             f"{config.payment_service_host}/create-stripe-transfer",
             json={"withdraw": withdraw},
         )
         if response.status_code != 200:
-            echo(
-                terminal.red
-                + f"Error: {response.status_code} {response.reason}"
-                + terminal.normal
-            )
+            echo(terminal.red(f"Error: {response.status_code} {response.reason}"))
             echo(response.text)
             exit(1)
         echo(
@@ -141,9 +139,10 @@ def fastcharge_account_withdraw(amount: str):
 @fastcharge_account.command("topup")
 @click.help_option("-h", "--help")
 @click.argument("amount", type=float, required=True)
-def fastcharge_account_topup(amount: float):
+@click.pass_obj
+def fastcharge_account_topup(ctx_obj: ContextObject, amount: float):
     """Top up your FastchargeAPI account.
 
     Amount in USD.
     """
-    do_account_topup(amount)
+    do_account_topup(ctx_obj, amount)

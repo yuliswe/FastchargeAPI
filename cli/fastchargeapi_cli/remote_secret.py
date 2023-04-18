@@ -1,23 +1,23 @@
-from dataclasses import dataclass
 import json
 import os
 import time
+from dataclasses import dataclass
 from typing import Any, Optional
 from uuid import uuid4
+
+import boto3
 from botocore import UNSIGNED
 from botocore.client import Config
-import boto3
-from jose import jws
-from jose import jwe
-
-from .exceptions import NotFound
 from botocore.exceptions import ClientError as BotoClientError
-from .graphql import get_client_info
+from jose import jwe, jws
+
 from .__generated__ import gql_operations as GQL
+from .exceptions import NotFound
+from .graphql_client import GQLClient
 
 
 def get_remote_secret_from_s3(
-    key: str, jwe_secret: bytes, jwt_secret: bytes
+    client: GQLClient, key: str, jwe_secret: bytes, jwt_secret: bytes
 ) -> Optional[Any]:
     """Get the secret from the remote server. If decode_secret is provided,
     expect the value retrieved to be a JWT token and decode it using the
@@ -47,14 +47,12 @@ def get_remote_secret_from_s3(
     return json.loads(jwe_decrypted)
 
 
-def get_remote_secret(key: str, jwe_secret: bytes, jwt_secret: bytes) -> Optional[str]:
+def get_remote_secret(
+    client: GQLClient, key: str, jwe_secret: bytes, jwt_secret: bytes
+) -> Optional[str]:
     """Get the secret from the remote server. If decode_secret is provided,
     expect the value retrieved to be a JWT token and decode it using the
     provided secret."""
-
-    client, user = get_client_info()
-    if not client or not user:
-        raise Exception("Client or user not found.")
 
     secret = GQL.get_secret(client, key=key)
 
@@ -82,6 +80,8 @@ class InteractWithReactQuery:
 class InteractWithReactResult:
     def __init__(
         self,
+        client: GQLClient,
+        *,
         jwe_secret: bytes,  # The secret to use to decrypt the JWE
         jwt_secret: bytes,  # The secret to use to verify the JWT
         key: str,  # A uuid4 key to use for the remote secret, should be unique for each value being stored
@@ -93,6 +93,7 @@ class InteractWithReactResult:
         assert poll_max_count < 100, "Too many polls"
         assert poll_interval_seconds >= 3, "Too short of a poll interval"
 
+        self.client = client
         self.jwe_secret = jwe_secret
         self.jwt_secret = jwt_secret
         self.poll_max_reached_prompt = poll_max_reached_prompt
@@ -113,7 +114,10 @@ class InteractWithReactResult:
             tries += 1
             try:
                 if value := self.getter_func(
-                    key=self.key, jwe_secret=self.jwe_secret, jwt_secret=self.jwt_secret
+                    client=self.client,
+                    key=self.key,
+                    jwe_secret=self.jwe_secret,
+                    jwt_secret=self.jwt_secret,
                 ):
                     return value
             except NotFound:
@@ -124,6 +128,8 @@ class InteractWithReactResult:
 
 
 def interact_with_react(
+    client: GQLClient,
+    *,
     poll_max_reached_prompt: str = "Timed out. Press enter to retry.",
     poll_max_count: int = 3,
     poll_interval_seconds: int = 5,
@@ -159,6 +165,7 @@ def interact_with_react(
             url_query_secrets=url_query_secrets,
         ),
         InteractWithReactResult(
+            client=client,
             jwe_secret=jwe_secret,
             jwt_secret=jwt_secret,
             key=key,

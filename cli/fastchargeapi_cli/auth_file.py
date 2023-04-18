@@ -1,15 +1,17 @@
-from dataclasses import dataclass
 import dataclasses
-import os
-from typing import Optional
-import requests
-from pathlib import Path
 import json
+import os
+from dataclasses import dataclass
+from functools import cache
+from pathlib import Path
+from typing import Literal, Optional, Union
+
 import jwt
+import requests
 from cryptography.x509 import load_pem_x509_certificate
 from gql import gql
+
 from . import config
-from functools import cache
 
 
 @cache
@@ -20,8 +22,8 @@ def get_google_cert() -> dict:
     return google_cert
 
 
-def get_auth_file_path() -> Path:
-    if profile := os.environ.get("FAPI_PROFILE"):
+def get_auth_file_path(profile: Optional[str]) -> Path:
+    if profile := profile or os.environ.get("PROFILE"):
         return Path.home() / f".fastcharge/auth.{profile}.json"
     return Path.home() / ".fastcharge/auth.json"
 
@@ -32,24 +34,35 @@ def list_auth_files() -> list[Path]:
     ]
 
 
+def delete_auth_file(profile: Optional[str]) -> None:
+    auth_file_path = get_auth_file_path(profile)
+    if auth_file_path.exists():
+        auth_file_path.unlink()
+
+
 @dataclass
 class AuthFileContent:
     id_token: str
-    refresh_token: str
+    refresh_token: Union[Literal["firebase"], Literal["fastchargeapi"]]
     user_pk: str
     email: str
+    issuer: str
 
 
 def write_to_auth_file(
     *,
+    profile: Optional[str] = None,
+    issuer: Optional[str] = "firebase",
     id_token: Optional[str] = None,
     refresh_token: Optional[str] = None,
     user_pk: Optional[str] = None,
     email: Optional[str] = None,
 ) -> AuthFileContent:
-    auth_file_path = get_auth_file_path()
+    """Partially update the auth file context, or create a new auth file with
+    the specified content."""
+    auth_file_path = get_auth_file_path(profile)
     auth_file_path.parent.mkdir(exist_ok=True)
-    auth_file = _read_auth_file()
+    auth_file = _read_auth_file(profile)
     data = dataclasses.asdict(auth_file) if auth_file else {}
     data.update(
         {
@@ -59,6 +72,7 @@ def write_to_auth_file(
                 "refresh_token": refresh_token,
                 "user_pk": user_pk,
                 "email": email,
+                "issuer": issuer,
             }.items()
             if v is not None
         }
@@ -69,45 +83,57 @@ def write_to_auth_file(
 
 
 def read_or_refresh_auth_file(
+    profile: Optional[str],
     force_refresh=False,
 ) -> Optional[AuthFileContent]:
     """
-    Get the id token from the auth file. If the file doesn't exist, return None.
-    If the id token is invalid, refresh it and return the new id token. If
-    unable to refresh, return None.
+    Gets the id token from the auth file. If the file doesn't exist, returns
+    None.
+
+    If the id token is issued by Firebase, verifies the token. If the id token
+    is invalid, refreshes it and returns the new id token. If unable to refresh,
+    return None.
+
+    If the id token is not issued by FastchargeAPI, skips the verification.
 
     The new id token and refresh token are written to the auth file.
     """
-    if auth := _read_auth_file():
-        if user := verify_or_refresh_id_token(
-            auth.id_token, auth.refresh_token, force_refresh
-        ):
-            if user.refreshed:
-                return write_to_auth_file(
-                    id_token=user.id_token,
-                    refresh_token=user.refresh_token,
-                    email=user.email,
-                    user_pk=query_user_pk(user.id_token, user.email),
-                )
-            else:
-                return auth
+    if auth := _read_auth_file(profile):
+        if auth.issuer == "firebase":
+            if user := verify_or_refresh_id_token(
+                auth.id_token, auth.refresh_token, force_refresh
+            ):
+                if user.refreshed:
+                    return write_to_auth_file(
+                        id_token=user.id_token,
+                        refresh_token=user.refresh_token,
+                        email=user.email,
+                        user_pk=query_user_pk(user.id_token, user.email),
+                    )
+                else:
+                    return auth
+        elif auth.issuer == "fastchargeapi":
+            return auth
+        else:
+            raise ValueError(f"Unknown issuer: {auth.issuer}")
     return None
 
 
-def _read_auth_file() -> Optional[AuthFileContent]:
+def _read_auth_file(profile: Optional[str]) -> Optional[AuthFileContent]:
     """Read the decoded id token from the auth file. If the file doesn't exist,
     return None."""
-    auth_file = get_auth_file_path()
+    auth_file = get_auth_file_path(profile)
     if auth_file.exists():
         auth = json.loads(auth_file.read_text())
+        auth.setdefault("issuer", "firebase")  # old auth file doesn't have issuer
         return AuthFileContent(**auth)
     else:
         return None
 
 
 def query_user_pk(id_token: str, email: str) -> str:
-    from .graphql import GQLClient
     from .__generated__ import gql_operations as GQL
+    from .graphql_client import GQLClient
 
     client = GQLClient(id_token=id_token, user_email=email)
     user = GQL.get_user_by_email(client, email=email)
@@ -129,7 +155,7 @@ def verify_or_refresh_id_token(
     Get user object from the id token. Refresh the id token if necessary.
     """
     if force_refresh:
-        result = _refresh_id_token(refresh_token)
+        result = refresh_id_token(refresh_token)
         if user := verify_id_token(result.id_token):
             return VerifyOrRefreshIdTokenResult(
                 email=user.email,
@@ -147,7 +173,7 @@ def verify_or_refresh_id_token(
             refreshed=False,
         )
     else:
-        result = _refresh_id_token(refresh_token)
+        result = refresh_id_token(refresh_token)
         user = verify_id_token(result.id_token)
         assert user is not None, "Unable to refresh id token."
         return VerifyOrRefreshIdTokenResult(
@@ -164,13 +190,14 @@ class RefreshIdTokenResult:
     refresh_token: str
 
 
-def _refresh_id_token(
+def refresh_id_token(
     refresh_token: str,
 ) -> RefreshIdTokenResult:
     resp = requests.post(
         f"{config.auth_service_host}/refresh-idtoken",
         json={"refreshToken": refresh_token},
     )
+    assert resp.status_code == 200, "Unable to refresh id token. " + resp.text
     data = resp.json()
     return RefreshIdTokenResult(
         id_token=data["idToken"], refresh_token=data["refreshToken"]

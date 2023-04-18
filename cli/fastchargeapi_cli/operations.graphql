@@ -102,7 +102,7 @@ query DeleteUserAppTpken($user: ID!, $app: ID!) {
     }
 }
 
-query GetUserAccountBalance($user: ID!) {
+query GetUserAccountBalanceForWithdrawl($user: ID!) {
     user(pk: $user) {
         balance
         stripeConnectAccountId
@@ -305,5 +305,30 @@ query GetUserAccountInfo($user: ID!) {
         balance
         author
         email
+    }
+}
+
+mutation createUser($email: Email!) {
+    createUser(email: $email) {
+        pk
+        email
+    }
+}
+
+query getFastchargeAPIIdToken($user: ID!) {
+    user(pk: $user) {
+        email
+        getFastchargeAPIIdToken
+    }
+}
+
+mutation addMoneyToUserAccount($user: ID!, $amount: NonNegativeDecimal!) {
+    createAccountActivity(user: $user, amount: $amount, type: debit, reason: topup, description: "Topup") {
+        createdAt
+        user {
+            updateBalance {
+                balance
+            }
+        }
     }
 }
