@@ -27,21 +27,13 @@ export async function createAccountActivitiesForTransfer(
     accountActivity: AccountActivity;
     feeActivity: AccountActivity;
 }> {
-    let userBalance = new Decimal(
-        await getUserBalance(context, transfer.receiver)
-    );
+    let userBalance = new Decimal(await getUserBalance(context, transfer.receiver));
     if (userBalance.lessThan(transfer.withdrawAmount)) {
-        throw new BadInput(
-            "User's account has insufficient funds to complete the transfer."
-        );
+        throw new BadInput("User's account has insufficient funds to complete the transfer.");
     }
-    let transferFee = new Decimal(transfer.withdrawAmount).sub(
-        transfer.receiveAmount
-    );
+    let transferFee = new Decimal(transfer.withdrawAmount).sub(transfer.receiveAmount);
     if (transferFee.lessThan(0)) {
-        throw new BadInput(
-            "The receive amount cannot be greater than the withdraw amount."
-        );
+        throw new BadInput("The receive amount cannot be greater than the withdraw amount.");
     }
     let settleAt = Date.now();
     let activity = await context.batched.AccountActivity.create({
@@ -72,18 +64,12 @@ export async function createAccountActivitiesForTransfer(
 
     // refresh the account activities
     context.batched.AccountActivity.clearCache();
-    activity = await context.batched.AccountActivity.get(
-        AccountActivityPK.extract(activity),
-        {
-            consistent: true,
-        }
-    );
-    feeActivity = await context.batched.AccountActivity.get(
-        AccountActivityPK.extract(activity),
-        {
-            consistent: true,
-        }
-    );
+    activity = await context.batched.AccountActivity.get(AccountActivityPK.extract(activity), {
+        consistent: true,
+    });
+    feeActivity = await context.batched.AccountActivity.get(AccountActivityPK.extract(activity), {
+        consistent: true,
+    });
     return {
         accountActivity: activity,
         feeActivity: feeActivity,

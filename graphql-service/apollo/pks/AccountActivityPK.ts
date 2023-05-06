@@ -5,9 +5,7 @@ export type AccountActivityPKContent = {
 
 export class AccountActivityPK {
     static parse(pk: string): AccountActivityPKContent {
-        let [user, createdAt] = JSON.parse(
-            Buffer.from(pk.replace(/^aact_/, ""), "base64url").toString("utf8")
-        );
+        let [user, createdAt] = JSON.parse(Buffer.from(pk.replace(/^aact_/, ""), "base64url").toString("utf8"));
         return {
             user,
             createdAt,
@@ -15,12 +13,7 @@ export class AccountActivityPK {
     }
 
     static stringify(item: AccountActivityPKContent): string {
-        return (
-            "aact_" +
-            Buffer.from(JSON.stringify([item.user, item.createdAt])).toString(
-                "base64url"
-            )
-        );
+        return "aact_" + Buffer.from(JSON.stringify([item.user, item.createdAt])).toString("base64url");
     }
 
     static extract(item: AccountActivityPKContent): AccountActivityPKContent {

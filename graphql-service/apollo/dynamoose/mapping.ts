@@ -1,10 +1,9 @@
-
 declare module "dynamoose/dist/Model" {
     interface Model<T> {
         easy: {
-            easySetMethod<R>(name: string, handle: (...args: unknown[]) => R | Promise<R>): void
-            easySetItemMethod<R>(name: string, handle: (item: T, ...args: unknown[]) => R | Promise<R>): void
-        }
+            easySetMethod<R>(name: string, handle: (...args: unknown[]) => R | Promise<R>): void;
+            easySetItemMethod<R>(name: string, handle: (item: T, ...args: unknown[]) => R | Promise<R>): void;
+        };
     }
 }
 

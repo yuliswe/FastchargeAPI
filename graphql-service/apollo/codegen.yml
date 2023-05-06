@@ -49,7 +49,7 @@ generates:
       - "typescript"
       - "typescript-operations"
     documents:
-      - "./cron-jobs/*.ts"  
+      - "./cron-jobs/*.ts"
     config:
       scalars:
         Email: string

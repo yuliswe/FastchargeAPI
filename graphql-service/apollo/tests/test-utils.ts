@@ -1,6 +1,6 @@
 import { RequestContext } from "../RequestContext";
 import { GQLUserIndex } from "../__generated__/resolvers-types";
-import { App, Pricing, FreeQuotaUsage } from "../dynamoose/models";
+import { App, FreeQuotaUsage, Pricing } from "../dynamoose/models";
 import { createUserWithEmail } from "../functions/user";
 import { AppPK } from "../pks/AppPK";
 import { stripePaymentAcceptResolvers } from "../resolvers/payment";

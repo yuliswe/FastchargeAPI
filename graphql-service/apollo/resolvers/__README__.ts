@@ -1,4 +1,3 @@
-
 /**
  * Remember to add your resolver to the resolvers object in server.ts.
  *

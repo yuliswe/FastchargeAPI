@@ -1,11 +1,12 @@
 import { describe, expect, test } from "@jest/globals";
-import { LambdaEvent, lambdaHandler } from "../lambdaHandler";
 import { v4 as uuidv4 } from "uuid";
-import { User, App } from "../dynamoose/models";
+import { RequestContext, createDefaultContextBatched } from "../RequestContext";
+import { App, User } from "../dynamoose/models";
+import { lambdaHandler } from "../lambdaHandler";
+import { LambdaEvent } from "../lambdaHandlerUtils";
+import { AppPK } from "../pks/AppPK";
 import { UserPK } from "../pks/UserPK";
 import { getOrCreateTestUser } from "./test-utils";
-import { RequestContext, createDefaultContextBatched } from "../RequestContext";
-import { AppPK } from "../pks/AppPK";
 
 let context: RequestContext = {
     batched: createDefaultContextBatched(),

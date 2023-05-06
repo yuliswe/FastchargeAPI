@@ -1,17 +1,17 @@
 {
-  "name": "dynamodb-migration-tool",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "symlink": "mkdir -p .symlinks && ln -sFh \"$(realpath ${PWD}/../apollo)\" .symlinks/graphql-service",
-    "build": "esbuild ./src/index.ts --bundle --outfile=./dist/index.js --platform=node",
-    "cli": "npm run build && node ./dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "commander": "^10.0.0"
-  }
+    "name": "dynamodb-migration-tool",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "symlink": "mkdir -p .symlinks && ln -sFh \"$(realpath ${PWD}/../apollo)\" .symlinks/graphql-service",
+        "build": "esbuild ./src/index.ts --bundle --outfile=./dist/index.js --platform=node",
+        "cli": "npm run build && node ./dist/index.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "commander": "^10.0.0"
+    }
 }
