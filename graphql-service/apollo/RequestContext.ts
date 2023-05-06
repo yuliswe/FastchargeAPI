@@ -54,3 +54,5 @@ export function createDefaultContextBatched() {
         FreeQuotaUsage: new Batched(FreeQuotaUsageModel),
     };
 }
+
+export type DefaultContextBatched = ReturnType<typeof createDefaultContextBatched>;

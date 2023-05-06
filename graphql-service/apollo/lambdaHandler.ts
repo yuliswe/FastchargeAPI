@@ -1,23 +1,13 @@
 import { HeaderMap } from "@apollo/server";
 import { startServerAndCreateLambdaHandler } from "@as-integrations/aws-lambda";
 import { RequestHandler, createRequestHandler } from "@as-integrations/aws-lambda/dist/request-handlers/_create";
-import {
-    APIGatewayEventRequestContextV2,
-    APIGatewayProxyEvent,
-    APIGatewayProxyEventBase,
-    APIGatewayProxyResult,
-} from "aws-lambda";
+import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { Chalk } from "chalk";
-import { RequestContext, RequestService, createDefaultContextBatched } from "./RequestContext";
-import { GQLUserIndex } from "./__generated__/resolvers-types";
-import { User } from "./dynamoose/models";
-import { BadInput } from "./errors";
-import { createUserWithEmail } from "./functions/user";
-import { UserPK } from "./pks/UserPK";
+import { RequestContext, createDefaultContextBatched } from "./RequestContext";
+import { getCurrentUser, getIsAdminUser, getIsServiceRequest, normalizeHeaders } from "./lambdaHandlerUtils";
 import { server } from "./server";
+import { LambdaEvent, LambdaResult } from "./lambdaHandlerUtils";
 
-export type LambdaEvent = APIGatewayProxyEventBase<APIGatewayEventRequestContextV2 | undefined>;
-export type LambdaResult = APIGatewayProxyResult;
 const chalk = new Chalk({ level: 3 });
 
 function addCors(event: APIGatewayProxyEvent, result: APIGatewayProxyResult): void {
@@ -32,8 +22,6 @@ function addCors(event: APIGatewayProxyEvent, result: APIGatewayProxyResult): vo
         };
     }
 }
-
-const batched = createDefaultContextBatched();
 
 let handle = startServerAndCreateLambdaHandler<RequestHandler<LambdaEvent, LambdaResult>, RequestContext>(
     server,
@@ -101,78 +89,18 @@ let handle = startServerAndCreateLambdaHandler<RequestHandler<LambdaEvent, Lambd
         }
     ),
     {
-        async context({ event }: { event: APIGatewayProxyEvent }): Promise<RequestContext> {
-            // let userEmail: string | undefined = undefined;
-            // let userPK: string | undefined = undefined;
-            let headers: { [header: string]: string } = {};
-            for (const [key, value] of Object.entries(event.headers ?? {})) {
-                if (value) {
-                    headers[key.toLowerCase()] = value;
-                }
-            }
-            let currentUser: User | undefined = undefined;
-            let domain = event.requestContext.domainName || "";
-            let serviceName: RequestService | undefined = undefined;
-            let isServiceRequest = false;
-            let isAdminUser = event.requestContext.authorizer?.["isAdminUser"] === "true";
-            // This domain is authenticated with AWS IAM. Only internal services
-            // can access it. Therefore we can trust the X-Service-Name header. For
-            // example, when the gateway service sends a graphql request, it
-            // must include the X-Service-Name header.
-            if (domain === "api.iam.graphql.fastchargeapi.com") {
-                serviceName = headers["x-service-name"] as RequestService;
-                let valid: RequestService[] = ["payment", "gateway", "internal"];
-                if (!valid.includes(serviceName)) {
-                    console.error(chalk.red("X-Service-Name header is missing."));
-                    throw new BadInput(
-                        `Invalid X-Service-Name header: ${serviceName}. Accepted values: ${valid.join(", ")}`
-                    );
-                }
-                isServiceRequest = true;
-                // When the request is from a service to IAM, there's no user.
-            } else if (process.env.TRUST_X_IS_SERVICE_REQUEST_HEADER === "1") {
-                console.warn(
-                    chalk.yellow("TRUST_X_IS_SERVICE_REQUEST_HEADER is enabled. Do not use this in production!")
-                );
-                if (headers["x-is-service-request"] === "true") {
-                    isServiceRequest = true;
-                }
-            }
-            if (process.env.TRUST_X_USER_PK_HEADER == "1" || process.env.TRUST_X_USER_EMAIL_HEADER == "1") {
-                if (process.env.TRUST_X_USER_PK_HEADER === "1") {
-                    const userPK = headers["x-user-pk"] || "";
-                    console.warn(chalk.yellow("TRUST_X_USER_PK_HEADER is enabled. Do not use this in production!"));
-                    if (userPK) {
-                        currentUser = (await batched.User.getOrNull(UserPK.parse(userPK))) ?? undefined;
-                    } else {
-                        console.warn(chalk.yellow("X-User-PK header is missing."));
-                    }
-                }
-                if (process.env.TRUST_X_USER_EMAIL_HEADER === "1") {
-                    const userEmail = headers["x-user-email"] || "";
-                    console.warn(chalk.yellow("TRUST_X_USER_EMAIL_HEADER is enabled. Do not use this in production!"));
-                    if (userEmail) {
-                        currentUser = await getOrCreateUserFromEmail(userEmail);
-                    } else {
-                        console.warn(chalk.yellow("X-User-Email header is missing."));
-                    }
-                }
-            }
-            if (event.requestContext.authorizer?.["userEmail"]) {
-                let userEmail = event.requestContext.authorizer?.["userEmail"];
-                currentUser = await getOrCreateUserFromEmail(userEmail);
-            } else if (event.requestContext.authorizer?.["userPK"]) {
-                let userPK = event.requestContext.authorizer?.["userPK"];
-                currentUser = await batched.User.get(UserPK.parse(userPK));
-            }
-            if (currentUser?.email == "fastchargeapi@gmail.com") {
-                isAdminUser = true;
-            }
+        async context({ event }: { event: LambdaEvent }): Promise<RequestContext> {
+            const batched = createDefaultContextBatched();
+            const headers: { [header: string]: string } = normalizeHeaders(event.headers ?? {});
+            const domain = event.requestContext.domainName || "";
+            const currentUser = await getCurrentUser(batched, headers, event.requestContext.authorizer);
+            const isAdminUser = getIsAdminUser(currentUser, event.requestContext.authorizer);
+            const { serviceName, isServiceRequest } = getIsServiceRequest(domain, headers);
             return Promise.resolve({
                 currentUser,
                 service: serviceName,
                 isServiceRequest,
-                batched: createDefaultContextBatched(),
+                batched,
                 isSQSMessage: false,
                 isAnonymousUser: currentUser == undefined,
                 isAdminUser,
@@ -180,21 +108,6 @@ let handle = startServerAndCreateLambdaHandler<RequestHandler<LambdaEvent, Lambd
         },
     }
 );
-
-async function getOrCreateUserFromEmail(email: string) {
-    let currentUser = await batched.User.getOrNull(
-        {
-            email,
-        },
-        {
-            using: GQLUserIndex.IndexByEmailOnlyPk,
-        }
-    );
-    if (currentUser === null) {
-        currentUser = await createUserWithEmail(batched, email);
-    }
-    return currentUser;
-}
 
 export const lambdaHandler = async (event: LambdaEvent, context: never, callback: never): Promise<LambdaResult> => {
     let response: LambdaResult;
