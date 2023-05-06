@@ -130,7 +130,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                 <Typography variant="body1" sx={{ fontWeight: 700 }}>
                     Run the following command, replacing the value with your own.
                 </Typography>
-                <TerminalInput>{`fastcharge app update "${app}" \\\n    --make-public/--make-private`}</TerminalInput>
+                <TerminalInput>{`fastcharge app update "${app}" \\\n    --visibility=public`}</TerminalInput>
             </Terminal>
         );
     }
