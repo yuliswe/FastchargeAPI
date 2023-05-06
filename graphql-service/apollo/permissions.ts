@@ -78,6 +78,15 @@ export const Can = {
     async createApp({ owner }: { owner: string }, context: RequestContext): Promise<boolean> {
         return await Promise.resolve(true);
     },
+    async viewAppHiddenPricingPlans(parent: App, context: RequestContext): Promise<boolean> {
+        if (context.isServiceRequest || context.isAdminUser) {
+            return true;
+        }
+        if (!context.currentUser) {
+            return false;
+        }
+        return await Promise.resolve(parent.owner === UserPK.stringify(context.currentUser));
+    },
     async updateApp(
         parent: App,
         { title, description, homepage, repository }: GQLAppUpdateAppArgs,

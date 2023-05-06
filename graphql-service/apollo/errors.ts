@@ -1,7 +1,7 @@
-import DynamooseError from "dynamoose-utils/dist/Error";
-import { GraphQLFormattedError } from "graphql";
 import { unwrapResolverError } from "@apollo/server/errors";
 import { Chalk } from "chalk";
+import DynamooseError from "dynamoose-utils/dist/Error";
+import { GraphQLFormattedError } from "graphql";
 
 import { GraphQLError } from "graphql";
 
@@ -30,9 +30,9 @@ export class TooManyResources extends GraphQLError {
 }
 
 export class BadInput extends GraphQLError {
-    constructor(public msg: string) {
+    constructor(public msg: string, public detailCode?: string) {
         super(msg, {
-            extensions: { code: "BAD_USER_INPUT" },
+            extensions: { code: "BAD_USER_INPUT", detailCode },
         });
     }
 }

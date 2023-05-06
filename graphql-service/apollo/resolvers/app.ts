@@ -1,7 +1,4 @@
 import { GraphQLResolveInfo } from "graphql";
-import { App } from "../dynamoose/models";
-import { BadInput, Denied, TooManyResources } from "../errors";
-import { Can } from "../permissions";
 import { RequestContext } from "../RequestContext";
 import {
     GQLAppResolvers,
@@ -11,9 +8,12 @@ import {
     GQLQueryAppFullTextSearchArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
+import { App } from "../dynamoose/models";
+import { BadInput, Denied, TooManyResources } from "../errors";
 import { isValidAppName } from "../functions/app";
-import { UserPK } from "../pks/UserPK";
+import { Can } from "../permissions";
 import { AppPK } from "../pks/AppPK";
+import { UserPK } from "../pks/UserPK";
 
 export const appResolvers: GQLResolvers & {
     App: GQLAppResolvers;
@@ -37,13 +37,11 @@ export const appResolvers: GQLResolvers & {
             return user;
         },
         async pricingPlans(parent: App, args: {}, context: RequestContext) {
-            // If the current user is the app owner, then they can see all pricing plans.
-            if (context.currentUser && parent.owner === UserPK.stringify(context.currentUser)) {
+            if (await Can.viewAppHiddenPricingPlans(parent, context)) {
                 return await context.batched.Pricing.many({
                     app: parent.name,
                 });
             } else {
-                // Otherwise, only visible pricing plans are returned.
                 return await context.batched.Pricing.many({
                     app: parent.name,
                     visible: true,
@@ -137,7 +135,13 @@ export const appResolvers: GQLResolvers & {
                 throw new Denied();
             }
             if (!isValidAppName(name)) {
-                throw new BadInput(`Invalid app name: ${name}. Must match: /^[a-z\\d][a-z\\d\\-]*[a-z\\d]$/.`);
+                if (name.length > 63) {
+                    throw new BadInput(`Invalid app name: ${name}. At most 63 characters.`, "APP_NAME");
+                }
+                throw new BadInput(
+                    `Invalid app name: ${name}. Must match: /^[a-z\\d][a-z\\d\\-]*[a-z\\d]$/.`,
+                    "APP_NAME"
+                );
             }
             // Each user can have at most 10 apps
             let count = await context.batched.App.count({ owner });
