@@ -79,8 +79,8 @@ type Mutation {
     createPricing(
         app: String!
         name: String!
-        minMonthlyCharge: String!
-        chargePerRequest: String!
+        minMonthlyCharge: NonNegativeDecimal!
+        chargePerRequest: NonNegativeDecimal!
         freeQuota: Int!
         visible: Boolean = false
         callToAction: String
