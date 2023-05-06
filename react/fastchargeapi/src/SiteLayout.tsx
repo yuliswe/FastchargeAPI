@@ -1,11 +1,4 @@
-import {
-    Container,
-    Grid,
-    Link,
-    Paper,
-    Stack,
-    Typography,
-} from "@mui/material";
+import { Container, Grid, Link, Paper, Stack, Typography } from "@mui/material";
 import React from "react";
 import { AppBar } from "./stateless-components/AppBar";
 import { AppContext, ReactAppContextType } from "./AppContext";
@@ -37,29 +30,18 @@ export class SiteLayout extends React.PureComponent<Props> {
                                             alignItems: "center",
                                         }}
                                     >
-                                        <CopyrightIcon
-                                            sx={{ fontSize: 16, mr: 0.5 }}
-                                        />
+                                        <CopyrightIcon sx={{ fontSize: 16, mr: 0.5 }} />
                                         FastchargeAPI
                                     </Link>
                                 </Stack>
                             </Grid>
                             <Grid item xs={3}>
                                 <Stack>
-                                    <Link
-                                        underline="hover"
-                                        href="/terms-of-service#pricing"
-                                    >
+                                    <Link underline="hover" href="/terms-of-service#pricing">
                                         Pricing
                                     </Link>
-                                    <Link
-                                        underline="hover"
-                                        href="https://doc.fastchargeapi.com"
-                                        target="_blank"
-                                    >
-                                        <Typography variant="body1">
-                                            Documentation
-                                        </Typography>
+                                    <Link underline="hover" href="https://doc.fastchargeapi.com" target="_blank">
+                                        <Typography variant="body1">Documentation</Typography>
                                     </Link>
                                 </Stack>
                             </Grid>
@@ -74,27 +56,17 @@ export class SiteLayout extends React.PureComponent<Props> {
                                     >
                                         Report an Issue
                                     </Link>
-                                    <Link
-                                        href="https://discord.gg/sfN267KmmW"
-                                        underline="hover"
-                                        target="_blank"
-                                    >
+                                    <Link href="https://discord.gg/sfN267KmmW" underline="hover" target="_blank">
                                         Get help on Discord
                                     </Link>
                                 </Stack>
                             </Grid>
                             <Grid item xs={3}>
                                 <Stack>
-                                    <Link
-                                        underline="hover"
-                                        href="/terms-of-service#privacy"
-                                    >
+                                    <Link underline="hover" href="/terms-of-service#privacy">
                                         Privacy
                                     </Link>
-                                    <Link
-                                        underline="hover"
-                                        href="/terms-of-service#tos"
-                                    >
+                                    <Link underline="hover" href="/terms-of-service#tos">
                                         Terms of Service
                                     </Link>
                                 </Stack>

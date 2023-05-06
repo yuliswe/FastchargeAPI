@@ -3,14 +3,7 @@ import { AccountAppState } from "../states/AccountAppState";
 import { RootAppState } from "../states/RootAppState";
 import { connect } from "react-redux";
 import { SiteLayout } from "../SiteLayout";
-import {
-    Container,
-    Grid,
-    Link,
-    List,
-    ListItem,
-    Typography,
-} from "@mui/material";
+import { Container, Grid, Link, List, ListItem, Typography } from "@mui/material";
 import { Outlet } from "react-router-dom";
 import { AppContext, ReactAppContextType } from "../AppContext";
 type Props = {
@@ -59,9 +52,7 @@ class _AccountPage extends React.Component<Props> {
                                             py: 0.8,
                                             borderLeftWidth: 3,
                                             borderLeftStyle: "solid",
-                                            borderLeftColor: link.isActive
-                                                ? "primary.main"
-                                                : "transparent",
+                                            borderLeftColor: link.isActive ? "primary.main" : "transparent",
                                         }}
                                         alignItems="flex-start"
                                     >
@@ -91,8 +82,6 @@ class _AccountPage extends React.Component<Props> {
     }
 }
 
-export const AccountPage = connect<Props, {}, {}, RootAppState>(
-    (rootAppState: RootAppState) => ({
-        appState: rootAppState.account,
-    })
-)(_AccountPage);
+export const AccountPage = connect<Props, {}, {}, RootAppState>((rootAppState: RootAppState) => ({
+    appState: rootAppState.account,
+}))(_AccountPage);

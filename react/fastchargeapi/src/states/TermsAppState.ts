@@ -1,4 +1,3 @@
-
 import { AppState, PartialProps } from "react-appevent-redux";
 
 export class TermsAppState extends AppState {

@@ -1,9 +1,4 @@
-import {
-    Grid,
-    List,
-    Pagination,
-    Typography,
-} from "@mui/material";
+import { Grid, List, Pagination, Typography } from "@mui/material";
 import React from "react";
 import { AppContext, ReactAppContextType } from "../AppContext";
 
@@ -29,18 +24,12 @@ export class PaginatedList<T> extends React.Component<PaginatedListProps<T>> {
     }
 
     currentPageSourceItems() {
-        let start =
-            (this.currentPageNum() - 1) * this.props.itemsPerPage;
-        return this.props.sourceItems.slice(
-            start,
-            start + this.props.itemsPerPage
-        );
+        let start = (this.currentPageNum() - 1) * this.props.itemsPerPage;
+        return this.props.sourceItems.slice(start, start + this.props.itemsPerPage);
     }
 
     totalNumOfPages() {
-        return Math.ceil(
-            this.props.sourceItems.length / this.props.itemsPerPage
-        );
+        return Math.ceil(this.props.sourceItems.length / this.props.itemsPerPage);
     }
 
     onPageChange(page: number) {
@@ -53,11 +42,7 @@ export class PaginatedList<T> extends React.Component<PaginatedListProps<T>> {
         return (
             <Grid container rowGap={5}>
                 <Grid item xs={12}>
-                    <List sx={{ mt: 0 }}>
-                        {this.props.listItemGenerator(
-                            this.currentPageSourceItems()
-                        )}
-                    </List>
+                    <List sx={{ mt: 0 }}>{this.props.listItemGenerator(this.currentPageSourceItems())}</List>
                     {this.props.sourceItems.length === 0 && (
                         <Typography variant="body1" m={2} sx={{ opacity: 0.8 }}>
                             No results found.

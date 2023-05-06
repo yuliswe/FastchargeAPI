@@ -1,10 +1,5 @@
 import { AppState, PartialProps } from "react-appevent-redux";
-import {
-    AppInfo,
-    AvailablePlan,
-    SubscriptionDetail,
-    UsageSummary,
-} from "../events/SubscriptionDetailEvent";
+import { AppInfo, AvailablePlan, SubscriptionDetail, UsageSummary } from "../events/SubscriptionDetailEvent";
 
 export class SubscriptionDetailAppState extends AppState {
     loadingSubscriptionDetail = true;

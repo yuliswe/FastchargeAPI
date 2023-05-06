@@ -1,9 +1,4 @@
-import {
-    Card,
-    CardContent,
-    Typography,
-    CardActions,
-} from "@mui/material";
+import { Card, CardContent, Typography, CardActions } from "@mui/material";
 import React from "react";
 
 export type PricingCardProps = {
@@ -26,12 +21,8 @@ export class PricingCard extends React.PureComponent<PricingCardProps> {
                     <Typography variant="caption" mb={2} component="div">
                         {this.props.callToAction}
                     </Typography>
-                    <Typography variant="body1">
-                        ${this.props.chargePerRequest} per request
-                    </Typography>
-                    <Typography>
-                        + ${this.props.minMonthlyCharge} per active month
-                    </Typography>
+                    <Typography variant="body1">${this.props.chargePerRequest} per request</Typography>
+                    <Typography>+ ${this.props.minMonthlyCharge} per active month</Typography>
                     <Typography variant="body1">
                         {this.props.freeQuota > 0
                             ? `First ${this.props.freeQuota} requests are free.`
