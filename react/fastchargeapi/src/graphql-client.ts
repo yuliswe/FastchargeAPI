@@ -1,10 +1,10 @@
+import { ApolloClient, InMemoryCache, createHttpLink, gql } from "@apollo/client";
+import { setContext } from "@apollo/client/link/context";
 import { HttpLink } from "@apollo/client/link/http/HttpLink";
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
-import { v4 as uuidv4 } from "uuid";
-import { ApolloClient, createHttpLink, InMemoryCache, gql } from "@apollo/client";
-import { setContext } from "@apollo/client/link/context";
-import { AppContext } from "./AppContext";
 import * as jose from "jose";
+import { v4 as uuidv4 } from "uuid";
+import { AppContext } from "./AppContext";
 
 // debug
 const DEBUG_USE_LOCAL_GRAPHQL = false;
@@ -176,7 +176,6 @@ export async function setRemoteSecret(
     }
 ) {
     let signedValue = await encryptAndSign(value, { jweSecret, jwtSecret });
-    console.log("encrypted & signed:", signedValue);
     const { client } = await getGQLClient(context);
     const response = client.mutate({
         mutation: gql`

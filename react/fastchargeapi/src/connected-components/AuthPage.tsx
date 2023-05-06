@@ -1,23 +1,23 @@
-import React from "react";
-import { connect } from "react-redux";
-import { RootAppState } from "../states/RootAppState";
-import { AppContext, ReactAppContextType } from "../AppContext";
-import { encryptAndSign } from "../graphql-client";
 import { Button, Container, Fade, Grid, Stack, Typography } from "@mui/material";
+import { FirebaseError } from "firebase/app";
 import {
     AuthProvider,
+    User as FirebaseUser,
     GithubAuthProvider,
     GoogleAuthProvider,
-    getAuth,
-    User as FirebaseUser,
-    signInWithPopup,
-    fetchSignInMethodsForEmail,
     OAuthCredential,
+    fetchSignInMethodsForEmail,
+    getAuth,
     linkWithCredential,
+    signInWithPopup,
 } from "firebase/auth";
-import { ReactComponent as GoogleIcon } from "../google.svg";
+import React from "react";
+import { connect } from "react-redux";
+import { AppContext, ReactAppContextType } from "../AppContext";
 import { ReactComponent as GithubIcon } from "../github.svg";
-import { FirebaseError } from "firebase/app";
+import { ReactComponent as GoogleIcon } from "../google.svg";
+import { setRemoteSecret } from "../graphql-client";
+import { RootAppState } from "../states/RootAppState";
 
 type _State = {
     errorMessage: string;
@@ -105,36 +105,26 @@ class _AuthPage extends React.Component<_Props, _State> {
                 break;
             }
             case "putsecret": {
-                let jwtSecret = this.getJWTSecret();
-                let jweSecret = this.getJWESecret();
                 let key = this.getBucketKey();
                 if (!key) {
                     throw new Error("No bucket key provided");
                 }
                 let idToken = await user.getIdToken(/* forceRefresh */ true);
-                let signed = await encryptAndSign(
+                await setRemoteSecret(
+                    this._context,
                     {
-                        idToken,
-                        refreshToken: user.refreshToken,
+                        key: key,
+                        value: {
+                            idToken,
+                            refreshToken: user.refreshToken,
+                        },
+                        expireAt: Date.now() + 1000 * 60 * 60 * 24, // 1 day,
                     },
                     {
-                        jwtSecret,
-                        jweSecret,
+                        jweSecret: this.getJWESecret(),
+                        jwtSecret: this.getJWTSecret(),
                     }
                 );
-
-                let bucket = "cli-auth-bucket";
-                let endpoint = `https://${bucket}.s3.amazonaws.com/${key}`;
-                let response = await fetch(endpoint, {
-                    mode: "cors",
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "text/plain",
-                        "x-amz-acl": "public-read-write",
-                        "x-amz-storage-class": "STANDARD",
-                    },
-                    body: signed,
-                });
                 break;
             }
         }
