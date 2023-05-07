@@ -356,22 +356,32 @@ func getRoute(graphqlClient *graphql.Client, method string, app string, path str
 		processFn := func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 			destination = endpoint.Destination
 		}
-		switch endpoint.Method {
-		case GQL.HTTPMethodGet:
-			appRouter.GET(endpoint.Path, processFn)
-		case GQL.HTTPMethodPost:
-			appRouter.POST(endpoint.Path, processFn)
-		case GQL.HTTPMethodPut:
-			appRouter.PUT(endpoint.Path, processFn)
-		case GQL.HTTPMethodDelete:
-			appRouter.DELETE(endpoint.Path, processFn)
-		case GQL.HTTPMethodPatch:
-			appRouter.PATCH(endpoint.Path, processFn)
-		case GQL.HTTPMethodHead:
-			appRouter.HEAD(endpoint.Path, processFn)
-		case GQL.HTTPMethodOptions:
-			appRouter.OPTIONS(endpoint.Path, processFn)
-		}
+		func() {
+			defer func() {
+				if e := recover(); e != nil {
+					// Setting the router could panic if there's a routing
+					// conflict, for example.
+					fmt.Println(color.Red, "Error setting routes for", app, endpoint.Path, color.Reset)
+					fmt.Println(color.Red, "Reason:", e, color.Reset)
+				}
+			}()
+			switch endpoint.Method {
+			case GQL.HTTPMethodGet:
+				appRouter.GET(endpoint.Path, processFn)
+			case GQL.HTTPMethodPost:
+				appRouter.POST(endpoint.Path, processFn)
+			case GQL.HTTPMethodPut:
+				appRouter.PUT(endpoint.Path, processFn)
+			case GQL.HTTPMethodDelete:
+				appRouter.DELETE(endpoint.Path, processFn)
+			case GQL.HTTPMethodPatch:
+				appRouter.PATCH(endpoint.Path, processFn)
+			case GQL.HTTPMethodHead:
+				appRouter.HEAD(endpoint.Path, processFn)
+			case GQL.HTTPMethodOptions:
+				appRouter.OPTIONS(endpoint.Path, processFn)
+			}
+		}() // Register the route with the handlers (processFn)
 	}
 	getRouterCache.Add(app, appRouter)
 	processFn, params, _ := appRouter.Lookup(method, path)
