@@ -7,13 +7,15 @@
     "test": "tests"
   },
   "scripts": {
-    "symlink": "mkdir -p .symlinks && ln -sFh \"$(realpath ${PWD}/../graphql-service/apollo)\" .symlinks/graphql-service",
+    "symlink:linux": "mkdir -p .symlinks && ln -sFfT \"$(realpath ${PWD}/../graphql-service/apollo)\" .symlinks/graphql-service",
+    "symlink:mac": "mkdir -p .symlinks && ln -sFh \"$(realpath ${PWD}/../graphql-service/apollo)\" .symlinks/graphql-service",
+    "symlink": "(npm run symlink:mac) || (npm run symlink:linux)",
     "gen": "graphql-codegen --config codegen.yml && prettier -w ./__generated__",
     "build-go": "cd app && go build && rm app",
     "build-node": "npm run symlink && npm run gen && tsc --noEmit",
     "build-sam": "sam build --cached --parallel",
     "build": "npm run build-go && npm run build-node && npm run build-sam",
-    "deploy": "npm run build && sam deploy",
+    "deploy": "npm run build && sam deploy --no-fail-on-empty-changeset",
     "logs": "sam logs --stack-name auth-service --tail",
     "start": "(npm run build) && (sam local start-api -p 7000 --warm-containers=EAGER)",
     "watch": "nodemon -e go,graphql,yaml.json,ts -i generated__graphql.go -i __generated__ --signal SIGINT -x 'npm run start || exit 1'",

@@ -5,13 +5,13 @@
     "main": "index.js",
     "scripts": {
         "test": "cd apollo && npm run test",
-        "build": "npm run typecheck && sam build",
+        "build": "sam build",
         "start": "(npm run build --parallel --cached) && (sam local start-api -p 4000 --env-vars ./devenv.json)",
         "watch": "npx nodemon -w ./apollo -e yml,ts,graphql,json -i ./apollo/__generated__ --signal SIGINT -x \"(npm run start) || exit 1\"",
         "logs": "sam logs --stack-name graphql-service --tail",
-        "deploy": "npm run build && sam deploy",
+        "deploy": "npm run build && sam deploy --no-fail-on-empty-changeset",
         "typecheck": "(cd apollo && npm run typecheck) && (cd ../payment-service && npm run typecheck) && (cd ../auth-service && npm run typecheck) && (cd ../cli && npm run typecheck) && (cd ../gateway-service && npm run typecheck) && echo All good!",
-        "crosscheck": "(cd apollo && npm run test) && (cd ../payment-service && npm run test) && (cd ../auth-service && npm run test) && (cd ../cli && npm run test) && (cd ../gateway-service && npm run test) && echo All good!",
+        "crosscheck": "(npm run typecheck) && (cd apollo && npm run test) && (cd ../payment-service && npm run test) && (cd ../auth-service && npm run test) && (cd ../cli && npm run test) && (cd ../gateway-service && npm run test) && echo All good!",
         "fix": "cd apollo && eslint --fix ./"
     },
     "author": "",

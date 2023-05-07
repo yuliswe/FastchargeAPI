@@ -1,10 +1,8 @@
-name: Build and test services
+name: Deploy to AWS skipping tests
 on:
   push:
-    branches-ignore:
-      - "releases/**"
-      - "deploy/no-test/**"
-      - "deploy/amplify"
+    branches:
+      - "deploy/no-test/all"
 
 permissions:
   id-token: write
@@ -18,66 +16,65 @@ env:
   NODE_OPTIONS: "--max_old_space_size=6144"
 
 jobs:
-  test-graphql-service:
+  deploy-auth-service:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/setup-push
         with:
           AWS_GITHUBACTIONROLE_ARN: ${{ secrets.AWS_GITHUBACTIONROLE_ARN }}
-      - name: Build
+      - name: Build dependency
         run: |
           (cd graphql-service/apollo && npm ci && npm run prebuild)
-      - name: Test
+          (cd auth-service && npm ci)
+      - name: Deploy
         run: |
-          cd graphql-service/apollo
-          npm run test
+          cd auth-service
+          npm run deploy
 
-  test-gateway-service:
+  deploy-graphql-service:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/setup-push
         with:
           AWS_GITHUBACTIONROLE_ARN: ${{ secrets.AWS_GITHUBACTIONROLE_ARN }}
-      - name: Build
+      - name: Build dependency
         run: |
           (cd graphql-service/apollo && npm ci && npm run prebuild)
-          (cd gateway-service && npm ci && npm run build:x86)
-      - name: Test
+      - name: Deploy
+        run: |
+          cd graphql-service
+          npm run deploy
+
+  deploy-gateway-service:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/setup-push
+        with:
+          AWS_GITHUBACTIONROLE_ARN: ${{ secrets.AWS_GITHUBACTIONROLE_ARN }}
+      - name: Build dependency
+        run: |
+          (cd graphql-service/apollo && npm ci && npm run prebuild)
+          (cd gateway-service && npm ci)
+      - name: Deploy
         run: |
           cd gateway-service
-          npm run test
+          npm run deploy
 
-  test-payment-service:
+  deploy-payment-service:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/setup-push
         with:
           AWS_GITHUBACTIONROLE_ARN: ${{ secrets.AWS_GITHUBACTIONROLE_ARN }}
-      - name: Build
+      - name: Build dependency
         run: |
           (cd graphql-service/apollo && npm ci && npm run prebuild)
-          (cd payment-service && npm ci && npm run prebuild)
-      - name: Test
+          (cd payment-service && npm ci)
+      - name: Deploy
         run: |
           cd payment-service
-          npm run test
-
-  test-cli:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: ./.github/setup-push
-        with:
-          AWS_GITHUBACTIONROLE_ARN: ${{ secrets.AWS_GITHUBACTIONROLE_ARN }}
-      - name: Build
-        run: |
-          poetry install
-          poetry run npm run build
-        working-directory: cli
-      - name: Test
-        run: |
-          poetry run npm run test
-        working-directory: cli
+          npm run deploy

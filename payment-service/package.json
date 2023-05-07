@@ -8,7 +8,7 @@
     "test": "tests"
   },
   "scripts": {
-    "symlink:linux": "mkdir -p .symlinks && ln -sFT \"$(realpath ${PWD}/../graphql-service/apollo)\" .symlinks/graphql-service",
+    "symlink:linux": "mkdir -p .symlinks && ln -sFfT \"$(realpath ${PWD}/../graphql-service/apollo)\" .symlinks/graphql-service",
     "symlink:mac": "mkdir -p .symlinks && ln -sFh \"$(realpath ${PWD}/../graphql-service/apollo)\" .symlinks/graphql-service",
     "symlink": "(npm run symlink:mac) || (npm run symlink:linux)",
     "gen": "graphql-codegen --config codegen.yml && prettier -w ./__generated__",
@@ -16,7 +16,7 @@
     "build:x86": "(npm run prebuild) && (sam build)",
     "build:arm": "(npm run prebuild) && (sam build --parallel)",
     "build": "npm run build:arm",
-    "deploy": "npm run build && sam deploy",
+    "deploy": "npm run build && sam deploy --no-fail-on-empty-changeset",
     "stripe": "stripe listen --forward-to https://api.v2.payment.fastchargeapi.com/accept-stripe-payment -e 'checkout.session.completed,checkout.session.expired,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed' & stripe listen --forward-to https://api.v2.payment.fastchargeapi.com/finish-stripe-onboard -e 'account.updated'",
     "logs": "sam logs --stack-name payment-service --tail",
     "start": "npm run build && sam local start-api -p 3000 --warm-containers lazy",

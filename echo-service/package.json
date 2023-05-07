@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "sam build",
-    "deploy": "npm run build && sam deploy"
+    "deploy": "npm run build && sam deploy --no-fail-on-empty-changeset"
   },
   "devDependencies": {
     "@types/node-fetch": "^2.6.2",

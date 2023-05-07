@@ -4,7 +4,7 @@
   "description": "This is a sample template for gateway-service - Below is a brief explanation of what we have generated for you:",
   "main": "index.js",
   "scripts": {
-    "symlink:linux": "mkdir -p .symlinks && ln -sFT \"$(realpath ${PWD}/../graphql-service/apollo)\" .symlinks/graphql-service",
+    "symlink:linux": "mkdir -p .symlinks && ln -sFfT \"$(realpath ${PWD}/../graphql-service/apollo)\" .symlinks/graphql-service",
     "symlink:mac": "mkdir -p .symlinks && ln -sFh \"$(realpath ${PWD}/../graphql-service/apollo)\" .symlinks/graphql-service",
     "symlink": "(npm run symlink:mac) || (npm run symlink:linux)",
     "gen": "go run github.com/Khan/genqlient",
@@ -18,7 +18,7 @@
     "start": "npm run build && sam local start-api -p 6000 --warm-containers eager --env-vars ./devenv.json",
     "watch": "nodemon -e go,graphql,yaml -i __generated__/ --signal SIGINT -x 'npm run start || exit 1'",
     "logs": "sam logs --stack-name gateway-service --tail",
-    "deploy": "npm run build && sam deploy",
+    "deploy": "npm run build && sam deploy --no-fail-on-empty-changeset",
     "typecheck": "(npm run gen) && (npm run try-build-all)",
     "test": "jest"
   },
