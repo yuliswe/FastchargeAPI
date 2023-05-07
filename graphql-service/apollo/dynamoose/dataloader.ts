@@ -350,7 +350,7 @@ export class Batched<I extends Item> {
     async get(key: Query<I>, options?: BatchOptions): Promise<I> {
         let result = await this.many(key, options);
         if (result.length === 0) {
-            throw new NotFound(this.model.name, JSON.stringify(key));
+            throw new NotFound(this.model.name, key);
         } else if (result.length > 1) {
             throw new Error(`Found more than one ${this.model.name} with key ${JSON.stringify(key)}`);
         } else {

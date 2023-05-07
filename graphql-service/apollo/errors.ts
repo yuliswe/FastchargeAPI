@@ -6,9 +6,9 @@ import { GraphQLFormattedError } from "graphql";
 import { GraphQLError } from "graphql";
 
 export class NotFound extends GraphQLError {
-    constructor(public resource: string, public key: string) {
-        super(`${resource} not found: ${JSON.stringify(key)}`, {
-            extensions: { code: "BAD_USER_INPUT" },
+    constructor(public resource: string, public query: Object) {
+        super(`${resource} not found: ${JSON.stringify(query)}`, {
+            extensions: { code: "BAD_USER_INPUT", resource, query },
         });
     }
 }
