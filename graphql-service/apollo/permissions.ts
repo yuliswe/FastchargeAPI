@@ -172,7 +172,7 @@ export const Can = {
         return false;
     },
     async createSubscription(
-        { app, pricing, subscriber }: GQLMutationCreateSubscriptionArgs,
+        { pricing, subscriber }: GQLMutationCreateSubscriptionArgs,
         context: RequestContext
     ): Promise<boolean> {
         if (context.isServiceRequest || context.isAdminUser) {

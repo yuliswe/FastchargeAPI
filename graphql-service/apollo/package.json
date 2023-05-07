@@ -8,7 +8,7 @@
         "gen": "graphql-codegen --config codegen.yml",
         "prebuild": "npm run gen",
         "build": "(npm run prebuild) && tsc",
-        "start": "(npm run build) && (node --experimental-specifier-resolution=node ./dist/devserver.js)",
+        "start": "(npm run build) && (TRUST_X_USER_PK_HEADER=1 TRUST_X_USER_EMAIL_HEADER=1 TRUST_X_IS_SERVICE_REQUEST_HEADER=1 node --experimental-specifier-resolution=node ./dist/devserver.js) || exit 1",
         "watch": "npx nodemon -e yml,ts,graphql,json -i __generated__/ -d 1 --signal SIGINT -x \"npm run start\"",
         "test": "jest",
         "sam": "cd ../ && make watch",

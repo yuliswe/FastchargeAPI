@@ -68,16 +68,10 @@ type Mutation {
         visibility: AppVisibility = public
     ): App!
 
-    createEndpoint(
-        app: String!
-        path: String!
-        method: HTTPMethod!
-        destination: String!
-        description: String
-    ): Endpoint!
+    createEndpoint(app: ID!, path: String!, method: HTTPMethod!, destination: String!, description: String): Endpoint!
 
     createPricing(
-        app: String!
+        app: ID!
         name: String!
         minMonthlyCharge: NonNegativeDecimal!
         chargePerRequest: NonNegativeDecimal!
@@ -86,7 +80,7 @@ type Mutation {
         callToAction: String
     ): Pricing!
 
-    createSubscription(app: ID!, pricing: ID!, subscriber: ID!): Subscribe!
+    createSubscription(pricing: ID!, subscriber: ID!): Subscribe!
 
     createUsageLog(app: ID!, path: String!, subscriber: ID!, volume: Int! = 1, pricing: ID!): UsageLog!
 

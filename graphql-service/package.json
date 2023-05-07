@@ -11,6 +11,7 @@
         "logs": "sam logs --stack-name graphql-service --tail",
         "deploy": "npm run build && sam deploy",
         "typecheck": "(cd apollo && npm run typecheck) && (cd ../payment-service && npm run typecheck) && (cd ../auth-service && npm run typecheck) && (cd ../cli && npm run typecheck) && (cd ../gateway-service && npm run typecheck) && echo All good!",
+        "crosscheck": "(cd apollo && npm run test) && (cd ../payment-service && npm run test) && (cd ../auth-service && npm run test) && (cd ../cli && npm run test) && (cd ../gateway-service && npm run test) && echo All good!",
         "fix": "cd apollo && eslint --fix ./"
     },
     "author": "",
