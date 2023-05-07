@@ -7,9 +7,10 @@ dist
 build
 *.pyc
 .docker
-.aws-sam
 .pytest_cache
 **/.symlinks/
 **/.aws-sam/
 **/__pycache__/
 **/__generated__/
+.coverage
+cov.xml

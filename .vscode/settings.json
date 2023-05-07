@@ -49,14 +49,23 @@
     "**/src/build/": true,
     "**/Thumbs.db": true
   },
-  "python.analysis.importFormat": "relative",
   "python.formatting.provider": "none",
   "python.analysis.typeCheckingMode": "basic",
   "editor.codeActionsOnSave": {
     "source.organizeImports": true,
+    "source.unusedImports": true,
     "source.fixAll.eslint": true
   },
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter"
   },
+  "python.autoComplete.extraPaths": [],
+  "coverage-gutters.coverageFileNames": [
+    "lcov.info",
+    "cov.xml",
+    "coverage.xml",
+    "jacoco.xml",
+    "coverage.cobertura.xml"
+  ],
+  "coverage-gutters.coverageBaseDir": "*",
 }

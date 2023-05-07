@@ -5,6 +5,16 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: pytest",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "justMyCode": true,
+            "args": [
+                "/Users/yu/lab/FastchargeAPI/cli/tests/fastcharge/login/test_login.py"
+            ]
+        },
+        {
             "type": "aws-sam",
             "request": "direct-invoke",
             "name": "apollo:lambdaHandler.lambdaHandler (nodejs18.x)",
