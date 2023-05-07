@@ -1,6 +1,3 @@
-import { Endpoint, EndpointModel } from "../dynamoose/models";
-import { BadInput, Denied } from "../errors";
-import { Can } from "../permissions";
 import { RequestContext } from "../RequestContext";
 import {
     GQLEndpointResolvers,
@@ -10,6 +7,9 @@ import {
     GQLQueryEndpointArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
+import { Endpoint, EndpointModel } from "../dynamoose/models";
+import { BadInput, Denied } from "../errors";
+import { Can } from "../permissions";
 import { EndpointPK } from "../pks/EndpointPK";
 
 function makeOwnerReadable<T>(
@@ -54,19 +54,6 @@ export const endpointResolvers: GQLResolvers & {
             if (!(await Can.updateEndpoint(parent, { method, path, description, destination }, context))) {
                 throw new Denied();
             }
-            if (path || destination) {
-                if (
-                    !(await checkPathDestinationConsistent(context, {
-                        app: parent.app,
-                        path: path ?? parent.path,
-                        destination: destination ?? parent.destination,
-                    }))
-                ) {
-                    throw new BadInput(
-                        "There is already an endpoint with this path, but a different destination. This is not allowed."
-                    );
-                }
-            }
             return await context.batched.Endpoint.update(parent, {
                 method,
                 path,
@@ -109,11 +96,6 @@ export const endpointResolvers: GQLResolvers & {
             if (!(await Can.createEndpoint({ app, path, method, description, destination }, context))) {
                 throw new Denied();
             }
-            if (!(await checkPathDestinationConsistent(context, { app, path, destination }))) {
-                throw new BadInput(
-                    "There is already an endpoint with this path, but a different destination. This is not allowed."
-                );
-            }
             let endpoint = await context.batched.Endpoint.create({
                 app,
                 path,
@@ -125,18 +107,3 @@ export const endpointResolvers: GQLResolvers & {
         },
     },
 };
-
-async function checkPathDestinationConsistent(
-    context: RequestContext,
-    { app, path, destination }: { app: string; path: string; destination: string }
-) {
-    let endpoints = await context.batched.Endpoint.many({ app, path });
-    if (endpoints.length == 0) {
-        return true;
-    }
-    let endpoint = endpoints[0];
-    if (endpoint.destination !== destination) {
-        return false;
-    }
-    return true;
-}
