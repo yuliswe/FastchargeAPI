@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/TwiN/go-color"
@@ -206,6 +207,9 @@ func getGoogleCert(kid string) (*GoogleCert, error) {
 }
 
 func isAnonymousUser(idToken string) (bool, error) {
+	if strings.ToLower(idToken) == "anonymous" {
+		return true, nil
+	}
 	provider, err := getSignInProvider(idToken)
 	if err != nil {
 		return false, err

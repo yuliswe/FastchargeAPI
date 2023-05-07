@@ -17,7 +17,7 @@
     "logs": "sam logs --stack-name auth-service --tail",
     "start": "(npm run build) && (sam local start-api -p 7000 --warm-containers=EAGER)",
     "watch": "nodemon -e go,graphql,yaml.json,ts -i generated__graphql.go -i __generated__ --signal SIGINT -x 'npm run start || exit 1'",
-    "test": "jest --runInBand",
+    "test": "echo TODO (No tests yet)",
     "fix": "eslint --fix ./",
     "typecheck": "npm run gen && tsc --noEmit"
   },
