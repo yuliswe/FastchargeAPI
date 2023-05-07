@@ -1,6 +1,7 @@
 from typing import Optional
-from click import echo
+
 import requests
+from click import echo
 
 from .login import read_or_refresh_auth_file
 

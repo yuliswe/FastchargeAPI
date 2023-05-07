@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Optional
 from urllib.parse import urlparse
 
@@ -10,7 +9,7 @@ from click_aliases import ClickAliasedGroup
 
 from .__generated__ import gql_operations as GQL
 from .context_obj import ContextObject
-from .exceptions import AlreadyExists, NotFound
+from .exceptions import AlreadyExists, BadUserInput, NotFound
 from .graphql_client import GQLClient, get_client_info
 from .groups import fastcharge
 
@@ -26,26 +25,36 @@ def fastcharge_dev_app():
 
 @fastcharge_dev_app.command("create", aliases=["new"])
 @click.argument("name", required=True)
+@click.option(
+    "--visibility",
+    type=click.Choice(list(GQL.AppVisibility.__members__.values())),
+    help="Set the visibility of the app.",
+)
 @click.pass_obj
-def fastcharge_app_create(ctx_obj: ContextObject, name: str):
+def fastcharge_app_create(
+    ctx_obj: ContextObject, name: str, visibility: GQL.AppVisibility
+):
     """Create a new app with [NAME]."""
     client, auth = get_client_info(ctx_obj.profile)
     try:
         GQL.create_app(client, name=name, owner=auth.user_pk)
     except AlreadyExists:
         echo(
-            terminal.red
-            + terminal.bold
-            + f'An app with the name "{name}" has already been registered.\n'
-            "Please use a different name." + terminal.normal
+            terminal.red(
+                f'An app with the name "{name}" has already been registered.\n'
+            )
+            + "Please use a different name."
         )
+        exit(1)
+    except BadUserInput as e:
+        if e.detail_code == "APP_NAME":
+            echo(terminal.red(e.message) + "\n" + "Please use a different name.")
+            exit(1)
+        else:
+            raise e
     else:
-        echo(
-            terminal.green
-            + terminal.bold
-            + f'App "{name}" created successfully.'
-            + terminal.normal
-        )
+        echo(terminal.green(f'App "{name}" created successfully.'))
+    GQL.update_app(client, app_name=name, visibility=visibility)
 
 
 @fastcharge_dev_app.command("list", aliases=["ls"])
@@ -78,24 +87,6 @@ def fastcharge_app_delete(ctx_obj: ContextObject, name: str):
         exit(1)
     else:
         echo(f"App {name} deleted.")
-
-
-@dataclass
-class AppInfo:
-    name: str
-    author: str
-    gatewayMode: str
-    description: str
-
-    def pretty_print(self):
-        echo(terminal.blue + terminal.bold + f"{self.name}:" + terminal.normal)
-        echo(
-            terminal.dim
-            + " "
-            + (self.description or "No description.")
-            + terminal.no_dim
-        )
-        echo()
 
 
 def get_app_or_prompt_exit(
@@ -148,21 +139,19 @@ class URL(click.ParamType):
 @click.option("--homepage", type=URL(), help="URL to the homepage for the app.")
 @click.option("--readme", type=URL(), help="URL to the README.md file for the app.")
 @click.option(
-    "--make-public/--make-private",
-    "visibility",
-    is_flag=True,
+    "--visibility",
+    type=click.Choice(list(GQL.AppVisibility.__members__.values())),
     help="Set the visibility of the app.",
-    default=None,
 )
 @click.pass_obj
 def fastcharge_app_update(
     ctx_obj: ContextObject,
     app_name: str,
-    description: str,
-    repository: str,
-    homepage: str,
-    readme: str,
-    visibility: Optional[bool] = None,
+    description: Optional[str],
+    repository: Optional[str],
+    homepage: Optional[str],
+    readme: Optional[str],
+    visibility: Optional[GQL.AppVisibility],
 ):
     """Update information for an existing app."""
     client, auth = get_client_info(ctx_obj.profile)
@@ -174,13 +163,7 @@ def fastcharge_app_update(
             repository=repository,
             homepage=homepage,
             readme=readme,
-            visibility=(
-                None
-                if visibility is None
-                else GQL.AppVisibility.public
-                if visibility
-                else GQL.AppVisibility.private
-            ),
+            visibility=visibility,
         )
     except NotFound:
         echo(

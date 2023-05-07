@@ -15,7 +15,7 @@ from .groups import fastapi
 terminal = Terminal()
 
 
-@fastapi.group("subscription", cls=ClickAliasedGroup, aliases=["sub"])
+@fastapi.group("subscription", cls=ClickAliasedGroup, aliases=["subs"])
 @click.help_option("-h", "--help")
 def fastapi_subscribe():
     """Manage your account subscriptions."""
@@ -30,6 +30,10 @@ def subscribe_list(ctx_obj: ContextObject):
     subscriptions = GQL.list_all_subscriptions_for_user(
         client, user=auth.user_pk
     ).subscriptions
+    if not subscriptions:
+        echo(terminal.yellow("You are not subscribed to any apps."))
+        echo("Use `fastapi subs add [APP_NAME] --plan [NAME]` to subscribe to an app.")
+        exit(0)
     echo(terminal.yellow("All apps that you are currently subscribed to:\n"))
     for sub in subscriptions:
         app = sub.app
@@ -37,23 +41,17 @@ def subscribe_list(ctx_obj: ContextObject):
         echo(
             terminal.blue
             + terminal.bold
-            + f'App "{app.name}": \n Current pricing plan "{pricing.name}":'
+            + f'App "{app.name}": \n Currently subscribed to "{pricing.name}":'
             + terminal.normal
         )
         echo(
-            f"  ${float(pricing.minMonthlyCharge):.2f} monthly subscription",
-            nl=False,
-        )
-        echo(
-            f" + additional "
-            + f"${float(pricing.chargePerRequest):.2f}".rstrip("0").rstrip(".")
-            + " per request"
+            f"  ${float(pricing.minMonthlyCharge):.2f} during active month + additional ${pricing.chargePerRequest} per request"
         )
         echo("  First 1000 requests are free of charge.")
         echo()
 
 
-@fastapi_subscribe.command("sub", aliases=["add"])
+@fastapi_subscribe.command("add", aliases=[])
 @click.argument("app_name", required=True)
 @click.option("-p", "--plan", help="Name of the plan to subscribe to.")
 @click.pass_obj
@@ -102,7 +100,6 @@ def subscription_add(ctx_obj: ContextObject, app_name: str, plan: Optional[str] 
         GQL.subscribe_to_app(
             client,
             subscriber=auth.user_pk,
-            app=app_name,
             pricing=subscribing_pricing.pk,
         )
     elif current_sub.pricing.name == plan:
@@ -147,9 +144,4 @@ def subscription_remove(ctx_obj: ContextObject, app_name: str):
         )
         exit(1)
     else:
-        echo(
-            terminal.green
-            + terminal.bold
-            + 'Unsubscribed from app: "{app_name}"'
-            + terminal.normal
-        )
+        echo(terminal.green(f'Unsubscribed from "{app_name}".'))

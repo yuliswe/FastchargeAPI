@@ -139,10 +139,11 @@ def fastcharge_account_withdraw(ctx_obj: ContextObject, amount: str, yes: bool):
 @fastcharge_account.command("topup")
 @click.help_option("-h", "--help")
 @click.argument("amount", type=float, required=True)
+@click.option("--browser/--no-browser", is_flag=True, default=True)
 @click.pass_obj
-def fastcharge_account_topup(ctx_obj: ContextObject, amount: float):
+def fastcharge_account_topup(ctx_obj: ContextObject, amount: float, browser: bool):
     """Top up your FastchargeAPI account.
 
     Amount in USD.
     """
-    do_account_topup(ctx_obj, amount)
+    do_account_topup(ctx_obj, amount, open_browser=browser)

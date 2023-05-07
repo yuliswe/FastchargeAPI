@@ -18,7 +18,7 @@ from .graphql_client import GQLClient
 
 def get_remote_secret_from_s3(
     client: GQLClient, key: str, jwe_secret: bytes, jwt_secret: bytes
-) -> Optional[Any]:
+) -> Optional[dict]:
     """Get the secret from the remote server. If decode_secret is provided,
     expect the value retrieved to be a JWT token and decode it using the
     provided secret."""
@@ -49,7 +49,7 @@ def get_remote_secret_from_s3(
 
 def get_remote_secret(
     client: GQLClient, key: str, jwe_secret: bytes, jwt_secret: bytes
-) -> Optional[str]:
+) -> Optional[dict]:
     """Get the secret from the remote server. If decode_secret is provided,
     expect the value retrieved to be a JWT token and decode it using the
     provided secret."""

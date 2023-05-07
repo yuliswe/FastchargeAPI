@@ -7,7 +7,7 @@ from click_aliases import ClickAliasedGroup
 
 from .__generated__ import gql_operations as GQL
 from .context_obj import ContextObject
-from .exceptions import AlreadyExists, NotFound, PermissionDenied
+from .exceptions import AlreadyExists, BadUserInput, NotFound, PermissionDenied
 from .fastcharge_app import get_app_or_prompt_exit
 from .graphql_client import get_client_info
 from .groups import fastcharge
@@ -24,23 +24,15 @@ def fastcharge_api():
 
 def validate_dest_or_exit(dest: str):
     if re.match(r"https?://[^\s]+", dest) is None:
-        echo(terminal.red + f"--destination must be a valid URL." + terminal.normal)
-        echo(
-            terminal.yellow
-            + f" example: --destination https://example.com"
-            + terminal.normal
-        )
+        echo(terminal.red(f"--destination must be a valid URL."))
+        echo(terminal.yellow(f" example: --destination https://example.com"))
         exit(1)
 
 
 def validate_path_or_exit(path: str):
     if re.match(r"/[^\s]*", path) is None:
-        echo(
-            terminal.red
-            + f"--path must be a valid URL path starting with /"
-            + terminal.normal
-        )
-        echo(terminal.yellow + f" example: --path /myendpoint" + terminal.normal)
+        echo(terminal.red(f"--path must be a valid URL path starting with /"))
+        echo(terminal.yellow(f" example: --path /myendpoint"))
         exit(1)
 
 
@@ -131,7 +123,7 @@ def api_list(ctx_obj: ContextObject, app_name: str):
             echo(" ID:\t\t" + endpoint.pk)
             echo(" HTTP Method:\t" + endpoint.method)
             echo(" Endpoint:\t" + f"{url} ~> {endpoint.destination}")
-            echo(terminal.dimgray(f" {endpoint.description or 'No description.'}"))
+            echo(terminal.dim(f" {endpoint.description or 'No description.'}"))
             echo()
     else:
         echo("No API available.")
@@ -143,7 +135,6 @@ def api_list(ctx_obj: ContextObject, app_name: str):
 @click.option(
     "-m",
     "--method",
-    required=True,
     type=click.Choice(
         list(GQL.HTTPMethod.__members__.values()),
     ),
@@ -186,22 +177,16 @@ def api_update(
         ).updateEndpoint
     except (NotFound, AlreadyExists) as e:
         if isinstance(e, AlreadyExists):
-            echo(
-                terminal.red
-                + f"An API endpoint at '{path}' already exists."
-                + terminal.normal
-            )
+            echo(terminal.red(f"An API endpoint at '{path}' already exists."))
         elif isinstance(e, NotFound):
-            echo(
-                terminal.red
-                + f"API endpoint id '{api_id}' does not exist."
-                + terminal.normal
-            )
-        echo(
-            terminal.yellow
-            + f"See `fastcharge api list` for a list of apis."
-            + terminal.normal
-        )
+            echo(terminal.red(f"API endpoint id '{api_id}' does not exist."))
+        echo(terminal.yellow(f"See `fastcharge api list [APP]` for a list of apis."))
+        exit(1)
+    except PermissionDenied:
+        echo(terminal.red(f"You do not have permission to manage this API."))
+        exit(1)
+    except BadUserInput as e:
+        echo(terminal.red(e.message))
         exit(1)
     else:
         echo(
@@ -211,14 +196,14 @@ def api_update(
         )
 
 
-@fastcharge_api.command("delete", aliases=["del"])
+@fastcharge_api.command("remove", aliases=["rm"])
 @click.help_option("-h", "--help")
 @click.argument("api_id", required=True)
 @click.pass_obj
-def api_delete(ctx_obj: ContextObject, api_id: str):
-    """Delete an API.
+def api_remove(ctx_obj: ContextObject, api_id: str):
+    """Remove an API.
 
-    eg. fastcharge api delete [api_id]
+    eg. fastcharge api remove [api_id]
 
     To find the api_ids, see `fastcharge api list`.
     """
@@ -227,18 +212,13 @@ def api_delete(ctx_obj: ContextObject, api_id: str):
         result = GQL.delete_enpoint(client, api_id).deleteEndpoint
         echo(
             terminal.green
-            + f"Deleted the API endpoint '{result.path}'."
+            + f"Removed the API endpoint '{result.path}'."
             + terminal.normal
         )
-    except NotFound:
-        echo(
-            terminal.red
-            + f"API endpoint id '{api_id}' does not exist."
-            + terminal.normal
-        )
-        echo(
-            terminal.yellow
-            + f"See `fastcharge api list` for a list of apis."
-            + terminal.normal
-        )
-        exit(1)
+    except NotFound as e:
+        if e.resource == "Endpoint":
+            echo(terminal.red(f"API endpoint id '{api_id}' does not exist."))
+            echo(terminal.yellow(f"See `fastcharge api list` for a list of apis."))
+            exit(1)
+        else:
+            raise e

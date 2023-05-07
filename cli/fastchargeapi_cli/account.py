@@ -16,7 +16,7 @@ from .remote_secret import interact_with_react
 terminal = Terminal()
 
 
-def do_account_topup(ctx_obj: ContextObject, amount: float):
+def do_account_topup(ctx_obj: ContextObject, amount: float, open_browser: bool = False):
     """Top up your FastchargeAPI account.
 
     Amount in USD.
@@ -57,15 +57,16 @@ def do_account_topup(ctx_obj: ContextObject, amount: float):
         poll_max_reached_prompt="Press enter after completing in browser.",
     )
     location = f"{config.react_host}/topup?amount={amount}&" + query.url_query_secrets
-    webbrowser.open_new(location)
     echo("Please complete payment in browser:")
-    echo(terminal.blue + " " + location + terminal.normal)
-    result = result.read()  # block
+    echo(" " + terminal.blue(location))
 
-    if result["status"] == "success":
-        echo(terminal.green + "Payment successful." + terminal.normal)
-    elif result["status"] == "canceled":
-        echo(terminal.red + "Payment canceled." + terminal.normal)
+    if open_browser:
+        webbrowser.open_new(location)
+        result = result.read()  # block
+        if result["status"] == "success":
+            echo(terminal.green + "Payment successful." + terminal.normal)
+        elif result["status"] == "canceled":
+            echo(terminal.red + "Payment canceled." + terminal.normal)
 
 
 def do_account_info(ctx_obj: ContextObject):

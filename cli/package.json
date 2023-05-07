@@ -8,6 +8,10 @@
     "typecheck": "(npm run gen) && (pyright .)",
     "build": "(npm run typecheck) && (poetry build)",
     "test": "pytest -s -n auto",
+    "coverage:update": "pytest -s -n auto --cov=fastchargeapi_cli",
+    "coverage:report": "coverage xml && coverage report --sort=Cover",
+    "coverage": "(npm run coverage:update) && (npm run coverage:report)",
+    "test:single": "pytest -s",
     "deploy": "(npm run build) && (poetry publish -r testpypi)",
     "watch": "nodemon --exec 'echo \\x1Bc && (npm run gen) && (npm run typecheck)' --watch . --ext py,json,graphql,yaml --delay 1 --ignore '**/__pycache__/' --ignore '**/__generated__/**'"
   },

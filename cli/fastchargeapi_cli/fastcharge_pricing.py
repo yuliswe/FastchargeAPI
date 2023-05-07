@@ -42,11 +42,6 @@ def pricing_list(ctx_obj: ContextObject, app_name: str):
         return
     app = GQL.list_app_pricing_details(client, app_name=app_name)
     echo(terminal.blue + terminal.bold + f"app: {app.name}" + terminal.normal)
-    # echo(
-    #     colorama.Style.DIM
-    #     + f"\n  {app['description'] or 'No description.'}"
-    #     + colorama.Style.RESET_ALL
-    # )
     if app.pricingPlans:
         echo(terminal.bold + " Available plans:" + terminal.normal)
     else:
@@ -54,18 +49,13 @@ def pricing_list(ctx_obj: ContextObject, app_name: str):
         exit(0)
     for plan in app.pricingPlans:
         echo(colorama.Style.RESET_ALL, nl=False)
-        echo(terminal.green + terminal.bold + f"  name: {plan.name}" + terminal.normal)
-        echo(terminal.bold + f"  id: {plan.pk}" + terminal.normal)
-        if plan.callToAction:
-            echo("  " + plan.callToAction)
-        echo(f"  ${float(plan.minMonthlyCharge):.2f} monthly subscription", nl=False)
-        echo(
-            f" + additional "
-            + f"${float(plan.chargePerRequest):.2f}".rstrip("0").rstrip(".")
-            + " per request"
-        )
+        echo(terminal.green(f"  name: {plan.name}"))
+        echo(terminal.bold(f"  id: {plan.pk}"))
+        echo(f"  ${float(plan.minMonthlyCharge):.2f} during active month", nl=False)
+        echo(f" + additional ${plan.chargePerRequest} per request")
         echo(f"  First {plan.freeQuota} requests are free of charge.")
-        echo(colorama.Style.DIM + "  Call of action." + colorama.Style.RESET_ALL)
+        if plan.callToAction:
+            echo(terminal.dim(f"  {plan.callToAction}"))
         echo()
 
 
@@ -142,7 +132,7 @@ def pricing_add(
         return
 
 
-@fastcharge_dev_pricing.command("udpate", aliases=["up"])
+@fastcharge_dev_pricing.command("update", aliases=["up"])
 @click.argument("pricing_id", required=True)
 @click.option("-n", "--name", help="Name of the pricing plan.")
 @click.option("-m", "--monthly-charge", type=float, help="Minimum monthly charge.")
@@ -175,8 +165,8 @@ def pricing_update(
             pk=pricing_id,
             name=name,
             callToAction=call_to_action,
-            minMonthlyCharge=monthly_charge,
-            chargePerRequest=charge_per_request,
+            minMonthlyCharge=monthly_charge and str(monthly_charge),
+            chargePerRequest=charge_per_request and str(charge_per_request),
             freeQuota=free_quota,
         )
     except NotFound:

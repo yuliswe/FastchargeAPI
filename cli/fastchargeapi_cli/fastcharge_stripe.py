@@ -1,12 +1,11 @@
 import webbrowser
 
-from blessings import Terminal
-
-
-from .groups import fastcharge
 import click
+from blessings import Terminal
 from click import echo
+
 from . import config
+from .groups import fastcharge
 
 terminal = Terminal()
 

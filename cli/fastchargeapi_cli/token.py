@@ -14,18 +14,28 @@ terminal = Terminal()
 
 @fastapi.group("token", cls=ClickAliasedGroup)
 @click.help_option("-h", "--help")
-def fastcharge_token():
+def fastapi_token():
     """Generate and manage user tokens."""
     pass
 
 
-@fastcharge_token.command("create", aliases=["new", "add"])
+@fastapi_token.command("create", aliases=[])
 @click.argument("app_name", required=True)
 @click.pass_obj
 def create_app_user_token(ctx_obj: ContextObject, app_name: str):
     """Create an API token for the specified app."""
 
     client, auth = get_client_info(ctx_obj.profile)
+    try:
+        current_sub = GQL.get_current_subscription(
+            client, user=auth.user_pk, app_name=app_name
+        )
+    except NotFound as e:
+        if e.resource == "Subscription":
+            echo(terminal.red("You are not subscribed to this app."))
+            exit(1)
+        else:
+            raise e
     try:
         response = GQL.create_user_app_token(client, user=auth.user_pk, app=app_name)
         echo(terminal.green("Token created successfully."))
@@ -45,7 +55,7 @@ def create_app_user_token(ctx_obj: ContextObject, app_name: str):
         echo(f"Error creating app user token: {str(e)}")
 
 
-@fastcharge_token.command("revoke", aliases=["rm", "del"])
+@fastapi_token.command("revoke", aliases=[])
 @click.argument("app_name", required=True)
 @click.pass_obj
 def revoke_app_user_token(ctx_obj: ContextObject, app_name: str):
@@ -53,13 +63,16 @@ def revoke_app_user_token(ctx_obj: ContextObject, app_name: str):
     client, auth = get_client_info(ctx_obj.profile)
     try:
         response = GQL.delete_user_app_tpken(client, user=auth.user_pk, app=app_name)
-        echo(
-            terminal.green
-            + f'Successfully revoked user token for app "{app_name}".'
-            + terminal.normal
-        )
-    except NotFound:
-        echo(terminal.red + f'Token for app "{app_name}" not found.' + terminal.normal)
+        echo(terminal.green(f'Token revoked for "{app_name}".'))
+    except NotFound as e:
+        if e.resource == "App":
+            echo(
+                terminal.red
+                + f'Token for app "{app_name}" not found.'
+                + terminal.normal
+            )
+        else:
+            raise e
     except Exception as e:
-        print(f"Error revoking app user token: {str(e)}")
+        echo(terminal.red(f"Error revoking app user token: {str(e)}"))
         return None

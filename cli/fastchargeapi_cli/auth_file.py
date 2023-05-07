@@ -1,6 +1,5 @@
 import dataclasses
 import json
-import os
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
@@ -9,7 +8,6 @@ from typing import Literal, Optional, Union
 import jwt
 import requests
 from cryptography.x509 import load_pem_x509_certificate
-from gql import gql
 
 from . import config
 
@@ -23,7 +21,7 @@ def get_google_cert() -> dict:
 
 
 def get_auth_file_path(profile: Optional[str]) -> Path:
-    if profile := profile or os.environ.get("PROFILE"):
+    if profile:
         return Path.home() / f".fastcharge/auth.{profile}.json"
     return Path.home() / ".fastcharge/auth.json"
 
@@ -59,7 +57,10 @@ def write_to_auth_file(
     email: Optional[str] = None,
 ) -> AuthFileContent:
     """Partially update the auth file context, or create a new auth file with
-    the specified content."""
+    the specified content.
+
+    Profile: The profile to write to. If None, writes to the default profile.
+    """
     auth_file_path = get_auth_file_path(profile)
     auth_file_path.parent.mkdir(exist_ok=True)
     auth_file = _read_auth_file(profile)

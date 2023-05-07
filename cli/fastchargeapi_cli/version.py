@@ -1,10 +1,10 @@
-from functools import cache
-import requests
 import json
+from functools import cache
 from pathlib import Path
+
+import requests
 import tomli
 from packaging.version import parse
-
 
 URL_PATTERN = "https://testpypi.python.org/pypi/{package}/json"
 

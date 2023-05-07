@@ -29,16 +29,22 @@ fastapi = 'fastchargeapi_cli.main:fastapi'
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"
-turms = "^0.3.1"
+turms = "0.4.2"
 pydantic = "^1.10.6"
 pyright = "^1.1.299"
 boto3 = "^1.26.114"
 pytest-xdist = "^3.2.1"
 pytest = "^7.3.1"
 isort = "^5.12.0"
+pytest-cov = "^4.0.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pyright]
+
+[tool.coverage.run]
+omit = [
+    "fastchargeapi_cli/config.py",
+]

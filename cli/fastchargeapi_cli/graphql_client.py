@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 from typing import Optional
 
 from click import echo
@@ -24,12 +23,12 @@ class GQLClient(Client):
         *,
         id_token: Optional[str] = None,
         user_email: Optional[str] = None,
-        user_pk: Optional[str] = None
+        user_pk: Optional[str] = None,
     ):
         transport = AIOHTTPTransport(
             graphql_host,
             headers={
-                "Authorization": id_token or "",
+                "Authorization": id_token or "anonymous",
                 "X-User-Email": user_email or "",
                 "X-User-PK": user_pk or "",
             },
@@ -42,19 +41,26 @@ class GQLClient(Client):
         try:
             return self.client.execute(*args, **kwargs)
         except TransportQueryError as e:
-            ext_code = e.errors and e.errors[0].get("extensions", {}).get("code")
-            if ext_code == "ALREADY_EXISTS":
-                raise AlreadyExists(str(e))
-            elif ext_code == "NOT_FOUND":
-                raise NotFound(str(e))
-            elif ext_code == "TOO_MANY_RESOURCES":
-                raise TooManyResources(str(e))
-            elif ext_code == "PERMISSION_DENIED":
-                raise PermissionDenied(str(e))
-            elif ext_code == "IMMUTABLE_RESOURCE":
-                raise ImmutableResource(str(e))
-            elif ext_code == "BAD_USER_INPUT":
-                raise BadUserInput(str(e))
+            ext: dict = e.errors and e.errors[0].get("extensions", {})  # type: ignore
+            msg: str = e.errors and e.errors[0].get("message", str(e))  # type: ignore
+            if not ext:
+                raise e
+            code = ext.get("code")
+            if code == "ALREADY_EXISTS":
+                raise AlreadyExists(msg)
+            elif code == "NOT_FOUND":
+                resource = ext.get("resource", "")
+                query = ext.get("query", {})
+                raise NotFound(msg, resource, query)
+            elif code == "TOO_MANY_RESOURCES":
+                raise TooManyResources(msg)
+            elif code == "PERMISSION_DENIED":
+                raise PermissionDenied(msg)
+            elif code == "IMMUTABLE_RESOURCE":
+                raise ImmutableResource(msg)
+            elif code == "BAD_USER_INPUT":
+                detail_code = ext.get("detailCode")
+                raise BadUserInput(msg, detail_code)
             else:
                 raise e
 
@@ -64,19 +70,13 @@ def gql_execute(client, model, variables):
     return model(**result)
 
 
-@dataclass
-class User:
-    email: str
-    pk: str
-
-
 def get_client_info(profile: Optional[str]) -> tuple[GQLClient, AuthFileContent]:
     """This function returns a tuple of (client, user_email). Is it root
     function that identifies the user for the cli."""
     auth = read_or_refresh_auth_file(profile)
 
     if auth is None:
-        echo("You must be logged in.")
+        echo(f"You must be logged in.")
         exit(1)
 
     return (

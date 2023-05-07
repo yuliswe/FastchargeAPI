@@ -35,7 +35,7 @@ def fastapi_api_list(ctx_obj: ContextObject, app_name: str):
             echo(" ID:\t\t" + endpoint.pk)
             echo(" HTTP Method:\t" + endpoint.method)
             echo(" Endpoint:\t" + url)
-            echo(terminal.dimgray(f" {endpoint.description or 'No description.'}"))
+            echo(terminal.dim(f" {endpoint.description or 'No description.'}"))
             echo()
     else:
         echo("No API available.")

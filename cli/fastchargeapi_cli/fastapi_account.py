@@ -19,13 +19,14 @@ def fastapi_account():
 @fastapi_account.command("topup")
 @click.help_option("-h", "--help")
 @click.argument("amount", type=float, required=True)
+@click.option("--no-browser", is_flag=True)
 @click.pass_obj
-def fastapi_account_topup(ctx_obj: ContextObject, amount: float):
+def fastapi_account_topup(ctx_obj: ContextObject, amount: float, no_browser: bool):
     """Top up your FastchargeAPI account.
 
     Amount in USD.
     """
-    do_account_topup(ctx_obj, amount)
+    do_account_topup(ctx_obj, amount, open_browser=not no_browser)
 
 
 @fastapi_account.command("info")

@@ -1,7 +1,7 @@
 import time
 from uuid import uuid4
 
-import fastchargeapi_cli.__generated__.gql_operations as GQL
+import tests.__generated__.gql_operations as GQL
 from click.testing import CliRunner
 from fastchargeapi_cli.main import fastcharge
 from tests.utils import (
@@ -14,6 +14,8 @@ from tests.utils import (
 
 
 class TestFastchargeAccountWithdraw:
+    """Test `fastcharge account withdraw`"""
+
     def setup_method(self):
         test_user_email: str = "testuser_" + uuid4().hex + "@gmail_mock.com"
         self.runner = CliRunner()
@@ -42,7 +44,7 @@ class TestFastchargeAccountWithdraw:
 
         new_result = None
         for attempt in range(10):
-            new_result = GQL.get_user_account_balance_for_withdrawl(
+            new_result = GQL.get_user_account_balance(
                 get_admin_gqlclient(), user=self.test_user.pk
             )
             if float(new_result.balance) == float(7):

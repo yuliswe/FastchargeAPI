@@ -4,16 +4,17 @@ from functools import cache
 from uuid import uuid4
 
 import boto3
-import fastchargeapi_cli.__generated__.gql_operations as GQL
 from fastchargeapi_cli.auth_file import (
     AuthFileContent,
     delete_auth_file,
+    get_auth_file_path,
     refresh_id_token,
     write_to_auth_file,
 )
 from fastchargeapi_cli.graphql_client import GQLClient, get_client_info
 from pydantic import ValidationError
 
+from .__generated__ import gql_operations as GQL
 from .sqs_graphql_client import PredefinedSQSQueue, get_sqs_graphql_client
 
 
@@ -39,14 +40,19 @@ def get_admin_gqlclient() -> GQLClient:
     )
 
 
-def create_test_user(email: str) -> GQL.createUserCreateuser:
+def create_test_user(email: str) -> GQL.CreateUserCreateuser:
     resp = GQL.create_user(get_admin_gqlclient(), email)
+    return resp
+
+
+def create_test_app(*, owner: str, name: str) -> GQL.CreateTestAppCreateapp:
+    resp = GQL.create_test_app(get_admin_gqlclient(), owner=owner, name=name)
     return resp
 
 
 def login_as_user(user_pk: str) -> AuthFileContent:
     resp = GQL.get_fastcharge_api_id_token(get_admin_gqlclient(), user=user_pk)
-    return write_to_auth_file(
+    content = write_to_auth_file(
         profile=user_pk,
         id_token=resp.getFastchargeAPIIdToken,
         issuer="fastchargeapi",
@@ -54,6 +60,8 @@ def login_as_user(user_pk: str) -> AuthFileContent:
         user_pk=user_pk,
         email=resp.email,
     )
+    assert get_auth_file_path(profile=user_pk).exists(), "Auth file should exist."
+    return content
 
 
 def logout_user(user_pk: str):
@@ -78,9 +86,7 @@ def add_money_for_user(user_pk: str, amount: str, wait: bool = True):
         pass
     if wait:
         for attempt in range(10):
-            result = GQL.get_user_account_balance_for_withdrawl(
-                get_admin_gqlclient(), user=user_pk
-            )
+            result = GQL.get_user_account_balance(get_admin_gqlclient(), user=user_pk)
             if float(result.balance) == float(amount):
                 break
             print(f"Waiting for balance update ({attempt}s):", result.balance)
