@@ -1,25 +1,25 @@
-import React from "react";
-import { connect } from "react-redux";
-import { RootAppState } from "../states/RootAppState";
-import { SiteLayout } from "../SiteLayout";
 import {
     Avatar,
     Container,
     FormControl,
     FormControlLabel,
-    Link,
     Grid,
+    Link,
     Paper,
     Radio,
     RadioGroup,
     Stack,
     Typography,
 } from "@mui/material";
-import { AppSearchResultState } from "../states/AppSearchResultState";
+import React from "react";
+import { connect } from "react-redux";
 import { AppContext, ReactAppContextType } from "../AppContext";
-import { appStore } from "../store-config";
+import { SiteLayout } from "../SiteLayout";
 import { AppSearchResultEvent, SearchResult } from "../events/AppSearchResultEvent";
 import { PaginatedList, PaginatedListOnPageChangeHandler } from "../stateless-components/PaginatedList";
+import { AppSearchResultState } from "../states/AppSearchResultState";
+import { RootAppState } from "../states/RootAppState";
+import { appStore } from "../store-config";
 
 type Props = {
     searchResultState: AppSearchResultState;

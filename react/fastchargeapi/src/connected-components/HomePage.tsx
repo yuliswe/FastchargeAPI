@@ -1,8 +1,3 @@
-import React from "react";
-import { connect } from "react-redux";
-import { HomeAppState } from "../states/HomeAppState";
-import { RootAppState } from "../states/RootAppState";
-import { SiteLayout } from "../SiteLayout";
 import {
     Box,
     Button,
@@ -19,8 +14,13 @@ import {
     TableRow,
     Typography,
 } from "@mui/material";
+import React from "react";
+import { connect } from "react-redux";
 import Terminal, { ColorMode, TerminalInput, TerminalOutput } from "react-terminal-ui";
 import { AppContext, ReactAppContextType } from "../AppContext";
+import { SiteLayout } from "../SiteLayout";
+import { HomeAppState } from "../states/HomeAppState";
+import { RootAppState } from "../states/RootAppState";
 
 type _State = {};
 
@@ -47,23 +47,22 @@ class _Home extends React.Component<_Props, _State> {
                     }}
                 >
                     <Container maxWidth="xl">
-                        <Grid container rowSpacing={10} columnSpacing={this._context.mediaQuery.md ? 5 : 10}>
+                        <Grid container rowSpacing={10} columnSpacing={2}>
                             <Grid item xs={6}>
-                                <Stack spacing={5} p={5}>
+                                <Stack spacing={5} py={5}>
                                     <Typography variant="h1">Sell your API with 3 simple commands</Typography>
                                     <Typography
                                         variant="body1"
                                         sx={{
                                             fontSize: 18,
+                                            width: "70%",
                                         }}
                                     >
-                                        FastchargeAPI is an API gateway between your API and your customers, taking care
-                                        of metering and billing the customers, so that you can focus on solving more
-                                        important problems.
+                                        We take care of billing, so you can focus on solving more important problems.
                                     </Typography>
                                     <Box>
                                         <Button
-                                            href="/auth?redirect=/account"
+                                            href="/auth?redirect=/account/my-apps"
                                             variant="contained"
                                             sx={{
                                                 fontSize: 18,
@@ -81,30 +80,28 @@ class _Home extends React.Component<_Props, _State> {
                             <Grid item xs={6}>
                                 <Paper
                                     className="terminal"
-                                    elevation={20}
+                                    elevation={15}
                                     sx={{
                                         borderRadius: 5,
                                     }}
                                 >
-                                    <Terminal colorMode={ColorMode.Dark} height="400px">
-                                        <TerminalInput>fastcharge login</TerminalInput>
-                                        <TerminalOutput>Login success.</TerminalOutput>
+                                    <Terminal colorMode={ColorMode.Dark} height="17em">
                                         <TerminalInput>fastcharge app create "myapp"</TerminalInput>
                                         <TerminalOutput>Created app "myapp".</TerminalOutput>
                                         <TerminalInput>
-                                            {`fastcharge api add "myapp" --path "/google" \\ \n    --destination "https://google.com"`}
+                                            {`fastcharge api add "myapp" --path "/example" \\ \n    --destination "https://example.com"`}
                                         </TerminalInput>
                                         <TerminalOutput>
-                                            {`Created endpoint: \n  App:   myapp\n  Path:  /google \n  https://myapp.fastchargeapi.com/google ~> https://google.com`}
+                                            {`Created endpoint: \n  App:   myapp\n  Path:  /example \n  https://myapp.fastchargeapi.com/example ~> https://example.com`}
                                         </TerminalOutput>
-                                        <TerminalInput>{`curl "https://myapp.fastchargeapi.com/google"`}</TerminalInput>
+                                        <TerminalInput>{`curl "https://myapp.fastchargeapi.com/example"`}</TerminalInput>
                                     </Terminal>
                                 </Paper>
                             </Grid>
                         </Grid>
                     </Container>
                 </Box>
-                <Box py={15}>
+                <Box bgcolor="background.paper" py={15}>
                     <Container maxWidth="lg">
                         <Grid container columnSpacing={this._context.mediaQuery.md ? 5 : 10}>
                             <Grid item xs={6}>
@@ -141,7 +138,7 @@ class _Home extends React.Component<_Props, _State> {
                                         </Typography>
                                         <Paper
                                             className="terminal"
-                                            elevation={20}
+                                            elevation={15}
                                             sx={{
                                                 borderRadius: 5,
                                             }}
@@ -173,7 +170,7 @@ class _Home extends React.Component<_Props, _State> {
                                         </Typography>
                                         <Paper
                                             className="terminal"
-                                            elevation={20}
+                                            elevation={15}
                                             sx={{
                                                 borderRadius: 5,
                                             }}
@@ -191,7 +188,7 @@ class _Home extends React.Component<_Props, _State> {
                         </Grid>
                     </Container>
                 </Box>
-                <Box bgcolor="background.paper" py={15} id="tag-pricing">
+                <Box py={15} id="tag-pricing">
                     <Container maxWidth="lg">
                         <Grid container spacing={5}>
                             <Grid item xs={6}>
@@ -290,7 +287,7 @@ class _Home extends React.Component<_Props, _State> {
                         </Grid>
                     </Container>
                 </Box>
-                <Box py={15}>
+                <Box bgcolor="background.paper" py={15}>
                     <Container maxWidth="lg">
                         <Grid container columnSpacing={this._context.mediaQuery.md ? 5 : 10}>
                             <Grid item xs={6}>
@@ -318,7 +315,7 @@ class _Home extends React.Component<_Props, _State> {
                                         </Typography>
                                         <Paper
                                             className="terminal"
-                                            elevation={20}
+                                            elevation={15}
                                             sx={{
                                                 borderRadius: 5,
                                             }}
@@ -352,7 +349,7 @@ class _Home extends React.Component<_Props, _State> {
                                         </Typography>
                                         <Paper
                                             className="terminal"
-                                            elevation={20}
+                                            elevation={15}
                                             sx={{
                                                 borderRadius: 5,
                                             }}
@@ -383,7 +380,7 @@ class _Home extends React.Component<_Props, _State> {
                                         </Typography>
                                         <Paper
                                             className="terminal"
-                                            elevation={20}
+                                            elevation={15}
                                             sx={{
                                                 borderRadius: 5,
                                             }}

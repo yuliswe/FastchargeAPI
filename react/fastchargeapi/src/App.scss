@@ -4,20 +4,22 @@ $yellow: #ffc100;
 $black: #313638;
 $red: #df2935;
 
-@font-face {
-    font-family: "Roboto";
-    src: url(../fonts/Roboto/Roboto-Regular.ttf);
-}
+$footer-max-offset: 17rem;
 
-@font-face {
-    font-family: "Ubuntu";
-    src: url(../fonts/Ubuntu/Ubuntu-Regular.ttf);
-}
+// @font-face {
+//     font-family: "Roboto";
+//     src: url(../fonts/Roboto/Roboto-Regular.ttf);
+// }
 
-@font-face {
-    font-family: "FingerPaint";
-    src: url(../fonts/FingerPaint/FingerPaint-Regular.ttf);
-}
+// @font-face {
+//     font-family: "Ubuntu";
+//     src: url(../fonts/Ubuntu/Ubuntu-Regular.ttf);
+// }
+
+// @font-face {
+//     font-family: "FingerPaint";
+//     src: url(../fonts/FingerPaint/FingerPaint-Regular.ttf);
+// }
 
 .terminal {
     overflow: hidden;
@@ -34,6 +36,9 @@ $red: #df2935;
 
 html {
     background-color: #ffc100;
+    main {
+        min-height: calc(100vh - #{$footer-max-offset});
+    }
 }
 
 .firebaseui-card-content {

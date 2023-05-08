@@ -1,11 +1,11 @@
-import React from "react";
-import { RootAppState } from "../states/RootAppState";
-import { connect } from "react-redux";
-import { Box, Button, CircularProgress, Divider, Grid, Link, Menu, MenuItem, Stack, Typography } from "@mui/material";
-import { DashboardAppState } from "../states/DashboardAppState";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import { AccountActivity, DashboardEvent } from "../events/DashboardEvent";
-import { appStore } from "../store-config";
+import { Box, Button, CircularProgress, Divider, Grid, Link, Menu, MenuItem, Paper, Typography } from "@mui/material";
+import "chart.js/auto";
+import React from "react";
+import { AfterEventOfType } from "react-appevent-redux";
+import { Line } from "react-chartjs-2";
+import { connect } from "react-redux";
+import Terminal, { ColorMode, TerminalInput } from "react-terminal-ui";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import {
     GQLAccountActivityReason,
@@ -13,17 +13,17 @@ import {
     GQLAccountActivityType,
     GQLStripeTransferStatus,
 } from "../__generated__/gql-operations";
-import { Line } from "react-chartjs-2";
-import "chart.js/auto";
-import { LogTable, LogTableOnChangeHandler } from "../stateless-components/LogTable";
-import { AfterEventOfType } from "react-appevent-redux";
+import { AccountActivity, DashboardEvent } from "../events/DashboardEvent";
 import {
     DocumentationDialog,
     SupportDocumentation,
     openDocumentationDialog,
     supportDocumenationDefault,
 } from "../stateless-components/DocumentationDialog";
-import Terminal, { ColorMode, TerminalInput } from "react-terminal-ui";
+import { LogTable, LogTableOnChangeHandler } from "../stateless-components/LogTable";
+import { DashboardAppState } from "../states/DashboardAppState";
+import { RootAppState } from "../states/RootAppState";
+import { appStore } from "../store-config";
 
 type Props = {
     dashboard: DashboardAppState;
@@ -203,24 +203,21 @@ class _DashboardPage extends React.Component<Props, State> {
                 datasets: [],
             };
         }
-        let sample: { label: string; value: number }[] = [];
+        const values: number[] = [];
+        const labels: string[] = [];
         for (let [index, v] of this.accountHistory().entries()) {
-            if (index % 10 === 0) {
-                sample.unshift({
-                    label: "",
-                    value: Number.parseFloat(v.closingBalance),
-                });
-            }
+            values.push(Number.parseFloat(v.closingBalance));
+            labels.push(new Date(v.closingTime).toLocaleDateString());
         }
         const data = {
-            labels: sample.map((x) => x.label),
+            labels,
             datasets: [
                 {
                     label: "",
-                    data: sample.map((x) => x.value),
+                    data: values,
                     borderColor: this._context.theme.palette.info.main,
                     backgroundColor: this._context.theme.palette.info.main + "33",
-                    tension: 0.1,
+                    tension: 0.5,
                     fill: {
                         target: "origin",
                         // above: "rgb(255, 0, 0)",
@@ -267,7 +264,7 @@ class _DashboardPage extends React.Component<Props, State> {
         return (
             <Box padding={5} maxWidth={500}>
                 <Typography variant="h6" gutterBottom>
-                    Sign in to Stripe
+                    Verify Email Address
                 </Typography>
                 <Typography variant="body1" gutterBottom>
                     To verify your identity, we will send an email containing the Stripe login link to your email.
@@ -309,190 +306,226 @@ class _DashboardPage extends React.Component<Props, State> {
     render() {
         return (
             <React.Fragment>
-                <Stack spacing={6}>
-                    <Typography variant="h5">
-                        Welcome, {this.appState.userAccountInfo?.author || "Anonymous User"}!
+                <Box my={5}>
+                    <Typography variant="h4">
+                        Welcome back, {this.appState.userAccountInfo?.author || "Anonymous User"}
                     </Typography>
-                    <Grid container>
-                        <Grid item md={8} flexGrow={1}>
-                            <Typography variant="h6">Account</Typography>
-                            <Divider sx={{ mb: 1 }} />
-                            <Typography variant="body1" fontSize={30} fontWeight={700}>
-                                ${this.appState.userAccountInfo?.balance || "..."}
+                </Box>
+                <Grid container spacing={5}>
+                    <Grid item xs={8} flexGrow={1}>
+                        <Paper sx={{ padding: 5, borderRadius: 10 }} elevation={1}>
+                            <Typography
+                                variant="h6"
+                                sx={{ position: "relative" }}
+                                component={Box}
+                                display="flex"
+                                alignItems="center"
+                            >
+                                <Box flexGrow={1}>Account</Box>
+                                <Button
+                                    variant="contained"
+                                    size="small"
+                                    onClick={this.handleMenu}
+                                    endIcon={<KeyboardArrowDownIcon />}
+                                >
+                                    Move Money
+                                </Button>
                             </Typography>
-                        </Grid>
-                        <Grid
-                            item
-                            xs={4}
-                            sx={{
-                                display: "flex",
-                                flexDirection: "row",
-                                justifyContent: "end",
-                                alignItems: "start",
-                            }}
-                        >
-                            <Button variant="contained" onClick={this.handleMenu} endIcon={<KeyboardArrowDownIcon />}>
-                                Move Money
-                            </Button>
-                            <Menu
-                                anchorEl={this.state.moveMoneyMenuAnchorEl}
-                                anchorOrigin={{
-                                    vertical: "bottom",
-                                    horizontal: "right",
-                                }}
-                                PaperProps={{
-                                    elevation: 1,
-                                    sx: {
-                                        // backgroundColor: "background.default",
-                                        borderRadius: 5,
-                                    },
-                                }}
-                                keepMounted
-                                transformOrigin={{
-                                    vertical: "top",
-                                    horizontal: "right",
-                                }}
-                                open={Boolean(this.state.moveMoneyMenuAnchorEl)}
-                                onClick={this.handleClose}
+                            <Divider sx={{ my: 1 }} />
+                            <Typography
+                                variant="body1"
+                                component={Box}
+                                fontSize={30}
+                                fontWeight={500}
+                                display="flex"
+                                alignItems="center"
                             >
-                                <MenuItem
-                                    LinkComponent={Button}
-                                    onClick={() => {
-                                        openDocumentationDialog(this, () => this.renderTopUpDocumentation());
-                                        this.handleClose();
-                                    }}
-                                >
-                                    Add funds
-                                </MenuItem>
-                                <MenuItem
-                                    href="/account"
-                                    onClick={() => {
-                                        openDocumentationDialog(this, () => this.renderTransferDocumentation());
-                                        this.handleClose();
-                                    }}
-                                    LinkComponent={Button}
-                                >
-                                    Withdraw
-                                </MenuItem>
-                            </Menu>
-                        </Grid>
-                        <Grid item xs={12} sm={12} md={6} pt={5}>
-                            <Line
-                                options={{
-                                    plugins: {
-                                        legend: {
-                                            display: false,
+                                <Box fontSize={25}>$</Box>
+                                {this.appState.userAccountInfo?.balance ? (
+                                    this.appState.userAccountInfo?.balance
+                                ) : (
+                                    <CircularProgress size="1em" sx={{ ml: 1 }} color="primary" />
+                                )}
+                            </Typography>
+                            <Box pt={5} sx={{ position: "relative" }} height={300}>
+                                <Line
+                                    options={{
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: {
+                                                display: false,
+                                            },
                                         },
-                                    },
-                                }}
-                                data={this.chartData()}
-                            />
-                        </Grid>
+                                        scales: {
+                                            x: {
+                                                ticks: {
+                                                    autoSkip: true,
+                                                    maxTicksLimit: 7,
+                                                },
+                                            },
+                                            y: {
+                                                ticks: {
+                                                    autoSkip: true,
+                                                    maxTicksLimit: 6,
+                                                },
+                                            },
+                                        },
+                                    }}
+                                    data={this.chartData()}
+                                />
+                            </Box>
+                        </Paper>
                     </Grid>
-                    <Box>
-                        <Typography variant="h6">Stripe</Typography>
-                        <Divider sx={{ mb: 2 }} />
-                        <Typography variant="body1">
-                            As an API developer, you can set up a Stripe account to start receiving payment. If you are
-                            using an API that's developed by someone else, you can skip this step.
-                        </Typography>
-                        <Typography variant="body1" component="div">
-                            To set up a Stripe account,{" "}
-                            <Link href="/onboard" target="_blank" color="info.main">
-                                go to the onboarding page
-                            </Link>{" "}
-                            and complete the registration.
-                        </Typography>
-                        If you have completed the setup above, you can log in to your Stripe portal.
-                        <Typography variant="body1"></Typography>
-                        <Box my={1}>
-                            <Link
-                                color="info.main"
-                                onClick={() => {
-                                    openDocumentationDialog(this, () => this.renderLoginStripeDocumentation());
-                                }}
+                    <Grid item xs={4}>
+                        <Paper sx={{ padding: 5, borderRadius: 10 }} elevation={1}>
+                            <Typography variant="h6">Connect to Stripe</Typography>
+                            <Divider sx={{ mb: 2 }} />
+                            <Typography variant="body1" gutterBottom>
+                                As an API developer, you can set up a Stripe account to start receiving payment.
+                            </Typography>
+                            <Typography variant="body1" component="div" gutterBottom>
+                                To set up a Stripe account,{" "}
+                                <Link href="/onboard" target="_blank" color="info.main">
+                                    go to the onboarding page
+                                </Link>{" "}
+                                and complete the registration.
+                            </Typography>
+                            If you have completed the setup above, you can log in to your Stripe portal.
+                            <Typography variant="body1" gutterBottom></Typography>
+                            <Box my={1}>
+                                <Link
+                                    color="info.main"
+                                    onClick={() => {
+                                        openDocumentationDialog(this, () => this.renderLoginStripeDocumentation());
+                                    }}
+                                >
+                                    Having trouble signing in?
+                                </Link>
+                            </Box>
+                            <Button
+                                href="https://connect.stripe.com/express_login"
+                                target="_blank"
+                                color="secondary"
+                                variant="outlined"
+                                sx={{ mt: 2 }}
                             >
-                                Having trouble signing in?
-                            </Link>
-                        </Box>
-                        <Button
-                            href="https://connect.stripe.com/express_login"
-                            target="_blank"
-                            color="secondary"
-                            variant="outlined"
-                            sx={{ mt: 2 }}
-                        >
-                            Sign in Stripe
-                        </Button>
-                    </Box>
-                    <LogTable<AccountActivity>
-                        tableName="Activities"
-                        urlNamespace="s"
-                        activities={this.allActivities()}
-                        activitiesPerPage={20}
-                        onChange={this.handleActivitiesPageChange}
-                        renderCell={(head: string, activity: AccountActivity) => {
-                            switch (head) {
-                                case "Date":
-                                    return this.date(activity);
-                                case "Reason":
-                                    return this.reason(activity);
-                                case "App":
-                                    return activity.billedApp?.name || "";
-                                case "Volume":
-                                    return activity.usageSummary?.volume || "";
-                                case "Description":
-                                    return activity.description;
-                                case "Income":
-                                    return this.earned(activity);
-                                case "Spending":
-                                    return this.spent(activity);
-                                case "Estimated Completion":
-                                    return this.eta(activity);
-                                case "Consumed Free Quota":
-                                    return activity.consumedFreeQuota && activity.consumedFreeQuota > 0
-                                        ? activity.consumedFreeQuota
-                                        : "";
-                                case "Status":
-                                    return this.status(activity);
-                            }
-                        }}
-                        headers={[
-                            {
-                                title: "Date",
-                            },
-                            {
-                                title: "Reason",
-                            },
-                            {
-                                title: "App",
-                            },
-                            {
-                                title: "Volume",
-                            },
-                            {
-                                title: "Description",
-                                hideByDefault: true,
-                            },
-                            {
-                                title: "Status",
-                            },
-                            {
-                                title: "Estimated Completion",
-                            },
-                            {
-                                title: "Consumed Free Quota",
-                            },
-                            {
-                                title: "Income",
-                            },
-                            {
-                                title: "Spending",
-                            },
-                        ]}
-                    />
-                </Stack>
+                                Sign in Stripe
+                            </Button>
+                        </Paper>
+                    </Grid>
+                    <Grid item>
+                        <Paper sx={{ padding: 5, borderRadius: 10 }} elevation={1}>
+                            <LogTable<AccountActivity>
+                                tableName="Activities"
+                                urlNamespace="s"
+                                activities={this.allActivities()}
+                                activitiesPerPage={20}
+                                onChange={this.handleActivitiesPageChange}
+                                renderCell={(head: string, activity: AccountActivity) => {
+                                    switch (head) {
+                                        case "Date":
+                                            return this.date(activity);
+                                        case "Reason":
+                                            return this.reason(activity);
+                                        case "App":
+                                            return activity.billedApp?.name || "";
+                                        case "Volume":
+                                            return activity.usageSummary?.volume || "";
+                                        case "Description":
+                                            return activity.description;
+                                        case "Income":
+                                            return this.earned(activity);
+                                        case "Spending":
+                                            return this.spent(activity);
+                                        case "Estimated Completion":
+                                            return this.eta(activity);
+                                        case "Consumed Free Quota":
+                                            return activity.consumedFreeQuota && activity.consumedFreeQuota > 0
+                                                ? activity.consumedFreeQuota
+                                                : "";
+                                        case "Status":
+                                            return this.status(activity);
+                                    }
+                                }}
+                                headers={[
+                                    {
+                                        title: "Date",
+                                    },
+                                    {
+                                        title: "Reason",
+                                    },
+                                    {
+                                        title: "App",
+                                    },
+                                    {
+                                        title: "Volume",
+                                    },
+                                    {
+                                        title: "Description",
+                                        hideByDefault: true,
+                                    },
+                                    {
+                                        title: "Status",
+                                    },
+                                    {
+                                        title: "Estimated Completion",
+                                    },
+                                    {
+                                        title: "Consumed Free Quota",
+                                    },
+                                    {
+                                        title: "Income",
+                                    },
+                                    {
+                                        title: "Spending",
+                                    },
+                                ]}
+                            />
+                        </Paper>
+                    </Grid>
+                </Grid>
                 <DocumentationDialog parent={this} />
+                <Menu
+                    anchorEl={this.state.moveMoneyMenuAnchorEl}
+                    anchorOrigin={{
+                        vertical: "bottom",
+                        horizontal: "right",
+                    }}
+                    PaperProps={{
+                        elevation: 1,
+                        sx: {
+                            backgroundColor: "grey.100",
+                            borderRadius: 5,
+                        },
+                    }}
+                    keepMounted
+                    transformOrigin={{
+                        vertical: "top",
+                        horizontal: "right",
+                    }}
+                    open={Boolean(this.state.moveMoneyMenuAnchorEl)}
+                    onClick={this.handleClose}
+                >
+                    <MenuItem
+                        LinkComponent={Button}
+                        onClick={() => {
+                            openDocumentationDialog(this, () => this.renderTopUpDocumentation());
+                            this.handleClose();
+                        }}
+                    >
+                        Add funds
+                    </MenuItem>
+                    <MenuItem
+                        href="/account"
+                        onClick={() => {
+                            openDocumentationDialog(this, () => this.renderTransferDocumentation());
+                            this.handleClose();
+                        }}
+                        LinkComponent={Button}
+                    >
+                        Withdraw
+                    </MenuItem>
+                </Menu>
             </React.Fragment>
         );
     }

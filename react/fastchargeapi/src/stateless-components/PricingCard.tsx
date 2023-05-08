@@ -1,4 +1,4 @@
-import { Card, CardContent, Typography, CardActions } from "@mui/material";
+import { Card, CardActions, CardContent, Typography } from "@mui/material";
 import React from "react";
 
 export type PricingCardProps = {
@@ -8,12 +8,16 @@ export type PricingCardProps = {
     chargePerRequest: string;
     freeQuota: number;
     actionButton: React.ReactNode;
+    CardProps?: React.ComponentProps<typeof Card>;
 };
 
 export class PricingCard extends React.PureComponent<PricingCardProps> {
+    constructor(props: PricingCardProps) {
+        super(props);
+    }
     render() {
         return (
-            <Card sx={{ p: 2, borderRadius: 5 }}>
+            <Card {...this.props.CardProps} sx={{ p: 2, borderRadius: 8, ...this.props.CardProps?.sx }}>
                 <CardContent>
                     <Typography variant="h6" mb={0}>
                         {this.props.name}

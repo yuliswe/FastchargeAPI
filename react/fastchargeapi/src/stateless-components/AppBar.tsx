@@ -1,25 +1,24 @@
-import React from "react";
+import SearchIcon from "@mui/icons-material/Search";
 import {
+    Avatar,
     Button,
-    ButtonBase,
     Container,
     Icon,
     IconButton,
     InputBase,
+    Link,
     AppBar as MUIAppBar,
+    Menu,
+    MenuItem,
     Paper,
     Stack,
     Toolbar,
-    Link,
     Typography,
-    Menu,
-    MenuItem,
-    Avatar,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import { AppContext, ReactAppContextType } from "../AppContext";
-import { createSearchParams } from "react-router-dom";
 import { getAuth } from "firebase/auth";
+import React from "react";
+import { createSearchParams } from "react-router-dom";
+import { AppContext, ReactAppContextType } from "../AppContext";
 
 type State = {
     searchText: string;
@@ -28,6 +27,7 @@ type State = {
 
 type Props = {
     onSearch?: (searchText: string) => void;
+    bgcolor?: string;
 };
 
 export class AppBar extends React.Component<Props, State> {
@@ -100,7 +100,15 @@ export class AppBar extends React.Component<Props, State> {
                         </Toolbar>
                     </Container>
                 </MUIAppBar>
-                <MUIAppBar position="static" sx={{ bgcolor: "background.default" }}>
+                <MUIAppBar
+                    position="static"
+                    sx={{
+                        bgcolor: this.props.bgcolor ?? "background.paper",
+                        borderBottom: "1px solid",
+                        borderColor: "grey.400",
+                    }}
+                    elevation={0}
+                >
                     <Container maxWidth="xl">
                         <Toolbar sx={{ px: "0 !important" }}>
                             <Button href="/" sx={{ p: 0 }}>
@@ -128,8 +136,8 @@ export class AppBar extends React.Component<Props, State> {
                                         borderBottomLeftRadius: 5,
                                         borderTopLeftRadius: 5,
                                         display: "flex",
-                                        bgcolor: "grey.200",
                                         flexGrow: 1,
+                                        bgcolor: "background.default",
                                     }}
                                 >
                                     <IconButton type="button" aria-label="search">
@@ -157,30 +165,25 @@ export class AppBar extends React.Component<Props, State> {
                                         }}
                                     />
                                 </Paper>
-                                <Paper
+                                <Button
+                                    component={Link}
+                                    underline="none"
                                     sx={{
-                                        bgcolor: "secondary.main",
                                         display: "flex",
                                         borderBottomLeftRadius: 0,
                                         borderTopLeftRadius: 0,
                                         borderTopRightRadius: 5,
                                         borderBottomRightRadius: 5,
                                     }}
+                                    variant="contained"
+                                    color="secondary"
+                                    href={`/search?q=${this.state.searchText}`}
+                                    onClick={() => {
+                                        this.props.onSearch?.(this.state.searchText);
+                                    }}
                                 >
-                                    <ButtonBase
-                                        component={Link}
-                                        sx={{
-                                            color: "secondary.contrastText",
-                                            px: 2,
-                                        }}
-                                        href={`/search?q=${this.state.searchText}`}
-                                        onClick={() => {
-                                            this.props.onSearch?.(this.state.searchText);
-                                        }}
-                                    >
-                                        <Typography>Search</Typography>
-                                    </ButtonBase>
-                                </Paper>
+                                    <Typography>Search</Typography>
+                                </Button>
                             </Stack>
                             <Stack>
                                 {this._context.firebase.isAnonymousUser && (
@@ -228,7 +231,7 @@ export class AppBar extends React.Component<Props, State> {
                                             PaperProps={{
                                                 elevation: 1,
                                                 sx: {
-                                                    // backgroundColor: "background.default",
+                                                    backgroundColor: "grey.100",
                                                     borderRadius: 5,
                                                 },
                                             }}

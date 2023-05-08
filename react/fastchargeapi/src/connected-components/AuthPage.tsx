@@ -278,7 +278,7 @@ class _AuthPage extends React.Component<_Props, _State> {
     render() {
         return (
             <React.Fragment>
-                <Grid container sx={{ height: "100vh" }}>
+                <Grid container sx={{ height: "100vh", bgcolor: "background.paper" }}>
                     <Grid
                         item
                         xs={7}

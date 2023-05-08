@@ -1,10 +1,10 @@
+import { Button, Card, CardActions, CardContent, Grid, Link, Stack, Typography } from "@mui/material";
 import React from "react";
-import { RootAppState } from "../states/RootAppState";
 import { connect } from "react-redux";
-import { Button, Card, CardActions, CardContent, Grid, Stack, Typography, Link } from "@mui/material";
-import { SubscriptionsAppState } from "../states/SubscriptionsAppState";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { SubscriptionEvent, UserSubscription } from "../events/SubscriptionEvent";
+import { RootAppState } from "../states/RootAppState";
+import { SubscriptionsAppState } from "../states/SubscriptionsAppState";
 import { appStore } from "../store-config";
 type Props = {
     appState: SubscriptionsAppState;
@@ -39,7 +39,7 @@ class _SubscriptionsPage extends React.Component<Props> {
         return (
             <Grid container spacing={2}>
                 {this.subscriptions().map((sub, index) => (
-                    <Grid item key={index}>
+                    <Grid item key={sub.pk}>
                         <Card sx={{ p: 3, borderRadius: 5 }}>
                             <CardContent>
                                 <Stack direction="row" spacing={1}>
@@ -53,13 +53,13 @@ class _SubscriptionsPage extends React.Component<Props> {
                                         {"v1.0.0"}
                                     </Typography> */}
                                 </Stack>
-                                <Typography variant="body1" display="flex" alignItems="center">
+                                <Typography variant="body1" display="flex" alignItems="center" mb={2}>
                                     Published by {sub.app.owner.author}
                                 </Typography>
-                                <Typography variant="body1" mt={2}>
-                                    Subscribed since {this.subscribedSince(sub)}
+                                <Typography variant="body1">
+                                    Subscribed to <b>{this.plan(sub)}</b>
                                 </Typography>
-                                <Typography variant="body1">Current plan: {this.plan(sub)}</Typography>
+                                <Typography variant="body1">Since {this.subscribedSince(sub)}</Typography>
                             </CardContent>
                             <CardActions>
                                 <Button variant="contained" color="secondary" LinkComponent={Link} href={sub.app.name}>

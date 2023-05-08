@@ -1,20 +1,22 @@
-import { HomePage } from "./connected-components/HomePage";
-import { createBrowserRouter } from "react-router-dom";
-import { AuthPage } from "./connected-components/AuthPage";
-import { OnboardPage } from "./connected-components/OnboardPage";
-import { TopUpPage } from "./connected-components/TopupPage";
 import React from "react";
-import { SearchResultPage } from "./connected-components/SearchResultPage";
-import { AppDetailPage } from "./connected-components/AppDetailPage";
+import { createBrowserRouter } from "react-router-dom";
+import { WithContextProps } from "./App";
 import { AccountPage } from "./connected-components/AccountPage";
+import { AppDetailPage } from "./connected-components/AppDetailPage";
+import { AuthPage } from "./connected-components/AuthPage";
 import { DashboardPage } from "./connected-components/DashboardPage";
-import { MyAppsPage } from "./connected-components/MyAppsPage";
-import { SubscriptionsPage } from "./connected-components/SubscriptionsPage";
+import { HomePage } from "./connected-components/HomePage";
 import { MyAppDetailPage } from "./connected-components/MyAppDetailPage";
+import { MyAppsPage } from "./connected-components/MyAppsPage";
+import { OnboardPage } from "./connected-components/OnboardPage";
+import { SearchResultPage } from "./connected-components/SearchResultPage";
 import { SubscriptionDetailPage } from "./connected-components/SubscriptionDetailPage";
+import { SubscriptionsPage } from "./connected-components/SubscriptionsPage";
 import { TermsPage } from "./connected-components/TermsPage";
+import { TopUpPage } from "./connected-components/TopupPage";
+import { themeWithWhiteBackground } from "./theme";
 
-export function createRouter(WithContext: (props: React.PropsWithChildren) => React.ReactElement) {
+export function createRouter(WithContext: (props: WithContextProps) => React.ReactElement) {
     const router = createBrowserRouter([
         {
             path: "/auth",
@@ -34,7 +36,7 @@ export function createRouter(WithContext: (props: React.PropsWithChildren) => Re
         },
         {
             path: "/search",
-            element: <WithContext children={<SearchResultPage />} />,
+            element: <WithContext children={<SearchResultPage />} theme={themeWithWhiteBackground} />,
         },
         {
             path: "/app/:app",

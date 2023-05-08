@@ -1,10 +1,10 @@
+import { CircularProgress, Container, Fade, Grid, Stack, Typography } from "@mui/material";
 import React from "react";
 import { connect } from "react-redux";
-import { RootAppState } from "../states/RootAppState";
-import { OnboardAppState } from "../states/OnBoardAppState";
-import { CircularProgress, Container, Fade, Grid, Stack, Typography } from "@mui/material";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { fetchWithAuth } from "../fetch";
+import { OnboardAppState } from "../states/OnBoardAppState";
+import { RootAppState } from "../states/RootAppState";
 type _State = {};
 
 type _Props = {
@@ -145,7 +145,7 @@ class _Onboard extends React.Component<_Props, _State> {
     render() {
         return (
             <React.Fragment>
-                <Grid container sx={{ height: "100vh" }}>
+                <Grid container sx={{ height: "100vh", bgcolor: "background.paper" }}>
                     <Grid
                         item
                         xs={5}

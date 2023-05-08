@@ -1,7 +1,6 @@
-import React from "react";
-import { RootAppState } from "../states/RootAppState";
-import { connect } from "react-redux";
-import { MyAppDetailAppState } from "../states/MyAppDetailAppState";
+import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
+import CopyIcon from "@mui/icons-material/FileCopy";
 import {
     Autocomplete,
     AutocompleteRenderInputParams,
@@ -12,6 +11,7 @@ import {
     Grid,
     IconButton,
     Link,
+    Paper,
     Stack,
     Table,
     TableBody,
@@ -21,20 +21,21 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
-import { MyAppDetailEvent } from "../events/MyAppDetailEvent";
-import { appStore } from "../store-config";
-import { ReactAppContextType, AppContext } from "../AppContext";
+import React from "react";
+import { connect } from "react-redux";
 import Terminal, { ColorMode, TerminalInput } from "react-terminal-ui";
-import EditIcon from "@mui/icons-material/Edit";
-import CopyIcon from "@mui/icons-material/FileCopy";
+import { AppContext, ReactAppContextType } from "../AppContext";
+import { GQLAppVisibility } from "../__generated__/gql-operations";
+import { MyAppDetailEvent } from "../events/MyAppDetailEvent";
 import {
     DocumentationDialog,
     SupportDocumentation,
     openDocumentationDialog,
     supportDocumenationDefault,
 } from "../stateless-components/DocumentationDialog";
-import { GQLAppVisibility } from "../__generated__/gql-operations";
+import { MyAppDetailAppState } from "../states/MyAppDetailAppState";
+import { RootAppState } from "../states/RootAppState";
+import { appStore } from "../store-config";
 type _Props = {
     appState: MyAppDetailAppState;
 };
@@ -211,507 +212,510 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
     render() {
         return (
             <React.Fragment>
-                <Breadcrumbs aria-label="breadcrumb">
-                    <Link underline="hover" color="inherit" href="/account/my-apps">
-                        My Apps
-                    </Link>
-                    <Stack direction="row" alignItems="center">
-                        <Typography variant="h6" display="flex" alignItems="center" color="text.primary">
-                            {this.appState.appDetail?.title || this.appState.appDetail?.name}
-                        </Typography>
-                        <Typography variant="body1" display="flex" alignItems="center" color="text.primary" ml={1}>
-                            @{this.appState.appDetail?.name}
-                        </Typography>
-                    </Stack>
-                </Breadcrumbs>
-                {/* <Button variant="contained" color="secondary" size="small" sx={{ my: 1 }}>
-                    Publish
-                </Button> */}
-                <Divider sx={{ mt: 1, mb: 5 }} />
-                <Stack spacing={10}>
-                    <Stack>
-                        <Grid container spacing={2}>
-                            <Grid item xs={12}>
-                                <Typography mb={1} variant="label">
-                                    App Name
+                <Stack spacing={5}>
+                    <Paper sx={{ padding: 5, borderRadius: 10 }} elevation={1}>
+                        <Breadcrumbs aria-label="breadcrumb">
+                            <Link underline="hover" color="inherit" href="/account/my-apps">
+                                My Apps
+                            </Link>
+                            <Stack direction="row" alignItems="center">
+                                <Typography variant="h6" display="flex" alignItems="center" color="text.primary">
+                                    {this.appState.appDetail?.title || this.appState.appDetail?.name}
                                 </Typography>
-                                <TextField variant="standard" value={this.appState.appDetail?.name || ""} disabled />
-                            </Grid>
-                            <Grid item xs={6}>
-                                <Stack direction="row" alignItems="center" mb={1}>
-                                    <Typography variant="label">Title</Typography>
-                                    <IconButton
-                                        size="small"
-                                        onClick={() => {
-                                            openDocumentationDialog(this, () =>
-                                                this.renderModifyAppInfoDocumentation({
-                                                    property: "title",
-                                                    value: "[New Name]",
-                                                    app: this.getAppName(),
-                                                })
-                                            );
+                                <Typography
+                                    variant="body1"
+                                    display="flex"
+                                    alignItems="center"
+                                    color="text.primary"
+                                    ml={1}
+                                >
+                                    @{this.appState.appDetail?.name}
+                                </Typography>
+                            </Stack>
+                        </Breadcrumbs>
+                        <Divider sx={{ my: 2 }} />
+                        <Stack>
+                            <Grid container spacing={2}>
+                                <Grid item xs={12}>
+                                    <Typography mb={1} variant="label">
+                                        App Name
+                                    </Typography>
+                                    <TextField
+                                        variant="standard"
+                                        value={this.appState.appDetail?.name || ""}
+                                        disabled
+                                    />
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <Stack direction="row" alignItems="center" mb={1}>
+                                        <Typography variant="label">Title</Typography>
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => {
+                                                openDocumentationDialog(this, () =>
+                                                    this.renderModifyAppInfoDocumentation({
+                                                        property: "title",
+                                                        value: "[New Name]",
+                                                        app: this.getAppName(),
+                                                    })
+                                                );
+                                            }}
+                                        >
+                                            <EditIcon />
+                                        </IconButton>
+                                    </Stack>
+                                    <TextField
+                                        fullWidth
+                                        disabled
+                                        placeholder="Display name for this app"
+                                        value={this.appState.appDetail?.title || ""}
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <Stack direction="row" alignItems="center" mb={1}>
+                                        <Typography variant="label">Visibility</Typography>
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => {
+                                                openDocumentationDialog(this, () =>
+                                                    this.renderModifyAppVisibilityDocumentation({
+                                                        app: this.getAppName(),
+                                                    })
+                                                );
+                                            }}
+                                        >
+                                            <EditIcon />
+                                        </IconButton>
+                                    </Stack>
+                                    <Autocomplete<GQLAppVisibility>
+                                        disablePortal
+                                        options={[GQLAppVisibility.Public, GQLAppVisibility.Private]}
+                                        getOptionLabel={(option) => option[0].toUpperCase() + option.slice(1)}
+                                        // defaultValue={["Public", GQLAppVisibility.Public]}
+                                        value={this.appState.appDetail?.visibility || GQLAppVisibility.Public}
+                                        disabled
+                                        color="secondary"
+                                        sx={{
+                                            maxWidth: 200,
+                                            bgcolor: "background.default",
                                         }}
-                                    >
-                                        <EditIcon />
-                                    </IconButton>
-                                </Stack>
-                                <TextField
-                                    fullWidth
-                                    disabled
-                                    placeholder="Display name for this app"
-                                    value={this.appState.appDetail?.title || ""}
-                                />
+                                        renderInput={(params: AutocompleteRenderInputParams) => (
+                                            <TextField variant="outlined" color="secondary" {...params} />
+                                        )}
+                                    />
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <Stack direction="row" alignItems="center" mb={1}>
+                                        <Typography variant="label">Repository</Typography>
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => {
+                                                openDocumentationDialog(this, () =>
+                                                    this.renderModifyAppInfoDocumentation({
+                                                        property: "repository",
+                                                        value: "https://github.com/username/myapp",
+                                                        app: this.getAppName(),
+                                                    })
+                                                );
+                                            }}
+                                        >
+                                            <EditIcon />
+                                        </IconButton>
+                                    </Stack>
+                                    <TextField
+                                        fullWidth
+                                        disabled
+                                        placeholder="URL to Github repository"
+                                        defaultValue={this.appState.appDetail?.repository || ""}
+                                    />
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <Stack direction="row" alignItems="center" mb={1}>
+                                        <Typography variant="label">Homepage</Typography>
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => {
+                                                openDocumentationDialog(this, () =>
+                                                    this.renderModifyAppInfoDocumentation({
+                                                        property: "homepage",
+                                                        value: "https://myproject/docs",
+                                                        app: this.getAppName(),
+                                                    })
+                                                );
+                                            }}
+                                        >
+                                            <EditIcon />
+                                        </IconButton>
+                                    </Stack>
+                                    <TextField fullWidth disabled placeholder="URL to project or documentation." />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <Stack direction="row" alignItems="center" mb={1}>
+                                        <Typography variant="label">README.md</Typography>
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => {
+                                                openDocumentationDialog(this, () =>
+                                                    this.renderModifyAppInfoDocumentation({
+                                                        property: "readme",
+                                                        value: "https://github.com/{user}/{repository}/blob/{branch}/README.md",
+                                                        app: this.getAppName(),
+                                                    })
+                                                );
+                                            }}
+                                        >
+                                            <EditIcon />
+                                        </IconButton>
+                                    </Stack>
+                                    <TextField
+                                        fullWidth
+                                        disabled
+                                        placeholder="URL to README.md, eg. https://github.com/{user}/{repository}/blob/{branch}/README.md"
+                                        defaultValue={this.appState.appDetail?.readme || ""}
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <Stack direction="row" alignItems="center" mb={1}>
+                                        <Typography variant="label">Description</Typography>
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => {
+                                                openDocumentationDialog(this, () =>
+                                                    this.renderModifyAppInfoDocumentation({
+                                                        property: "description",
+                                                        value: "My App description",
+                                                        app: this.getAppName(),
+                                                    })
+                                                );
+                                            }}
+                                        >
+                                            <EditIcon />
+                                        </IconButton>
+                                    </Stack>
+                                    <TextField
+                                        multiline
+                                        rows={4}
+                                        fullWidth
+                                        defaultValue={this.appState.appDetail?.description || ""}
+                                        placeholder="A short description that is displayed in the search result."
+                                        disabled
+                                    />
+                                </Grid>
                             </Grid>
-                            <Grid item xs={12}>
-                                <Stack direction="row" alignItems="center" mb={1}>
-                                    <Typography variant="label">Visibility</Typography>
-                                    <IconButton
-                                        size="small"
-                                        onClick={() => {
-                                            openDocumentationDialog(this, () =>
-                                                this.renderModifyAppVisibilityDocumentation({
-                                                    app: this.getAppName(),
-                                                })
-                                            );
-                                        }}
-                                    >
-                                        <EditIcon />
-                                    </IconButton>
-                                </Stack>
-                                <Autocomplete<GQLAppVisibility>
-                                    disablePortal
-                                    options={[GQLAppVisibility.Public, GQLAppVisibility.Private]}
-                                    getOptionLabel={(option) => option[0].toUpperCase() + option.slice(1)}
-                                    // defaultValue={["Public", GQLAppVisibility.Public]}
-                                    value={this.appState.appDetail?.visibility || GQLAppVisibility.Public}
-                                    disabled
-                                    color="secondary"
-                                    sx={{
-                                        maxWidth: 200,
-                                        bgcolor: "background.default",
-                                    }}
-                                    renderInput={(params: AutocompleteRenderInputParams) => (
-                                        <TextField variant="outlined" color="secondary" {...params} />
-                                    )}
-                                />
-                            </Grid>
-                            <Grid item xs={6}>
-                                <Stack direction="row" alignItems="center" mb={1}>
-                                    <Typography variant="label">Repository</Typography>
-                                    <IconButton
-                                        size="small"
-                                        onClick={() => {
-                                            openDocumentationDialog(this, () =>
-                                                this.renderModifyAppInfoDocumentation({
-                                                    property: "repository",
-                                                    value: "https://github.com/username/myapp",
-                                                    app: this.getAppName(),
-                                                })
-                                            );
-                                        }}
-                                    >
-                                        <EditIcon />
-                                    </IconButton>
-                                </Stack>
-                                <TextField
-                                    fullWidth
-                                    disabled
-                                    placeholder="URL to Github repository"
-                                    defaultValue={this.appState.appDetail?.repository || ""}
-                                />
-                            </Grid>
-                            <Grid item xs={6}>
-                                <Stack direction="row" alignItems="center" mb={1}>
-                                    <Typography variant="label">Homepage</Typography>
-                                    <IconButton
-                                        size="small"
-                                        onClick={() => {
-                                            openDocumentationDialog(this, () =>
-                                                this.renderModifyAppInfoDocumentation({
-                                                    property: "homepage",
-                                                    value: "https://myproject/docs",
-                                                    app: this.getAppName(),
-                                                })
-                                            );
-                                        }}
-                                    >
-                                        <EditIcon />
-                                    </IconButton>
-                                </Stack>
-                                <TextField fullWidth disabled placeholder="URL to project or documentation." />
-                            </Grid>
-                            <Grid item xs={12}>
-                                <Stack direction="row" alignItems="center" mb={1}>
-                                    <Typography variant="label">README.md</Typography>
-                                    <IconButton
-                                        size="small"
-                                        onClick={() => {
-                                            openDocumentationDialog(this, () =>
-                                                this.renderModifyAppInfoDocumentation({
-                                                    property: "readme",
-                                                    value: "https://github.com/{user}/{repository}/blob/{branch}/README.md",
-                                                    app: this.getAppName(),
-                                                })
-                                            );
-                                        }}
-                                    >
-                                        <EditIcon />
-                                    </IconButton>
-                                </Stack>
-                                <TextField
-                                    fullWidth
-                                    disabled
-                                    placeholder="URL to README.md, eg. https://github.com/{user}/{repository}/blob/{branch}/README.md"
-                                    defaultValue={this.appState.appDetail?.readme || ""}
-                                />
-                            </Grid>
-                            <Grid item xs={12}>
-                                <Stack direction="row" alignItems="center" mb={1}>
-                                    <Typography variant="label">Description</Typography>
-                                    <IconButton
-                                        size="small"
-                                        onClick={() => {
-                                            openDocumentationDialog(this, () =>
-                                                this.renderModifyAppInfoDocumentation({
-                                                    property: "description",
-                                                    value: "My App description",
-                                                    app: this.getAppName(),
-                                                })
-                                            );
-                                        }}
-                                    >
-                                        <EditIcon />
-                                    </IconButton>
-                                </Stack>
-                                <TextField
-                                    multiline
-                                    rows={4}
-                                    fullWidth
-                                    defaultValue={this.appState.appDetail?.description || ""}
-                                    placeholder="A short description that is displayed in the search result."
-                                    disabled
-                                />
-                            </Grid>
-                        </Grid>
-                    </Stack>
+                        </Stack>
+                    </Paper>
                     {/* Start Pricing Section */}
-                    <Stack>
-                        <Typography variant="h6">Pricing</Typography>
-                        <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
-                            <Button
-                                variant="contained"
-                                size="small"
-                                endIcon={<AddIcon />}
-                                onClick={() => {
-                                    openDocumentationDialog(this, () =>
-                                        this.renderAddPricingDocumentation({
-                                            app: this.getAppName(),
-                                        })
-                                    );
-                                }}
-                            >
-                                Add Pricing
-                            </Button>
-                            <Button
-                                variant="contained"
-                                color="secondary"
-                                size="small"
-                                disabled={this.state.pricingCheckboxes.size == 0}
-                                onClick={() => {
-                                    openDocumentationDialog(this, () =>
-                                        this.renderDeletePricingDocumentation({
-                                            pricingIDs: [...this.state.pricingCheckboxes],
-                                        })
-                                    );
-                                }}
-                            >
-                                Delete
-                            </Button>
-                        </Stack>
-                        <Divider sx={{ mt: 2, mb: 5 }} />
-                        <Table sx={{ mt: 2 }}>
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell width={50}>
-                                        <Checkbox
-                                            onChange={(e, checked) => {
-                                                if (checked) {
-                                                    this.setState({
-                                                        pricingCheckboxes: new Set(
-                                                            this.getPricingList().map((pricing) => pricing.pk)
-                                                        ),
-                                                    });
-                                                } else {
-                                                    this.setState({
-                                                        pricingCheckboxes: new Set(),
-                                                    });
-                                                }
-                                            }}
-                                        />
-                                    </TableCell>
-                                    <TableCell>ID</TableCell>
-                                    <TableCell>Name</TableCell>
-                                    <TableCell>Charge per call</TableCell>
-                                    <TableCell>Min monthly charge</TableCell>
-                                    <TableCell>Free quota</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {this.getPricingList().map((pricing, index) => (
-                                    <TableRow key={index}>
+                    <Paper sx={{ padding: 5, borderRadius: 10 }} elevation={1}>
+                        <Stack>
+                            <Typography variant="h6">Pricing</Typography>
+                            <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
+                                <Button
+                                    variant="contained"
+                                    size="small"
+                                    endIcon={<AddIcon />}
+                                    onClick={() => {
+                                        openDocumentationDialog(this, () =>
+                                            this.renderAddPricingDocumentation({
+                                                app: this.getAppName(),
+                                            })
+                                        );
+                                    }}
+                                >
+                                    Add Pricing
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    color="secondary"
+                                    size="small"
+                                    disabled={this.state.pricingCheckboxes.size == 0}
+                                    onClick={() => {
+                                        openDocumentationDialog(this, () =>
+                                            this.renderDeletePricingDocumentation({
+                                                pricingIDs: [...this.state.pricingCheckboxes],
+                                            })
+                                        );
+                                    }}
+                                >
+                                    Delete
+                                </Button>
+                            </Stack>
+                            <Divider sx={{ mt: 2, mb: 5 }} />
+                            <Table sx={{ mt: 2 }}>
+                                <TableHead>
+                                    <TableRow>
                                         <TableCell width={50}>
                                             <Checkbox
-                                                color="secondary"
-                                                checked={this.state.pricingCheckboxes.has(pricing.pk)}
                                                 onChange={(e, checked) => {
-                                                    let newState = new Set(this.state.pricingCheckboxes);
                                                     if (checked) {
-                                                        newState.add(pricing.pk);
                                                         this.setState({
-                                                            pricingCheckboxes: newState,
+                                                            pricingCheckboxes: new Set(
+                                                                this.getPricingList().map((pricing) => pricing.pk)
+                                                            ),
                                                         });
                                                     } else {
-                                                        newState.delete(pricing.pk);
                                                         this.setState({
-                                                            pricingCheckboxes: newState,
+                                                            pricingCheckboxes: new Set(),
                                                         });
                                                     }
                                                 }}
                                             />
                                         </TableCell>
-                                        <TableCell>
-                                            <IconButton
-                                                onClick={() => {
-                                                    void window.navigator.clipboard.writeText(pricing.pk);
-                                                }}
-                                            >
-                                                <CopyIcon />
-                                            </IconButton>
-                                        </TableCell>
-                                        <TableCell>
-                                            <TextField
-                                                variant="standard"
-                                                disabled
-                                                fullWidth
-                                                color="secondary"
-                                                defaultValue={pricing.name}
-                                                sx={{
-                                                    bgcolor: "background.default",
-                                                }}
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <TextField
-                                                variant="standard"
-                                                disabled
-                                                placeholder="Enter amount in USD"
-                                                fullWidth
-                                                type="number"
-                                                color="secondary"
-                                                defaultValue={pricing.chargePerRequest}
-                                                sx={{
-                                                    bgcolor: "background.default",
-                                                }}
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <TextField
-                                                variant="standard"
-                                                disabled
-                                                placeholder="Enter amount in USD"
-                                                fullWidth
-                                                type="number"
-                                                color="secondary"
-                                                // defaultValue={api.destination}
-                                                sx={{
-                                                    bgcolor: "background.default",
-                                                }}
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <TextField
-                                                variant="standard"
-                                                disabled
-                                                fullWidth
-                                                type="number"
-                                                color="secondary"
-                                                defaultValue={pricing.freeQuota || 0}
-                                                sx={{
-                                                    bgcolor: "background.default",
-                                                }}
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <IconButton
-                                                onClick={() => {
-                                                    openDocumentationDialog(this, () =>
-                                                        this.renderModifyPricingDocumentation({
-                                                            pricingID: pricing.pk,
-                                                        })
-                                                    );
-                                                }}
-                                            >
-                                                <EditIcon />
-                                            </IconButton>
-                                        </TableCell>
+                                        <TableCell>ID</TableCell>
+                                        <TableCell>Name</TableCell>
+                                        <TableCell>Charge per call</TableCell>
+                                        <TableCell>Monthly charge</TableCell>
+                                        <TableCell>Free quota</TableCell>
+                                        <TableCell>Call to Action</TableCell>
+                                        <TableCell>Edit</TableCell>
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </Stack>
+                                </TableHead>
+                                <TableBody>
+                                    {this.getPricingList().map((pricing, index) => (
+                                        <TableRow key={pricing.pk}>
+                                            <TableCell width={50}>
+                                                <Checkbox
+                                                    color="secondary"
+                                                    checked={this.state.pricingCheckboxes.has(pricing.pk)}
+                                                    onChange={(e, checked) => {
+                                                        let newState = new Set(this.state.pricingCheckboxes);
+                                                        if (checked) {
+                                                            newState.add(pricing.pk);
+                                                            this.setState({
+                                                                pricingCheckboxes: newState,
+                                                            });
+                                                        } else {
+                                                            newState.delete(pricing.pk);
+                                                            this.setState({
+                                                                pricingCheckboxes: newState,
+                                                            });
+                                                        }
+                                                    }}
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <IconButton
+                                                    onClick={() => {
+                                                        void window.navigator.clipboard.writeText(pricing.pk);
+                                                    }}
+                                                >
+                                                    <CopyIcon />
+                                                </IconButton>
+                                            </TableCell>
+                                            <TableCell>
+                                                <TextField
+                                                    variant="standard"
+                                                    disabled
+                                                    fullWidth
+                                                    color="secondary"
+                                                    defaultValue={pricing.name}
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <TextField
+                                                    variant="standard"
+                                                    disabled
+                                                    placeholder="USD $"
+                                                    fullWidth
+                                                    type="number"
+                                                    color="secondary"
+                                                    defaultValue={pricing.chargePerRequest}
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <TextField
+                                                    variant="standard"
+                                                    disabled
+                                                    placeholder="USD $"
+                                                    fullWidth
+                                                    type="number"
+                                                    color="secondary"
+                                                    // defaultValue={api.destination}
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <TextField
+                                                    variant="standard"
+                                                    disabled
+                                                    fullWidth
+                                                    type="number"
+                                                    color="secondary"
+                                                    defaultValue={pricing.freeQuota || 0}
+                                                />
+                                            </TableCell>
+                                            <TableCell>{pricing.callToAction || "Not provided."}</TableCell>
+                                            <TableCell>
+                                                <IconButton
+                                                    onClick={() => {
+                                                        openDocumentationDialog(this, () =>
+                                                            this.renderModifyPricingDocumentation({
+                                                                pricingID: pricing.pk,
+                                                            })
+                                                        );
+                                                    }}
+                                                >
+                                                    <EditIcon />
+                                                </IconButton>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </Stack>
+                    </Paper>
                     {/* Start API Section */}
-                    <Stack>
-                        <Typography variant="h6" sx={{ mb: 1 }}>
-                            Endpoints
-                        </Typography>
-                        <Stack direction="row" spacing={2}>
-                            <Button
-                                variant="contained"
-                                size="small"
-                                endIcon={<AddIcon />}
-                                onClick={() => {
-                                    openDocumentationDialog(this, () =>
-                                        this.renderAddAPIDocumentation({
-                                            app: this.getAppName(),
-                                        })
-                                    );
-                                }}
-                            >
-                                Add API
-                            </Button>
-                            <Button
-                                variant="contained"
-                                size="small"
-                                color="secondary"
-                                disabled={this.state.endpointCheckboxes.size == 0}
-                                onClick={() => {
-                                    openDocumentationDialog(this, () =>
-                                        this.renderDeleteAPIDocumentation({
-                                            endpointIDs: [...this.state.endpointCheckboxes],
-                                        })
-                                    );
-                                }}
-                            >
-                                Delete
-                            </Button>
-                        </Stack>
-                        <Divider sx={{ mt: 2, mb: 5 }} />
-                        <Table sx={{ mt: 2 }}>
-                            <TableHead>
-                                <TableRow>
-                                    <TableCell width={50}>
-                                        <Checkbox
-                                            onChange={(e, checked) => {
-                                                if (checked) {
-                                                    this.setState({
-                                                        endpointCheckboxes: new Set(
-                                                            this.getAPIList().map((api) => api.pk)
-                                                        ),
-                                                    });
-                                                } else {
-                                                    this.setState({
-                                                        endpointCheckboxes: new Set(),
-                                                    });
-                                                }
-                                            }}
-                                        />
-                                    </TableCell>
-                                    <TableCell>ID</TableCell>
-                                    <TableCell>Http method</TableCell>
-                                    <TableCell>Path</TableCell>
-                                    <TableCell>Destination</TableCell>
-                                    <TableCell></TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {this.getAPIList().map((api, index) => (
-                                    <TableRow key={index}>
+                    <Paper sx={{ padding: 5, borderRadius: 10 }} elevation={1}>
+                        <Stack>
+                            <Typography variant="h6" sx={{ mb: 1 }}>
+                                Endpoints
+                            </Typography>
+                            <Stack direction="row" spacing={2}>
+                                <Button
+                                    variant="contained"
+                                    size="small"
+                                    endIcon={<AddIcon />}
+                                    onClick={() => {
+                                        openDocumentationDialog(this, () =>
+                                            this.renderAddAPIDocumentation({
+                                                app: this.getAppName(),
+                                            })
+                                        );
+                                    }}
+                                >
+                                    Add API
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    size="small"
+                                    color="secondary"
+                                    disabled={this.state.endpointCheckboxes.size == 0}
+                                    onClick={() => {
+                                        openDocumentationDialog(this, () =>
+                                            this.renderDeleteAPIDocumentation({
+                                                endpointIDs: [...this.state.endpointCheckboxes],
+                                            })
+                                        );
+                                    }}
+                                >
+                                    Delete
+                                </Button>
+                            </Stack>
+                            <Divider sx={{ mt: 2, mb: 5 }} />
+                            <Table sx={{ mt: 2 }}>
+                                <TableHead>
+                                    <TableRow>
                                         <TableCell width={50}>
                                             <Checkbox
-                                                color="secondary"
-                                                checked={this.state.endpointCheckboxes.has(api.pk)}
                                                 onChange={(e, checked) => {
-                                                    let newState = new Set(this.state.endpointCheckboxes);
                                                     if (checked) {
-                                                        newState.add(api.pk);
                                                         this.setState({
-                                                            endpointCheckboxes: newState,
+                                                            endpointCheckboxes: new Set(
+                                                                this.getAPIList().map((api) => api.pk)
+                                                            ),
                                                         });
                                                     } else {
-                                                        newState.delete(api.pk);
                                                         this.setState({
-                                                            endpointCheckboxes: newState,
+                                                            endpointCheckboxes: new Set(),
                                                         });
                                                     }
                                                 }}
                                             />
                                         </TableCell>
-                                        <TableCell>
-                                            <IconButton
-                                                onClick={() => {
-                                                    void window.navigator.clipboard.writeText(api.pk);
-                                                }}
-                                            >
-                                                <CopyIcon />
-                                            </IconButton>
-                                        </TableCell>
-                                        <TableCell width={200}>
-                                            <Autocomplete
-                                                disablePortal
-                                                options={["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"]}
-                                                defaultValue={api.method}
-                                                disabled
-                                                color="secondary"
-                                                sx={{
-                                                    bgcolor: "background.default",
-                                                }}
-                                                renderInput={(params) => (
-                                                    <TextField variant="standard" color="secondary" {...params} />
-                                                )}
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <TextField
-                                                variant="standard"
-                                                color="secondary"
-                                                fullWidth
-                                                defaultValue={api.path}
-                                                disabled
-                                                sx={{
-                                                    bgcolor: "background.default",
-                                                }}
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <TextField
-                                                variant="standard"
-                                                fullWidth
-                                                color="secondary"
-                                                defaultValue={api.destination}
-                                                disabled
-                                                sx={{
-                                                    bgcolor: "background.default",
-                                                }}
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <IconButton
-                                                onClick={() => {
-                                                    openDocumentationDialog(this, () =>
-                                                        this.renderModifyAPIDocumentation({
-                                                            endpointID: api.pk,
-                                                        })
-                                                    );
-                                                }}
-                                            >
-                                                <EditIcon />
-                                            </IconButton>
-                                        </TableCell>
+                                        <TableCell>ID</TableCell>
+                                        <TableCell>Http method</TableCell>
+                                        <TableCell>Path</TableCell>
+                                        <TableCell>Destination</TableCell>
+                                        <TableCell></TableCell>
                                     </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </Stack>
+                                </TableHead>
+                                <TableBody>
+                                    {this.getAPIList().map((api, index) => (
+                                        <TableRow key={api.pk}>
+                                            <TableCell width={50}>
+                                                <Checkbox
+                                                    color="secondary"
+                                                    checked={this.state.endpointCheckboxes.has(api.pk)}
+                                                    onChange={(e, checked) => {
+                                                        let newState = new Set(this.state.endpointCheckboxes);
+                                                        if (checked) {
+                                                            newState.add(api.pk);
+                                                            this.setState({
+                                                                endpointCheckboxes: newState,
+                                                            });
+                                                        } else {
+                                                            newState.delete(api.pk);
+                                                            this.setState({
+                                                                endpointCheckboxes: newState,
+                                                            });
+                                                        }
+                                                    }}
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <IconButton
+                                                    onClick={() => {
+                                                        void window.navigator.clipboard.writeText(api.pk);
+                                                    }}
+                                                >
+                                                    <CopyIcon />
+                                                </IconButton>
+                                            </TableCell>
+                                            <TableCell width={200}>
+                                                <Autocomplete
+                                                    disablePortal
+                                                    options={[
+                                                        "GET",
+                                                        "POST",
+                                                        "PUT",
+                                                        "DELETE",
+                                                        "PATCH",
+                                                        "OPTIONS",
+                                                        "HEAD",
+                                                    ]}
+                                                    defaultValue={api.method}
+                                                    disabled
+                                                    color="secondary"
+                                                    renderInput={(params) => (
+                                                        <TextField variant="standard" color="secondary" {...params} />
+                                                    )}
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <TextField
+                                                    variant="standard"
+                                                    color="secondary"
+                                                    fullWidth
+                                                    defaultValue={api.path}
+                                                    disabled
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <TextField
+                                                    variant="standard"
+                                                    fullWidth
+                                                    color="secondary"
+                                                    defaultValue={api.destination}
+                                                    disabled
+                                                />
+                                            </TableCell>
+                                            <TableCell>
+                                                <IconButton
+                                                    onClick={() => {
+                                                        openDocumentationDialog(this, () =>
+                                                            this.renderModifyAPIDocumentation({
+                                                                endpointID: api.pk,
+                                                            })
+                                                        );
+                                                    }}
+                                                >
+                                                    <EditIcon />
+                                                </IconButton>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </Stack>
+                    </Paper>
                 </Stack>
                 <DocumentationDialog parent={this} />
             </React.Fragment>

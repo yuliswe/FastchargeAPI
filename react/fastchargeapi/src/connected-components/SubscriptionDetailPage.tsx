@@ -1,20 +1,20 @@
+import { Box, Breadcrumbs, Button, Divider, Grid, Link, Paper, Stack, Typography } from "@mui/material";
 import React from "react";
-import { RootAppState } from "../states/RootAppState";
 import { connect } from "react-redux";
-import { SubscriptionDetailAppState } from "../states/SubscriptionDetailAppState";
-import { Box, Breadcrumbs, Button, Divider, Grid, Link, Stack, Typography } from "@mui/material";
-import { PricingCard } from "../stateless-components/PricingCard";
-import { AvailablePlan, SubscriotionDetailEvent, UsageSummary } from "../events/SubscriptionDetailEvent";
-import { appStore } from "../store-config";
+import Terminal, { ColorMode, TerminalInput } from "react-terminal-ui";
 import { AppContext, ReactAppContextType } from "../AppContext";
-import { LogTable, LogTableOnChangeHandler } from "../stateless-components/LogTable";
+import { AvailablePlan, SubscriotionDetailEvent, UsageSummary } from "../events/SubscriptionDetailEvent";
 import {
     DocumentationDialog,
     SupportDocumentation,
     openDocumentationDialog,
+    supportDocumenationDefault,
 } from "../stateless-components/DocumentationDialog";
-import { supportDocumenationDefault } from "../stateless-components/DocumentationDialog";
-import Terminal, { ColorMode, TerminalInput } from "react-terminal-ui";
+import { LogTable, LogTableOnChangeHandler } from "../stateless-components/LogTable";
+import { PricingCard } from "../stateless-components/PricingCard";
+import { RootAppState } from "../states/RootAppState";
+import { SubscriptionDetailAppState } from "../states/SubscriptionDetailAppState";
+import { appStore } from "../store-config";
 
 type _Props = {
     appState: SubscriptionDetailAppState;
@@ -142,106 +142,117 @@ class _SubscriptionDetailPage extends React.Component<_Props, _State> {
     render() {
         return (
             <React.Fragment>
-                <Stack spacing={10}>
-                    <Stack>
-                        <Breadcrumbs aria-label="breadcrumb" sx={{ display: "flex", alignItems: "center" }}>
-                            <Link underline="hover" color="inherit" href="/account/subscriptions">
-                                Subscriptions
-                            </Link>
-                            {/* <Typography color="text.primary">
+                <Stack spacing={5}>
+                    <Paper sx={{ padding: 5, borderRadius: 10 }} elevation={1}>
+                        <Stack>
+                            <Breadcrumbs aria-label="breadcrumb" sx={{ display: "flex", alignItems: "center" }}>
+                                <Link underline="hover" color="inherit" href="/account/subscriptions">
+                                    Subscriptions
+                                </Link>
+                                {/* <Typography color="text.primary">
                         {this.getAppNameFromUrl()}
                     </Typography> */}
-                            <Stack direction="row" spacing={1} alignItems="center">
-                                <Typography variant="h6" display="flex" alignItems="center" color="text.primary">
-                                    {this.appState.appInfo?.title || this.appState.appInfo?.name}
-                                </Typography>
-                                <Typography variant="body1" display="flex" alignItems="center" color="text.primary">
-                                    @{this.appState.appInfo?.name}
-                                </Typography>
-                                {/* <Typography variant="body1">1.3.7</Typography>
+                                <Stack direction="row" spacing={1} alignItems="center">
+                                    <Typography variant="h6" display="flex" alignItems="center" color="text.primary">
+                                        {this.appState.appInfo?.title || this.appState.appInfo?.name}
+                                    </Typography>
+                                    <Typography variant="body1" display="flex" alignItems="center" color="text.primary">
+                                        @{this.appState.appInfo?.name}
+                                    </Typography>
+                                    {/* <Typography variant="body1">1.3.7</Typography>
                                 <Typography variant="body1">Published 10 months ago</Typography> */}
-                                <Box width={4}></Box>
-                                <Button
-                                    variant="outlined"
-                                    color="secondary"
-                                    size="small"
-                                    onClick={() =>
-                                        openDocumentationDialog(this, () =>
-                                            this.renderUnsubscribeDocumentation({
-                                                app: this.getAppNameFromUrl(),
-                                            })
-                                        )
-                                    }
-                                >
-                                    Unsubscribe
-                                </Button>
-                            </Stack>
-                        </Breadcrumbs>
-                        <Divider sx={{ mb: 3, mt: 1 }} />
-                        <Typography variant="body1">
-                            {this.appState.appInfo?.description ||
-                                "The author did not provide a description for this app."}
-                        </Typography>
-                    </Stack>
-                    <Stack>
-                        <Typography variant="h6">Subscription</Typography>
-                        <Divider sx={{ mb: 5 }} />
-                        <Grid container spacing={2}>
-                            {this.availablePlans().map((pricing, index) => (
-                                <Grid item xs={3} key={index} sx={{ minWidth: 300 }}>
-                                    <PricingCard
-                                        {...pricing}
-                                        actionButton={
-                                            <Button
-                                                variant={this.isActivePlan(pricing) ? "contained" : "outlined"}
-                                                color="secondary"
-                                                onClick={() =>
-                                                    openDocumentationDialog(this, () =>
-                                                        this.renderChangeSubscriptionDocumentation({
-                                                            app: this.getAppNameFromUrl(),
-                                                            plan: pricing.name,
-                                                        })
-                                                    )
-                                                }
-                                            >
-                                                {this.isActivePlan(pricing) ? "Subscribed" : "Change"}
-                                            </Button>
+                                    <Box width={4}></Box>
+                                    <Button
+                                        variant="outlined"
+                                        color="secondary"
+                                        size="small"
+                                        onClick={() =>
+                                            openDocumentationDialog(this, () =>
+                                                this.renderUnsubscribeDocumentation({
+                                                    app: this.getAppNameFromUrl(),
+                                                })
+                                            )
                                         }
-                                    ></PricingCard>
-                                </Grid>
-                            ))}
-                        </Grid>
-                    </Stack>
-                    <Stack>
-                        <LogTable<UsageSummary>
-                            tableName="Usage Summary"
-                            urlNamespace="s"
-                            activities={this.usageSummary()}
-                            activitiesPerPage={20}
-                            onChange={this.handleSummaryPageChange}
-                            renderCell={(headerTitle, activity) => {
-                                switch (headerTitle) {
-                                    case "Date":
-                                        return this.summaryDate(activity);
-                                    case "Request Volume":
-                                        return this.summaryVolume(activity);
-                                    case "Cost":
-                                        return this.summaryCost(activity);
-                                }
-                            }}
-                            headers={[
-                                {
-                                    title: "Date",
-                                },
-                                {
-                                    title: "Request Volume",
-                                },
-                                {
-                                    title: "Cost",
-                                },
-                            ]}
-                        />
-                    </Stack>
+                                    >
+                                        Unsubscribe
+                                    </Button>
+                                </Stack>
+                            </Breadcrumbs>
+                            <Divider sx={{ mb: 3, mt: 1 }} />
+                            <Typography variant="body1">
+                                {this.appState.appInfo?.description ||
+                                    "The author did not provide a description for this app."}
+                            </Typography>
+                        </Stack>
+                    </Paper>
+                    <Paper sx={{ padding: 5, borderRadius: 10 }} elevation={1}>
+                        <Stack>
+                            <Typography variant="h6">Subscription</Typography>
+                            <Divider sx={{ mb: 5 }} />
+                            <Grid container spacing={2}>
+                                {this.availablePlans().map((pricing, index) => (
+                                    <Grid item xs={3} key={pricing.pk} sx={{ minWidth: 300 }}>
+                                        <PricingCard
+                                            {...pricing}
+                                            CardProps={{
+                                                sx: {
+                                                    bgcolor: "background.default",
+                                                },
+                                            }}
+                                            actionButton={
+                                                <Button
+                                                    variant={this.isActivePlan(pricing) ? "contained" : "outlined"}
+                                                    color="secondary"
+                                                    onClick={() =>
+                                                        openDocumentationDialog(this, () =>
+                                                            this.renderChangeSubscriptionDocumentation({
+                                                                app: this.getAppNameFromUrl(),
+                                                                plan: pricing.name,
+                                                            })
+                                                        )
+                                                    }
+                                                >
+                                                    {this.isActivePlan(pricing) ? "Subscribed" : "Change"}
+                                                </Button>
+                                            }
+                                        ></PricingCard>
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        </Stack>
+                    </Paper>
+                    <Paper sx={{ padding: 5, borderRadius: 10 }} elevation={1}>
+                        <Stack>
+                            <LogTable<UsageSummary>
+                                tableName="Usage Summary"
+                                urlNamespace="s"
+                                activities={this.usageSummary()}
+                                activitiesPerPage={20}
+                                onChange={this.handleSummaryPageChange}
+                                renderCell={(headerTitle, activity) => {
+                                    switch (headerTitle) {
+                                        case "Date":
+                                            return this.summaryDate(activity);
+                                        case "Request Volume":
+                                            return this.summaryVolume(activity);
+                                        case "Cost":
+                                            return this.summaryCost(activity);
+                                    }
+                                }}
+                                headers={[
+                                    {
+                                        title: "Date",
+                                    },
+                                    {
+                                        title: "Request Volume",
+                                    },
+                                    {
+                                        title: "Cost",
+                                    },
+                                ]}
+                            />
+                        </Stack>
+                    </Paper>
                 </Stack>
                 <DocumentationDialog parent={this} />
             </React.Fragment>

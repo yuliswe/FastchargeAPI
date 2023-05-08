@@ -1,17 +1,17 @@
-import { AppEvent, AppEventStream, mapState, to } from "react-appevent-redux";
-import { RootAppState } from "../states/RootAppState";
-import { getGQLClient } from "../graphql-client";
-import { AppContext } from "../AppContext";
 import { gql } from "graphql-tag";
+import { AppEvent, AppEventStream, mapState, to } from "react-appevent-redux";
+import { AppContext } from "../AppContext";
 import {
-    GQLGetAccountInfoQuery,
-    GQLGetAccountInfoQueryVariables,
     GQLGetAccountActivitiesQuery,
     GQLGetAccountActivitiesQueryVariables,
     GQLGetAccountHistoriesQuery,
     GQLGetAccountHistoriesQueryVariables,
+    GQLGetAccountInfoQuery,
+    GQLGetAccountInfoQueryVariables,
 } from "../__generated__/gql-operations";
 import { fetchWithAuth } from "../fetch";
+import { getGQLClient } from "../graphql-client";
+import { RootAppState } from "../states/RootAppState";
 
 export type UserAccountInfo = GQLGetAccountInfoQuery["user"];
 class LoadUserInfo extends AppEvent<RootAppState> {

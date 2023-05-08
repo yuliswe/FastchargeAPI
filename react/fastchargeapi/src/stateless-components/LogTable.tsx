@@ -1,28 +1,28 @@
+import CheckBoxIcon from "@mui/icons-material/CheckBox";
+import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
+import FilterColumns from "@mui/icons-material/ViewWeek";
 import {
-    Typography,
-    TextField,
-    Table,
-    TableHead,
-    TableRow,
-    TableCell,
-    TableBody,
-    Pagination,
-    Divider,
-    Grid,
+    Autocomplete,
     Box,
     Button,
-    Stack,
-    Menu,
-    Autocomplete,
     Checkbox,
+    Divider,
+    Grid,
+    Menu,
+    Pagination,
+    Stack,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableRow,
+    TextField,
+    Typography,
 } from "@mui/material";
-import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
+import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import React from "react";
-import { ReactAppContextType, AppContext } from "../AppContext";
-import FilterColumns from "@mui/icons-material/ViewWeek";
-import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
-import CheckBoxIcon from "@mui/icons-material/CheckBox";
+import { AppContext, ReactAppContextType } from "../AppContext";
 
 export type LogTableOnChangeHandler = (data: { page: number; dateRange: { end: number } }) => void;
 export type LogTableProps<Activity> = {
@@ -188,11 +188,10 @@ export class LogTable<Activity> extends React.Component<LogTableProps<Activity>,
                                         .filter((h) => this.state.selectedColumns.has(h.title))
                                         .map((header, index) => (
                                             <TableCell
-                                                key={index}
+                                                key={header.title}
                                                 sx={{
                                                     whiteSpace: "nowrap",
                                                     width: header.flexGrow ? "100%" : "initial",
-                                                    // px: 4,
                                                 }}
                                             >
                                                 {header.title}
@@ -207,7 +206,7 @@ export class LogTable<Activity> extends React.Component<LogTableProps<Activity>,
                                             .filter((h) => this.state.selectedColumns.has(h.title))
                                             .map((header, index) => (
                                                 <TableCell
-                                                    key={index}
+                                                    key={header.title}
                                                     sx={{
                                                         whiteSpace: "nowrap",
                                                         width: header.flexGrow ? "100%" : "initial",

@@ -1,16 +1,21 @@
-import { useMediaQuery, CssBaseline } from "@mui/material";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { CssBaseline, useMediaQuery } from "@mui/material";
+import { Theme, ThemeProvider } from "@mui/material/styles";
+import { User as FirebaseUser, getAuth, signInAnonymously } from "firebase/auth";
+import React, { useEffect, useState } from "react";
 import { RouterProvider, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { AppContextProvider, defaulAppContext } from "./AppContext";
-import React, { useEffect, useState } from "react";
 import { initializeFirebase } from "./firebase";
-import { getTheme } from "./theme";
 import { createRouter } from "./routes";
-import { User as FirebaseUser, getAuth, signInAnonymously } from "firebase/auth";
+import { defaultTheme } from "./theme";
 
 let firebaseApp = initializeFirebase();
 
-function WithContext(props: React.PropsWithChildren) {
+export type WithContextProps = React.PropsWithChildren<{
+    theme?: Theme;
+}>;
+
+function WithContext(props: WithContextProps) {
+    const theme = props.theme ?? defaultTheme;
     const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
     const [isAnonymousUser, setIsAnonymousUser] = useState<boolean>(true);
     let userPromise = new Promise<FirebaseUser>((resolve) => {
@@ -34,17 +39,14 @@ function WithContext(props: React.PropsWithChildren) {
         });
     });
 
-    const defaultTheme = createTheme();
-    const mediaQueryXs = useMediaQuery(defaultTheme.breakpoints.down("sm"));
-    const mediaQuerySm = useMediaQuery(defaultTheme.breakpoints.down("md"));
-    const mediaQueryMd = useMediaQuery(defaultTheme.breakpoints.down("lg"));
+    const mediaQueryXs = useMediaQuery(theme.breakpoints.down("sm"));
+    const mediaQuerySm = useMediaQuery(theme.breakpoints.down("md"));
+    const mediaQueryMd = useMediaQuery(theme.breakpoints.down("lg"));
 
     const location = useLocation();
     const navigate = useNavigate();
     const params = useParams();
     const query = useSearchParams();
-
-    const theme = getTheme();
 
     return (
         <React.Fragment>

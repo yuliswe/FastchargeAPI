@@ -1,11 +1,12 @@
-import { Container, Grid, Link, Paper, Stack, Typography } from "@mui/material";
-import React from "react";
-import { AppBar } from "./stateless-components/AppBar";
-import { AppContext, ReactAppContextType } from "./AppContext";
 import CopyrightIcon from "@mui/icons-material/Copyright";
+import { Box, Container, Grid, Link, Paper, Stack, Typography } from "@mui/material";
+import React from "react";
+import { AppContext, ReactAppContextType } from "./AppContext";
+import { AppBar } from "./stateless-components/AppBar";
 type Props = {
     children: React.ReactNode;
     onSearch?: (query: string) => void;
+    bgcolor?: string;
 };
 
 export class SiteLayout extends React.PureComponent<Props> {
@@ -14,12 +15,18 @@ export class SiteLayout extends React.PureComponent<Props> {
         return this.context as AppContext;
     }
 
+    constructor(props: Props) {
+        super(props);
+    }
+
     render() {
         return (
             <React.Fragment>
-                <AppBar onSearch={this.props.onSearch} />
-                {this.props.children}
-                <Paper sx={{ mt: 15, bgcolor: "primary.main", p: 5 }}>
+                <AppBar onSearch={this.props.onSearch} bgcolor={this.props.bgcolor} />
+                <Box component="main" sx={{ bgcolor: this.props.bgcolor }}>
+                    {this.props.children}
+                </Box>
+                <Paper sx={{ bgcolor: "primary.main", p: 5 }} component="footer">
                     <Container maxWidth="lg">
                         <Grid container>
                             <Grid item xs={3}>
@@ -56,7 +63,7 @@ export class SiteLayout extends React.PureComponent<Props> {
                                     >
                                         Report an Issue
                                     </Link>
-                                    <Link href="https://discord.gg/sfN267KmmW" underline="hover" target="_blank">
+                                    <Link href="https://discord.gg/HfQDWjkJ7n" underline="hover" target="_blank">
                                         Get help on Discord
                                     </Link>
                                 </Stack>
