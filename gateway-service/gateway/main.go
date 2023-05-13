@@ -3,7 +3,6 @@ package main
 import (
 	"compress/gzip"
 	"context"
-	"crypto/ecdsa"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -18,8 +17,6 @@ import (
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 
-	"github.com/golang-jwt/jwt/v4"
-	"github.com/google/uuid"
 	lru "github.com/hashicorp/golang-lru/v2"
 	httprouter "github.com/julienschmidt/httprouter"
 
@@ -404,17 +401,17 @@ func getRoute(graphqlClient *graphql.Client, method string, app string, path str
 	return destination, gatewayMode, true
 }
 
-func createUserUsageToken(app string, user string) (string, error) {
-	signer := jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims{
-		"app": app,
-		"exp": time.Now().Unix() + 180,
-		"iat": time.Now().Unix(),
-		"iss": "fastcharge",
-		"jti": uuid.New().String(),
-	})
-	token, err := signer.SignedString(getPrivateKey())
-	return token, err
-}
+// func createUserUsageToken(app string, user string) (string, error) {
+// 	signer := jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims{
+// 		"app": app,
+// 		"exp": time.Now().Unix() + 180,
+// 		"iat": time.Now().Unix(),
+// 		"iss": "fastcharge",
+// 		"jti": uuid.New().String(),
+// 	})
+// 	token, err := signer.SignedString(getPrivateKey())
+// 	return token, err
+// }
 
 func billUsage(graphqlClient *graphql.Client, user string, app string, path string, pricing string) {
 	//fmt.Println(color.Yellow, "Billing usage for", user, app, path, color.Reset)
@@ -503,19 +500,6 @@ func getGatewayRequestDecision(graphqlClient *graphql.Client, userEmail string, 
 
 	errorResponse = apiGatewayErrorResponse(401, "UNKNOWN_REASON", "You are not allowed to access this endpoint.")
 	return decision, errorResponse
-}
-
-func getPrivateKey() *ecdsa.PrivateKey {
-	key := []byte(`-----BEGIN EC PRIVATE KEY-----
-MHcCAQEEINEyilA1d68VxuH2QmIiP3+Ye6SH1/Z3/2LQc+kVZNj1oAoGCCqGSM49
-AwEHoUQDQgAE9CR7SW0cTqQBG1vxWnkjk5dO7zfvUeueXgubjSD6i6vcmHdetZ25
-/ItESQDBmX0LL2qYaPzqTJHbWKxqL+6CtA==
------END EC PRIVATE KEY-----`)
-	if parsedKey, err := jwt.ParseECPrivateKeyFromPEM(key); err != nil {
-		panic(fmt.Sprintln("Cannot parse private key: ", err))
-	} else {
-		return parsedKey
-	}
 }
 
 func getPublicKey() []byte {
