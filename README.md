@@ -1,3 +1,11 @@
+# What is FastchargeAPI
+
+FastchargeAPI is going to be a competitor of [RapidAPI](https://rapidapi.com). It aims to provide API
+developers with the lowest commission possible at 5%, in contrast to RapidAPI's
+30% commission.
+
+Work in progress: https://fastchargeapi.com
+
 # Start development
 
 ## MacOS
