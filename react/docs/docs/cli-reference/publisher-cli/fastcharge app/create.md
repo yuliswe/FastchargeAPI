@@ -25,10 +25,6 @@ Maximum length: 63
 
 ## Available options:
 
-### --make-private / --make-public
-
-An alias to `--visibility`.
-
 ### --visibility ENUM
 
 Value: `public, private`. Optional.

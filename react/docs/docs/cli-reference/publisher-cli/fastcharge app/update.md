@@ -20,10 +20,6 @@ Name of the app to be updated.
 
 ## Available options:
 
-### --make-private / --make-public
-
-An alias to `--visibility`.
-
 ### --visibility ENUM
 
 Value: `public, private`. Optional.

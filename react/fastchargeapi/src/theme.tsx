@@ -8,9 +8,13 @@ import "@fontsource/source-sans-pro/400.css";
 import "@fontsource/source-sans-pro/600.css";
 import "@fontsource/source-sans-pro/700.css";
 import "@fontsource/ubuntu";
+import "@fontsource/ubuntu/300.css";
+import "@fontsource/ubuntu/400.css";
+import "@fontsource/ubuntu/500.css";
+import "@fontsource/ubuntu/700.css";
 import { LinkProps } from "@mui/material/Link";
 import "@mui/material/styles";
-import { createTheme } from "@mui/material/styles";
+import { createTheme, darken, lighten } from "@mui/material/styles";
 import type { Shadows } from "@mui/material/styles/shadows";
 import React from "react";
 import { LinkProps as RouterLinkProps } from "react-router-dom";
@@ -25,6 +29,10 @@ declare module "@mui/material/styles" {
     interface TypographyVariantsOptions {
         label?: React.CSSProperties;
     }
+
+    // interface PaletteOptions {
+    //     black?: PaletteColorOptions;
+    // }
 }
 
 // Update the Typography's variant prop options
@@ -34,12 +42,24 @@ declare module "@mui/material/Typography" {
     }
 }
 
+// declare module "@mui/material/Button" {
+//     interface ButtonPropsColorOverrides {
+//         black: true;
+//     }
+// }
+
+// declare module "@mui/material/IconButton" {
+//     interface IconButtonPropsColorOverrides {
+//         black: true;
+//     }
+// }
+
 const shadowScale = 0.5;
 const shadowKeyUmbraOpacity = 0.2 * shadowScale;
 const shadowKeyPenumbraOpacity = 0.14 * shadowScale;
 const shadowAmbientShadowOpacity = 0.12 * shadowScale;
 function createShadow(...px: number[]) {
-    let scale = 1;
+    px[1] = px[5] = px[9] = 0;
     return [
         `${px[0]}px ${px[1]}px ${px[2]}px ${px[3]}px rgba(0,0,0,${shadowKeyUmbraOpacity})`,
         `${px[4]}px ${px[5]}px ${px[6]}px ${px[7]}px rgba(0,0,0,${shadowKeyPenumbraOpacity})`,
@@ -49,6 +69,7 @@ function createShadow(...px: number[]) {
 
 const shadows: Shadows = [
     "none",
+    //           x  y  b  s   x  y  b  s  x  y  b  s
     createShadow(0, 2, 1, -1, 0, 1, 1, 0, 0, 1, 3, 0),
     createShadow(0, 3, 1, -2, 0, 2, 2, 0, 0, 1, 5, 0),
     createShadow(0, 3, 3, -2, 0, 3, 4, 0, 0, 1, 8, 0),
@@ -76,11 +97,27 @@ const shadows: Shadows = [
 ];
 
 const blue = "#3772FF";
-const bgWhite = "#f7f7f7";
+const bgWhite = "#fff";
 const bgGrey = "#E8E9EB";
 const yellow = "#FFC100";
 const black = "#313638";
 const red = "#DF2935";
+const pink = "#CA907E";
+const green = "#00CC66";
+
+const primary = blue;
+const primaryLight = lighten(blue, 0.9);
+const secondary = black;
+const secondaryLight = lighten(black, 0.2);
+const warning = yellow;
+const warningLight = lighten(yellow, 0.97);
+const warningDark = darken(yellow, 0.2);
+const success = green;
+const successLight = lighten(green, 0.85);
+const successDark = darken(green, 0.2);
+const error = red;
+const errorLight = lighten(red, 0.85);
+const errorDark = darken(red, 0.2);
 
 export function getTheme() {
     const LinkBehavior = React.forwardRef<
@@ -109,18 +146,42 @@ export function getTheme() {
             },
         },
         palette: {
+            common: {
+                black,
+                white: bgWhite,
+            },
             background: {
-                default: bgGrey,
+                default: bgWhite,
                 paper: bgWhite,
             },
             primary: {
-                main: yellow,
+                main: primary,
+                light: primaryLight,
             },
             secondary: {
-                main: black,
+                main: secondary,
+                light: secondaryLight,
             },
+            // black: {
+            //     main: black,
+            //     light: lighten(black, 0.9),
+            //     contrastText: "#fff",
+            // },
             info: {
                 main: blue,
+            },
+            warning: {
+                main: warning,
+                light: warningLight,
+            },
+            success: {
+                main: success,
+                light: successLight,
+                dark: successDark,
+            },
+            text: {
+                primary: black,
+                secondary: black,
             },
         },
         shadows,
@@ -129,8 +190,13 @@ export function getTheme() {
         },
         components: {
             MuiPaper: {
+                styleOverrides: {
+                    root: {
+                        borderRadius: 20,
+                    },
+                },
                 defaultProps: {
-                    elevation: 0,
+                    elevation: 3,
                 },
             },
             MuiAppBar: {
@@ -149,10 +215,25 @@ export function getTheme() {
                         borderRadius: 20,
                         textTransform: "none",
                     },
+                    containedSecondary: {
+                        ":hover": {
+                            backgroundColor: secondaryLight,
+                        },
+                    },
+                    contained: {
+                        ":hover": {
+                            color: "#fff", // This fixes the hover color when the button is a Link component
+                        },
+                    },
                 },
                 defaultProps: {
                     LinkComponent: LinkBehavior,
                     // disableElevation: true,
+                },
+            },
+            MuiButtonBase: {
+                styleOverrides: {
+                    root: {},
                 },
             },
             MuiOutlinedInput: {
@@ -169,20 +250,37 @@ export function getTheme() {
                 styleOverrides: {
                     h1: {
                         fontFamily: "Ubuntu",
-                        fontSize: 45,
-                        fontWeight: 500,
+                        fontSize: 50,
+                        fontWeight: 400,
                     },
                     h2: {
                         fontFamily: "Ubuntu",
-                        fontWeight: 400,
-                        fontSize: 40,
+                        fontSize: 30,
+                        fontWeight: 700,
                     },
                     h3: {
-                        fontFamily: '"Source Sans Pro", sans-serif',
-                        fontSize: 30,
+                        fontFamily: "Ubuntu",
+                        fontSize: 20,
+                        fontWeight: 600,
+                    },
+                    h4: {
+                        fontFamily: "Ubuntu",
+                        fontSize: 18,
+                        fontWeight: 800,
+                    },
+                    h5: {
+                        fontFamily: "Ubuntu",
+                        fontSize: 16,
+                        fontWeight: 800,
+                    },
+                    h6: {
+                        fontFamily: "Roboto",
+                        fontSize: 14,
+                        fontWeight: 800,
                     },
                     body1: {
                         fontFamily: "Roboto",
+                        fontSize: 16,
                     },
                 },
                 defaultProps: {
@@ -191,18 +289,47 @@ export function getTheme() {
                     },
                 },
             },
+            MuiChip: {
+                styleOverrides: {
+                    colorPrimary: {
+                        backgroundColor: primaryLight,
+                        color: primary,
+                        fontWeight: 800,
+                    },
+                    colorInfo: {
+                        backgroundColor: primaryLight,
+                        color: primary,
+                        fontWeight: 800,
+                    },
+                    colorSuccess: {
+                        backgroundColor: successLight,
+                        color: successDark,
+                        fontWeight: 800,
+                    },
+                    colorWarning: {
+                        backgroundColor: lighten(warning, 0.8),
+                        color: warningDark,
+                        fontWeight: 800,
+                    },
+                    colorError: {
+                        backgroundColor: errorLight,
+                        color: errorDark,
+                        fontWeight: 800,
+                    },
+                },
+            },
             MuiLink: {
                 styleOverrides: {
                     root: {
-                        textDecoration: "none",
-                        // "&:hover": {
-                        //     textDecoration: "underline",
-                        // },
+                        // textDecoration: "none",
+                        "&:hover": {
+                            color: blue,
+                        },
                     },
                 },
                 defaultProps: {
-                    color: "primary.contrastText",
-                    underline: "hover",
+                    color: black,
+                    underline: "none",
                     component: LinkBehavior,
                 } as LinkProps,
             },

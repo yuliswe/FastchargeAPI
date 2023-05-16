@@ -1,27 +1,27 @@
-import React from "react";
-import { RootAppState } from "../states/RootAppState";
-import { AppDetailAppState } from "../states/AppDetailAppState";
-import { connect } from "react-redux";
 import { Avatar, Box, Button, Container, Divider, Grid, Link, Stack, Typography } from "@mui/material";
-import { SiteLayout } from "../SiteLayout";
-import { PricingCard } from "../stateless-components/PricingCard";
-import { AppDetailEndpoint, AppDetailEvent, AppDetailPricing } from "../events/AppDetailEvent";
-import { appStore } from "../store-config";
-import { AppContext, ReactAppContextType } from "../AppContext";
+import "highlight.js/styles/github.css";
+import React from "react";
 import ReactMarkdown from "react-markdown";
 import type { PluggableList } from "react-markdown/lib/react-markdown";
-import remarkGfm from "remark-gfm";
+import { connect } from "react-redux";
+import Terminal, { ColorMode, TerminalInput } from "react-terminal-ui";
 import rehypeHighlight from "rehype-highlight";
-import remarkGithub from "remark-github";
 import rehypeRemoveComments from "rehype-remove-comments";
-import "highlight.js/styles/github.css";
+import remarkGfm from "remark-gfm";
+import remarkGithub from "remark-github";
+import { AppContext, ReactAppContextType } from "../AppContext";
+import { SiteLayout } from "../SiteLayout";
+import { AppDetailEndpoint, AppDetailEvent, AppDetailPricing } from "../events/AppDetailEvent";
 import {
     DocumentationDialog,
     SupportDocumentation,
     openDocumentationDialog,
     supportDocumenationDefault,
 } from "../stateless-components/DocumentationDialog";
-import Terminal, { ColorMode, TerminalInput } from "react-terminal-ui";
+import { PricingCard } from "../stateless-components/PricingCard";
+import { AppDetailAppState } from "../states/AppDetailAppState";
+import { RootAppState } from "../states/RootAppState";
+import { appStore } from "../store-config";
 
 type _Props = {
     appState: AppDetailAppState;

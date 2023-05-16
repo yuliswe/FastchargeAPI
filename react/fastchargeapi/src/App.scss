@@ -21,37 +21,29 @@ $footer-max-offset: 17rem;
 //     src: url(../fonts/FingerPaint/FingerPaint-Regular.ttf);
 // }
 
-.terminal {
-    overflow: hidden;
-    .react-terminal-wrapper {
-        font-size: 0.95rem;
+.react-terminal-wrapper {
+    font-size: 0.95em !important;
+    padding: 4em 3em !important;
+    height: inherit;
+    background-color: inherit !important;
+    .react-terminal {
+        overflow: visible !important;
     }
-    .react-terminal-line {
-        opacity: 0.4;
+    .terminal-hidden-input {
+        visibility: hidden;
     }
-    .react-terminal-line.react-terminal-input {
-        opacity: 1;
-    }
+}
+.react-terminal-line {
+    font-size: 0.95em !important;
+    // opacity: 0.5;
+}
+.react-terminal-line.react-terminal-input {
+    opacity: 1;
 }
 
 html {
-    background-color: #ffc100;
     main {
         min-height: calc(100vh - #{$footer-max-offset});
-    }
-}
-
-.firebaseui-card-content {
-    padding: 0 !important;
-    .firebaseui-list-item {
-        display: flex;
-    }
-    button {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        max-width: unset;
-        border-radius: 0.5rem;
     }
 }
 
@@ -62,4 +54,10 @@ code.hljs {
 
 .MuiAutocomplete-option[aria-selected="true"] {
     background-color: unset !important;
+}
+
+svg.change-color {
+    path {
+        fill: currentColor;
+    }
 }

@@ -56,7 +56,7 @@ The command also all necessary dependencies you need. It will install 2 command-
 ## Subscribe to a pricing plan
 
 Before using an API, you must be subscribed to a pricing plan offered by the
-app. Not All pricing plans charge a monthly subscription fee. And some of the
+app. Not All pricing plans charge an active monthly fee. And some of the
 plans offer free quota.
 
 We will subscribe to the `Free` pricing plan that offers 100 free quota for this app.
