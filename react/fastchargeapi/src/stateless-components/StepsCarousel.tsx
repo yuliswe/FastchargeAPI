@@ -89,7 +89,7 @@ export class StepsCarousel<T> extends React.Component<StepsCarouselProps<T>, _St
         for (let [i, p] of this.props.pages.entries()) {
             children.push(
                 <Box
-                    key={i}
+                    key={2 * i}
                     onClick={() => {
                         if (i !== this.state.currentPage) {
                             this.goTo(i);
@@ -100,7 +100,7 @@ export class StepsCarousel<T> extends React.Component<StepsCarouselProps<T>, _St
                 </Box>
             );
             children.push(
-                <Box key={i} display="flex" alignItems="center">
+                <Box key={2 * i + 1} display="flex" alignItems="center">
                     {this.renderForwardButton({
                         disabled: this.state.currentPage !== i,
                     })}

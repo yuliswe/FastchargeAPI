@@ -186,7 +186,7 @@ export function getTheme() {
         },
         shadows,
         shape: {
-            borderRadius: 2,
+            borderRadius: 1,
         },
         components: {
             MuiPaper: {
@@ -226,14 +226,14 @@ export function getTheme() {
                         },
                     },
                 },
-                defaultProps: {
-                    LinkComponent: LinkBehavior,
-                    // disableElevation: true,
-                },
             },
             MuiButtonBase: {
                 styleOverrides: {
                     root: {},
+                },
+                defaultProps: {
+                    LinkComponent: LinkBehavior,
+                    // disableElevation: true,
                 },
             },
             MuiOutlinedInput: {

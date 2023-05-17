@@ -10,6 +10,7 @@ type _State = {
 type _Props = {
     onSearch?: (query: string) => void;
     searchText: string;
+    showSearchButton?: boolean;
 };
 
 export class SearchBar extends React.Component<_Props, _State> {
@@ -49,8 +50,8 @@ export class SearchBar extends React.Component<_Props, _State> {
                     sx={{
                         pl: 1,
                         py: 0.25,
-                        borderBottomRightRadius: 0,
-                        borderTopRightRadius: 0,
+                        borderBottomRightRadius: this.props.showSearchButton ? 0 : this.borderRadius(),
+                        borderTopRightRadius: this.props.showSearchButton ? 0 : this.borderRadius(),
                         borderBottomLeftRadius: this.borderRadius(),
                         borderTopLeftRadius: this.borderRadius(),
                         display: "flex",
@@ -88,7 +89,7 @@ export class SearchBar extends React.Component<_Props, _State> {
                     component={Link}
                     underline="none"
                     sx={{
-                        display: "flex",
+                        display: this.props.showSearchButton ? "flex" : "none",
                         borderBottomLeftRadius: 0,
                         borderTopLeftRadius: 0,
                         borderTopRightRadius: this.borderRadius(),

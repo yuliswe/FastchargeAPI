@@ -1,15 +1,16 @@
-import React from "react";
-import { Params, Location, NavigateFunction, useSearchParams } from "react-router-dom";
 import { Theme } from "@mui/material/styles";
 import { User as FirebaseUser } from "firebase/auth";
+import React from "react";
+import { Location, NavigateFunction, Params, useSearchParams } from "react-router-dom";
 
 export const defaulAppContext = {
     DEV: false,
     paymentGatewayHost: "https://api.payment.fastchargeapi.com",
     mediaQuery: {
-        xs: false,
-        sm: false,
-        md: false,
+        xs: { down: false, only: false, up: false },
+        sm: { down: false, only: false, up: false },
+        md: { down: false, only: false, up: false },
+        lg: { down: false, only: false, up: false },
     },
     firebase: null as unknown as {
         user: FirebaseUser | null;

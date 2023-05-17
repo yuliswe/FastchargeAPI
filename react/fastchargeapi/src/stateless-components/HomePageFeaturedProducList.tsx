@@ -85,7 +85,7 @@ export class HomePageFeaturedProductList extends React.PureComponent<HomePageFea
                 </Box>
                 <Grid container spacing={4}>
                     {this.props.products.map((product, idx) => (
-                        <Grid item xs={6}>
+                        <Grid item xs={6} key={product.pk}>
                             {this.renderProductItem(product, idx)}
                         </Grid>
                     ))}

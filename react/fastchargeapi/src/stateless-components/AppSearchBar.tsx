@@ -2,7 +2,6 @@ import React from "react";
 import { createSearchParams } from "react-router-dom";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { SearchBar } from "./SearchBar";
-
 type _State = {};
 
 type _Props = {};
@@ -16,9 +15,9 @@ export class AppSearchBar extends React.Component<_Props, _State> {
     render() {
         return (
             <SearchBar
+                showSearchButton={this._context.mediaQuery.sm.up}
                 searchText={this._context.route?.query.get("q") || ""}
                 onSearch={(query) => {
-                    console.log("searching for", query);
                     this._context.route?.navigate({
                         pathname: "/search",
                         search: createSearchParams({

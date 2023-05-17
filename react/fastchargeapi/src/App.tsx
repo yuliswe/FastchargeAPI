@@ -7,7 +7,6 @@ import { AppContextProvider, defaulAppContext } from "./AppContext";
 import { initializeFirebase } from "./firebase";
 import { createRouter } from "./routes";
 import { defaultTheme } from "./theme";
-
 let firebaseApp = initializeFirebase();
 
 export type WithContextProps = React.PropsWithChildren<{
@@ -39,9 +38,25 @@ function WithContext(props: WithContextProps) {
         });
     });
 
-    const mediaQueryXs = useMediaQuery(theme.breakpoints.down("sm"));
-    const mediaQuerySm = useMediaQuery(theme.breakpoints.down("md"));
-    const mediaQueryMd = useMediaQuery(theme.breakpoints.down("lg"));
+    const mediaQueryXsDown = useMediaQuery(theme.breakpoints.down("xs"));
+    const mediaQuerySmDown = useMediaQuery(theme.breakpoints.down("sm"));
+    const mediaQueryMdDown = useMediaQuery(theme.breakpoints.down("md"));
+    const mediaQueryLgDown = useMediaQuery(theme.breakpoints.down("lg"));
+    const mediaQueryXsOnly = useMediaQuery(theme.breakpoints.only("xs"));
+    const mediaQuerySmOnly = useMediaQuery(theme.breakpoints.only("sm"));
+    const mediaQueryMdOnly = useMediaQuery(theme.breakpoints.only("md"));
+    const mediaQueryLgOnly = useMediaQuery(theme.breakpoints.only("lg"));
+    const mediaQueryXsUp = useMediaQuery(theme.breakpoints.up("xs"));
+    const mediaQuerySmUp = useMediaQuery(theme.breakpoints.up("sm"));
+    const mediaQueryMdUp = useMediaQuery(theme.breakpoints.up("md"));
+    const mediaQueryLgUp = useMediaQuery(theme.breakpoints.up("lg"));
+
+    const mediaQuery = {
+        xs: { down: mediaQueryXsDown, only: mediaQueryXsOnly, up: mediaQueryXsUp },
+        sm: { down: mediaQuerySmDown, only: mediaQuerySmOnly, up: mediaQuerySmUp },
+        md: { down: mediaQueryMdDown, only: mediaQueryMdOnly, up: mediaQueryMdUp },
+        lg: { down: mediaQueryLgDown, only: mediaQueryLgOnly, up: mediaQueryLgUp },
+    };
 
     const location = useLocation();
     const navigate = useNavigate();
@@ -53,11 +68,7 @@ function WithContext(props: WithContextProps) {
             <AppContextProvider
                 value={{
                     ...defaulAppContext,
-                    mediaQuery: {
-                        sm: mediaQuerySm,
-                        md: mediaQueryMd,
-                        xs: mediaQueryXs,
-                    },
+                    mediaQuery,
                     firebase: {
                         user: firebaseUser,
                         userPromise,
