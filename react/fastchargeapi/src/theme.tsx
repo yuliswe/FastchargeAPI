@@ -14,12 +14,14 @@ import "@fontsource/ubuntu/500.css";
 import "@fontsource/ubuntu/700.css";
 import { LinkProps } from "@mui/material/Link";
 import "@mui/material/styles";
-import { createTheme, darken, lighten } from "@mui/material/styles";
+import { ThemeOptions, createTheme, darken, lighten } from "@mui/material/styles";
 import type { Shadows } from "@mui/material/styles/shadows";
+import { deepmerge } from "@mui/utils";
 import React from "react";
 import { LinkProps as RouterLinkProps } from "react-router-dom";
 import { HashLink } from "react-router-hash-link";
 import "./App.scss";
+
 declare module "@mui/material/styles" {
     interface TypographyVariants {
         label: React.CSSProperties;
@@ -119,7 +121,7 @@ const error = red;
 const errorLight = lighten(red, 0.85);
 const errorDark = darken(red, 0.2);
 
-export function getTheme() {
+export function getTheme(extraThemeOpts?: ThemeOptions) {
     const LinkBehavior = React.forwardRef<
         HTMLAnchorElement,
         Omit<RouterLinkProps, "to"> & {
@@ -135,222 +137,227 @@ export function getTheme() {
         //     return <RouterLink ref={ref} to={href} {...other} />;
         // }
     });
-    return createTheme({
-        // spacing: [0, 4, 8, 16, 32, 64],
-        // spacing: (factor: number) => `${0.25 * factor}rem`,
-        // spacing: mediaQuerySm ? 2 : mediaQueryMd ? 4 : 8,
-        typography: {
-            label: {
-                fontSize: 16,
-                fontWeight: 500,
+    return createTheme(
+        deepmerge(
+            {
+                // spacing: [0, 4, 8, 16, 32, 64],
+                // spacing: (factor: number) => `${0.25 * factor}rem`,
+                // spacing: mediaQuerySm ? 2 : mediaQueryMd ? 4 : 8,
+                typography: {
+                    label: {
+                        fontSize: "1rem",
+                        fontWeight: 500,
+                    },
+                },
+                palette: {
+                    common: {
+                        black,
+                        white: bgWhite,
+                    },
+                    background: {
+                        default: bgWhite,
+                        paper: bgWhite,
+                    },
+                    primary: {
+                        main: primary,
+                        light: primaryLight,
+                    },
+                    secondary: {
+                        main: secondary,
+                        light: secondaryLight,
+                    },
+                    // black: {
+                    //     main: black,
+                    //     light: lighten(black, 0.9),
+                    //     contrastText: "#fff",
+                    // },
+                    info: {
+                        main: blue,
+                    },
+                    warning: {
+                        main: warning,
+                        light: warningLight,
+                    },
+                    success: {
+                        main: success,
+                        light: successLight,
+                        dark: successDark,
+                    },
+                    text: {
+                        primary: black,
+                        secondary: black,
+                    },
+                },
+                shadows,
+                shape: {
+                    borderRadius: 1,
+                },
+                components: {
+                    MuiPaper: {
+                        styleOverrides: {
+                            root: {
+                                borderRadius: 20,
+                            },
+                        },
+                        defaultProps: {
+                            elevation: 3,
+                        },
+                    },
+                    MuiAppBar: {
+                        defaultProps: {
+                            elevation: 1,
+                        },
+                    },
+                    MuiMenu: {
+                        defaultProps: {
+                            elevation: 1,
+                        },
+                    },
+                    MuiButton: {
+                        styleOverrides: {
+                            root: {
+                                borderRadius: 20,
+                                textTransform: "none",
+                            },
+                            containedSecondary: {
+                                ":hover": {
+                                    backgroundColor: secondaryLight,
+                                },
+                            },
+                            contained: {
+                                ":hover": {
+                                    color: "#fff", // This fixes the hover color when the button is a Link component
+                                },
+                            },
+                        },
+                    },
+                    MuiButtonBase: {
+                        styleOverrides: {
+                            root: {},
+                        },
+                        defaultProps: {
+                            LinkComponent: LinkBehavior,
+                            // disableElevation: true,
+                        },
+                    },
+                    MuiOutlinedInput: {
+                        styleOverrides: {
+                            root: {
+                                borderRadius: 5,
+                            },
+                        },
+                    },
+                    MuiTextField: {
+                        styleOverrides: {},
+                    },
+                    MuiTypography: {
+                        styleOverrides: {
+                            h1: {
+                                fontFamily: "Ubuntu",
+                                fontSize: "3.125rem",
+                                fontWeight: 400,
+                            },
+                            h2: {
+                                fontFamily: "Ubuntu",
+                                fontSize: "1.875rem",
+                                fontWeight: 700,
+                            },
+                            h3: {
+                                fontFamily: "Ubuntu",
+                                fontSize: "1.25rem",
+                                fontWeight: 600,
+                            },
+                            h4: {
+                                fontFamily: "Ubuntu",
+                                fontSize: "1.125rem",
+                                fontWeight: 800,
+                            },
+                            h5: {
+                                fontFamily: "Ubuntu",
+                                fontSize: "1rem",
+                                fontWeight: 800,
+                            },
+                            h6: {
+                                fontFamily: "Roboto",
+                                fontSize: "0.875rem",
+                                fontWeight: 800,
+                            },
+                            body1: {
+                                fontFamily: "Roboto",
+                                fontSize: "1rem",
+                            },
+                        },
+                        defaultProps: {
+                            variantMapping: {
+                                label: "h6",
+                            },
+                        },
+                    },
+                    MuiChip: {
+                        styleOverrides: {
+                            colorPrimary: {
+                                backgroundColor: primaryLight,
+                                color: primary,
+                                fontWeight: 800,
+                            },
+                            colorInfo: {
+                                backgroundColor: primaryLight,
+                                color: primary,
+                                fontWeight: 800,
+                            },
+                            colorSuccess: {
+                                backgroundColor: successLight,
+                                color: successDark,
+                                fontWeight: 800,
+                            },
+                            colorWarning: {
+                                backgroundColor: lighten(warning, 0.8),
+                                color: warningDark,
+                                fontWeight: 800,
+                            },
+                            colorError: {
+                                backgroundColor: errorLight,
+                                color: errorDark,
+                                fontWeight: 800,
+                            },
+                        },
+                    },
+                    MuiLink: {
+                        styleOverrides: {
+                            root: {
+                                // textDecoration: "none",
+                                "&:hover": {
+                                    color: blue,
+                                },
+                            },
+                        },
+                        defaultProps: {
+                            color: black,
+                            underline: "none",
+                            component: LinkBehavior,
+                        } as LinkProps,
+                    },
+                    MuiSkeleton: {
+                        defaultProps: {
+                            animation: "wave",
+                            variant: "rounded",
+                        },
+                    },
+                },
             },
-        },
+            extraThemeOpts
+        )
+    );
+}
+
+export function getThemeWithWhiteBackground(extraThemeOpts?: ThemeOptions) {
+    return getTheme({
+        ...extraThemeOpts,
         palette: {
-            common: {
-                black,
-                white: bgWhite,
-            },
             background: {
                 default: bgWhite,
                 paper: bgWhite,
             },
-            primary: {
-                main: primary,
-                light: primaryLight,
-            },
-            secondary: {
-                main: secondary,
-                light: secondaryLight,
-            },
-            // black: {
-            //     main: black,
-            //     light: lighten(black, 0.9),
-            //     contrastText: "#fff",
-            // },
-            info: {
-                main: blue,
-            },
-            warning: {
-                main: warning,
-                light: warningLight,
-            },
-            success: {
-                main: success,
-                light: successLight,
-                dark: successDark,
-            },
-            text: {
-                primary: black,
-                secondary: black,
-            },
-        },
-        shadows,
-        shape: {
-            borderRadius: 1,
-        },
-        components: {
-            MuiPaper: {
-                styleOverrides: {
-                    root: {
-                        borderRadius: 20,
-                    },
-                },
-                defaultProps: {
-                    elevation: 3,
-                },
-            },
-            MuiAppBar: {
-                defaultProps: {
-                    elevation: 1,
-                },
-            },
-            MuiMenu: {
-                defaultProps: {
-                    elevation: 1,
-                },
-            },
-            MuiButton: {
-                styleOverrides: {
-                    root: {
-                        borderRadius: 20,
-                        textTransform: "none",
-                    },
-                    containedSecondary: {
-                        ":hover": {
-                            backgroundColor: secondaryLight,
-                        },
-                    },
-                    contained: {
-                        ":hover": {
-                            color: "#fff", // This fixes the hover color when the button is a Link component
-                        },
-                    },
-                },
-            },
-            MuiButtonBase: {
-                styleOverrides: {
-                    root: {},
-                },
-                defaultProps: {
-                    LinkComponent: LinkBehavior,
-                    // disableElevation: true,
-                },
-            },
-            MuiOutlinedInput: {
-                styleOverrides: {
-                    root: {
-                        borderRadius: 5,
-                    },
-                },
-            },
-            MuiTextField: {
-                styleOverrides: {},
-            },
-            MuiTypography: {
-                styleOverrides: {
-                    h1: {
-                        fontFamily: "Ubuntu",
-                        fontSize: 50,
-                        fontWeight: 400,
-                    },
-                    h2: {
-                        fontFamily: "Ubuntu",
-                        fontSize: 30,
-                        fontWeight: 700,
-                    },
-                    h3: {
-                        fontFamily: "Ubuntu",
-                        fontSize: 20,
-                        fontWeight: 600,
-                    },
-                    h4: {
-                        fontFamily: "Ubuntu",
-                        fontSize: 18,
-                        fontWeight: 800,
-                    },
-                    h5: {
-                        fontFamily: "Ubuntu",
-                        fontSize: 16,
-                        fontWeight: 800,
-                    },
-                    h6: {
-                        fontFamily: "Roboto",
-                        fontSize: 14,
-                        fontWeight: 800,
-                    },
-                    body1: {
-                        fontFamily: "Roboto",
-                        fontSize: 16,
-                    },
-                },
-                defaultProps: {
-                    variantMapping: {
-                        label: "h6",
-                    },
-                },
-            },
-            MuiChip: {
-                styleOverrides: {
-                    colorPrimary: {
-                        backgroundColor: primaryLight,
-                        color: primary,
-                        fontWeight: 800,
-                    },
-                    colorInfo: {
-                        backgroundColor: primaryLight,
-                        color: primary,
-                        fontWeight: 800,
-                    },
-                    colorSuccess: {
-                        backgroundColor: successLight,
-                        color: successDark,
-                        fontWeight: 800,
-                    },
-                    colorWarning: {
-                        backgroundColor: lighten(warning, 0.8),
-                        color: warningDark,
-                        fontWeight: 800,
-                    },
-                    colorError: {
-                        backgroundColor: errorLight,
-                        color: errorDark,
-                        fontWeight: 800,
-                    },
-                },
-            },
-            MuiLink: {
-                styleOverrides: {
-                    root: {
-                        // textDecoration: "none",
-                        "&:hover": {
-                            color: blue,
-                        },
-                    },
-                },
-                defaultProps: {
-                    color: black,
-                    underline: "none",
-                    component: LinkBehavior,
-                } as LinkProps,
-            },
-            MuiSkeleton: {
-                defaultProps: {
-                    animation: "wave",
-                    variant: "rounded",
-                },
-            },
         },
     });
 }
-
-function getThemeWithWhiteBackground() {
-    const theme = getTheme();
-    theme.palette.background = {
-        paper: bgGrey,
-        default: bgWhite,
-    };
-    return theme;
-}
-
-export const themeWithWhiteBackground = getThemeWithWhiteBackground();
-export const defaultTheme = getTheme();

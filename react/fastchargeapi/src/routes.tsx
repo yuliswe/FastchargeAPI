@@ -14,7 +14,6 @@ import { SubscriptionDetailPage } from "./connected-components/SubscriptionDetai
 import { SubscriptionsPage } from "./connected-components/SubscriptionsPage";
 import { TermsPage } from "./connected-components/TermsPage";
 import { TopUpPage } from "./connected-components/TopupPage";
-import { themeWithWhiteBackground } from "./theme";
 
 export function createRouter(WithContext: (props: WithContextProps) => React.ReactElement) {
     const router = createBrowserRouter([
@@ -36,7 +35,7 @@ export function createRouter(WithContext: (props: WithContextProps) => React.Rea
         },
         {
             path: "/search",
-            element: <WithContext children={<SearchResultPage />} theme={themeWithWhiteBackground} />,
+            element: <WithContext children={<SearchResultPage />} />,
         },
         {
             path: "/app/:app",

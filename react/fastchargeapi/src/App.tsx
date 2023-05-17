@@ -6,7 +6,8 @@ import { RouterProvider, useLocation, useNavigate, useParams, useSearchParams } 
 import { AppContextProvider, defaulAppContext } from "./AppContext";
 import { initializeFirebase } from "./firebase";
 import { createRouter } from "./routes";
-import { defaultTheme } from "./theme";
+import { getTheme } from "./theme";
+
 let firebaseApp = initializeFirebase();
 
 export type WithContextProps = React.PropsWithChildren<{
@@ -14,7 +15,7 @@ export type WithContextProps = React.PropsWithChildren<{
 }>;
 
 function WithContext(props: WithContextProps) {
-    const theme = props.theme ?? defaultTheme;
+    const theme = props.theme ?? getTheme();
     const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
     const [isAnonymousUser, setIsAnonymousUser] = useState<boolean>(true);
     let userPromise = new Promise<FirebaseUser>((resolve) => {
@@ -98,7 +99,11 @@ function WithContext(props: WithContextProps) {
                     theme,
                 }}
             >
-                <ThemeProvider theme={theme}>
+                <ThemeProvider
+                    theme={getTheme({
+                        spacing: mediaQuery.xs.only ? 4 : 8,
+                    })}
+                >
                     <CssBaseline />
                     {props.children}
                 </ThemeProvider>
