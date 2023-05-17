@@ -316,6 +316,17 @@ export class AppBar extends React.Component<Props, State> {
                             <ListItemText primary={link.text} />
                         </MenuItem>
                     ))}
+                    {this.profileMenuLinks.map((link, index) => (
+                        <MenuItem
+                            component={Link}
+                            href={link.href}
+                            key={link.text}
+                            target={link.target}
+                            onClick={() => this.closeMenu()}
+                        >
+                            <ListItemText primary={link.text} />
+                        </MenuItem>
+                    ))}
                     {this._context.firebase.isAnonymousUser ? (
                         <MenuItem
                             href={this.loginHref()}

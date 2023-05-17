@@ -1,6 +1,7 @@
 import { ArrowForwardRounded, StarsRounded } from "@mui/icons-material";
 import { Avatar, Box, Button, Chip, Grid, Paper, Stack, Typography } from "@mui/material";
 import React from "react";
+import { AppContext, ReactAppContextType } from "../AppContext";
 import { getRandomProductIcons } from "./HomePageProductList";
 
 export type HomePageFeaturedProductListProduct = {
@@ -20,6 +21,10 @@ export type HomePageFeaturedProductListProps = {
 };
 
 export class HomePageFeaturedProductList extends React.PureComponent<HomePageFeaturedProductListProps> {
+    static contextType = ReactAppContextType;
+    get _context() {
+        return this.context as AppContext;
+    }
     constructor(props: HomePageFeaturedProductListProps) {
         super(props);
     }
@@ -75,7 +80,7 @@ export class HomePageFeaturedProductList extends React.PureComponent<HomePageFea
     render() {
         return (
             <Box>
-                <Box display="flex" alignItems="center" justifyContent="center">
+                <Box display="flex" alignItems="center" justifyContent="center" flexWrap="wrap">
                     <Typography variant="h2" my={7} flexGrow={1}>
                         {this.props.listTitle}
                     </Typography>
@@ -85,7 +90,16 @@ export class HomePageFeaturedProductList extends React.PureComponent<HomePageFea
                 </Box>
                 <Grid container spacing={4}>
                     {this.props.products.map((product, idx) => (
-                        <Grid item xs={6} key={product.pk}>
+                        <Grid
+                            item
+                            xs={
+                                (this._context.mediaQuery.lg.down && this._context.mediaQuery.md.up) ||
+                                this._context.mediaQuery.sm.down
+                                    ? 12
+                                    : 6
+                            }
+                            key={product.pk}
+                        >
                             {this.renderProductItem(product, idx)}
                         </Grid>
                     ))}

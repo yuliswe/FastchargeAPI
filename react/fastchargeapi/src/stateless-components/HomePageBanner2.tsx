@@ -24,10 +24,17 @@ export class HomePageBanner2 extends React.PureComponent {
                     bgcolor: "primary.light",
                     position: "relative",
                     overflow: "hidden",
-                    p: 10,
+                    p: this._context.mediaQuery.md.down ? 5 : 10,
                 }}
             >
-                <Container maxWidth="lg" sx={{ inset: 0, position: "absolute" }}>
+                <Container
+                    maxWidth="lg"
+                    sx={{
+                        inset: 0,
+                        position: "absolute",
+                        display: this._context.mediaQuery.md.down ? "none" : "inherit",
+                    }}
+                >
                     <Box
                         component={BannerIconServer}
                         sx={{

@@ -112,7 +112,9 @@ class _Home extends React.Component<_Props, _State> {
 
     renderCallToAction() {
         return (
-            <Paper sx={{ bgcolor: "primary.light", p: 3 }}>
+            <Paper
+                sx={{ bgcolor: "primary.light", p: 3, display: this._context.mediaQuery.md.up ? "initial" : "none" }}
+            >
                 <Avatar sx={{ height: 50, width: 50, bgcolor: "primary.dark" }}>
                     <ArrowUpwardRounded sx={{ height: "70%", width: "70%" }} />
                 </Avatar>
@@ -131,7 +133,7 @@ class _Home extends React.Component<_Props, _State> {
 
     renderCallToAction2() {
         return (
-            <Paper sx={{ bgcolor: "primary.light", p: 5, position: "relative", overflow: "hidden" }}>
+            <Paper sx={{ bgcolor: "primary.light", p: 5, position: "relative", overflow: "hidden", height: "100%" }}>
                 <Box
                     sx={{
                         borderRadius: "50%",
@@ -170,7 +172,7 @@ class _Home extends React.Component<_Props, _State> {
 
     renderCallToAction3() {
         return (
-            <Paper sx={{ bgcolor: "primary.dark", p: 5, position: "relative", overflow: "hidden" }}>
+            <Paper sx={{ bgcolor: "primary.dark", p: 5, position: "relative", overflow: "hidden", height: "100%" }}>
                 <Box
                     sx={{
                         borderRadius: "50%",
@@ -250,59 +252,72 @@ class _Home extends React.Component<_Props, _State> {
             },
         ];
         return (
-            <Box>
-                <Typography variant="h2" mb={8} textAlign="center">
-                    As simple as 3 commands.
-                </Typography>
-                <Grid container spacing={5}>
-                    {steps.map((step, index) => (
-                        <Grid item xs={index < steps.length - 1 ? 4 : 8} key={step.title}>
-                            <Card sx={{ height: "100%" }}>
-                                <CardActionArea
-                                    sx={{
-                                        px: 4,
-                                        py: 2,
-                                        height: "inherit",
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        alignItems: "start",
-                                    }}
-                                >
-                                    <CardMedia
+            <Container maxWidth="lg" sx={{ display: this._context.mediaQuery.md.down ? "none" : "block" }}>
+                <Box
+                    sx={{
+                        bgcolor: "primary.light",
+                        p: 10,
+                        borderRadius: 20,
+                    }}
+                >
+                    <Typography variant="h2" mb={8} textAlign="center">
+                        As simple as 3 commands.
+                    </Typography>
+                    <Grid container spacing={5}>
+                        {steps.map((step, index) => (
+                            <Grid item xs={index < steps.length - 1 ? 4 : 8} key={step.title}>
+                                <Card sx={{ height: "100%" }}>
+                                    <CardActionArea
                                         sx={{
-                                            p: index < steps.length - 1 ? 5 : 3,
-                                            alignSelf: "center",
-                                            height: 230,
+                                            px: 4,
+                                            py: 2,
+                                            height: "inherit",
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            alignItems: "start",
                                         }}
                                     >
-                                        {step.icon}
-                                    </CardMedia>
-                                    <CardContent sx={{ flexGrow: 1 }}>
-                                        <Typography variant="h3" my={2}>
-                                            {step.title}
-                                        </Typography>
-                                        <Typography variant="body1">{step.description}</Typography>
-                                    </CardContent>
-                                    <CardActions>
-                                        <Button component="div" disableRipple endIcon={<ArrowForwardRounded />}>
-                                            View details
-                                        </Button>
-                                    </CardActions>
-                                </CardActionArea>
-                            </Card>
-                        </Grid>
-                    ))}
-                </Grid>
-            </Box>
+                                        <CardMedia
+                                            sx={{
+                                                p: index < steps.length - 1 ? 5 : 3,
+                                                alignSelf: "center",
+                                                height: 230,
+                                            }}
+                                        >
+                                            {step.icon}
+                                        </CardMedia>
+                                        <CardContent sx={{ flexGrow: 1 }}>
+                                            <Typography variant="h3" my={2}>
+                                                {step.title}
+                                            </Typography>
+                                            <Typography variant="body1">{step.description}</Typography>
+                                        </CardContent>
+                                        <CardActions>
+                                            <Button component="div" disableRipple endIcon={<ArrowForwardRounded />}>
+                                                View details
+                                            </Button>
+                                        </CardActions>
+                                    </CardActionArea>
+                                </Card>
+                            </Grid>
+                        ))}
+                    </Grid>
+                </Box>
+            </Container>
         );
     }
 
     renderPricing() {
         return (
-            <Container maxWidth="lg">
+            <Container
+                maxWidth="lg"
+                sx={{
+                    display: this._context.mediaQuery.xs.only ? "none" : "initial",
+                }}
+            >
                 <Paper sx={{ overflow: "hidden" }}>
                     <Grid container>
-                        <Grid item xs={8} sx={{ p: 5 }}>
+                        <Grid item xs={this._context.mediaQuery.md.down ? 12 : 8} sx={{ p: 5 }}>
                             <TableContainer>
                                 <Table>
                                     <TableHead>
@@ -382,7 +397,11 @@ class _Home extends React.Component<_Props, _State> {
                                 </Table>
                             </TableContainer>
                         </Grid>
-                        <Grid item xs={4} sx={{ bgcolor: "primary.light", p: 5 }}>
+                        <Grid
+                            item
+                            xs={this._context.mediaQuery.md.down ? 12 : 4}
+                            sx={{ bgcolor: "primary.light", p: 5 }}
+                        >
                             <Stack direction="column">
                                 <Typography variant="h2" justifyContent="center" mb={5}>
                                     Pricing for API Publishers
@@ -419,22 +438,35 @@ class _Home extends React.Component<_Props, _State> {
 
     renderTutorialCarousel() {
         return (
-            <Box>
+            <Container
+                maxWidth="lg"
+                sx={{
+                    display: this._context.mediaQuery.md.down ? "none" : "initial",
+                }}
+            >
                 <Typography variant="h2" textAlign="center" mb={5}>
                     Publish an API in 1 minute
                 </Typography>
                 <HomePagePublisherTutorialCarousel />
-            </Box>
+            </Container>
         );
     }
     render() {
         return (
             <SiteLayout>
                 <HomePageBanner2 />
-                <Box pb={15}>
+                <Stack
+                    pb={10}
+                    spacing={this._context.mediaQuery.md.down ? 8 : this._context.mediaQuery.lg.down ? 10 : 15}
+                    alignItems="center"
+                >
                     <Container maxWidth="lg" sx={{ mt: 2.5 }}>
-                        <Grid container spacing={5}>
-                            <Grid item xs={9}>
+                        <Grid
+                            container
+                            spacing={5}
+                            direction={this._context.mediaQuery.md.up ? "row" : "column-reverse"}
+                        >
+                            <Grid item xs={this._context.mediaQuery.md.up ? 9 : 12}>
                                 {this.renderProductLists()}
                                 <Stack direction="row" spacing={5} sx={{ mt: 5 }}>
                                     <Button
@@ -448,7 +480,7 @@ class _Home extends React.Component<_Props, _State> {
                                     <AppSearchBar />
                                 </Stack>
                             </Grid>
-                            <Grid item xs={3}>
+                            <Grid item xs={this._context.mediaQuery.md.up ? 3 : 12}>
                                 <Stack spacing={5} sx={{ position: "sticky", top: 0 }}>
                                     {this.renderCategoryList()}
                                     {this.renderCallToAction()}
@@ -456,137 +488,20 @@ class _Home extends React.Component<_Props, _State> {
                             </Grid>
                         </Grid>
                     </Container>
-                    <Container maxWidth="lg" sx={{ mt: 15 }}>
+                    <Container maxWidth="lg">
                         <Grid container spacing={5}>
-                            <Grid item xs={6}>
+                            <Grid item xs={this._context.mediaQuery.xs.only ? 12 : 6}>
                                 {this.renderCallToAction2()}
                             </Grid>
-                            <Grid item xs={6}>
+                            <Grid item xs={this._context.mediaQuery.xs.only ? 12 : 6}>
                                 {this.renderCallToAction3()}
                             </Grid>
                         </Grid>
                     </Container>
-                    <Container maxWidth="lg">
-                        <Box sx={{ bgcolor: "primary.light", p: 10, my: 10, borderRadius: 20 }}>
-                            {this.renderTutorial()}
-                        </Box>
-                    </Container>
-                    <Box sx={{ mt: 15 }}>{this.renderPricing()}</Box>
-                    <Container maxWidth="lg" sx={{ mt: 15 }}>
-                        {this.renderTutorialCarousel()}
-                    </Container>
-                </Box>
-
-                {/* <Box bgcolor="background.paper" py={15}>
-                    <Container maxWidth="lg">
-                        <Grid container columnSpacing={this._context.mediaQuery.md ? 5 : 10}>
-                            <Grid item xs={6}>
-                                <Typography variant="h2">API Customer</Typography>
-                                <Stack mt={12} spacing={1}>
-                                    <Typography variant="body1">
-                                        <b>--app:</b> Name of the app you want to subscribe to.
-                                    </Typography>
-                                    <Typography variant="body1">
-                                        <b>--pricing:</b> Name of the pricing plan you want to subscribe to.
-                                    </Typography>
-                                </Stack>
-                            </Grid>
-                            <Grid item xs={6}>
-                                <Stack spacing={5}>
-                                    <Stack spacing={3}>
-                                        <Typography variant="h3">Subscribe to an App</Typography>
-                                        <Typography
-                                            variant="body1"
-                                            sx={{
-                                                fontSize: 18,
-                                            }}
-                                        >
-                                            Subscribe to an App's pricing plan to start using the API.
-                                        </Typography>
-                                        <Paper
-                                            className="terminal"
-                                            elevation={15}
-                                            sx={{
-                                                borderRadius: 5,
-                                            }}
-                                        >
-                                            <Terminal colorMode={ColorMode.Dark} height="150px">
-                                                <TerminalInput>
-                                                    {`fastapi subscription sub "myapp" \\ \n    --pricing "Basic Plan"`}
-                                                </TerminalInput>
-                                                <TerminalOutput>
-                                                    Subscribed to app "myapp" with "Basic plan" pricing.
-                                                </TerminalOutput>
-                                            </Terminal>
-                                        </Paper>
-                                    </Stack>
-                                    <Stack spacing={3}>
-                                        <Typography
-                                            variant="h3"
-                                            sx={{
-                                                mt: 5,
-                                            }}
-                                        >
-                                            Create an API Token
-                                        </Typography>
-                                        <Typography
-                                            variant="body1"
-                                            sx={{
-                                                fontSize: 18,
-                                            }}
-                                        >
-                                            Create an API token to use the API.
-                                        </Typography>
-                                        <Paper
-                                            className="terminal"
-                                            elevation={15}
-                                            sx={{
-                                                borderRadius: 5,
-                                            }}
-                                        >
-                                            <Terminal colorMode={ColorMode.Dark} height="50px">
-                                                <TerminalInput>{`fastapi token create "myapp"`}</TerminalInput>
-                                                <TerminalOutput>Token: xxxxxxxxxxxxxxxxxxxx</TerminalOutput>
-                                            </Terminal>
-                                        </Paper>
-                                    </Stack>
-                                    <Stack spacing={3}>
-                                        <Typography
-                                            variant="h3"
-                                            sx={{
-                                                mt: 5,
-                                            }}
-                                        >
-                                            Call the API
-                                        </Typography>
-                                        <Typography
-                                            variant="body1"
-                                            sx={{
-                                                fontSize: 18,
-                                            }}
-                                        >
-                                            Include this token in the <code>X-FAST-API-KEY</code> header of your API
-                                            requests.
-                                        </Typography>
-                                        <Paper
-                                            className="terminal"
-                                            elevation={15}
-                                            sx={{
-                                                borderRadius: 5,
-                                            }}
-                                        >
-                                            <Terminal colorMode={ColorMode.Dark} height="50px">
-                                                <TerminalInput>
-                                                    {`curl "https://myapp.fastchargeapi.com/google" \n    -H "X-FAST-API-KEY: xxxxxxxxxxxxxxxxxxxx"`}
-                                                </TerminalInput>
-                                            </Terminal>
-                                        </Paper>
-                                    </Stack>
-                                </Stack>
-                            </Grid>
-                        </Grid>
-                    </Container>
-                </Box> */}
+                    {this.renderTutorial()}
+                    {this.renderPricing()}
+                    {this.renderTutorialCarousel()}
+                </Stack>
             </SiteLayout>
         );
     }

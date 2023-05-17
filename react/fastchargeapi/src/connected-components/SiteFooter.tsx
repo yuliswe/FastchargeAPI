@@ -1,5 +1,6 @@
 import { Box, ButtonBase, Container, Grid, IconButton, Link, Stack, Typography } from "@mui/material";
 import React from "react";
+import { AppContext, ReactAppContextType } from "../AppContext";
 import { ReactComponent as DiscordIcon } from "../svg/discord.svg";
 import { ReactComponent as GithubIcon } from "../svg/github-solid.svg";
 import { ReactComponent as Logo } from "../svg/logo5.svg";
@@ -8,6 +9,11 @@ const githubRepoLink = "https://github.com/FastchargeAPI/fastchargeapi-cli/issue
 const discordInviteLink = "https://discord.gg/HfQDWjkJ7n";
 
 export class SiteFooter extends React.PureComponent {
+    static contextType = ReactAppContextType;
+    get _context() {
+        return this.context as AppContext;
+    }
+
     renderLogo() {
         return (
             <ButtonBase href="/" sx={{ p: 0 }}>
@@ -52,15 +58,15 @@ export class SiteFooter extends React.PureComponent {
         return (
             <Box sx={{ p: 5, pb: 10 }} component="footer">
                 <Container maxWidth="lg">
-                    <Grid container>
-                        <Grid item xs={3}>
+                    <Grid container spacing={5}>
+                        <Grid item xs={this._context.mediaQuery.md.down ? 12 : 3}>
                             {this.renderLogo()}
                             <Typography variant="body1" mt={2}>
                                 API metering made simple.
                             </Typography>
                             {this.renderSocialMediaLinks()}
                         </Grid>
-                        <Grid item xs={3}>
+                        <Grid item xs={this._context.mediaQuery.md.down ? 6 : 3}>
                             <Typography variant="h5" mb={2}>
                                 Resources
                             </Typography>
@@ -71,7 +77,7 @@ export class SiteFooter extends React.PureComponent {
                                 </Link>
                             </Stack>
                         </Grid>
-                        <Grid item xs={3}>
+                        <Grid item xs={this._context.mediaQuery.md.down ? 6 : 3}>
                             <Typography variant="h5" mb={2}>
                                 Report
                             </Typography>
@@ -84,7 +90,7 @@ export class SiteFooter extends React.PureComponent {
                                 </Link>
                             </Stack>
                         </Grid>
-                        <Grid item xs={3}>
+                        <Grid item xs={this._context.mediaQuery.md.down ? 6 : 3}>
                             <Typography variant="h5" mb={2}>
                                 Legal
                             </Typography>
