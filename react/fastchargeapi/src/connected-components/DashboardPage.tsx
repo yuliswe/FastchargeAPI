@@ -306,14 +306,12 @@ class _DashboardPage extends React.Component<Props, State> {
     render() {
         return (
             <React.Fragment>
-                <Box my={5}>
-                    <Typography variant="h4">
-                        Welcome back, {this.appState.userAccountInfo?.author || "Anonymous User"}
-                    </Typography>
-                </Box>
+                <Typography variant="h2" mb={4}>
+                    Welcome back, {this.appState.userAccountInfo?.author || "Anonymous User"}
+                </Typography>
                 <Grid container spacing={5}>
-                    <Grid item xs={8} flexGrow={1}>
-                        <Paper sx={{ padding: 5, borderRadius: 10 }} elevation={1}>
+                    <Grid item xl={8} lg={7} xs={12}>
+                        <Paper sx={{ padding: 5 }}>
                             <Typography
                                 variant="h6"
                                 sx={{ position: "relative" }}
@@ -376,8 +374,8 @@ class _DashboardPage extends React.Component<Props, State> {
                             </Box>
                         </Paper>
                     </Grid>
-                    <Grid item xs={4}>
-                        <Paper sx={{ padding: 5, borderRadius: 10 }} elevation={1}>
+                    <Grid item xl={4} lg={5} xs={12}>
+                        <Paper sx={{ padding: 5 }}>
                             <Typography variant="h6">Connect to Stripe</Typography>
                             <Divider sx={{ mb: 2 }} />
                             <Typography variant="body1" gutterBottom>
@@ -413,8 +411,8 @@ class _DashboardPage extends React.Component<Props, State> {
                             </Button>
                         </Paper>
                     </Grid>
-                    <Grid item>
-                        <Paper sx={{ padding: 5, borderRadius: 10 }} elevation={1}>
+                    <Grid item xs={12}>
+                        <Paper sx={{ padding: 5 }}>
                             <LogTable<AccountActivity>
                                 tableName="Activities"
                                 urlNamespace="s"

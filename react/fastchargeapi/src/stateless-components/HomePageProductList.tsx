@@ -76,7 +76,7 @@ export class HomePageProductList extends React.PureComponent<HomePageProductList
                 sx={{
                     display: "flex",
                     alignItems: "center",
-                    p: 4,
+                    p: 3,
                     border: "1px solid",
                     borderColor: this.props.useFeaturedListStyle ? "warning.main" : "transparent",
                     bgcolor: this.props.useFeaturedListStyle ? "warning.light" : "transparent",
@@ -114,7 +114,7 @@ export class HomePageProductList extends React.PureComponent<HomePageProductList
                         Browse all APIs
                     </Button>
                 </Box>
-                <Stack spacing={4}>
+                <Stack spacing={2}>
                     {this.props.products.map((product, idx) => this.renderProductItem(product, idx))}
                 </Stack>
             </Box>

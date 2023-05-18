@@ -32,6 +32,14 @@ type State = {
 type Props = {
     onSearch?: (searchText: string) => void;
     bgcolor?: string;
+    mobileMenuExtraItems?: MobileMenuItemProps[];
+};
+
+export type MobileMenuItemProps = {
+    text: string;
+    href: string;
+    target?: string;
+    icon?: React.ReactNode;
 };
 
 export class AppBar extends React.Component<Props, State> {
@@ -126,7 +134,7 @@ export class AppBar extends React.Component<Props, State> {
         });
     }
 
-    mainMenuLinks = [
+    mainMenuLinks: MobileMenuItemProps[] = [
         {
             text: "Pricing",
             href: "/terms-of-service#pricing",
@@ -139,7 +147,7 @@ export class AppBar extends React.Component<Props, State> {
         },
     ];
 
-    profileMenuLinks = [
+    profileMenuLinks: MobileMenuItemProps[] = [
         {
             text: "My account",
             href: "/account",
@@ -194,7 +202,7 @@ export class AppBar extends React.Component<Props, State> {
                     Home
                 </Link>
                 {this.mainMenuLinks.map((link) => (
-                    <Link key={link.text} href={link.href} target={link.target}>
+                    <Link key={link.text} href={link.href} target={link.target ?? "_self"}>
                         {link.text}
                     </Link>
                 ))}
@@ -275,7 +283,7 @@ export class AppBar extends React.Component<Props, State> {
         );
     }
 
-    renderDrawerMenu() {
+    renderMobileDrawerMenu() {
         return (
             <Drawer
                 anchor="bottom"
@@ -309,10 +317,10 @@ export class AppBar extends React.Component<Props, State> {
                             component={Link}
                             href={link.href}
                             key={link.text}
-                            target={link.target}
+                            target={link.target ?? "_self"}
                             onClick={() => this.closeMenu()}
-                            divider={index === this.mainMenuLinks.length - 1}
                         >
+                            {link.icon && <ListItemIcon>{link.icon}</ListItemIcon>}
                             <ListItemText primary={link.text} />
                         </MenuItem>
                     ))}
@@ -321,12 +329,28 @@ export class AppBar extends React.Component<Props, State> {
                             component={Link}
                             href={link.href}
                             key={link.text}
-                            target={link.target}
+                            target={link.target ?? "_self"}
                             onClick={() => this.closeMenu()}
+                            divider={index === this.profileMenuLinks.length - 1}
                         >
+                            {link.icon && <ListItemIcon>{link.icon}</ListItemIcon>}
                             <ListItemText primary={link.text} />
                         </MenuItem>
                     ))}
+                    {this.props.mobileMenuExtraItems &&
+                        this.props.mobileMenuExtraItems.map((link, index) => (
+                            <MenuItem
+                                component={Link}
+                                href={link.href}
+                                key={link.text}
+                                target={link.target ?? "_self"}
+                                onClick={() => this.closeMenu()}
+                                divider={index === this.props.mobileMenuExtraItems!.length - 1}
+                            >
+                                {link.icon && <ListItemIcon>{link.icon}</ListItemIcon>}
+                                <ListItemText primary={link.text} />
+                            </MenuItem>
+                        ))}
                     {this._context.firebase.isAnonymousUser ? (
                         <MenuItem
                             href={this.loginHref()}
@@ -381,7 +405,7 @@ export class AppBar extends React.Component<Props, State> {
                         </Container>
                     </MUIAppBar>
                 </Stack>
-                {this.renderDrawerMenu()}
+                {this.renderMobileDrawerMenu()}
             </React.Fragment>
         );
     }
