@@ -102,6 +102,9 @@ function WithContext(props: WithContextProps) {
                 <ThemeProvider
                     theme={getTheme({
                         spacing: mediaQuery.xs.only ? 4 : 8,
+                        typography: {
+                            fontSize: mediaQuery.xs.only ? 12 : 14,
+                        },
                     })}
                 >
                     <CssBaseline />

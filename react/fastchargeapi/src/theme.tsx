@@ -137,18 +137,19 @@ export function getTheme(extraThemeOpts?: ThemeOptions) {
         //     return <RouterLink ref={ref} to={href} {...other} />;
         // }
     });
+
+    const fontSize = (typeof extraThemeOpts?.typography != "function" && extraThemeOpts?.typography?.fontSize) || 14;
+    const htmlFontSize =
+        (typeof extraThemeOpts?.typography != "function" && extraThemeOpts?.typography?.htmlFontSize) || 16;
+
+    // This formula is copied from the material-ui docs.
+    const coef = fontSize / 14;
+    const pxToRem = (size: number) => `${(size / htmlFontSize) * coef}rem`;
+
     return createTheme(
         deepmerge(
             {
-                // spacing: [0, 4, 8, 16, 32, 64],
-                // spacing: (factor: number) => `${0.25 * factor}rem`,
-                // spacing: mediaQuerySm ? 2 : mediaQueryMd ? 4 : 8,
-                typography: {
-                    label: {
-                        fontSize: "1rem",
-                        fontWeight: 500,
-                    },
-                },
+                typography: {},
                 palette: {
                     common: {
                         black,
@@ -254,37 +255,37 @@ export function getTheme(extraThemeOpts?: ThemeOptions) {
                         styleOverrides: {
                             h1: {
                                 fontFamily: "Ubuntu",
-                                fontSize: "3.125rem",
+                                fontSize: pxToRem(50),
                                 fontWeight: 400,
                             },
                             h2: {
                                 fontFamily: "Ubuntu",
-                                fontSize: "1.875rem",
+                                fontSize: pxToRem(30),
                                 fontWeight: 700,
                             },
                             h3: {
                                 fontFamily: "Ubuntu",
-                                fontSize: "1.25rem",
+                                fontSize: pxToRem(20),
                                 fontWeight: 600,
                             },
                             h4: {
                                 fontFamily: "Ubuntu",
-                                fontSize: "1.125rem",
+                                fontSize: pxToRem(18),
                                 fontWeight: 800,
                             },
                             h5: {
                                 fontFamily: "Ubuntu",
-                                fontSize: "1rem",
+                                fontSize: pxToRem(16),
                                 fontWeight: 800,
                             },
                             h6: {
                                 fontFamily: "Roboto",
-                                fontSize: "0.875rem",
+                                fontSize: pxToRem(14),
                                 fontWeight: 800,
                             },
                             body1: {
                                 fontFamily: "Roboto",
-                                fontSize: "1rem",
+                                fontSize: pxToRem(16),
                             },
                         },
                         defaultProps: {
