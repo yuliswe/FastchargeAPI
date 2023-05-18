@@ -68,4 +68,7 @@
     "coverage.cobertura.xml"
   ],
   "coverage-gutters.coverageBaseDir": "*",
+  "eslint.options": {
+    "cache": true,
+  },
 }
