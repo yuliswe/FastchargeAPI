@@ -6,12 +6,13 @@ import {
     Drawer,
     IconButton,
     Link,
+    List,
+    ListItemButton,
     ListItemIcon,
     ListItemText,
     AppBar as MUIAppBar,
     Menu,
     MenuItem,
-    MenuList,
     Stack,
     Toolbar,
     Typography,
@@ -297,8 +298,8 @@ export class AppBar extends React.Component<Props, State> {
                     },
                 }}
             >
-                <MenuList>
-                    <MenuItem key={"Sign in"} onClick={() => this.closeMenu()}>
+                <List>
+                    <ListItemButton key={"Sign in"} onClick={() => this.closeMenu()}>
                         <ListItemIcon>
                             <Logo />
                         </ListItemIcon>
@@ -308,12 +309,12 @@ export class AppBar extends React.Component<Props, State> {
                                 variant: "h5",
                             }}
                         />
-                    </MenuItem>
-                    <MenuItem href={"/"} key={"Home"} onClick={() => this.closeMenu()} component={Link}>
+                    </ListItemButton>
+                    <ListItemButton href={"/"} key={"Home"} onClick={() => this.closeMenu()} component={Link}>
                         <ListItemText primary={"Home"} />
-                    </MenuItem>
+                    </ListItemButton>
                     {this.mainMenuLinks.map((link, index) => (
-                        <MenuItem
+                        <ListItemButton
                             component={Link}
                             href={link.href}
                             key={link.text}
@@ -322,10 +323,10 @@ export class AppBar extends React.Component<Props, State> {
                         >
                             {link.icon && <ListItemIcon>{link.icon}</ListItemIcon>}
                             <ListItemText primary={link.text} />
-                        </MenuItem>
+                        </ListItemButton>
                     ))}
                     {this.profileMenuLinks.map((link, index) => (
-                        <MenuItem
+                        <ListItemButton
                             component={Link}
                             href={link.href}
                             key={link.text}
@@ -335,11 +336,11 @@ export class AppBar extends React.Component<Props, State> {
                         >
                             {link.icon && <ListItemIcon>{link.icon}</ListItemIcon>}
                             <ListItemText primary={link.text} />
-                        </MenuItem>
+                        </ListItemButton>
                     ))}
                     {this.props.mobileMenuExtraItems &&
                         this.props.mobileMenuExtraItems.map((link, index) => (
-                            <MenuItem
+                            <ListItemButton
                                 component={Link}
                                 href={link.href}
                                 key={link.text}
@@ -349,19 +350,19 @@ export class AppBar extends React.Component<Props, State> {
                             >
                                 {link.icon && <ListItemIcon>{link.icon}</ListItemIcon>}
                                 <ListItemText primary={link.text} />
-                            </MenuItem>
+                            </ListItemButton>
                         ))}
                     {this._context.firebase.isAnonymousUser ? (
-                        <MenuItem
+                        <ListItemButton
                             href={this.loginHref()}
                             key={"Sign in"}
                             onClick={() => this.closeMenu()}
                             component={Link}
                         >
                             <ListItemText primary={"Sign in"} />
-                        </MenuItem>
+                        </ListItemButton>
                     ) : (
-                        <MenuItem
+                        <ListItemButton
                             component={Link}
                             href={this.loginHref()}
                             key={"Sign out"}
@@ -371,9 +372,9 @@ export class AppBar extends React.Component<Props, State> {
                             }}
                         >
                             <ListItemText primary={"Sign out"} />
-                        </MenuItem>
+                        </ListItemButton>
                     )}
-                </MenuList>
+                </List>
             </Drawer>
         );
     }
