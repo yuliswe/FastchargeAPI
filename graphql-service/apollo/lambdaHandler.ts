@@ -4,15 +4,26 @@ import { RequestHandler, createRequestHandler } from "@as-integrations/aws-lambd
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { Chalk } from "chalk";
 import { RequestContext, createDefaultContextBatched } from "./RequestContext";
-import { getCurrentUser, getIsAdminUser, getIsServiceRequest, normalizeHeaders } from "./lambdaHandlerUtils";
+import {
+    LambdaEvent,
+    LambdaResult,
+    getCurrentUser,
+    getIsAdminUser,
+    getIsServiceRequest,
+    normalizeHeaders,
+} from "./lambdaHandlerUtils";
 import { server } from "./server";
-import { LambdaEvent, LambdaResult } from "./lambdaHandlerUtils";
 
 const chalk = new Chalk({ level: 3 });
 
 function addCors(event: APIGatewayProxyEvent, result: APIGatewayProxyResult): void {
     let origin = event.headers["Origin"] || event.headers["origin"];
-    if (origin && [/^http:\/\/localhost(:\\d+)?/, /^https:\/\/fastchargeapi.com/i].some((x) => x.test(origin!))) {
+    if (
+        origin &&
+        [/^http:\/\/yumbp16.local(:\\d+)?/, /^http:\/\/localhost(:\\d+)?/, /^https:\/\/fastchargeapi.com/].some((x) =>
+            x.test(origin!)
+        )
+    ) {
         result.headers = {
             ...(result.headers ?? {}),
             "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
