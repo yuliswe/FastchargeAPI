@@ -5,6 +5,7 @@ import {
     Grid,
     Link,
     Paper,
+    Stack,
     Table,
     TableBody,
     TableCell,
@@ -82,9 +83,9 @@ class _MyAppsPage extends React.Component<_Props, _State> {
 
     render() {
         return (
-            <React.Fragment>
-                <Paper sx={{ padding: 5, borderRadius: 10 }} elevation={1}>
-                    <Typography variant="h6" mb={1}>
+            <Stack spacing={4}>
+                <Paper sx={{ padding: 5 }}>
+                    <Typography variant="h4" mb={1}>
                         Author Name
                     </Typography>
                     <Divider sx={{ my: 2 }} />
@@ -110,26 +111,28 @@ class _MyAppsPage extends React.Component<_Props, _State> {
                         </Grid>
                     </Grid>
                 </Paper>
-                <Paper sx={{ padding: 5, borderRadius: 10, mt: 5 }} elevation={1}>
-                    <Typography variant="h6" mb={1}>
-                        Manage Apps
-                    </Typography>
-                    <Button
-                        variant="contained"
-                        size="small"
-                        endIcon={<AddIcon />}
-                        onClick={() => {
-                            openDocumentationDialog(this, () => this.renderCreateAppDocumentation());
-                        }}
-                    >
-                        New App
-                    </Button>
+                <Paper sx={{ padding: 5 }}>
+                    <Stack direction="row" spacing={1} sx={{ display: "flex", alignItems: "center" }}>
+                        <Typography variant="h4" mb={1} sx={{ flexGrow: 1 }}>
+                            Manage Apps
+                        </Typography>
+                        <Button
+                            variant="contained"
+                            size="small"
+                            endIcon={<AddIcon />}
+                            onClick={() => {
+                                openDocumentationDialog(this, () => this.renderCreateAppDocumentation());
+                            }}
+                        >
+                            New App
+                        </Button>
+                    </Stack>
                     <Divider sx={{ my: 2 }} />
                     <Table>
                         <TableHead>
                             <TableRow>
+                                <TableCell>ID</TableCell>
                                 <TableCell>App Title</TableCell>
-                                <TableCell>App ID</TableCell>
                                 <TableCell>Last Update</TableCell>
                                 <TableCell align="right">Action</TableCell>
                             </TableRow>
@@ -137,8 +140,8 @@ class _MyAppsPage extends React.Component<_Props, _State> {
                         <TableBody>
                             {this.appsList().map((app, index) => (
                                 <TableRow key={app.name}>
-                                    <TableCell>{app.title || app.name}</TableCell>
                                     <TableCell>{app.name}</TableCell>
+                                    <TableCell>{app.title || app.name}</TableCell>
                                     <TableCell>{this.updatedOn(app)}</TableCell>
                                     <TableCell align="right">
                                         <Button
@@ -156,7 +159,7 @@ class _MyAppsPage extends React.Component<_Props, _State> {
                     </Table>
                 </Paper>
                 <DocumentationDialog parent={this} />
-            </React.Fragment>
+            </Stack>
         );
     }
 }

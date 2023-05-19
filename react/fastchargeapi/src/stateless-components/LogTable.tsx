@@ -110,10 +110,10 @@ export class LogTable<Activity> extends React.Component<LogTableProps<Activity>,
                         justifyContent: "end",
                     }}
                 >
-                    <Typography variant="h6" sx={{ display: "flex", alignItems: "end" }}>
-                        {this.props.tableName}
-                    </Typography>
-                    <Stack direction="row" spacing={2} sx={{ my: 2 }}>
+                    <Stack direction="row" spacing={2} sx={{ my: 2, alignItems: "center" }}>
+                        <Typography variant="h4" sx={{ display: "flex", alignItems: "end", flexGrow: 1 }}>
+                            {this.props.tableName}
+                        </Typography>
                         <LocalizationProvider dateAdapter={AdapterDateFns}>
                             <DatePicker
                                 label="Display up to"
@@ -230,6 +230,7 @@ export class LogTable<Activity> extends React.Component<LogTableProps<Activity>,
                     {this.currentPageActivities().length > 0 && (
                         <Pagination
                             count={this.numPages()}
+                            size={this._context.mediaQuery.xs.only ? "small" : "medium"}
                             page={this.activityPageNum()}
                             onChange={(e, page) => this.handlePageChange(page)}
                             sx={{ flexGrow: 1, mt: 2 }}

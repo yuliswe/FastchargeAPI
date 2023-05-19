@@ -13,6 +13,7 @@ import "@fontsource/ubuntu/400.css";
 import "@fontsource/ubuntu/500.css";
 import "@fontsource/ubuntu/700.css";
 import { LinkProps } from "@mui/material/Link";
+import { grey } from "@mui/material/colors";
 import "@mui/material/styles";
 import { ThemeOptions, createTheme, darken, lighten } from "@mui/material/styles";
 import type { Shadows } from "@mui/material/styles/shadows";
@@ -283,6 +284,11 @@ export function getTheme(extraThemeOpts?: ThemeOptions) {
                                 fontSize: pxToRem(14),
                                 fontWeight: 800,
                             },
+                            label: {
+                                fontFamily: "Roboto",
+                                fontSize: pxToRem(14),
+                                fontWeight: 800,
+                            },
                             body1: {
                                 fontFamily: "Roboto",
                                 fontSize: pxToRem(16),
@@ -291,6 +297,13 @@ export function getTheme(extraThemeOpts?: ThemeOptions) {
                         defaultProps: {
                             variantMapping: {
                                 label: "h6",
+                            },
+                        },
+                    },
+                    MuiIconButton: {
+                        styleOverrides: {
+                            colorSecondary: {
+                                color: grey[600],
                             },
                         },
                     },

@@ -139,26 +139,8 @@ class _DashboardPage extends React.Component<Props, State> {
         return date.toLocaleDateString() + " " + date.toLocaleTimeString();
     }
 
-    activitiesPerPage = 20;
-
-    numPages() {
-        return Math.ceil(this.allActivities().length / this.activitiesPerPage);
-    }
-
-    activityPageNum(): number {
-        let p = this._context.route.query.get("page");
-        return p ? Number.parseInt(p) : 1;
-    }
-
-    currentPageActivities() {
-        let start = (this.activityPageNum() - 1) * this.activitiesPerPage;
-        return this.allActivities().slice(start, start + this.activitiesPerPage);
-    }
-
-    handlePageChange(page: number) {
-        this._context.route.updateQuery({
-            page: page.toString(),
-        });
+    activitiesPerPage(): number {
+        return this._context.mediaQuery.lg.up ? 15 : 5;
     }
 
     accountHistory() {
@@ -263,7 +245,7 @@ class _DashboardPage extends React.Component<Props, State> {
     renderLoginStripeDocumentation() {
         return (
             <Box padding={5} maxWidth={500}>
-                <Typography variant="h6" gutterBottom>
+                <Typography variant="h4" gutterBottom>
                     Verify Email Address
                 </Typography>
                 <Typography variant="body1" gutterBottom>
@@ -306,14 +288,14 @@ class _DashboardPage extends React.Component<Props, State> {
     render() {
         return (
             <React.Fragment>
-                <Typography variant="h2" mb={4}>
+                <Typography variant="h2" mb={4} mt={2} ml={1}>
                     Welcome back, {this.appState.userAccountInfo?.author || "Anonymous User"}
                 </Typography>
-                <Grid container spacing={5}>
+                <Grid container spacing={4}>
                     <Grid item xl={8} lg={7} xs={12}>
                         <Paper sx={{ padding: 5 }}>
                             <Typography
-                                variant="h6"
+                                variant="h4"
                                 sx={{ position: "relative" }}
                                 component={Box}
                                 display="flex"
@@ -376,7 +358,9 @@ class _DashboardPage extends React.Component<Props, State> {
                     </Grid>
                     <Grid item xl={4} lg={5} xs={12}>
                         <Paper sx={{ padding: 5 }}>
-                            <Typography variant="h6">Connect to Stripe</Typography>
+                            <Typography variant="h4" mb={1.5}>
+                                Connect to Stripe
+                            </Typography>
                             <Divider sx={{ mb: 2 }} />
                             <Typography variant="body1" gutterBottom>
                                 As an API developer, you can set up a Stripe account to start receiving payment.
@@ -417,7 +401,7 @@ class _DashboardPage extends React.Component<Props, State> {
                                 tableName="Activities"
                                 urlNamespace="s"
                                 activities={this.allActivities()}
-                                activitiesPerPage={20}
+                                activitiesPerPage={this.activitiesPerPage()}
                                 onChange={this.handleActivitiesPageChange}
                                 renderCell={(head: string, activity: AccountActivity) => {
                                     switch (head) {
@@ -490,10 +474,10 @@ class _DashboardPage extends React.Component<Props, State> {
                         horizontal: "right",
                     }}
                     PaperProps={{
-                        elevation: 1,
+                        elevation: 5,
                         sx: {
                             backgroundColor: "grey.100",
-                            borderRadius: 5,
+                            borderRadius: 10,
                         },
                     }}
                     keepMounted

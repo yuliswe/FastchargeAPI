@@ -219,14 +219,7 @@ export class AppBar extends React.Component<Props, State> {
                 }}
             >
                 {this._context.firebase.isAnonymousUser && (
-                    <Button
-                        sx={{
-                            color: "black",
-                            p: 2,
-                            borderRadius: 5,
-                        }}
-                        href={this.loginHref()}
-                    >
+                    <Button sx={{ color: "text.primary", p: 2 }} href={this.loginHref()}>
                         <Typography noWrap>Sign In</Typography>
                     </Button>
                 )}
@@ -255,7 +248,7 @@ export class AppBar extends React.Component<Props, State> {
                                 horizontal: "right",
                             }}
                             PaperProps={{
-                                elevation: 1,
+                                elevation: 5,
                                 sx: {
                                     backgroundColor: "grey.100",
                                     borderRadius: 10,

@@ -139,13 +139,18 @@ class _SubscriptionDetailPage extends React.Component<_Props, _State> {
             </Terminal>
         );
     }
+
+    activitiesPerPage(): number {
+        return this._context.mediaQuery.lg.up ? 15 : 5;
+    }
+
     render() {
         return (
             <React.Fragment>
                 <Stack spacing={5}>
-                    <Paper sx={{ padding: 5, borderRadius: 10 }} elevation={1}>
+                    <Paper sx={{ padding: 5 }}>
                         <Stack>
-                            <Breadcrumbs aria-label="breadcrumb" sx={{ display: "flex", alignItems: "center" }}>
+                            <Breadcrumbs sx={{ display: "flex", alignItems: "center" }}>
                                 <Link underline="hover" color="inherit" href="/account/subscriptions">
                                     Subscriptions
                                 </Link>
@@ -153,7 +158,7 @@ class _SubscriptionDetailPage extends React.Component<_Props, _State> {
                         {this.getAppNameFromUrl()}
                     </Typography> */}
                                 <Stack direction="row" spacing={1} alignItems="center">
-                                    <Typography variant="h6" display="flex" alignItems="center" color="text.primary">
+                                    <Typography variant="h4" display="flex" alignItems="center" color="text.primary">
                                         {this.appState.appInfo?.title || this.appState.appInfo?.name}
                                     </Typography>
                                     <Typography variant="body1" display="flex" alignItems="center" color="text.primary">
@@ -185,20 +190,17 @@ class _SubscriptionDetailPage extends React.Component<_Props, _State> {
                             </Typography>
                         </Stack>
                     </Paper>
-                    <Paper sx={{ padding: 5, borderRadius: 10 }} elevation={1}>
+                    <Paper sx={{ padding: 5 }}>
                         <Stack>
-                            <Typography variant="h6">Subscription</Typography>
+                            <Typography variant="h4" mb={2}>
+                                Subscription
+                            </Typography>
                             <Divider sx={{ mb: 5 }} />
                             <Grid container spacing={2}>
                                 {this.availablePlans().map((pricing, index) => (
                                     <Grid item xs={3} key={pricing.pk} sx={{ minWidth: 300 }}>
                                         <PricingCard
                                             {...pricing}
-                                            CardProps={{
-                                                sx: {
-                                                    bgcolor: "background.default",
-                                                },
-                                            }}
                                             actionButton={
                                                 <Button
                                                     variant={this.isActivePlan(pricing) ? "contained" : "outlined"}
@@ -221,13 +223,13 @@ class _SubscriptionDetailPage extends React.Component<_Props, _State> {
                             </Grid>
                         </Stack>
                     </Paper>
-                    <Paper sx={{ padding: 5, borderRadius: 10 }} elevation={1}>
+                    <Paper sx={{ padding: 5 }}>
                         <Stack>
                             <LogTable<UsageSummary>
                                 tableName="Usage Summary"
                                 urlNamespace="s"
                                 activities={this.usageSummary()}
-                                activitiesPerPage={20}
+                                activitiesPerPage={this.activitiesPerPage()}
                                 onChange={this.handleSummaryPageChange}
                                 renderCell={(headerTitle, activity) => {
                                     switch (headerTitle) {

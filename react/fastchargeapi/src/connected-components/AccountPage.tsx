@@ -2,8 +2,8 @@ import DashboardIcon from "@mui/icons-material/Insights";
 import SubscriptionIcon from "@mui/icons-material/Replay30";
 import MyAppsIcon from "@mui/icons-material/Widgets";
 import {
+    Box,
     Container,
-    Grid,
     Link,
     List,
     ListItem,
@@ -11,6 +11,7 @@ import {
     ListItemIcon,
     ListItemText,
     Paper,
+    Stack,
 } from "@mui/material";
 import React from "react";
 import { connect } from "react-redux";
@@ -62,10 +63,10 @@ class _AccountPage extends React.Component<Props> {
         return (
             <SiteLayout mobileMenuExtraItems={this.links()}>
                 <Container maxWidth="xl">
-                    <Grid container spacing={5} mt={-2} mb={15}>
+                    <Stack direction="row" spacing={3} sx={{ display: "flex", mt: 1 }}>
                         {this._context.mediaQuery.md.up && (
-                            <Grid item xl={2.25} lg={2.75} md={3.5}>
-                                <List component={Paper}>
+                            <Box>
+                                <List component={Paper} sx={{ width: 230, maxWidth: 230 }}>
                                     {this.links().map((link) => (
                                         <ListItem key={link.href}>
                                             <ListItemButton
@@ -81,12 +82,15 @@ class _AccountPage extends React.Component<Props> {
                                         </ListItem>
                                     ))}
                                 </List>
-                            </Grid>
+                            </Box>
                         )}
-                        <Grid item xl={9.75} lg={9.25} md={8.5} sm={12}>
+                        <Box
+                            sx={{ flexGrow: 1, overflow: "hidden", p: 1 }}
+                            style={{ marginTop: this._context.theme.spacing(-1) }}
+                        >
                             <Outlet />
-                        </Grid>
-                    </Grid>
+                        </Box>
+                    </Stack>
                 </Container>
             </SiteLayout>
         );

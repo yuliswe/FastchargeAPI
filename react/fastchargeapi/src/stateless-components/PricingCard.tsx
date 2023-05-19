@@ -1,4 +1,4 @@
-import { Card, CardActions, CardContent, Typography } from "@mui/material";
+import { Card, CardActions, CardContent, Chip, Typography } from "@mui/material";
 import React from "react";
 
 export type PricingCardProps = {
@@ -19,18 +19,27 @@ export class PricingCard extends React.PureComponent<PricingCardProps> {
         return (
             <Card {...this.props.CardProps} sx={{ p: 2, borderRadius: 8, ...this.props.CardProps?.sx }}>
                 <CardContent>
-                    <Typography variant="h6" mb={0}>
+                    <Typography variant="h4" mb={0}>
                         {this.props.name}
                     </Typography>
                     <Typography variant="caption" mb={2} component="div">
                         {this.props.callToAction}
                     </Typography>
-                    <Typography variant="body1">${this.props.chargePerRequest} per request</Typography>
-                    <Typography>+ ${this.props.minMonthlyCharge} per active month</Typography>
+                    <Typography variant="body1" gutterBottom>
+                        <Chip color="success" label={`$${this.props.minMonthlyCharge}`} size="small" />
+                        {" in active month + "}
+                        <Chip color="warning" label={`$${this.props.chargePerRequest}`} size="small" />
+                        {" per request"}
+                    </Typography>
                     <Typography variant="body1">
-                        {this.props.freeQuota > 0
-                            ? `First ${this.props.freeQuota} requests are free.`
-                            : "No free quota."}
+                        {this.props.freeQuota > 0 ? (
+                            <>
+                                First <Chip color="info" label={`${this.props.freeQuota}`} size="small" /> requests are
+                                free.
+                            </>
+                        ) : (
+                            "No free quota."
+                        )}
                     </Typography>
                 </CardContent>
                 <CardActions>{this.props.actionButton}</CardActions>

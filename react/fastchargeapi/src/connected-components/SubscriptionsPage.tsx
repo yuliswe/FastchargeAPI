@@ -1,4 +1,4 @@
-import { Button, Card, CardActions, CardContent, Grid, Link, Stack, Typography } from "@mui/material";
+import { Button, Card, CardActions, CardContent, Chip, Grid, Link, Stack, Typography } from "@mui/material";
 import React from "react";
 import { connect } from "react-redux";
 import { AppContext, ReactAppContextType } from "../AppContext";
@@ -40,30 +40,28 @@ class _SubscriptionsPage extends React.Component<Props> {
             <Grid container spacing={2}>
                 {this.subscriptions().map((sub, index) => (
                     <Grid item key={sub.pk}>
-                        <Card sx={{ p: 3, borderRadius: 5 }}>
+                        <Card sx={{ p: 3 }}>
                             <CardContent>
                                 <Stack direction="row" spacing={1}>
-                                    <Typography variant="h6" display="flex" alignItems="center">
+                                    <Typography variant="h4" display="flex" alignItems="center">
                                         {sub.app.title || sub.app.name}
                                     </Typography>
-                                    <Typography variant="body1" display="flex" alignItems="center">
+                                    <Typography variant="body2" display="flex" alignItems="center">
                                         @{sub.app.name}
                                     </Typography>
-                                    {/* <Typography variant="body1" display="flex" fontSize={14} alignItems="center">
-                                        {"v1.0.0"}
-                                    </Typography> */}
                                 </Stack>
-                                <Typography variant="body1" display="flex" alignItems="center" mb={2}>
+                                <Typography variant="body2" display="flex" alignItems="center" mb={2}>
                                     Published by {sub.app.owner.author}
                                 </Typography>
+                                <Typography variant="body2">Since {this.subscribedSince(sub)}</Typography>
                                 <Typography variant="body1">
-                                    Subscribed to <b>{this.plan(sub)}</b>
+                                    Subscribed to{" "}
+                                    <Chip component="span" color="success" label={this.plan(sub)} size="medium" />
                                 </Typography>
-                                <Typography variant="body1">Since {this.subscribedSince(sub)}</Typography>
                             </CardContent>
                             <CardActions>
-                                <Button variant="contained" color="secondary" LinkComponent={Link} href={sub.app.name}>
-                                    View
+                                <Button variant="contained" color="primary" LinkComponent={Link} href={sub.app.name}>
+                                    Manage
                                 </Button>
                             </CardActions>
                         </Card>
