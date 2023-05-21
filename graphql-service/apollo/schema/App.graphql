@@ -7,7 +7,7 @@ type Query {
     ### App API
     # apps: [App]
     app(pk: ID, name: String): App!
-    appFullTextSearch(query: String!): [App!]!
+    appFullTextSearch(query: String!, limit: Int, offset: Int): [App!]!
     ### User API
     # users(pk: [ID!]): [User!]! # Get all users in the system
     user(pk: ID, email: Email): User!
@@ -115,6 +115,8 @@ type Mutation {
         description: String!
         settleAt: Timestamp
     ): AccountActivity!
+
+    flushAppSearchIndex: Int!
 }
 
 type Secret {

@@ -1,0 +1,2 @@
+#!/bin/bash
+aws rds-data execute-statement --resource-arn arn:aws:rds:us-east-1:887279901853:cluster:fastcharge-search-cluster --secret-arn arn:aws:secretsmanager:us-east-1:887279901853:secret:AuroraDBSecret-ie6utwL7NgUH-7TUv3G --sql "$1"

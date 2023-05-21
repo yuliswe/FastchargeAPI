@@ -121,6 +121,78 @@ Resources:
         Target: "es2022"
         EntryPoints:
           - handlers/AppFullTextSearch.ts
+
+  # AuroraDBClusterSubnetGroup:
+  #   Type: "AWS::RDS::DBSubnetGroup"
+  #   Properties:
+  #     DBSubnetGroupDescription: "Subnet group for Aurora DB cluster (search-service)"
+  #     SubnetIds:
+  #       - subnet-0104fd063c1f05447
+  #       - subnet-0b3cfffb9e20fa00f
+
+  AuroraDBSecretKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: "KMS key for Aurora DB cluster secret (search-service)"
+      KeyPolicy:
+        Statement:
+          - Sid: "Enable IAM User Permissions"
+            Effect: "Allow"
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: "kms:*"
+            Resource: "*"
+
+  AuroraDBSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      KmsKeyId: !Ref AuroraDBSecretKey
+      GenerateSecretString:
+        SecretStringTemplate: '{"username": "postgres"}'
+        GenerateStringKey: "password"
+        PasswordLength: 16
+        ExcludeCharacters: '"@/\'
+
+  AuroraDBCluster:
+    Type: AWS::RDS::DBCluster
+    Properties:
+      Engine: aurora-postgresql
+      EngineMode: serverless
+      EngineVersion: "13.9"
+      DatabaseName: db1
+      MasterUsername: postgres
+      # MasterUserPassword: "{{resolve:ssm-secure:/search.aurora_password}}"
+      MasterUserPassword: !Join ["", ["{{resolve:secretsmanager:", !Ref AuroraDBSecret, ":SecretString:password}}"]]
+      DBClusterIdentifier: fastcharge-search-cluster
+      EnableHttpEndpoint: true
+      ScalingConfiguration:
+        AutoPause: true
+        MinCapacity: 2
+        MaxCapacity: 4
+        SecondsUntilAutoPause: 300
+      Port: 5432
+      # DBSubnetGroupName: !Ref AuroraDBClusterSubnetGroup
+      # VpcSecurityGroupIds:
+      #   - !Ref AuroraDBClusterSecurityGroup
+
+  # AuroraDBClusterSecurityGroup:
+  #   Type: AWS::EC2::SecurityGroup
+  #   Properties:
+  #     GroupDescription: "Security group for Aurora DB cluster (search-service)"
+  #     GroupName: search-service-security-group
+  #     SecurityGroupEgress:
+  #       - CidrIp: 0.0.0.0/0
+  #         Description: Allow all outbound traffic by default
+  #         FromPort: -1
+  #         IpProtocol: -1
+  #         ToPort: -1
+  #     SecurityGroupIngress:
+  #       - CidrIp: 0.0.0.0/0
+  #         Description: Allow all inbound traffic by default
+  #         FromPort: -1
+  #         IpProtocol: -1
+  #         ToPort: -1
+  #     VpcId: vpc-03ef29247739ade2b
 # Outputs:
 #   APIGateway:
 #     Description: API APIGateway endpoint URL for DEV stage for Hello World function

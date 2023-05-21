@@ -633,8 +633,17 @@ export class Batched<I extends Item> {
         return result;
     }
 
-    async scan(): Promise<I[]> {
-        return await this.model.scan().exec();
+    async *scan({ batchSize = 100 }: { batchSize?: number } = {}): AsyncIterable<I[]> {
+        let response = await this.model.scan().limit(batchSize).exec();
+        if (response.length > 0) {
+            yield response;
+        }
+        while (response.lastKey) {
+            response = await this.model.scan().startAt(response.lastKey).limit(batchSize).exec();
+            if (response.length > 0) {
+                yield response;
+            }
+        }
     }
 
     async substringSearch(key: string, propertyNames: string[]): Promise<I[]> {

@@ -393,6 +393,9 @@ export const Can = {
     async createAccountActivity(context: RequestContext): Promise<boolean> {
         return Promise.resolve(context.isServiceRequest || context.isAdminUser || false);
     },
+    async flushAppSearchIndex(context: RequestContext): Promise<boolean> {
+        return Promise.resolve(context.isServiceRequest || context.isAdminUser || false);
+    },
     // async *viewAppIter<App extends { owner: string }>(
     //     arr: App[],
     //     context: RequestContext

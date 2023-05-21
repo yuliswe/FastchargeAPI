@@ -1,3 +1,4 @@
+import { Chalk } from "chalk";
 import { GraphQLResolveInfo } from "graphql";
 import { RequestContext } from "../RequestContext";
 import {
@@ -10,10 +11,12 @@ import {
 } from "../__generated__/resolvers-types";
 import { App } from "../dynamoose/models";
 import { BadInput, Denied, TooManyResources } from "../errors";
-import { isValidAppName } from "../functions/app";
+import { appFullTextSearch, flushAppSearchIndex, isValidAppName } from "../functions/app";
 import { Can } from "../permissions";
 import { AppPK } from "../pks/AppPK";
 import { UserPK } from "../pks/UserPK";
+
+const chalk = new Chalk({ level: 3 });
 
 export const appResolvers: GQLResolvers & {
     App: GQLAppResolvers;
@@ -107,13 +110,13 @@ export const appResolvers: GQLResolvers & {
             }
             return app!;
         },
+
         async appFullTextSearch(
             parent: {},
-            { query }: GQLQueryAppFullTextSearchArgs,
+            { query, limit, offset }: GQLQueryAppFullTextSearchArgs,
             context: RequestContext
         ): Promise<Array<App>> {
-            let apps = await context.batched.App.substringSearch(query, ["name", "description"]);
-            return apps;
+            return await appFullTextSearch(context, { query, limit: limit || undefined, offset: offset || undefined });
         },
     },
     Mutation: {
@@ -158,6 +161,13 @@ export const appResolvers: GQLResolvers & {
                 repository,
                 visibility,
             });
+        },
+
+        async flushAppSearchIndex(parent: {}, args: {}, context: RequestContext) {
+            if (!(await Can.flushAppSearchIndex(context))) {
+                throw new Denied();
+            }
+            return await flushAppSearchIndex(context);
         },
     },
 };
