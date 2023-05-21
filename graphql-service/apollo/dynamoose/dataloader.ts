@@ -1,10 +1,10 @@
+import { ConditionalCheckFailedException } from "@aws-sdk/client-dynamodb";
 import DataLoader from "dataloader";
 import { InputKey, KeyObject, ModelType } from "dynamoose/dist/General";
 import { Item } from "dynamoose/dist/Item";
-import { AlreadyExists, NotFound, UpdateContainsPrimaryKey } from "../errors";
-import hash from "object-hash";
-import { ConditionalCheckFailedException } from "@aws-sdk/client-dynamodb";
 import { Query as DynamogooseQuery } from "dynamoose/dist/ItemRetriever";
+import hash from "object-hash";
+import { AlreadyExists, NotFound, UpdateContainsPrimaryKey } from "../errors";
 
 type Optional<T> = T | undefined | null;
 type ConditionQuery<V> = {
@@ -144,6 +144,7 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
         let hashKeyName = model.table().hashKey as keyof I & string;
         let rangeKeyName = model.table().rangeKey as (keyof I & string) | undefined;
         for (let [index, bk] of bkArray.entries()) {
+            // Case 1: query is a hashkey string
             if (
                 hashKeyName &&
                 !rangeKeyName &&
@@ -152,7 +153,9 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
             ) {
                 batch1.push(bk.query);
                 bkType.push(1);
-            } else if (
+            }
+            // Case 2: query is an object containing only the hashkey
+            else if (
                 hashKeyName &&
                 !rangeKeyName &&
                 typeof bk.query === "object" &&
@@ -162,7 +165,10 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
             ) {
                 batch1.push(bk.query[hashKeyName] as PrimaryKey);
                 bkType.push(1);
-            } else if (
+            }
+            // Case 3: query is an object containing only the hashkey and the
+            // range key
+            else if (
                 hashKeyName &&
                 rangeKeyName &&
                 typeof bk.query === "object" &&
@@ -173,7 +179,9 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
             ) {
                 batch2.push(bk.query);
                 bkType.push(2);
-            } else {
+            }
+            // Other cases are unbatchable
+            else {
                 // could be a pk (string or object) with options
                 unbatchable.push(index);
                 bkType.push(3);
@@ -272,10 +280,15 @@ function stripNullKeys<T extends object>(
     object: T,
     options?: { returnUndefined?: boolean; deep?: boolean }
 ): Partial<T> | undefined {
+    if (object === null || typeof object !== "object") {
+        return object;
+    }
+    if (Array.isArray(object)) {
+        return object.map((item) => stripNullKeys(item, options)) as any;
+    }
     let data: Partial<T> = {};
     for (let [key, val] of Object.entries(object)) {
-        if (val !== null && typeof val === "object" && options?.deep) {
-            // typeof null is "object"
+        if (options?.deep) {
             val = stripNullKeys(val, options);
         }
         if (val !== undefined && val !== null) {
