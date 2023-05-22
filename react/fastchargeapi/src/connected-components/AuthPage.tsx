@@ -14,10 +14,10 @@ import {
 import React from "react";
 import { connect } from "react-redux";
 import { AppContext, ReactAppContextType } from "../AppContext";
-import { ReactComponent as GithubIcon } from "../svg/github.svg";
-import { ReactComponent as GoogleIcon } from "../svg/google.svg";
 import { setRemoteSecret } from "../graphql-client";
 import { RootAppState } from "../states/RootAppState";
+import { ReactComponent as GithubIcon } from "../svg/github.svg";
+import { ReactComponent as GoogleIcon } from "../svg/google.svg";
 
 type _State = {
     errorMessage: string;
@@ -149,15 +149,12 @@ class _AuthPage extends React.Component<_Props, _State> {
 
     renderSuccessPage() {
         return (
-            <Stack display="flex" mb={30} p={10}>
-                <Typography variant="h5" display="flex" fontWeight={500}>
-                    Welcome to FastchargeAPI
+            <Stack display="flex">
+                <Typography variant="h3" mb={1} display="flex" textAlign="center">
+                    Signed in successfully.
                 </Typography>
-                <Typography variant="h5" display="flex" fontWeight={500}>
-                    You have successfully signed in.
-                </Typography>
-                <Typography variant="body1" my={1}>
-                    You can close this window.
+                <Typography variant="body1" display="flex">
+                    Welcome to FastchargeAPI! You can now close this window.
                 </Typography>
             </Stack>
         );
@@ -235,12 +232,12 @@ class _AuthPage extends React.Component<_Props, _State> {
 
     renderLoginPage() {
         return (
-            <Stack display="flex" mb={20} p={10}>
-                <Typography variant="h5" display="flex" fontWeight={500}>
+            <Stack display="flex">
+                <Typography variant="h3" display="flex" textAlign="center" mb={1}>
                     Welcome to FastchargeAPI
                 </Typography>
-                <Typography variant="caption" my={1}>
-                    Please sign in with a 3rd-party provider:
+                <Typography variant="caption" textAlign="center">
+                    Please sign in with a 3rd-party authenticator.
                 </Typography>
                 <Stack my={5} spacing={2}>
                     <Button
@@ -250,7 +247,7 @@ class _AuthPage extends React.Component<_Props, _State> {
                             this.handleGoogleSignIn();
                         }}
                         startIcon={<GoogleIcon width={24} height={24} />}
-                        sx={{ bgcolor: "white", py: 1 }}
+                        sx={{ bgcolor: "white", color: "text.primary", py: 1 }}
                     >
                         Sign in with Google
                     </Button>
@@ -275,31 +272,37 @@ class _AuthPage extends React.Component<_Props, _State> {
         );
     }
 
+    renderPageState() {
+        // return this.renderLoginPage();
+        // return this.renderSuccessPage();
+        return this._context.firebase.isAnonymousUser ? this.renderLoginPage() : this.renderSuccessPage()
+    }
+
     render() {
         return (
             <React.Fragment>
                 <Grid container sx={{ height: "100vh", bgcolor: "background.paper" }}>
-                    <Grid
+                    {this._context.mediaQuery.md.up && <Grid
                         item
-                        xs={7}
+                        xs={6}
                         display="flex"
                         justifyContent="center"
                         alignItems="center"
                         bgcolor="primary.main"
                         height="100%"
                         sx={{
-                            backgroundImage: "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
+                            bgcolor: "primary.light",
                         }}
                     >
                         <Container maxWidth="md">
-                            <Stack spacing={5} padding={10} mb={30}>
+                            <Stack spacing={5} p={10} pb={25}>
                                 <Fade
                                     in={true}
                                     style={{
                                         transitionDuration: "1s",
                                     }}
                                 >
-                                    <Typography variant="h4" lineHeight={1.5} fontFamily="Ubuntu">
+                                    <Typography variant="h1">
                                         Focus on solving what's important.
                                     </Typography>
                                 </Fade>
@@ -309,15 +312,15 @@ class _AuthPage extends React.Component<_Props, _State> {
                                         transitionDuration: "2s",
                                     }}
                                 >
-                                    <Typography variant="h6" fontWeight={300}>
-                                        FastchargeAPI will take care of metering and billing.
+                                    <Typography variant="body1">
+                                        Let us take care of metering and billing.
                                     </Typography>
                                 </Fade>
                             </Stack>
                         </Container>
-                    </Grid>
-                    <Grid item xs={5} display="flex" justifyContent="center" alignItems="center">
-                        {this._context.firebase.isAnonymousUser ? this.renderLoginPage() : this.renderSuccessPage()}
+                    </Grid>}
+                    <Grid item xs={12} sm={12} md={6} lg={6} xl={6} p={10} pb={20} display="flex" justifyContent="center" alignItems="center">
+                        {this.renderPageState()}
                     </Grid>
                 </Grid>
             </React.Fragment>

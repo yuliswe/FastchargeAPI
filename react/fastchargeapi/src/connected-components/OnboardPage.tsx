@@ -1,4 +1,4 @@
-import { CircularProgress, Container, Fade, Grid, Stack, Typography } from "@mui/material";
+import { Box, CircularProgress, Container, Fade, Grid, Stack, Typography } from "@mui/material";
 import React from "react";
 import { connect } from "react-redux";
 import { AppContext, ReactAppContextType } from "../AppContext";
@@ -112,33 +112,41 @@ class _Onboard extends React.Component<_Props, _State> {
 
     renderSuccessPage() {
         return (
-            <Stack justifyContent="center" display="flex" mb={30}>
-                <Typography variant="h5" fontWeight={500} gutterBottom>
-                    Welcome to FastchargeAPI!
+            <Stack justifyContent="center" display="flex">
+                <Typography variant="h3" mb={1}>
+                    Onboarding completed.
                 </Typography>
                 <Typography variant="body1">
-                    Onboarding has completed. You can revisit this page any time to change the information.
+                    Welcome to FastchargeAPI! You can now close this page.
                 </Typography>
-                <Typography variant="body1">You can now close this page.</Typography>
             </Stack>
         );
     }
 
     renderLoadingPage() {
         return (
-            <Stack justifyContent="center" display="flex" mb={30}>
-                <Typography variant="h5" fontWeight={500} gutterBottom display="flex" alignItems="center">
-                    <CircularProgress sx={{ mr: 2 }} />
-                    Onboarding your account with Stripe.
-                </Typography>
-                <Typography variant="body1" sx={{ ml: 7.3 }}>
-                    This could take up to a minute. Please wait...
-                </Typography>
-            </Stack>
+            <Box>
+                <Stack direction="row">
+                    <Box sx={{ display: "flex", alignItems: "center", minWidth: 60, width: 60 }}>
+                        <CircularProgress sx={{ width: 50, height: 50 }} />
+                    </Box>
+                    <Typography variant="h3" gutterBottom display="flex" alignItems="center">
+                        Onboarding your account with Stripe.
+                    </Typography>
+                </Stack>
+                <Stack direction="row">
+                    <Box sx={{ minWidth: 60, width: 60 }}></Box>
+                    <Typography variant="body1" sx={{ display: "flex", alignItems: "center" }}>
+                        This may take up to a minute. Please wait...
+                    </Typography>
+                </Stack>
+            </Box>
         );
     }
 
     renderOnboardingPage() {
+        // return this.renderLoadingPage();
+        // return this.renderSuccessPage();
         return this.isSuccess() ? this.renderSuccessPage() : this.renderLoadingPage();
     }
 
@@ -146,27 +154,24 @@ class _Onboard extends React.Component<_Props, _State> {
         return (
             <React.Fragment>
                 <Grid container sx={{ height: "100vh", bgcolor: "background.paper" }}>
-                    <Grid
+                    {this._context.mediaQuery.md.up && <Grid
                         item
-                        xs={5}
+                        md={6}
                         display="flex"
                         justifyContent="center"
                         alignItems="center"
-                        bgcolor="primary.main"
+                        bgcolor="primary.light"
                         height="100%"
-                        sx={{
-                            backgroundImage: "linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)",
-                        }}
                     >
                         <Container maxWidth="md">
-                            <Stack spacing={5} padding={10} mb={30}>
+                            <Stack spacing={5} padding={10} mb={10}>
                                 <Fade
                                     in={true}
                                     style={{
                                         transitionDuration: "1s",
                                     }}
                                 >
-                                    <Typography variant="h4" lineHeight={1.5} fontFamily="Ubuntu">
+                                    <Typography variant="h1" >
                                         Focus on solving what's important.
                                     </Typography>
                                 </Fade>
@@ -176,14 +181,14 @@ class _Onboard extends React.Component<_Props, _State> {
                                         transitionDuration: "2s",
                                     }}
                                 >
-                                    <Typography variant="h6" fontWeight={300}>
-                                        FastchargeAPI will take care of metering and billing.
+                                    <Typography variant="body1">
+                                        Let us take care of metering and billing.
                                     </Typography>
                                 </Fade>
                             </Stack>
                         </Container>
-                    </Grid>
-                    <Grid item xs={7} display="flex" justifyContent="center" alignItems="center">
+                    </Grid>}
+                    <Grid item xs={12} sm={12} md={6} lg={6} xl={6} display="flex" justifyContent="center" alignItems="center" p={10} pb={20}>
                         {this.renderOnboardingPage()}
                     </Grid>
                 </Grid>
