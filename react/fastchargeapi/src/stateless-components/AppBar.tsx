@@ -392,7 +392,7 @@ export class AppBar extends React.Component<Props, State> {
                                 {this.renderMobileMenuButton()}
                                 {this.renderToolbarMenu()}
                                 <Box my={1} ml={4} mr={4} flexGrow={1}>
-                                    <AppSearchBar />
+                                    <AppSearchBar onSearch={this.props.onSearch} />
                                 </Box>
                                 {this.renderSignInButton()}
                             </Toolbar>
