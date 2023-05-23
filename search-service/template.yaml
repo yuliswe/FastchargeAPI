@@ -129,6 +129,27 @@ Resources:
   #     SubnetIds:
   #       - subnet-0104fd063c1f05447
   #       - subnet-0b3cfffb9e20fa00f
+  AuroraDBSearchServicePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: "Aurora DB Search Service Policy"
+      ManagedPolicyName: AuroraDBSearchServicePolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Resource: !GetAtt AuroraDBSecretKey.Arn
+            Action: "kms:Decrypt"
+          - Effect: Allow
+            Resource: "*"
+            Action:
+              - "rds-data:ExecuteSql"
+              - "rds-data:ExecuteStatement"
+              - "rds-data:BatchExecuteStatement"
+              - "rds-data:BeginTransaction"
+              - "rds-data:CommitTransaction"
+              - "rds-data:RollbackTransaction"
+              - "secretsmanager:GetSecretValue"
 
   AuroraDBSecretKey:
     Type: AWS::KMS::Key

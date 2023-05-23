@@ -39,6 +39,43 @@ Resources:
         - DomainName: "api.iam.graphql.fastchargeapi.com"
           HostedZoneId: Z0358815GI2I8U5CTHXW
 
+  GraphQLServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: "Apollo GraphQL Service Role"
+      RoleName: GraphQLServiceRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaRole
+        - arn:aws:iam::887279901853:policy/AuroraDBSearchServicePolicy
+      Policies:
+        - PolicyName: GraphQLServicePolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Resource: "*"
+                Action:
+                  - "dynamodb:BatchGetItem"
+                  - "dynamodb:BatchWriteItem"
+                  - "dynamodb:ConditionCheckItem"
+                  - "dynamodb:DeleteItem"
+                  - "dynamodb:GetItem"
+                  - "dynamodb:GetRecords"
+                  - "dynamodb:PutItem"
+                  - "dynamodb:Query"
+                  - "dynamodb:Scan"
+                  - "dynamodb:UpdateItem"
+                  - "ssm:Get*"
+
   # Create another gateway with IAM based authentication
   APIGatewayIAM:
     Type: AWS::Serverless::Api
@@ -65,10 +102,7 @@ Resources:
       Runtime: nodejs18.x
       Architectures:
         - arm64
-      Policies:
-        - AWSLambdaRole
-        - AmazonDynamoDBFullAccess # Give the Lambda service access to poll your DynamoDB Stream
-        - AmazonSSMReadOnlyAccess # Allows getting private key from System Manager
+      Role: !GetAtt GraphQLServiceRole.Arn
       Events:
         PostIAM:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -139,10 +173,7 @@ Resources:
       Runtime: nodejs18.x
       Architectures:
         - arm64
-      Policies:
-        - AWSLambdaRole
-        - AmazonDynamoDBFullAccess # Give the Lambda service access to poll your DynamoDB Stream
-        - AmazonSSMReadOnlyAccess # Allows getting private key from System Manager
+      Role: !GetAtt GraphQLServiceRole.Arn
       Events:
         Get:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -177,10 +208,7 @@ Resources:
       Runtime: nodejs18.x
       Architectures:
         - arm64
-      Policies:
-        - AWSLambdaRole
-        - AmazonDynamoDBFullAccess # Give the Lambda service access to poll your DynamoDB Stream
-        - AmazonSSMReadOnlyAccess # Allows getting private key from System Manager
+      Role: !GetAtt GraphQLServiceRole.Arn
       Timeout: 30
       Events:
         UsageLogQueueEvent:
@@ -256,10 +284,7 @@ Resources:
       Runtime: nodejs18.x
       Architectures:
         - arm64
-      Policies:
-        - AWSLambdaRole
-        - AmazonDynamoDBFullAccess # Give the Lambda service access to poll your DynamoDB Stream
-        - AmazonSSMReadOnlyAccess # Allows getting private key from System Manager
+      Role: !GetAtt GraphQLServiceRole.Arn
       Timeout: 300
       Events:
         ScheduledTrigger:
@@ -273,17 +298,16 @@ Resources:
         Target: "es2022"
         EntryPoints:
           - settleAccountActivities.ts
-
-Outputs:
-  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
-  # Find out more about other implicit resources you can reference within SAM
-  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  APIGateway:
-    Description: "API Gateway endpoint URL"
-    Value: !Sub "https://${APIGateway}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
-  ApolloServer:
-    Description: "ApolloServer ARN"
-    Value: !GetAtt ApolloServer.Arn
-  ApolloServerIamRole:
-    Description: "Implicit IAM Role created (ApolloServerRole)"
-    Value: !GetAtt ApolloServerRole.Arn
+# Outputs:
+#   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+#   # Find out more about other implicit resources you can reference within SAM
+#   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+#   APIGateway:
+#     Description: "API Gateway endpoint URL"
+#     Value: !Sub "https://${APIGateway}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
+#   ApolloServer:
+#     Description: "ApolloServer ARN"
+#     Value: !GetAtt ApolloServer.Arn
+#   ApolloServerIamRole:
+#     Description: "Implicit IAM Role created (ApolloServerRole)"
+#     Value: !GetAtt ApolloServerRole.Arn

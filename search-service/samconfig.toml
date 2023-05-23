@@ -4,6 +4,6 @@ stack_name = "search-service"
 resolve_s3 = true
 s3_prefix = "search-service"
 region = "us-east-1"
-capabilities = "CAPABILITY_IAM"
+capabilities = "CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM"
 parameter_overrides = "Stage=\"DEV\" GatewayHostNameV2=\"api.v2.search.fastchargeapi.com\""
 image_repositories = []
