@@ -33,6 +33,7 @@ class LoadUserInfo extends AppEvent<RootAppState> {
             query: gql`
                 query GetAccountInfo($user: ID!) {
                     user(pk: $user) {
+                        email
                         balance
                         author
                     }

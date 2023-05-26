@@ -285,11 +285,15 @@ class _DashboardPage extends React.Component<Props, State> {
         );
     }
 
+    userName(): string | undefined {
+        return this.appState.userAccountInfo?.author || this.appState.userAccountInfo?.email;
+    }
+
     render() {
         return (
             <React.Fragment>
                 <Typography variant="h2" mb={4} mt={2} ml={1}>
-                    Welcome back, {this.appState.userAccountInfo?.author || "Anonymous User"}
+                    Welcome back{this.userName() ? `, ${this.userName()!}` : ""}!
                 </Typography>
                 <Grid container spacing={4}>
                     <Grid item xl={8} lg={7} xs={12}>

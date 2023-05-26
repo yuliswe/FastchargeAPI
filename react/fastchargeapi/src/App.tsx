@@ -36,7 +36,7 @@ function WithContext(props: WithContextProps) {
             return () => {
                 // do nothing
             };
-        });
+        }, []);
     });
 
     const mediaQueryXsDown = useMediaQuery(theme.breakpoints.down("xs"));
