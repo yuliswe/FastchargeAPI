@@ -4,11 +4,11 @@
     "private": true,
     "scripts": {
         "eject": "react-scripts eject",
-        "gen": "graphql-codegen --config codegen.yml && prettier -w ./src/__generated__/",
+        "gen": "graphql-codegen --config codegen.yml",
         "build": "npm run gen && react-scripts build",
         "test": "npm run gen && react-scripts test",
         "start": "npm run gen && PORT=8000 react-scripts start",
-        "watch": "nodemon -e ts,tsx,yml,yaml -i build/ -i src/__generated__ --exec 'npm run gen' & PORT=8000 FORCE_COLOR=true react-scripts start | cat",
+        "watch": "(PORT=8000 react-scripts start) & (nodemon -e ts,tsx,yml,yaml -i build/ -i src/__generated__ --exec 'npm run gen')",
         "new-page": "node ../react-appevent-redux-tools/dist/index.js",
         "fix": "eslint --fix ./"
     },
