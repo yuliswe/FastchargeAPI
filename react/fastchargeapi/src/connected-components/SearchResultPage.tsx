@@ -1,5 +1,6 @@
 import {
     Avatar,
+    Chip,
     Container,
     FormControl,
     FormControlLabel,
@@ -8,6 +9,7 @@ import {
     Paper,
     Radio,
     RadioGroup,
+    Skeleton,
     Stack,
     Typography,
 } from "@mui/material";
@@ -44,59 +46,71 @@ class _SearchResultPage extends React.Component<Props, {}> {
     };
 
     searchForAppsbyKeyword = (keyword: string) => {
+        this._context.route?.updateQuery({
+            q: keyword,
+        });
         appStore.dispatch(new AppSearchResultEvent.SearchResultEvent(this._context, keyword));
     };
 
     render() {
         return (
             <SiteLayout onSearch={this.searchForAppsbyKeyword}>
-                <Container maxWidth="xl">
-                    <Grid container>
-                        <Grid item xs={3} pl={5}>
-                            <Typography variant="h6" my={5}>
-                                {this.props.searchResultState.searchResults.length} result
-                                {this.props.searchResultState.searchResults.length > 1 && "s"} found
-                            </Typography>
-                            <Typography variant="body1" my={1}>
-                                Sort results
-                            </Typography>
-                            <FormControl>
-                                <RadioGroup
-                                    aria-labelledby="demo-radio-buttons-group-label"
-                                    defaultValue="exact-match"
-                                    name="radio-buttons-group"
-                                    onChange={(e) => {
-                                        this._context.route?.updateQuery({
-                                            sort: e.target.value,
-                                        });
-                                        // this._context.route?.navigate({
-                                        //     pathname: "/search",
-                                        //     search: createSearchParams({
-                                        //         sort: e.target.value,
-                                        //     }).toString(),
-                                        // });
-                                    }}
-                                >
-                                    <FormControlLabel value="exact-match" control={<Radio />} label="Exact match" />
-                                    <FormControlLabel
-                                        value="github-popularity"
-                                        control={<Radio />}
-                                        label="Github popularity"
-                                    />
-                                </RadioGroup>
-                            </FormControl>
-                        </Grid>
-                        <Grid item xs={9}>
+                <Container maxWidth="lg">
+                    <Grid container spacing={5}>
+                        {this._context.mediaQuery.md.up && (
+                            <Grid item md={2} lg={2} xl={2} pl={5}>
+                                <Typography variant="h4" my={5}>
+                                    {this.props.searchResultState.searchResults.length}
+                                    {this.props.searchResultState.searchResults.length > 99 && "+"} result
+                                    {this.props.searchResultState.searchResults.length > 1 && "s"} found
+                                </Typography>
+                                <Typography variant="body1" my={1}>
+                                    Sort results
+                                </Typography>
+                                <FormControl>
+                                    <RadioGroup
+                                        aria-labelledby="demo-radio-buttons-group-label"
+                                        defaultValue="exact-match"
+                                        name="radio-buttons-group"
+                                        onChange={(e) => {
+                                            this._context.route?.updateQuery({
+                                                sort: e.target.value,
+                                            });
+                                            // this._context.route?.navigate({
+                                            //     pathname: "/search",
+                                            //     search: createSearchParams({
+                                            //         sort: e.target.value,
+                                            //     }).toString(),
+                                            // });
+                                        }}
+                                    >
+                                        <FormControlLabel value="exact-match" control={<Radio />} label="Exact match" />
+                                        <FormControlLabel
+                                            value="github-popularity"
+                                            control={<Radio />}
+                                            label="Github popularity"
+                                        />
+                                    </RadioGroup>
+                                </FormControl>
+                            </Grid>
+                        )}
+                        <Grid item xs={12} sm={12} md={10} lg={9} xl={9}>
                             <PaginatedList<SearchResult>
-                                sourceItems={this.props.searchResultState.searchResults}
+                                sx={{ my: 5 }}
+                                sourceItems={
+                                    this.props.searchResultState.loading
+                                        ? Array(7).fill(null)
+                                        : this.props.searchResultState.searchResults
+                                }
                                 urlNamespace="s"
                                 itemsPerPage={7}
                                 onChange={this.searchResultPageChangeHandler}
-                                listItemGenerator={generateAppSearchResultComponents}
+                                renderPage={
+                                    this.props.searchResultState.loading
+                                        ? renderSkeleton
+                                        : generateAppSearchResultComponents
+                                }
                             />
-                            {/* <List sx={{ mt: 0 }}>
-                                {createListItems(this.props.searchResultState.searchResults)}
-                            </List> */}
                         </Grid>
                     </Grid>
                 </Container>
@@ -105,35 +119,42 @@ class _SearchResultPage extends React.Component<Props, {}> {
     }
 }
 
-const generateAppSearchResultComponents = (searchResults: SearchResult[]): JSX.Element[] => {
+const generateAppSearchResultComponents = (searchResults: SearchResult[]) => {
     return searchResults.map((result, index) => (
-        <Paper
-            key={index}
-            sx={{
-                py: 3,
-                borderBottom: 1,
-                borderBottomColor: "divider",
-                bgcolor: "transparent",
-            }}
-        >
-            <Link href={`/app/${result.pk}`} underline="hover">
+        <Paper key={index} sx={{ p: 3, mb: 2 }}>
+            <Link href={`/app/${result.pk}`}>
                 <Stack direction="row" spacing={1} alignItems="center">
-                    <Typography variant="h6">{result.title || result.name}</Typography>
-                    <Typography variant="body1" color="secondary.main">
+                    <Typography variant="h5" maxWidth="20em" noWrap lineHeight="100%">
+                        {result.title || result.name}
+                    </Typography>
+                    <Typography variant="body1" maxWidth="20em" noWrap lineHeight="100%">
                         @{result.name}
                     </Typography>
                 </Stack>
             </Link>
-            <Typography variant="body1" my={2}>
+            <Typography variant="body1" my={2} display="flex" alignItems="center">
+                <Avatar
+                    src="./logo192.png"
+                    sx={{ display: "inline-block", mr: 1, width: 35, height: 35 }}
+                    component="span"
+                />
                 {result.description || "The author did not provide a description for this app."}
             </Typography>
             <Stack direction="row" spacing={1} alignItems="center">
-                <Avatar src="./logo192.png" />
-                <Typography variant="body1" fontWeight={500}>
-                    {result.owner.author || "Anonymous author"}
-                </Typography>
+                <Chip label={result.owner.author || "Anonymous author"} color="primary" />
             </Stack>
         </Paper>
+    ));
+};
+
+const renderSkeleton = (searchResults: SearchResult[]) => {
+    return searchResults.map((_, idx) => (
+        <Stack key={idx} sx={{ mb: 2, height: 150 }} spacing={2}>
+            <Skeleton variant="rounded" height={100} sx={{ bgcolor: "grey.100", borderRadius: 20 }} />
+            <Stack direction="row" spacing={2} alignItems="center">
+                <Skeleton variant="rounded" height={30} width={"30%"} sx={{ bgcolor: "grey.100", borderRadius: 20 }} />
+            </Stack>
+        </Stack>
     ));
 };
 

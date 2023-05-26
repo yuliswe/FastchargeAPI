@@ -8,7 +8,6 @@ import Terminal, { ColorMode, TerminalInput } from "react-terminal-ui";
 import rehypeHighlight from "rehype-highlight";
 import rehypeRemoveComments from "rehype-remove-comments";
 import remarkGfm from "remark-gfm";
-import remarkGithub from "remark-github";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { SiteLayout } from "../SiteLayout";
 import { AppDetailEndpoint, AppDetailEvent, AppDetailPricing } from "../events/AppDetailEvent";
@@ -100,33 +99,41 @@ class _AppDetailPage extends React.Component<_Props, _State> {
     render() {
         return (
             <SiteLayout>
-                <Container maxWidth="xl">
+                <Container maxWidth="lg">
                     <Grid container columnSpacing={5}>
                         <Grid item px={5} xs={9}>
                             <Stack spacing={5}>
                                 <Box>
-                                    <Stack direction="row" spacing={1} mt={5} mb={1} alignItems="center">
-                                        <Typography variant="h6" id="description">
+                                    <Stack direction="row" spacing={1} mt={5} alignItems="center">
+                                        <Typography
+                                            variant="h3"
+                                            id="description"
+                                            noWrap
+                                            maxWidth="20em"
+                                            component="span"
+                                        >
                                             {this.appState?.appInfo?.title || this.appState?.appInfo?.name}
                                         </Typography>
-                                        <Typography variant="body1">@{this.appState?.appInfo?.name}</Typography>
+                                        <Typography variant="body1" noWrap maxWidth="20em" component="span">
+                                            @{this.appState?.appInfo?.name}
+                                        </Typography>
                                         {/* <Typography variant="body1">1.3.7</Typography>
                                         <Typography variant="body1">Published 10 months ago</Typography> */}
                                     </Stack>
-                                    <Divider sx={{ mb: 3 }} />
+                                    <Divider sx={{ mt: 1, mb: 3 }} />
                                     <Typography variant="body1">
                                         {this.appState?.appInfo?.description ||
                                             "The author did not provide a description for this app."}
                                     </Typography>
                                 </Box>
                                 <Box>
-                                    <Typography variant="h6" id="pricing">
+                                    <Typography variant="h4" id="pricing">
                                         Pricing
                                     </Typography>
-                                    <Divider sx={{ mb: 3 }} />
+                                    <Divider sx={{ mt: 1, mb: 3 }} />
                                     <Grid container spacing={3}>
-                                        {this.getPricingList().map((pricing: AppDetailPricing) => (
-                                            <Grid item xs={12} md={6} lg={4} xl={3}>
+                                        {this.getPricingList().map((pricing: AppDetailPricing, idx) => (
+                                            <Grid item xs={12} md={6} lg={4.5} xl={4.5} key={idx}>
                                                 <PricingCard
                                                     {...pricing}
                                                     actionButton={
@@ -191,22 +198,23 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                                 </Box>
                                 {this.appState.appReadmeContent && (
                                     <Box>
-                                        <Typography variant="h6" id="readme">
+                                        <Typography variant="h4" id="readme">
                                             README.md
                                         </Typography>
-                                        <Divider sx={{ mb: 3 }} />
+                                        <Divider sx={{ mt: 1, mb: 3 }} />
 
                                         <ReactMarkdown
                                             children={this.appState.appReadmeContent}
                                             skipHtml={true}
                                             remarkPlugins={(() => {
                                                 let plugins: PluggableList = [remarkGfm];
-                                                if (this.appState.appInfo!.repository) {
-                                                    plugins.push([
-                                                        remarkGithub,
-                                                        { repository: this.appState.appInfo!.repository },
-                                                    ] as any);
-                                                }
+                                                console.log(this.appState.appInfo?.repository);
+                                                // if (this.appState.appInfo!.repository) {
+                                                //     plugins.push([
+                                                //         remarkGithub,
+                                                //         { repository: this.appState.appInfo!.repository },
+                                                //     ] as any);
+                                                // }
                                                 return plugins;
                                             })()}
                                             rehypePlugins={[rehypeHighlight, rehypeRemoveComments]}
@@ -214,21 +222,19 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                                     </Box>
                                 )}
                                 <Box>
-                                    <Typography variant="h6" id="endpoints">
-                                        Endpoints
+                                    <Typography variant="h4" id="endpoints">
+                                        APIs
                                     </Typography>
-                                    <Divider sx={{ mb: 3 }} />
-                                    <Stack spacing={2}>
-                                        {this.appState?.endpoints?.map((endpoint: AppDetailEndpoint) => (
-                                            <Box>
+                                    <Divider sx={{ mt: 1, mb: 3 }} />
+                                    <Stack spacing={3}>
+                                        {this.appState?.endpoints?.map((endpoint: AppDetailEndpoint, idx) => (
+                                            <Box key={idx}>
                                                 <Stack direction="row" spacing={1}>
-                                                    <Typography variant="body1" color="secondary.main" fontWeight={700}>
-                                                        {endpoint.method}
-                                                    </Typography>
+                                                    <Typography variant="h6">{endpoint.method}</Typography>
                                                     <code>{endpoint.path}</code>
                                                 </Stack>
-                                                <Typography variant="body1">
-                                                    {endpoint.description || "No description provided."}
+                                                <Typography variant="body2">
+                                                    {endpoint.description || "No description provided for this API."}
                                                 </Typography>
                                             </Box>
                                         ))}
@@ -238,9 +244,7 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                         </Grid>
                         <Grid item xs={3} my={5}>
                             <Box position="sticky" top={50}>
-                                <Typography variant="h6" fontWeight={700} fontSize={15}>
-                                    Repository
-                                </Typography>
+                                <Typography variant="h6">Repository</Typography>
                                 {this.appState.appInfo?.repository ? (
                                     <Link href={this.appState.appInfo?.repository} target="_blank" variant="body2">
                                         {this.appState.appInfo?.repository}
@@ -250,8 +254,6 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                                 )}
                                 <Typography
                                     variant="h6"
-                                    fontWeight={700}
-                                    fontSize={15}
                                     mt={2}
                                     pt={2}
                                     sx={{
@@ -270,8 +272,6 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                                 )}
                                 <Typography
                                     variant="h6"
-                                    fontWeight={700}
-                                    fontSize={15}
                                     mt={2}
                                     pt={2}
                                     sx={{
@@ -290,8 +290,6 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                                 )}
                                 <Typography
                                     variant="h6"
-                                    fontWeight={700}
-                                    fontSize={15}
                                     mt={2}
                                     py={2}
                                     sx={{
@@ -309,8 +307,6 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                                 </Stack>
                                 <Typography
                                     variant="h6"
-                                    fontWeight={700}
-                                    fontSize={15}
                                     mt={2}
                                     py={2}
                                     sx={{

@@ -1,5 +1,5 @@
-import { Grid, List, Pagination, Typography } from "@mui/material";
-import React from "react";
+import { Box, Grid, Pagination, SxProps, Typography } from "@mui/material";
+import React, { ReactNode } from "react";
 import { AppContext, ReactAppContextType } from "../AppContext";
 
 export type PaginatedListOnPageChangeHandler = (data: { page: number }) => void;
@@ -9,7 +9,8 @@ type PaginatedListProps<T> = {
     urlNamespace: string;
     itemsPerPage: number;
     onChange: PaginatedListOnPageChangeHandler;
-    listItemGenerator: (items: T[]) => JSX.Element[];
+    renderPage: (items: T[]) => ReactNode;
+    sx?: SxProps;
 };
 
 export class PaginatedList<T> extends React.Component<PaginatedListProps<T>> {
@@ -20,7 +21,7 @@ export class PaginatedList<T> extends React.Component<PaginatedListProps<T>> {
 
     currentPageNum(): number {
         let p = this._context.route.query.get(`${this.props.urlNamespace}page`);
-        return p ? Number.parseInt(p) : 1;
+        return Math.min(p ? Number.parseInt(p) : 1, this.totalNumOfPages());
     }
 
     currentPageSourceItems() {
@@ -40,9 +41,9 @@ export class PaginatedList<T> extends React.Component<PaginatedListProps<T>> {
 
     render() {
         return (
-            <Grid container rowGap={5}>
+            <Grid container rowGap={5} sx={this.props.sx}>
                 <Grid item xs={12}>
-                    <List sx={{ mt: 0 }}>{this.props.listItemGenerator(this.currentPageSourceItems())}</List>
+                    <Box sx={{ mt: 0 }}>{this.props.renderPage(this.currentPageSourceItems())}</Box>
                     {this.props.sourceItems.length === 0 && (
                         <Typography variant="body1" m={2} sx={{ opacity: 0.8 }}>
                             No results found.

@@ -17,7 +17,7 @@ export class PricingCard extends React.PureComponent<PricingCardProps> {
     }
     render() {
         return (
-            <Card {...this.props.CardProps} sx={{ p: 2, borderRadius: 8, ...this.props.CardProps?.sx }}>
+            <Card {...this.props.CardProps} sx={{ p: 2, ...this.props.CardProps?.sx }}>
                 <CardContent>
                     <Typography variant="h4" mb={0}>
                         {this.props.name}
@@ -26,16 +26,32 @@ export class PricingCard extends React.PureComponent<PricingCardProps> {
                         {this.props.callToAction}
                     </Typography>
                     <Typography variant="body1" gutterBottom>
-                        <Chip color="success" label={`$${this.props.minMonthlyCharge}`} size="small" />
-                        {" in active month + "}
-                        <Chip color="warning" label={`$${this.props.chargePerRequest}`} size="small" />
-                        {" per request"}
+                        <Chip
+                            color="success"
+                            label={`$${this.props.minMonthlyCharge}`}
+                            size="small"
+                            sx={{ fontSize: "90%" }}
+                        />
+                        {" during active month + "}
+                        <Chip
+                            color="warning"
+                            label={`$${this.props.chargePerRequest}`}
+                            size="small"
+                            sx={{ fontSize: "90%" }}
+                        />
+                        {" per request."}
                     </Typography>
                     <Typography variant="body1">
                         {this.props.freeQuota > 0 ? (
                             <>
-                                First <Chip color="info" label={`${this.props.freeQuota}`} size="small" /> requests are
-                                free.
+                                First{" "}
+                                <Chip
+                                    color="info"
+                                    label={`${this.props.freeQuota}`}
+                                    size="small"
+                                    sx={{ fontSize: "90%" }}
+                                />{" "}
+                                requests are free.
                             </>
                         ) : (
                             "No free quota."

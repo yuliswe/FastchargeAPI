@@ -281,12 +281,12 @@ export function getTheme(extraThemeOpts?: ThemeOptions) {
                             },
                             h6: {
                                 fontFamily: "Roboto",
-                                fontSize: pxToRem(14),
+                                fontSize: pxToRem(15),
                                 fontWeight: 800,
                             },
                             label: {
                                 fontFamily: "Roboto",
-                                fontSize: pxToRem(14),
+                                fontSize: pxToRem(15),
                                 fontWeight: 800,
                             },
                             body1: {
@@ -298,6 +298,7 @@ export function getTheme(extraThemeOpts?: ThemeOptions) {
                             variantMapping: {
                                 label: "h6",
                             },
+                            component: "div",
                         },
                     },
                     MuiIconButton: {

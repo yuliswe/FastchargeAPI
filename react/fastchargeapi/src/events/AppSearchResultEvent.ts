@@ -1,9 +1,9 @@
-import { AppEvent, AppEventStream, mapState, to } from "react-appevent-redux";
-import { RootAppState } from "../states/RootAppState";
 import { gql } from "graphql-tag";
-import { getGQLClient } from "../graphql-client";
+import { AppEvent, AppEventStream, mapState, to } from "react-appevent-redux";
 import { AppContext } from "../AppContext";
 import { GQLAppFullTextSearchQuery, GQLAppFullTextSearchQueryVariables } from "../__generated__/gql-operations";
+import { getGQLClient } from "../graphql-client";
+import { RootAppState } from "../states/RootAppState";
 
 export type SearchResult = GQLAppFullTextSearchQuery["appFullTextSearch"][0];
 class SearchResultEvent extends AppEvent<RootAppState> {
