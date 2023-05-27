@@ -60,12 +60,17 @@ export async function flushAppSearchIndex(context: RequestContext): Promise<numb
 
 export async function appFullTextSearch(
     context: RequestContext,
-    { query, limit = 100, offset = 0 }: { query: string; limit?: number; offset?: number }
+    {
+        query,
+        limit = 100,
+        offset = 0,
+        minSimilarity = 0.3,
+    }: { query: string; limit?: number; offset?: number; minSimilarity?: number }
 ): Promise<App[]> {
     const command = new ExecuteStatementCommand({
         resourceArn: auroraResourceArn,
         secretArn: auroraSecretArn,
-        sql: `select search_app(:search_text, :limit, :offset)`,
+        sql: `select name from trigm_search_app(:search_text, :limit, :offset, :similarity)`,
         parameters: [
             {
                 name: "search_text",
@@ -85,12 +90,20 @@ export async function appFullTextSearch(
                     longValue: offset,
                 },
             },
+            {
+                name: "similarity",
+                value: {
+                    doubleValue: minSimilarity,
+                },
+            },
         ],
     });
-    const response = await rdsClient.send(command);
+    const response = await rdsClient.send(command, {
+        requestTimeout: 60_000,
+    });
     const promises = [];
     for (const record of response.records ?? []) {
-        const app_name = record[0].stringValue?.trimEnd();
+        const app_name = record[0].stringValue;
         if (app_name) {
             promises.push(context.batched.App.many({ name: app_name }));
         }
