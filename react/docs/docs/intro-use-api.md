@@ -25,7 +25,7 @@ fastapi token create [APP_NAME]
 curl "https://[APP_NAME].fastchargeapi.com/someresource" -H "X-Fast-API-KEY: [Your Token]"
 ```
 
-# Continued
+## Getting started
 
 For the purpose of this tutorial, we will use the official `myapp` example
 that's created in the previous tutorial: [Publish API](./intro-publish-api).

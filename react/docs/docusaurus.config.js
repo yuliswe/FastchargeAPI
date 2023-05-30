@@ -71,7 +71,7 @@ const config = {
                 title: "Documentation",
                 logo: {
                     alt: "FastchargeAPI Logo",
-                    src: "img/logo2.png",
+                    src: "img/logo5.svg",
                 },
                 items: [
                     {
@@ -91,13 +91,43 @@ const config = {
             },
             footer: {
                 style: "dark",
+                logo: {
+                    alt: "FastchargeAPI Logo",
+                    src: "img/logo5.svg",
+                },
                 links: [
                     {
-                        title: "Docs",
+                        title: "FastchargeAPI",
                         items: [
                             {
-                                label: "Tutorial",
+                                label: "API metering made simple.",
+                                to: "https://fastchargeapi.com",
+                            },
+                        ],
+                    },
+                    {
+                        title: "Resources",
+                        items: [
+                            {
+                                label: "Home",
+                                to: "https://fastchargeapi.com",
+                            },
+                            {
+                                label: "Pricing",
+                                to: "https://fastchargeapi.com/terms-of-service#pricing",
+                            },
+                        ],
+                    },
+                    {
+                        title: "Tutorials",
+                        items: [
+                            {
+                                label: "Publish APIs",
                                 to: "/docs/intro-publish-api",
+                            },
+                            {
+                                label: "Use APIs",
+                                to: "/docs/intro-use-api",
                             },
                         ],
                     },
@@ -106,20 +136,24 @@ const config = {
                         items: [
                             {
                                 label: "Report an Issue",
-                                href: "#",
+                                href: "https://github.com/FastchargeAPI/fastchargeapi-cli/issues",
                             },
                             {
                                 label: "Get help on Discord",
-                                href: "#",
+                                href: "https://discord.gg/HfQDWjkJ7n",
                             },
                         ],
                     },
                     {
-                        title: "More",
+                        title: "Legal",
                         items: [
                             {
-                                label: "GitHub",
-                                href: "#",
+                                label: "Privacy",
+                                to: "https://fastchargeapi.com/terms-of-service#privacy",
+                            },
+                            {
+                                label: "Terms of Service",
+                                to: "https://fastchargeapi.com/terms-of-service",
                             },
                         ],
                     },
