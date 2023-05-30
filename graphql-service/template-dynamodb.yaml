@@ -1,0 +1,337 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+
+Parameters:
+  TablePrefix:
+    Type: String
+    Default: dev__
+
+Resources:
+  AccountActivityTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "createdAt"
+          AttributeType: "N"
+        - AttributeName: "settleAt"
+          AttributeType: "N"
+        - AttributeName: "status"
+          AttributeType: "S"
+        - AttributeName: "user"
+          AttributeType: "S"
+      BillingMode: "PAY_PER_REQUEST"
+      TableName: !Join ["", [!Ref TablePrefix, "AccountActivity"]]
+      KeySchema:
+        - AttributeName: "user"
+          KeyType: "HASH"
+        - AttributeName: "createdAt"
+          KeyType: "RANGE"
+      GlobalSecondaryIndexes:
+        - IndexName: "indexByStatus_settleAt__onlyPK"
+          KeySchema:
+            - AttributeName: "status"
+              KeyType: "HASH"
+            - AttributeName: "settleAt"
+              KeyType: "RANGE"
+          Projection:
+            ProjectionType: "KEYS_ONLY"
+
+  EndpointTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "app"
+          AttributeType: "S"
+        - AttributeName: "createdAt"
+          AttributeType: "N"
+      BillingMode: "PAY_PER_REQUEST"
+      TableName: !Join ["", [!Ref TablePrefix, "Endpoint"]]
+      KeySchema:
+        - AttributeName: "app"
+          KeyType: "HASH"
+        - AttributeName: "createdAt"
+          KeyType: "RANGE"
+
+  AccountHistoryTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "startingTime"
+          AttributeType: "N"
+        - AttributeName: "user"
+          AttributeType: "S"
+      BillingMode: "PAY_PER_REQUEST"
+      TableName: !Join ["", [!Ref TablePrefix, "AccountHistory"]]
+      KeySchema:
+        - AttributeName: "user"
+          KeyType: "HASH"
+        - AttributeName: "startingTime"
+          KeyType: "RANGE"
+
+  FreeQuotaUsageTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "app"
+          AttributeType: "S"
+        - AttributeName: "subscriber"
+          AttributeType: "S"
+      BillingMode: "PAY_PER_REQUEST"
+      TableName: !Join ["", [!Ref TablePrefix, "FreeQuotaUsage"]]
+      KeySchema:
+        - AttributeName: "subscriber"
+          KeyType: "HASH"
+        - AttributeName: "app"
+          KeyType: "RANGE"
+
+  GatewayRequestCounterTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "app"
+          AttributeType: "S"
+        - AttributeName: "requester"
+          AttributeType: "S"
+      BillingMode: "PAY_PER_REQUEST"
+      TableName: !Join ["", [!Ref TablePrefix, "GatewayRequestCounter"]]
+      KeySchema:
+        - AttributeName: "requester"
+          KeyType: "HASH"
+        - AttributeName: "app"
+          KeyType: "RANGE"
+
+  AppTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "name"
+          AttributeType: "S"
+        - AttributeName: "owner"
+          AttributeType: "S"
+      BillingMode: "PAY_PER_REQUEST"
+      TableName: !Join ["", [!Ref TablePrefix, "App"]]
+      KeySchema:
+        - AttributeName: "name"
+          KeyType: "HASH"
+      GlobalSecondaryIndexes:
+        - IndexName: "indexByOwner__onlyPK"
+          KeySchema:
+            - AttributeName: "owner"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "KEYS_ONLY"
+
+  PricingTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "app"
+          AttributeType: "S"
+        - AttributeName: "createdAt"
+          AttributeType: "N"
+      BillingMode: "PAY_PER_REQUEST"
+      TableName: !Join ["", [!Ref TablePrefix, "Pricing"]]
+      KeySchema:
+        - AttributeName: "app"
+          KeyType: "HASH"
+        - AttributeName: "createdAt"
+          KeyType: "RANGE"
+
+  SecretTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "key"
+          AttributeType: "S"
+      BillingMode: "PAY_PER_REQUEST"
+      TableName: !Join ["", [!Ref TablePrefix, "Secret"]]
+      KeySchema:
+        - AttributeName: "key"
+          KeyType: "HASH"
+
+  StripePaymentAcceptTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "createdAt"
+          AttributeType: "N"
+        - AttributeName: "user"
+          AttributeType: "S"
+      BillingMode: "PAY_PER_REQUEST"
+      TableName: !Join ["", [!Ref TablePrefix, "StripePaymentAccept"]]
+      KeySchema:
+        - AttributeName: "user"
+          KeyType: "HASH"
+        - AttributeName: "createdAt"
+          KeyType: "RANGE"
+
+  SubscribeTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "app"
+          AttributeType: "S"
+        - AttributeName: "subscriber"
+          AttributeType: "S"
+      BillingMode: "PAY_PER_REQUEST"
+      TableName: !Join ["", [!Ref TablePrefix, "Subscribe"]]
+      KeySchema:
+        - AttributeName: "subscriber"
+          KeyType: "HASH"
+        - AttributeName: "app"
+          KeyType: "RANGE"
+
+  StripeTransferTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "createdAt"
+          AttributeType: "N"
+        - AttributeName: "receiver"
+          AttributeType: "S"
+        - AttributeName: "status"
+          AttributeType: "S"
+        - AttributeName: "transferAt"
+          AttributeType: "N"
+      BillingMode: "PAY_PER_REQUEST"
+      TableName: !Join ["", [!Ref TablePrefix, "StripeTransfer"]]
+      KeySchema:
+        - AttributeName: "receiver"
+          KeyType: "HASH"
+        - AttributeName: "createdAt"
+          KeyType: "RANGE"
+      GlobalSecondaryIndexes:
+        - IndexName: "indexByStatus_transferAt__onlyPK"
+          KeySchema:
+            - AttributeName: "status"
+              KeyType: "HASH"
+            - AttributeName: "transferAt"
+              KeyType: "RANGE"
+          Projection:
+            ProjectionType: "KEYS_ONLY"
+
+  SubscriptionTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "app"
+          AttributeType: "S"
+        - AttributeName: "subscriber"
+          AttributeType: "S"
+      BillingMode: "PAY_PER_REQUEST"
+      TableName: !Join ["", [!Ref TablePrefix, "Subscription"]]
+      KeySchema:
+        - AttributeName: "subscriber"
+          KeyType: "HASH"
+        - AttributeName: "app"
+          KeyType: "RANGE"
+
+  UsageSummaryTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "createdAt"
+          AttributeType: "N"
+        - AttributeName: "subscriber"
+          AttributeType: "S"
+      BillingMode: "PAY_PER_REQUEST"
+      TableName: !Join ["", [!Ref TablePrefix, "UsageSummary"]]
+      KeySchema:
+        - AttributeName: "subscriber"
+          KeyType: "HASH"
+        - AttributeName: "createdAt"
+          KeyType: "RANGE"
+
+  UserTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "email"
+          AttributeType: "S"
+        - AttributeName: "uid"
+          AttributeType: "S"
+      BillingMode: "PAY_PER_REQUEST"
+      TableName: !Join ["", [!Ref TablePrefix, "User"]]
+      KeySchema:
+        - AttributeName: "uid"
+          KeyType: "HASH"
+      GlobalSecondaryIndexes:
+        - IndexName: "indexByEmail__onlyPK"
+          KeySchema:
+            - AttributeName: "email"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "KEYS_ONLY"
+
+  UserAppTokenTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "createdAt"
+          AttributeType: "N"
+        - AttributeName: "subscriber"
+          AttributeType: "S"
+      BillingMode: "PAY_PER_REQUEST"
+      TableName: !Join ["", [!Ref TablePrefix, "UserAppToken"]]
+      KeySchema:
+        - AttributeName: "subscriber"
+          KeyType: "HASH"
+        - AttributeName: "createdAt"
+          KeyType: "RANGE"
+
+  UsageLogTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "createdAt"
+          AttributeType: "N"
+        - AttributeName: "subscriber"
+          AttributeType: "S"
+      BillingMode: "PAY_PER_REQUEST"
+      TableName: !Join ["", [!Ref TablePrefix, "UsageLog"]]
+      KeySchema:
+        - AttributeName: "subscriber"
+          KeyType: "HASH"
+        - AttributeName: "createdAt"
+          KeyType: "RANGE"
+
+  GatewayRequestDecisionCacheTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "app"
+          AttributeType: "S"
+        - AttributeName: "requester"
+          AttributeType: "S"
+      BillingMode: "PAY_PER_REQUEST"
+      TableName: !Join ["", [!Ref TablePrefix, "GatewayRequestDecisionCache"]]
+      KeySchema:
+        - AttributeName: "requester"
+          KeyType: "HASH"
+        - AttributeName: "app"
+          KeyType: "RANGE"
+
+  AppTagTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "app"
+          AttributeType: "S"
+        - AttributeName: "tag"
+          AttributeType: "S"
+      BillingMode: "PAY_PER_REQUEST"
+      TableName: !Join ["", [!Ref TablePrefix, "AppTag"]]
+      KeySchema:
+        - AttributeName: "app"
+          KeyType: "HASH"
+        - AttributeName: "tag"
+          KeyType: "RANGE"
+      GlobalSecondaryIndexes:
+        - IndexName: "indexByTag_app__onlyPK"
+          KeySchema:
+            - AttributeName: "tag"
+              KeyType: "HASH"
+            - AttributeName: "app"
+              KeyType: "RANGE"
+          Projection:
+            ProjectionType: "KEYS_ONLY"

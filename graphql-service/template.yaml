@@ -19,6 +19,11 @@ Globals:
       service-name: graphql-service
 
 Resources:
+  NestedStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./template-dynamodb.yaml
+
   # This is a custom build layer. See:
   # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/building-layers.html
   CopyDependencies:
@@ -74,7 +79,13 @@ Resources:
                   - "dynamodb:Query"
                   - "dynamodb:Scan"
                   - "dynamodb:UpdateItem"
-                  - "ssm:Get*"
+                  - "ssm:GetParameter"
+                  - "ssm:GetParameters"
+                  - "ssm:GetParametersByPath"
+                  - "sqs:DeleteMessage"
+                  - "sqs:ReceiveMessage"
+                  - "sqs:SendMessage"
+                  - "sqs:GetQueueAttributes"
 
   # Create another gateway with IAM based authentication
   APIGatewayIAM:
