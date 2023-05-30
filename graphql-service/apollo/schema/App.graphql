@@ -5,7 +5,7 @@ scalar URL
 
 type Query {
     ### App API
-    # apps: [App]
+    apps(tag: String, limit: Int): [App!]!
     app(pk: ID, name: String): App!
     appFullTextSearch(query: String!, limit: Int, offset: Int): [App!]!
     ### User API
@@ -36,6 +36,7 @@ type Query {
     ): GatewayDecisionResponse!
 
     stripeTransfer(pk: ID): StripeTransfer!
+    appTags(tag: String): [AppTag!]!
 }
 
 enum GatewayDecisionResponseReason {
@@ -66,6 +67,7 @@ type Mutation {
         repository: URL
         homepage: URL
         visibility: AppVisibility = public
+        logo: URL
     ): App!
 
     createEndpoint(app: ID!, path: String!, method: HTTPMethod!, destination: String!, description: String): Endpoint!
@@ -117,6 +119,8 @@ type Mutation {
     ): AccountActivity!
 
     flushAppSearchIndex: Int!
+
+    createAppTag(app: String!, tag: String!): AppTag!
 }
 
 type Secret {
@@ -203,6 +207,7 @@ type App {
     updatedAt: Timestamp!
     createdAt: Timestamp!
     visibility: AppVisibility!
+    logo: URL
 
     endpoints: [Endpoint!]!
     pricingPlans: [Pricing!]!
@@ -216,6 +221,8 @@ type App {
         visibility: AppVisibility
     ): App!
     deleteApp: App!
+
+    tags: [AppTag!]!
 }
 
 enum AppIndex {
@@ -408,4 +415,13 @@ type UserAppToken {
     token: String
 
     deleteUserAppToken: UserAppToken!
+}
+
+type AppTag {
+    app: App!
+    tag: String!
+    createdAt: Timestamp!
+    updatedAt: Timestamp!
+
+    updateAppTag(tag: String): AppTag!
 }

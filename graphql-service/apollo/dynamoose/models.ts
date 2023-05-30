@@ -1,8 +1,8 @@
 import dynamoose from "dynamoose";
+import { ModelType } from "dynamoose/dist/General";
 import { Item } from "dynamoose/dist/Item";
 import { TableClass } from "dynamoose/dist/Table/types";
 import { isValidAppName } from "../functions/app";
-import { ModelType } from "dynamoose/dist/General";
 
 let MAKE_TABLE = false;
 
@@ -121,13 +121,34 @@ const AppTableSchema = new dynamoose.Schema(
                 project: ["name", "owner"],
             },
         },
-        title: { type: String, required: false },
+        logo: { type: String },
+        title: { type: String },
         gatewayMode: { type: String, default: "proxy", enum: ["proxy", "redirect"] },
         description: { type: String },
         repository: { type: String },
         homepage: { type: String },
         readme: { type: String },
         visibility: { type: String, default: "private", enum: ["public", "private"] },
+    },
+    { timestamps: true }
+);
+
+export enum AppTagTableIndex {
+    indexByTag_app__onlyPK = "indexByTag_app__onlyPK",
+}
+
+const AppTagTableSchema = new dynamoose.Schema(
+    {
+        app: { hashKey: true, ...String_Required_NotEmpty("app") },
+        tag: {
+            rangeKey: true,
+            ...String_Required_NotEmpty("tag"),
+            index: {
+                type: "global",
+                name: "indexByTag_app__onlyPK",
+                project: ["tag", "app"],
+            },
+        },
     },
     { timestamps: true }
 );
@@ -497,6 +518,15 @@ export class App extends Item {
     updatedAt: number;
     createdAt: number;
     visibility: AppVisibility;
+    logo: string;
+}
+/// When creating a new Item class, remember to add it to codegen.yml mappers
+/// config.
+export class AppTag extends Item {
+    app: string;
+    tag: string;
+    updatedAt: number;
+    createdAt: number;
 }
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
@@ -730,6 +760,9 @@ export type Model<T extends Item> = ModelType<T>;
 export { Item } from "dynamoose/dist/Item";
 
 export const AppModel = dynamoose.model<App>("App", AppTableSchema, {
+    ...tableConfigs,
+});
+export const AppTagModel = dynamoose.model<AppTag>("AppTag", AppTagTableSchema, {
     ...tableConfigs,
 });
 export const EndpointModel = dynamoose.model<Endpoint>("Endpoint", EndpointTableSchema, { ...tableConfigs });

@@ -1,5 +1,6 @@
 import { RequestContext } from "./RequestContext";
 import {
+    GQLAppTagUpdateAppTagArgs,
     GQLAppUpdateAppArgs,
     GQLEndpointUpdateEndpointArgs,
     GQLMutationCreateEndpointArgs,
@@ -12,6 +13,7 @@ import {
     AccountActivity,
     AccountHistory,
     App,
+    AppTag,
     Endpoint,
     Pricing,
     StripePaymentAccept,
@@ -396,6 +398,20 @@ export const Can = {
     async flushAppSearchIndex(context: RequestContext): Promise<boolean> {
         return Promise.resolve(context.isServiceRequest || context.isAdminUser || false);
     },
+    async createAppTag(context: RequestContext): Promise<boolean> {
+        return Promise.resolve(context.isServiceRequest || context.isAdminUser || false);
+    },
+    async updateAppTag(parent: AppTag, { tag }: GQLAppTagUpdateAppTagArgs, context: RequestContext): Promise<boolean> {
+        if (tag === "Featured" || tag === "Latest") {
+            return Promise.resolve(context.isServiceRequest || context.isAdminUser || false);
+        }
+        if (!context.currentUser) {
+            return false;
+        }
+        const app = await context.batched.App.get(AppPK.parse(parent.app));
+        return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
+    },
+
     // async *viewAppIter<App extends { owner: string }>(
     //     arr: App[],
     //     context: RequestContext

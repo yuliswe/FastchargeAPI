@@ -66,7 +66,7 @@ export class UpdateContainsPrimaryKey extends GraphQLError {
         super(
             `New value of ${resource} cannot contain the primary key component ("${key}"): ${JSON.stringify(
                 newValues
-            )}.`,
+            )}, because it will actually create a new entry in the database. Consider deleting the old entry first.`,
             {
                 extensions: { code: "INTERNAL_SERVER_ERROR" },
             }

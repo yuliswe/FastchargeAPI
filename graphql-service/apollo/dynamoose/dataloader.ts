@@ -2,7 +2,7 @@ import { ConditionalCheckFailedException } from "@aws-sdk/client-dynamodb";
 import DataLoader from "dataloader";
 import { InputKey, KeyObject, ModelType } from "dynamoose/dist/General";
 import { Item } from "dynamoose/dist/Item";
-import { Query as DynamogooseQuery } from "dynamoose/dist/ItemRetriever";
+import { Query as DynamogooseQuery, Scan as DynamogooseScan } from "dynamoose/dist/ItemRetriever";
 import hash from "object-hash";
 import { AlreadyExists, NotFound, UpdateContainsPrimaryKey } from "../errors";
 
@@ -41,13 +41,28 @@ type AdvancedUpdateQuery<T> = {
  * DataLoader.
  */
 
-function applyBatchOptionsToQuery<T>(query: DynamogooseQuery<T>, options: BatchOptions): DynamogooseQuery<T> {
+function applyBatchOptionsToQuery<T>(query: DynamogooseQuery<T>, options: BatchQueryOptions): DynamogooseQuery<T> {
     if (options) {
         if (options.limit != null) {
             query = query.limit(options.limit);
         }
         if (options.sort != null) {
             query = query.sort(options.sort);
+        }
+        if (options.using != null) {
+            query = query.using(options.using);
+        }
+        if (options.consistent) {
+            query = query.consistent();
+        }
+    }
+    return query;
+}
+
+function applyBatchOptionsToScan<T>(query: DynamogooseScan<T>, options: BatchQueryOptions): DynamogooseScan<T> {
+    if (options) {
+        if (options.limit != null) {
+            query = query.limit(options.limit);
         }
         if (options.using != null) {
             query = query.using(options.using);
@@ -95,17 +110,23 @@ async function assignDefaults<I extends Item>(item: I): Promise<I> {
 }
 
 type PrimaryKey = string | number;
-type BatchOptions = {
+type BatchQueryOptions = {
     limit?: number | null;
     sort?: "ascending" | "descending" | null;
     using?: string | null; // Index name
     consistent?: boolean; // Use consistent read
+    batchSize?: number; // Number of items to get per batch
 };
 type BatchKey<I extends Item> = {
     query: PrimaryKey | Query<I>;
-    options?: BatchOptions;
+    options?: BatchQueryOptions;
 };
-
+type BatchScanOptions = {
+    limit?: number | null;
+    using?: string | null; // Index name
+    consistent?: boolean; // Use consistent read
+    batchSize?: number; // Number of items to get per batch
+};
 /**
  * Used by DataLoader, this function takes a list of filter conditions and
  * returns a list of items of the same count.
@@ -360,7 +381,7 @@ export class Batched<I extends Item> {
      * dynamoose.Model.query().
      * @returns An object of the model type.
      */
-    async get(key: Query<I>, options?: BatchOptions): Promise<I> {
+    async get(key: Query<I>, options?: BatchQueryOptions): Promise<I> {
         let result = await this.many(key, options);
         if (result.length === 0) {
             throw new NotFound(this.model.name, key);
@@ -371,7 +392,7 @@ export class Batched<I extends Item> {
         }
     }
 
-    async getOrNull(key: Query<I>, options?: BatchOptions): Promise<I | null> {
+    async getOrNull(key: Query<I>, options?: BatchQueryOptions): Promise<I | null> {
         let result = await this.many(key, options);
         if (result.length === 0) {
             return null;
@@ -382,7 +403,7 @@ export class Batched<I extends Item> {
         }
     }
 
-    async getOrCreate(key: GQLPartial<I>, options?: BatchOptions): Promise<I> {
+    async getOrCreate(key: GQLPartial<I>, options?: BatchQueryOptions): Promise<I> {
         let item = await this.getOrNull(key, options);
         if (item === null) {
             item = await this.create(key);
@@ -414,7 +435,7 @@ export class Batched<I extends Item> {
      *          than the actual number of items matching the query.
      * @returns An array of objects of the model type.
      */
-    async many(key: Query<I>, options?: BatchOptions): Promise<I[]> {
+    async many(key: Query<I>, options?: BatchQueryOptions): Promise<I[]> {
         let strippedKey;
         if (typeof key === "object") {
             strippedKey = stripNullKeys(key, {
@@ -453,7 +474,7 @@ export class Batched<I extends Item> {
         }
     }
 
-    async count(key: Query<I>, options?: BatchOptions): Promise<number> {
+    async count(key: Query<I>, options?: BatchQueryOptions): Promise<number> {
         if (typeof key === "object") {
             key = stripNullKeys(key)!;
         }
@@ -471,7 +492,7 @@ export class Batched<I extends Item> {
         return result.count;
     }
 
-    async exists(key: Partial<I>, options?: BatchOptions): Promise<boolean> {
+    async exists(key: Partial<I>, options?: BatchQueryOptions): Promise<boolean> {
         let result = await this.many(key, options);
         return result.length > 0;
     }
@@ -550,7 +571,7 @@ export class Batched<I extends Item> {
         return item;
     }
 
-    async deleteMany(query: Partial<I>, options?: BatchOptions): Promise<I[]> {
+    async deleteMany(query: Partial<I>, options?: BatchQueryOptions): Promise<I[]> {
         let items = await this.many(query, options);
         const deleteChunk = async (batch: I[]) => {
             let pks = batch.map((x) => extractKeysFromItems(this.model, x));
@@ -633,47 +654,25 @@ export class Batched<I extends Item> {
         return result;
     }
 
-    async *scan({ batchSize = 100 }: { batchSize?: number } = {}): AsyncIterable<I[]> {
-        let response = await this.model.scan().limit(batchSize).exec();
+    async *scan(
+        conditions: ConditionQuery<I> = {},
+        { batchSize = 100, limit = 1000, ...options }: BatchScanOptions = {}
+    ): AsyncIterable<I[]> {
+        const baseQuery = applyBatchOptionsToScan(this.model.scan(conditions), options);
+        let remaining = limit as number;
+        let response = await baseQuery.limit(Math.min(batchSize, remaining)).exec();
         if (response.length > 0) {
+            remaining = Math.max(0, remaining - response.length);
             yield response;
         }
-        while (response.lastKey) {
-            response = await this.model.scan().startAt(response.lastKey).limit(batchSize).exec();
+        while (response.lastKey && remaining > 0) {
+            response = await baseQuery.startAt(response.lastKey).limit(Math.min(batchSize, remaining)).exec();
             if (response.length > 0) {
+                remaining = Math.max(0, remaining - response.length);
                 yield response;
             }
         }
     }
-
-    async substringSearch(key: string, propertyNames: string[]): Promise<I[]> {
-        const lowerCaseKey = key.toLowerCase();
-        const upperCaseKey = key.toUpperCase();
-        const keyWithFirstLetterCapitalized = capitalizeFirstLetter(key);
-
-        let query = this.model.scan();
-        for (let i = 0; i < propertyNames.length; i++) {
-            const propertyName = propertyNames[i];
-            if (i !== 0) {
-                query = query.or();
-            }
-            query = query
-                .where(propertyName)
-                .contains(key)
-                .or()
-                .where(propertyName)
-                .contains(lowerCaseKey)
-                .or()
-                .where(propertyName)
-                .contains(upperCaseKey)
-                .or()
-                .where(propertyName)
-                .contains(keyWithFirstLetterCapitalized);
-        }
-        const result = await query.exec();
-        return result;
-    }
-
     // prime(values: Iterable<I>) {
     //     let keyName = this.model.table().hashKey;
     //     let keyMap = new Map();
@@ -697,8 +696,4 @@ export class Batched<I extends Item> {
 
 async function sleep(miliseconds: number) {
     return new Promise((resolve) => setTimeout(resolve, miliseconds));
-}
-
-function capitalizeFirstLetter(word: string) {
-    return word.charAt(0).toUpperCase() + word.slice(1);
 }

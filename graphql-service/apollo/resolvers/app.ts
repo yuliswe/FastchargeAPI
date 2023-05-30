@@ -7,9 +7,10 @@ import {
     GQLMutationCreateAppArgs,
     GQLQueryAppArgs,
     GQLQueryAppFullTextSearchArgs,
+    GQLQueryAppsArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
-import { App } from "../dynamoose/models";
+import { App, AppTagTableIndex } from "../dynamoose/models";
 import { BadInput, Denied, TooManyResources } from "../errors";
 import { appFullTextSearch, flushAppSearchIndex, isValidAppName } from "../functions/app";
 import { Can } from "../permissions";
@@ -83,6 +84,12 @@ export const appResolvers: GQLResolvers & {
             return parent;
         },
 
+        async tags(parent: App, args: {}, context: RequestContext) {
+            return await context.batched.AppTag.many({
+                app: parent.name,
+            });
+        },
+
         /**************************
          * All private attributes
          **************************/
@@ -118,6 +125,28 @@ export const appResolvers: GQLResolvers & {
         ): Promise<Array<App>> {
             return await appFullTextSearch(context, { query, limit: limit || undefined, offset: offset || undefined });
         },
+
+        async apps(parent: {}, { tag, limit = 10 }: GQLQueryAppsArgs, context: RequestContext): Promise<App[]> {
+            if (tag) {
+                const tags = await context.batched.AppTag.many(
+                    {
+                        tag: tag,
+                    },
+                    {
+                        limit,
+                        using: AppTagTableIndex.indexByTag_app__onlyPK,
+                    }
+                );
+                return await Promise.all(
+                    tags.map((tag) =>
+                        context.batched.App.get({
+                            name: tag.app,
+                        })
+                    )
+                );
+            }
+            return [];
+        },
     },
     Mutation: {
         async createApp(
@@ -131,6 +160,7 @@ export const appResolvers: GQLResolvers & {
                 homepage,
                 repository,
                 visibility,
+                logo,
             }: GQLMutationCreateAppArgs,
             context: RequestContext
         ): Promise<App> {
@@ -160,6 +190,7 @@ export const appResolvers: GQLResolvers & {
                 owner,
                 repository,
                 visibility,
+                logo,
             });
         },
 

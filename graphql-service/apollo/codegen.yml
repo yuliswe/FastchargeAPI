@@ -25,6 +25,7 @@ generates:
       # defaultMapper: "{[k in keyof {T}]: {T}[k] | (() => {T})}"
       mappers:
         App: ../dynamoose/models#App
+        AppTag: ../dynamoose/models#AppTag
         User: ../dynamoose/models#User
         Endpoint: ../dynamoose/models#Endpoint
         Pricing: ../dynamoose/models#Pricing

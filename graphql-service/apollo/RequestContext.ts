@@ -4,6 +4,7 @@ import {
     AccountActivityModel,
     AccountHistoryModel,
     AppModel,
+    AppTagModel,
     EndpointModel,
     FreeQuotaUsageModel,
     GatewayRequestCounterModel,
@@ -38,6 +39,7 @@ export function createDefaultContextBatched() {
     return {
         User: new Batched(UserModel),
         App: new Batched(AppModel),
+        AppTag: new Batched(AppTagModel),
         Endpoint: new Batched(EndpointModel),
         Pricing: new Batched(PricingModel),
         Subscription: new Batched(SubscriptionModel),
