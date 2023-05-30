@@ -5,6 +5,7 @@ on:
       - "releases/**"
       - "deploy/no-test/**"
       - "deploy/amplify"
+      - "deploy/docs"
 
 permissions:
   id-token: write

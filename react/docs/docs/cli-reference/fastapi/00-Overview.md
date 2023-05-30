@@ -1,3 +1,11 @@
+---
+sidebar_label: Overview
+---
+
+# Fastapi CLI
+
+Fastapi is a CLI for managing your subscriptions as an API user.
+
 # global options
 
 ## Usage

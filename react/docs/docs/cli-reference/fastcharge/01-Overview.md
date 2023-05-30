@@ -1,3 +1,11 @@
+---
+sidebar_label: Overview
+---
+
+# Fastcharge CLI
+
+fastcharge is a CLI for publishing APIs.
+
 # global options
 
 ## Usage
