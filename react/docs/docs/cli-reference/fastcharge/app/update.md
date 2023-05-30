@@ -1,4 +1,8 @@
-# update
+---
+sidebar_label: update
+---
+
+# fastcharge app update
 
 Update attributes of an app.
 

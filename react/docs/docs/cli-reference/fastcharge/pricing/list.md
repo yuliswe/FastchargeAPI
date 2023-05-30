@@ -1,4 +1,8 @@
-# list
+---
+sidebar_label: list
+---
+
+# fastcharge pricing list
 
 List pricing plans of an app.
 

@@ -1,4 +1,8 @@
-# add
+---
+sidebar_label: add
+---
+
+# fastcharge pricing add
 
 Add a new pricing plan to your app.
 

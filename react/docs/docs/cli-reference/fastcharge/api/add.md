@@ -1,4 +1,8 @@
-# add
+---
+sidebar_label: add
+---
+
+# fastcharge api add
 
 Add an endpoint to an app.
 

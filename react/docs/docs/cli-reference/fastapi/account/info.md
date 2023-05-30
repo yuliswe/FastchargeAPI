@@ -1,4 +1,8 @@
-# info
+---
+sidebar_label: info
+---
+
+# fastapi info
 
 View your account information.
 

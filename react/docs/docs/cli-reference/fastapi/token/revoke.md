@@ -1,11 +1,15 @@
-# create
+---
+sidebar_label: revoke
+---
+
+# fastapi token revoke
 
 Delete an API token.
 
 ## Usage
 
 ```bash
-fastapi token delete [APP_NAME]
+fastapi token revoke [APP_NAME]
 ```
 
 ## Arguments:

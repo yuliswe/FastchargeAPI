@@ -1,4 +1,8 @@
-# delete
+---
+sidebar_label: delete
+---
+
+# fastcharge app delete
 
 :::danger
 This command may cause you financial loss. Read carefully.

@@ -1,4 +1,8 @@
-# create
+---
+sidebar_label: create
+---
+
+# fastapi token create
 
 Create an API token to authenticate requests.
 

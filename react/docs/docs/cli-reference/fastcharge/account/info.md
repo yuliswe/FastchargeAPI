@@ -1,4 +1,8 @@
-# info
+---
+sidebar_label: info
+---
+
+# fastcharge account info
 
 View and manage your publisher account. Shows the account email and balance.
 

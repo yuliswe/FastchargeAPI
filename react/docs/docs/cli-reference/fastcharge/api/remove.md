@@ -1,4 +1,8 @@
-# remove
+---
+sidebar_label: remove
+---
+
+# fastcharge api remove
 
 Remove an endpoint from an app.
 

@@ -1,4 +1,8 @@
-# update
+---
+sidebar_label: update
+---
+
+# fastcharge account update
 
 Update attributes of your user account.
 

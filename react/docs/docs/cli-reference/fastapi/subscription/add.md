@@ -1,11 +1,15 @@
-# sub
+---
+sidebar_label: add
+---
+
+# fastapi subscription add
 
 Subscribe to an app.
 
 ## Usage
 
 ```bash
-fastapi subscription sub [APP_NAME] --plan [PRICING_ID]
+fastapi subscription add [APP_NAME] --plan [PRICING_ID]
 ```
 
 ## Arguments:

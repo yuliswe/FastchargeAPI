@@ -1,4 +1,8 @@
-# login
+---
+sidebar_label: login
+---
+
+# fastcharge login
 
 Sign in a user account.
 

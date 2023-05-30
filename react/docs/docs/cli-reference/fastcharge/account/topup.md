@@ -1,4 +1,8 @@
-# topup
+---
+sidebar_label: topup
+---
+
+# fastcharge account topup
 
 Top-up your account. The amount is in USD.
 

@@ -1,11 +1,15 @@
-# unsub
+---
+sidebar_label: remove
+---
+
+# fastapi subscription remove
 
 Unsubscribe from an app.
 
 ## Usage
 
 ```bash
-fastapi subscription unsub [APP_NAME]
+fastapi subscription remove [APP_NAME]
 ```
 
 ## Arguments:

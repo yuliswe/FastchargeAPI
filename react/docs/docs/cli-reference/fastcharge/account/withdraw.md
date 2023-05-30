@@ -1,4 +1,8 @@
-# withdraw
+---
+sidebar_label: withdraw
+---
+
+# fastcharge account withdraw
 
 Withdraw money from FastchargeAPI to your bank account.
 

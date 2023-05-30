@@ -1,4 +1,8 @@
-# login
+---
+sidebar_label: login
+---
+
+# fastapi login
 
 Sign in a user account.
 

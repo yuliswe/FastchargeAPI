@@ -1,4 +1,8 @@
-# list
+---
+sidebar_label: list
+---
+
+# fastcharge api list
 
 List available endpoints of an app published by you.
 

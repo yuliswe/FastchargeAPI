@@ -1,4 +1,8 @@
-# update
+---
+sidebar_label: update
+---
+
+# fastcharge pricing update
 
 Update attributes of a pricing plan.
 

@@ -1,4 +1,8 @@
-# list
+---
+sidebar_label: list
+---
+
+# fastapi pricing list
 
 List pricing plans of an app.
 

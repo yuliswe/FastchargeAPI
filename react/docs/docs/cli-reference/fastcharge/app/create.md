@@ -1,4 +1,8 @@
-# create
+---
+sidebar_label: create
+---
+
+# fastcharge app create
 
 Create a new app.
 
