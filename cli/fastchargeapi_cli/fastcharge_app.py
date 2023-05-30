@@ -132,6 +132,7 @@ class URL(click.ParamType):
 
 @fastcharge_dev_app.command("update", aliases=["up"])
 @click.argument("app_name", required=True)
+@click.option("--title", help="Title of the app. (60 characters max)")
 @click.option("--description", help="Description of the app. (100 characters max)")
 @click.option(
     "--repository", type=URL(), help="URL to the (Github) repository for the app."
@@ -144,21 +145,27 @@ class URL(click.ParamType):
     help="Set the visibility of the app.",
 )
 @click.pass_obj
-def fastcharge_app_update(
+def fastcharge_app_update(*args, **kwargs):
+    """Update information for an existing app."""
+    return do_app_update(*args, **kwargs)
+
+
+def do_app_update(
     ctx_obj: ContextObject,
     app_name: str,
-    description: Optional[str],
-    repository: Optional[str],
-    homepage: Optional[str],
-    readme: Optional[str],
-    visibility: Optional[GQL.AppVisibility],
+    title: Optional[str] = None,
+    description: Optional[str] = None,
+    repository: Optional[str] = None,
+    homepage: Optional[str] = None,
+    readme: Optional[str] = None,
+    visibility: Optional[GQL.AppVisibility] = None,
 ):
-    """Update information for an existing app."""
     client, auth = get_client_info(ctx_obj.profile)
     try:
         GQL.update_app(
             client,
             app_name=app_name,
+            title=title,
             description=description,
             repository=repository,
             homepage=homepage,
@@ -174,3 +181,17 @@ def fastcharge_app_update(
         )
         echo(terminal.yellow + "Run `fastcharge app list` to see all apps.")
         exit(1)
+
+
+@fastcharge_dev_app.command("publish", aliases=[])
+@click.argument("app_name", required=True)
+@click.pass_obj
+def fastcharge_app_publish(
+    ctx_obj: ContextObject,
+    app_name: str,
+):
+    """Make your app visible to the public.
+
+    This command is an alias for `fastcharge app update --visibility public`.
+    """
+    return do_app_update(ctx_obj, app_name, visibility=GQL.AppVisibility.public)

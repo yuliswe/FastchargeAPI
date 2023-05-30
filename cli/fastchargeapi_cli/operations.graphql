@@ -164,6 +164,7 @@ query DeleteApp($name: String!) {
 
 query UpdateApp(
     $app_name: String!
+    $title: String
     $description: String
     $repository: URL
     $homepage: URL
@@ -172,13 +173,14 @@ query UpdateApp(
 ) {
     app(name: $app_name) {
         updateApp(
+            title: $title
             description: $description
             repository: $repository
             homepage: $homepage
             readme: $readme
             visibility: $visibility
         ) {
-            name
+            updatedAt
         }
     }
 }
