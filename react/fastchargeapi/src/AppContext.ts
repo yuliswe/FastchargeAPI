@@ -19,13 +19,13 @@ export const defaulAppContext = {
         isAnonymousUserPromise: Promise<boolean>;
     },
     route: null as unknown as {
-        location: Location;
+        location: Location; // Equivalent to window.location
         locationHref: string; // Equivalent to location.pathname + location.search + location.hash
         navigate: NavigateFunction;
-        params: Params<string>;
-        query: ReturnType<typeof useSearchParams>[0];
-        setQuery: ReturnType<typeof useSearchParams>[1];
-        updateQuery: (query: Record<string, string | null | undefined>) => void;
+        params: Params<string>; // Gets the values of the current route's dynamic segments, for example the id of /users/:id
+        query: ReturnType<typeof useSearchParams>[0]; // Gets the values of the current route's query string, ie, the part after the ? in /users?search=abc
+        setQuery: ReturnType<typeof useSearchParams>[1]; // Sets the query params with an encoded string, eg setQuery("search=abc")
+        updateQuery: (query: Record<string, string | null | undefined>) => void; // Sets the query params with a dictionary, eg updateQuery({search: "abc"})
     },
     theme: null as unknown as Theme,
 };

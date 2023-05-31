@@ -4,6 +4,7 @@ import { AppContext, ReactAppContextType } from "../AppContext";
 import { ReactComponent as DiscordIcon } from "../svg/discord.svg";
 import { ReactComponent as GithubIcon } from "../svg/github-solid.svg";
 import { ReactComponent as Logo } from "../svg/logo5.svg";
+import { RouteURL } from "../routes";
 
 const githubRepoLink = "https://github.com/FastchargeAPI/fastchargeapi-cli/issues";
 const discordInviteLink = "https://discord.gg/HfQDWjkJ7n";
@@ -72,7 +73,7 @@ export class SiteFooter extends React.PureComponent {
                             </Typography>
                             <Stack spacing={1}>
                                 <Link href="/terms-of-service#pricing">Pricing</Link>
-                                <Link href="https://doc.fastchargeapi.com" target="_blank">
+                                <Link href={RouteURL.documentationPage()} target="_blank">
                                     <Typography variant="body1">Documentation</Typography>
                                 </Link>
                             </Stack>

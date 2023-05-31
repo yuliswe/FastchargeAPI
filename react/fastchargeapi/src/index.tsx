@@ -1,12 +1,12 @@
-import reportWebVitals from "./reportWebVitals";
-import { Provider } from "react-redux";
-import { reduxStore } from "./store-config";
 import { createRoot } from "react-dom/client";
+import { Provider } from "react-redux";
+import reportWebVitals from "./reportWebVitals";
+import { reduxStore } from "./store-config";
 
-import { HelmetProvider } from "react-helmet-async";
 import React from "react";
-import "./App.scss";
+import { HelmetProvider } from "react-helmet-async";
 import App from "./App";
+import "./App.scss";
 
 const root = createRoot(document.getElementById("root")!);
 root.render(

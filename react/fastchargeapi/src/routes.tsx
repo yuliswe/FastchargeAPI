@@ -1,6 +1,6 @@
 import React from "react";
 import { createBrowserRouter } from "react-router-dom";
-import { WithContextProps } from "./App";
+import { WithRouteContextProps } from "./App";
 import { AccountPage } from "./connected-components/AccountPage";
 import { AppDetailPage } from "./connected-components/AppDetailPage";
 import { AuthPage } from "./connected-components/AuthPage";
@@ -15,7 +15,54 @@ import { SubscriptionsPage } from "./connected-components/SubscriptionsPage";
 import { TermsPage } from "./connected-components/TermsPage";
 import { TopUpPage } from "./connected-components/TopupPage";
 
-export function createRouter(WithContext: (props: WithContextProps) => React.ReactElement) {
+type SearchResultPageParams = {};
+type SearchResultPageQuery = { q?: string; tag?: string; sort?: string; page?: string };
+type AppDetailPageParams = { app: string };
+type AuthPageQuery = { redirect?: string };
+
+export function buildSearchParams(query: any): string {
+    const search = new URLSearchParams();
+    for (let key of Object.keys(query)) {
+        search.set(key, query[key]);
+    }
+    return search.toString();
+}
+
+/**
+ * Note that some routes contain ?auth=true in the URL. This is so that before
+ * nagivating to the route, we can check if the user is logged in, and redirect
+ * to the auth page if log in is required.
+ */
+export const RouteURL = {
+    searchResultPage({
+        params = {},
+        query = {},
+    }: { params?: SearchResultPageParams; query?: SearchResultPageQuery } = {}) {
+        return `/search?${buildSearchParams(query)}` + "#";
+    },
+    appDetailPage({ params }: { params: AppDetailPageParams }): string {
+        return `/app/${params.app}` + "#";
+    },
+    termsPage(): string {
+        return "/terms-of-service#";
+    },
+    documentationPage(): string {
+        if (process.env.REACT_APP_LOCAL_DOC === "1") {
+            return "http://localhost:3000";
+        }
+        return "https://doc.fastchargeapi.com";
+    },
+    accountPage(): string {
+        return `/account?${buildSearchParams({
+            auth: true,
+        })}#`;
+    },
+    authPage({ query }: { query?: AuthPageQuery } = {}): string {
+        return `/auth?${buildSearchParams(query)}` + "#";
+    },
+};
+
+export function createRouter(WithContext: (props: WithRouteContextProps) => React.ReactElement) {
     const router = createBrowserRouter([
         {
             path: "/auth",
@@ -43,7 +90,7 @@ export function createRouter(WithContext: (props: WithContextProps) => React.Rea
         },
         {
             path: "/account",
-            element: <WithContext children={<AccountPage />} />,
+            element: <WithContext requireAuth={true} children={<AccountPage />} />,
             children: [
                 {
                     path: "",

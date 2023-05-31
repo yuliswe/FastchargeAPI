@@ -3,14 +3,15 @@ import { HomePageProductListProduct } from "../stateless-components/HomePageProd
 
 export type HomePageCategoryListCategory = {
     title: string;
-    link: string;
+    tag: string;
     description: string;
 };
 
 export class HomeAppState extends AppState {
-    welcomeText = "Welcome!";
     featuredProducts = new Array<HomePageProductListProduct>();
+    loadingFeaturedProducts = true;
     latestProducts = new Array<HomePageProductListProduct>();
+    loadingLatestProducts = true;
     categories = new Array<HomePageCategoryListCategory>();
     constructor(props: PartialProps<HomeAppState>) {
         super();

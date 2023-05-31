@@ -12,15 +12,12 @@ import "@fontsource/ubuntu/300.css";
 import "@fontsource/ubuntu/400.css";
 import "@fontsource/ubuntu/500.css";
 import "@fontsource/ubuntu/700.css";
-import { LinkProps } from "@mui/material/Link";
 import { grey } from "@mui/material/colors";
 import "@mui/material/styles";
 import { ThemeOptions, createTheme, darken, lighten } from "@mui/material/styles";
 import type { Shadows } from "@mui/material/styles/shadows";
 import { deepmerge } from "@mui/utils";
 import React from "react";
-import { LinkProps as RouterLinkProps } from "react-router-dom";
-import { HashLink } from "react-router-hash-link";
 import "./App.scss";
 
 declare module "@mui/material/styles" {
@@ -123,22 +120,6 @@ const errorLight = lighten(red, 0.85);
 const errorDark = darken(red, 0.2);
 
 export function getTheme(extraThemeOpts?: ThemeOptions) {
-    const LinkBehavior = React.forwardRef<
-        HTMLAnchorElement,
-        Omit<RouterLinkProps, "to"> & {
-            href: RouterLinkProps["to"];
-            isHash: boolean;
-        }
-    >((props, ref) => {
-        const { href, ...other } = props;
-        // Map href (MUI) -> to (react-router)
-        // if (isHash) {
-        return <HashLink ref={ref} to={href} {...other} />;
-        // } else {
-        //     return <RouterLink ref={ref} to={href} {...other} />;
-        // }
-    });
-
     const fontSize = (typeof extraThemeOpts?.typography != "function" && extraThemeOpts?.typography?.fontSize) || 14;
     const htmlFontSize =
         (typeof extraThemeOpts?.typography != "function" && extraThemeOpts?.typography?.htmlFontSize) || 16;
@@ -236,10 +217,6 @@ export function getTheme(extraThemeOpts?: ThemeOptions) {
                     MuiButtonBase: {
                         styleOverrides: {
                             root: {},
-                        },
-                        defaultProps: {
-                            LinkComponent: LinkBehavior,
-                            // disableElevation: true,
                         },
                     },
                     MuiOutlinedInput: {
@@ -349,8 +326,7 @@ export function getTheme(extraThemeOpts?: ThemeOptions) {
                         defaultProps: {
                             color: black,
                             underline: "none",
-                            component: LinkBehavior,
-                        } as LinkProps,
+                        },
                     },
                     MuiSkeleton: {
                         defaultProps: {

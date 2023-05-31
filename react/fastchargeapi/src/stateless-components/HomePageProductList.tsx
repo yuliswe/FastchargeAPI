@@ -8,7 +8,7 @@ import {
     SportsMotorsportsRounded,
     StarsRounded,
 } from "@mui/icons-material";
-import { Avatar, Box, Button, Chip, Paper, Stack, Typography } from "@mui/material";
+import { Avatar, Box, Button, Chip, Paper, Skeleton, Stack, Typography } from "@mui/material";
 import React from "react";
 
 export function getRandomProductIcons(avatarSize: number, iconSize: number) {
@@ -48,8 +48,10 @@ export type HomePageProductListProduct = {
 
 export type HomePageProductListProps = {
     listTitle: string;
+    listHref: string;
     useFeaturedListStyle?: boolean;
     products: HomePageProductListProduct[];
+    loading: boolean;
 };
 
 export class HomePageProductList extends React.PureComponent<HomePageProductListProps> {
@@ -94,13 +96,33 @@ export class HomePageProductList extends React.PureComponent<HomePageProductList
                     </Stack>
                 </Box>
                 <Box display="flex" gap={2} flexWrap="wrap" justifyContent="center" alignItems="center">
-                    <Button variant="text">Learn more</Button>
-                    <Button variant="contained" endIcon={<ArrowForwardRounded />}>
+                    <Button variant="text" href={product.link}>
+                        Learn more
+                    </Button>
+                    <Button variant="contained" endIcon={<ArrowForwardRounded />} href={product.link}>
                         Visit
                     </Button>
                 </Box>
             </Paper>
         );
+    }
+
+    renderSkeleton(idx: number) {
+        return (
+            <Box key={idx} sx={{ width: "100%", mb: 2 }}>
+                <Stack spacing={2}>
+                    <Skeleton variant="rounded" sx={{ borderRadius: 15 }} color="grey.100" height={100} width="100%" />
+                    <Skeleton variant="rounded" sx={{ borderRadius: 20 }} color="grey.100" height={25} width="40%" />
+                </Stack>
+            </Box>
+        );
+    }
+
+    products(): (HomePageProductListProduct | null)[] {
+        if (this.props.loading) {
+            return [null, null];
+        }
+        return this.props.products;
     }
 
     render() {
@@ -110,12 +132,14 @@ export class HomePageProductList extends React.PureComponent<HomePageProductList
                     <Typography variant="h2" my={7} flexGrow={1}>
                         {this.props.listTitle}
                     </Typography>
-                    <Button variant="outlined" size="large" color="inherit">
+                    <Button variant="outlined" size="large" color="inherit" href={this.props.listHref}>
                         Browse all APIs
                     </Button>
                 </Box>
                 <Stack spacing={2}>
-                    {this.props.products.map((product, idx) => this.renderProductItem(product, idx))}
+                    {this.products().map((product, idx) =>
+                        this.props.loading ? this.renderSkeleton(idx) : this.renderProductItem(product!, idx)
+                    )}
                 </Stack>
             </Box>
         );

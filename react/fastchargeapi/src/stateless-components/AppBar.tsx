@@ -24,6 +24,7 @@ import { ReactComponent as Logo } from "../svg/logo5.svg";
 import { AppSearchBar } from "./AppSearchBar";
 
 import MenuIcon from "@mui/icons-material/Menu";
+import { RouteURL } from "../routes";
 
 type State = {
     accountButtonEl: HTMLElement | null;
@@ -138,20 +139,20 @@ export class AppBar extends React.Component<Props, State> {
     mainMenuLinks: MobileMenuItemProps[] = [
         {
             text: "Pricing",
-            href: "/terms-of-service#pricing",
+            href: RouteURL.termsPage(),
             target: "_self",
         },
         {
             text: "Documentation",
-            href: "https://doc.fastchargeapi.com",
-            target: "_blank",
+            href: RouteURL.documentationPage(),
+            target: "_self",
         },
     ];
 
     profileMenuLinks: MobileMenuItemProps[] = [
         {
             text: "My account",
-            href: "/account",
+            href: RouteURL.accountPage(),
             target: "_self",
         },
     ];

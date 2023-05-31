@@ -37,6 +37,7 @@ import { connect } from "react-redux";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { SiteLayout } from "../SiteLayout";
 import { HomePageEvent } from "../events/HomePageEvent";
+import { RouteURL } from "../routes";
 import { AppSearchBar } from "../stateless-components/AppSearchBar";
 import { HomePageBanner2 } from "../stateless-components/HomePageBanner2";
 import { HomePageFeaturedProductList } from "../stateless-components/HomePageFeaturedProducList";
@@ -67,9 +68,9 @@ class _Home extends React.Component<_Props, _State> {
     }
 
     componentDidMount(): void {
-        appStore.dispatch(new HomePageEvent.LoadLatestProducts());
-        appStore.dispatch(new HomePageEvent.LoadFeaturedProducts());
-        appStore.dispatch(new HomePageEvent.LoadCategories());
+        appStore.dispatch(new HomePageEvent.LoadLatestProducts(this._context));
+        appStore.dispatch(new HomePageEvent.LoadFeaturedProducts(this._context));
+        appStore.dispatch(new HomePageEvent.LoadCategories(this._context));
     }
 
     renderProductLists() {
@@ -77,9 +78,26 @@ class _Home extends React.Component<_Props, _State> {
             <React.Fragment>
                 <HomePageFeaturedProductList
                     listTitle="Featured APIs"
+                    loading={this.props.homeAppState.loadingFeaturedProducts}
                     products={this.props.homeAppState.featuredProducts}
+                    listHref={RouteURL.searchResultPage({
+                        query: {
+                            tag: "Featured",
+                            sort: "recent",
+                        },
+                    })}
                 />
-                <HomePageProductList listTitle="Latest APIs" products={this.props.homeAppState.latestProducts} />
+                <HomePageProductList
+                    listTitle="Latest APIs"
+                    loading={this.props.homeAppState.loadingLatestProducts}
+                    products={this.props.homeAppState.latestProducts}
+                    listHref={RouteURL.searchResultPage({
+                        query: {
+                            tag: "Latest",
+                            sort: "recent",
+                        },
+                    })}
+                />
             </React.Fragment>
         );
     }
@@ -95,7 +113,10 @@ class _Home extends React.Component<_Props, _State> {
                 </Typography>
                 <List disablePadding component={Paper} sx={{ overflow: "hidden" }}>
                     {this.props.homeAppState.categories.map((category) => (
-                        <ListItemButton key={category.title}>
+                        <ListItemButton
+                            key={category.title}
+                            href={RouteURL.searchResultPage({ query: { tag: category.title, sort: "recent" } })}
+                        >
                             <ListItemIcon>{icons[category.title] ?? <LabelRounded />}</ListItemIcon>
                             <ListItemText
                                 primary={category.title}
@@ -124,7 +145,13 @@ class _Home extends React.Component<_Props, _State> {
                 <Typography variant="body1" my={3}>
                     FastCharge is a platform for API publishers to publish their APIs and manage their customers.
                 </Typography>
-                <Button variant="contained" color="secondary" size="large" endIcon={<ArrowForwardRounded />}>
+                <Button
+                    variant="contained"
+                    color="secondary"
+                    size="large"
+                    endIcon={<ArrowForwardRounded />}
+                    href={RouteURL.documentationPage() + "/docs/intro-publish-api"}
+                >
                     Get started
                 </Button>
             </Paper>
@@ -162,7 +189,13 @@ class _Home extends React.Component<_Props, _State> {
                     <Typography variant="body1" my={3}>
                         FastCharge is a platform for API publishers to publish their APIs and manage their customers.
                     </Typography>
-                    <Button variant="contained" color="secondary" size="large" endIcon={<ArrowForwardRounded />}>
+                    <Button
+                        variant="contained"
+                        color="secondary"
+                        size="large"
+                        endIcon={<ArrowForwardRounded />}
+                        href={RouteURL.documentationPage() + "/docs/intro-publish-api"}
+                    >
                         Get started
                     </Button>
                 </Box>
@@ -201,7 +234,13 @@ class _Home extends React.Component<_Props, _State> {
                     <Typography variant="body1" my={3} color="primary.contrastText">
                         Learn how to subscribe to an app, or create an app to make income.
                     </Typography>
-                    <Button variant="contained" color="secondary" size="large" endIcon={<ArrowForwardRounded />}>
+                    <Button
+                        variant="contained"
+                        color="secondary"
+                        size="large"
+                        endIcon={<ArrowForwardRounded />}
+                        href={RouteURL.documentationPage()}
+                    >
                         View tutorial
                     </Button>
                 </Box>
@@ -214,25 +253,28 @@ class _Home extends React.Component<_Props, _State> {
             {
                 title: "Create an app",
                 description: "Start by creating an app that hosts your APIs.",
-                link: "",
+                link: RouteURL.documentationPage() + "/docs/cli-reference/fastcharge/app/create",
                 icon: <AppDrawingBoardIcon style={{ height: 150 }} />,
+                target: "_blank",
             },
             {
                 title: "Set a price",
                 description: "Create pricing plans for your app.",
-                link: "",
+                link: RouteURL.documentationPage() + "/docs/cli-reference/fastcharge/pricing/add",
                 icon: <SetAPriceIcon style={{ height: 150 }} />,
+                target: "_blank",
             },
             {
                 title: "Publish API",
                 description: "Make your app discoverable in search.",
-                link: "",
+                link: RouteURL.documentationPage() + "/docs/cli-reference/fastcharge/app/publish",
                 icon: <PublishAPIIcon style={{ height: 150 }} />,
+                target: "_blank",
             },
             {
                 title: "Use API",
                 description: "Learn how to use an API published here.",
-                link: "",
+                link: RouteURL.documentationPage() + "/docs/cli-reference/fastapi/subscription/add",
                 icon: (
                     <Box sx={{ color: "primary.main" }}>
                         <MobileProgrammerIcon
@@ -243,12 +285,14 @@ class _Home extends React.Component<_Props, _State> {
                         />
                     </Box>
                 ),
+                target: "_blank",
             },
             {
                 title: "Make income",
                 description: "Learn how to collect income generated by your APIs.",
-                link: "",
+                link: RouteURL.accountPage(),
                 icon: <MakeMoneyIcon style={{ height: 180 }} />,
+                target: "_self",
             },
         ];
         return (
@@ -268,6 +312,9 @@ class _Home extends React.Component<_Props, _State> {
                             <Grid item xs={index < steps.length - 1 ? 4 : 8} key={step.title}>
                                 <Card sx={{ height: "100%" }}>
                                     <CardActionArea
+                                        component={Link}
+                                        href={step.link}
+                                        target={step.target}
                                         sx={{
                                             px: 4,
                                             py: 2,
@@ -413,7 +460,11 @@ class _Home extends React.Component<_Props, _State> {
                             </Typography>
                             <Typography variant="body1" sx={{ mt: 2 }}>
                                 To learn more about pricing, please visit our{" "}
-                                <Link href="/terms-of-service#pricing" underline="hover" color="info.main">
+                                <Link
+                                    href={RouteURL.termsPage()}
+                                    color="info.main"
+                                    sx={{ ":hover": { color: "info.light" } }}
+                                >
                                     Terms & Services
                                 </Link>
                                 .
@@ -424,7 +475,7 @@ class _Home extends React.Component<_Props, _State> {
                                     color="secondary"
                                     size="large"
                                     endIcon={<ArrowForwardRounded />}
-                                    href="/terms-of-service#pricing"
+                                    href={RouteURL.termsPage()}
                                 >
                                     Terms & Services
                                 </Button>
@@ -474,6 +525,11 @@ class _Home extends React.Component<_Props, _State> {
                                         color="primary"
                                         size="large"
                                         endIcon={<ArrowForwardRounded />}
+                                        href={RouteURL.searchResultPage({
+                                            query: {
+                                                tag: "Latest",
+                                            },
+                                        })}
                                     >
                                         Browse all APIs
                                     </Button>

@@ -54,7 +54,7 @@ const steps: Step[] = [
     },
     {
         title: "Release! (That's it!)",
-        input: [`fastcharge app update "my-first-app"`, `    --visibility "public"`],
+        input: [`fastcharge app publish "my-first-app"`],
         output: ["Pricing plan created."],
         help: `This command makes your app public so that anyone can use it.`,
         params: [["--visibility", "The visibility of your app. Can be either 'public' or 'private'."]],

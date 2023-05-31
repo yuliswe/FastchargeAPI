@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import { AppContext } from "./AppContext";
 
 // debug
-const DEBUG_USE_LOCAL_GRAPHQL = false;
+const DEBUG_USE_LOCAL_GRAPHQL = process.env.REACT_APP_LOCAL_GRAPHQL === "1";
 
 const sqsClient = new SQSClient({ region: "us-east-1" });
 const cache = new InMemoryCache();
@@ -16,6 +16,7 @@ let graphql_url = "https://api.graphql.fastchargeapi.com";
 
 if (DEBUG_USE_LOCAL_GRAPHQL) {
     graphql_url = "http://localhost:4000";
+    console.warn("Using local graphql server", graphql_url);
 }
 
 /**
