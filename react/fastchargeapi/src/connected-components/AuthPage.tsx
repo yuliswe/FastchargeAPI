@@ -101,7 +101,10 @@ class _AuthPage extends React.Component<_Props, _State> {
                 if (!redirect) {
                     throw new Error("No redirect url provided");
                 }
-                this._context.route.navigate(redirect, { state: {} });
+                setTimeout(() => {
+                    // IDK why there has to be a delay or else the navigate function throws an exception
+                    this._context.route.navigate(redirect!, { replace: true });
+                }, 0);
                 break;
             }
             case "putsecret": {
@@ -135,10 +138,10 @@ class _AuthPage extends React.Component<_Props, _State> {
             // go to a url with only the relogin query param deleted
             await getAuth().signOut();
             this._context.route.updateQuery({
+                // use Update to keep other query such as redirect unchanged.
                 relogin: undefined,
                 success: undefined,
             });
-            window.location.reload();
         }
 
         let user = await this._context.firebase.userPromise;
@@ -247,7 +250,14 @@ class _AuthPage extends React.Component<_Props, _State> {
                             this.handleGoogleSignIn();
                         }}
                         startIcon={<GoogleIcon width={24} height={24} />}
-                        sx={{ bgcolor: "white", color: "text.primary", py: 1 }}
+                        sx={{
+                            bgcolor: "white",
+                            color: "text.primary",
+                            py: 1,
+                            borderColor: "grey.200",
+                            borderWidth: 1,
+                            borderStyle: "solid",
+                        }}
                     >
                         Sign in with Google
                     </Button>
@@ -275,55 +285,69 @@ class _AuthPage extends React.Component<_Props, _State> {
     renderPageState() {
         // return this.renderLoginPage();
         // return this.renderSuccessPage();
-        return this._context.firebase.isAnonymousUser ? this.renderLoginPage() : this.renderSuccessPage()
+        return this._context.firebase.isAnonymousUser ? this.renderLoginPage() : this.renderSuccessPage();
     }
 
     render() {
         return (
-            <React.Fragment>
-                <Grid container sx={{ height: "100vh", bgcolor: "background.paper" }}>
-                    {this._context.mediaQuery.md.up && <Grid
-                        item
-                        xs={6}
-                        display="flex"
-                        justifyContent="center"
-                        alignItems="center"
-                        bgcolor="primary.main"
-                        height="100%"
-                        sx={{
-                            bgcolor: "primary.light",
-                        }}
-                    >
-                        <Container maxWidth="md">
-                            <Stack spacing={5} p={10} pb={25}>
-                                <Fade
-                                    in={true}
-                                    style={{
-                                        transitionDuration: "1s",
-                                    }}
-                                >
-                                    <Typography variant="h1">
-                                        Focus on solving what's important.
-                                    </Typography>
-                                </Fade>
-                                <Fade
-                                    in={true}
-                                    style={{
-                                        transitionDuration: "2s",
-                                    }}
-                                >
-                                    <Typography variant="body1">
-                                        Let us take care of metering and billing.
-                                    </Typography>
-                                </Fade>
-                            </Stack>
-                        </Container>
-                    </Grid>}
-                    <Grid item xs={12} sm={12} md={6} lg={6} xl={6} p={10} pb={20} display="flex" justifyContent="center" alignItems="center">
-                        {this.renderPageState()}
+            this.reloginNeeded() || (
+                <React.Fragment>
+                    <Grid container sx={{ height: "100vh", bgcolor: "background.paper" }}>
+                        {this._context.mediaQuery.md.up && (
+                            <Grid
+                                item
+                                xs={6}
+                                display="flex"
+                                justifyContent="center"
+                                alignItems="center"
+                                bgcolor="primary.main"
+                                height="100%"
+                                sx={{
+                                    bgcolor: "primary.light",
+                                }}
+                            >
+                                <Container maxWidth="md">
+                                    <Stack spacing={5} p={10} pb={25}>
+                                        <Fade
+                                            in={true}
+                                            style={{
+                                                transitionDuration: "1s",
+                                            }}
+                                        >
+                                            <Typography variant="h1">Focus on solving what's important.</Typography>
+                                        </Fade>
+                                        <Fade
+                                            in={true}
+                                            style={{
+                                                transitionDuration: "2s",
+                                            }}
+                                        >
+                                            <Typography variant="body1">
+                                                Let us take care of metering and billing.
+                                            </Typography>
+                                        </Fade>
+                                    </Stack>
+                                </Container>
+                            </Grid>
+                        )}
+                        <Grid
+                            item
+                            xs={12}
+                            sm={12}
+                            md={6}
+                            lg={6}
+                            xl={6}
+                            p={10}
+                            pb={20}
+                            display="flex"
+                            justifyContent="center"
+                            alignItems="center"
+                        >
+                            {this.renderPageState()}
+                        </Grid>
                     </Grid>
-                </Grid>
-            </React.Fragment>
+                </React.Fragment>
+            )
         );
     }
 }
