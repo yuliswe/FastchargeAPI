@@ -120,10 +120,16 @@ export const appResolvers: GQLResolvers & {
 
         async appFullTextSearch(
             parent: {},
-            { query, limit, offset }: GQLQueryAppFullTextSearchArgs,
+            { query, tag, orderBy, limit, offset }: GQLQueryAppFullTextSearchArgs,
             context: RequestContext
         ): Promise<Array<App>> {
-            return await appFullTextSearch(context, { query, limit: limit || undefined, offset: offset || undefined });
+            return await appFullTextSearch(context, {
+                query,
+                tag,
+                orderBy,
+                limit,
+                offset,
+            });
         },
 
         async apps(parent: {}, { tag, limit = 10 }: GQLQueryAppsArgs, context: RequestContext): Promise<App[]> {

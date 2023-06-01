@@ -17,6 +17,7 @@ import React from "react";
 import { connect } from "react-redux";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { SiteLayout } from "../SiteLayout";
+import { GQLAppFullTextSearchOrderBy } from "../__generated__/gql-operations";
 import { AppSearchResultEvent, SearchResult } from "../events/AppSearchResultEvent";
 import { PaginatedList, PaginatedListOnPageChangeHandler } from "../stateless-components/PaginatedList";
 import { AppSearchResultState } from "../states/AppSearchResultState";
@@ -34,22 +35,32 @@ class _SearchResultPage extends React.Component<Props, {}> {
     }
 
     componentDidMount(): void {
+        this.search();
+    }
+
+    search() {
         appStore.dispatch(
-            new AppSearchResultEvent.SearchResultEvent(this._context, this._context.route.query.get("q")!)
+            new AppSearchResultEvent.SearchResultEvent(this._context, {
+                query: this._context.route.query.get("q"),
+                tag: this._context.route.query.get("tag"),
+                orderBy:
+                    {
+                        "exact-match": GQLAppFullTextSearchOrderBy.ExactMatch,
+                        "github-popularity": GQLAppFullTextSearchOrderBy.GithubPopularity,
+                    }[this._context.route.query.get("sort") || ""] ?? GQLAppFullTextSearchOrderBy.ExactMatch,
+            })
         );
     }
 
     searchResultPageChangeHandler: PaginatedListOnPageChangeHandler = ({ page }) => {
-        appStore.dispatch(
-            new AppSearchResultEvent.SearchResultEvent(this._context, this._context.route.query.get("q")!)
-        );
+        this.search();
     };
 
     searchForAppsbyKeyword = (keyword: string) => {
         this._context.route?.updateQuery({
             q: keyword,
         });
-        appStore.dispatch(new AppSearchResultEvent.SearchResultEvent(this._context, keyword));
+        this.search();
     };
 
     render() {
@@ -124,10 +135,10 @@ const generateAppSearchResultComponents = (searchResults: SearchResult[]) => {
         <Paper key={index} sx={{ p: 3, mb: 2 }}>
             <Link href={`/app/${result.pk}`}>
                 <Stack direction="row" spacing={1} alignItems="center">
-                    <Typography variant="h5" maxWidth="20em" noWrap lineHeight="100%">
+                    <Typography variant="h5" maxWidth="20em" noWrap lineHeight="130%">
                         {result.title || result.name}
                     </Typography>
-                    <Typography variant="body1" maxWidth="20em" noWrap lineHeight="100%">
+                    <Typography variant="body1" maxWidth="20em" noWrap lineHeight="130%">
                         @{result.name}
                     </Typography>
                 </Stack>

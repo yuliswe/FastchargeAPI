@@ -57,8 +57,7 @@ function WithRouteContext(props: WithRouteContextProps) {
                     query: searchParam,
                     setQuery: setSearchParam,
                     updateQuery: (newQuery: { [key: string]: string | null | undefined }) => {
-                        const current = searchParam;
-                        const search = new URLSearchParams(current?.toString());
+                        const search = new URLSearchParams(searchParam);
                         for (let key of Object.keys(newQuery)) {
                             if (newQuery[key] == null) {
                                 search.delete(key);

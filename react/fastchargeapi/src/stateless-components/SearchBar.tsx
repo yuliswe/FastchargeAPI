@@ -1,5 +1,5 @@
 import SearchIcon from "@mui/icons-material/Search";
-import { Button, IconButton, InputBase, Link, Paper, Stack, Typography } from "@mui/material";
+import { Button, IconButton, InputBase, Paper, Stack, Typography } from "@mui/material";
 import React from "react";
 import { AppContext, ReactAppContextType } from "../AppContext";
 
@@ -86,8 +86,6 @@ export class SearchBar extends React.Component<_Props, _State> {
                     />
                 </Paper>
                 <Button
-                    component={Link}
-                    underline="none"
                     sx={{
                         display: this.props.showSearchButton ? "flex" : "none",
                         borderBottomLeftRadius: 0,
@@ -100,7 +98,6 @@ export class SearchBar extends React.Component<_Props, _State> {
                     }}
                     variant="contained"
                     color="secondary"
-                    href={`/search?q=${this.state.searchText}`}
                     onClick={() => {
                         this.props.onSearch?.(this.state.searchText);
                     }}

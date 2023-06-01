@@ -656,7 +656,7 @@ export class Batched<I extends Item> {
 
     async *scan(
         conditions: ConditionQuery<I> = {},
-        { batchSize = 100, limit = 1000, ...options }: BatchScanOptions = {}
+        { batchSize = 100, limit = Infinity, ...options }: BatchScanOptions = {}
     ): AsyncIterable<I[]> {
         const baseQuery = applyBatchOptionsToScan(this.model.scan(conditions), options);
         let remaining = limit as number;

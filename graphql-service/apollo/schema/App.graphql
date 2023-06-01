@@ -7,7 +7,7 @@ type Query {
     ### App API
     apps(tag: String, limit: Int): [App!]!
     app(pk: ID, name: String): App!
-    appFullTextSearch(query: String!, limit: Int, offset: Int): [App!]!
+    appFullTextSearch(query: String, tag: String, orderBy: AppFullTextSearchOrderBy, limit: Int, offset: Int): [App!]!
     ### User API
     # users(pk: [ID!]): [User!]! # Get all users in the system
     user(pk: ID, email: Email): User!
@@ -37,6 +37,11 @@ type Query {
 
     stripeTransfer(pk: ID): StripeTransfer!
     appTags(tag: String): [AppTag!]!
+}
+
+enum AppFullTextSearchOrderBy {
+    exact_match
+    github_popularity
 }
 
 enum GatewayDecisionResponseReason {

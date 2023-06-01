@@ -1,6 +1,7 @@
 import { BatchExecuteStatementCommand, ExecuteStatementCommand, RDSDataClient } from "@aws-sdk/client-rds-data";
 import { Chalk } from "chalk";
 import { RequestContext } from "../RequestContext";
+import { GQLAppFullTextSearchOrderBy } from "../__generated__/resolvers-types";
 import { App } from "../dynamoose/models";
 import { AppPK } from "../pks/AppPK";
 
@@ -19,8 +20,9 @@ export function isValidAppName(name: string): boolean {
     return /^[a-z\d][a-z\d\\-]*[a-z\d]$/.test(name) && name.length <= 63 && !reserved.includes(name);
 }
 
-export async function updateAppSearchIndex(apps: App[]): Promise<number> {
-    const parameterSets = apps.map((app) => [
+export async function updateAppSearchIndex(context: RequestContext, apps: App[]): Promise<number> {
+    const tags = apps.map((app) => context.batched.AppTag.many({ app: app.name }));
+    const parameterSets = apps.map(async (app, index) => [
         {
             name: "name",
             value: {
@@ -35,12 +37,24 @@ export async function updateAppSearchIndex(apps: App[]): Promise<number> {
             name: "description",
             value: app.description == undefined ? { isNull: true } : { stringValue: app.description },
         },
+        {
+            name: "tags",
+            value: {
+                stringValue: (await tags[index]).map((tag) => tag.tag).join(", "),
+            },
+        },
+        {
+            name: "github_popularity",
+            value: {
+                longValue: 0,
+            },
+        },
     ]);
     const command = new BatchExecuteStatementCommand({
         resourceArn: auroraResourceArn,
         secretArn: auroraSecretArn,
-        sql: `select count(*) from update_app(:name, :title, :description)`,
-        parameterSets,
+        sql: `select count(*) from update_app(:name, :title, :description, :tags, :github_popularity)`,
+        parameterSets: await Promise.all(parameterSets),
     });
     const response = await rdsClient.send(command);
     return response.updateResults?.length ?? 0;
@@ -49,7 +63,7 @@ export async function updateAppSearchIndex(apps: App[]): Promise<number> {
 export async function flushAppSearchIndex(context: RequestContext): Promise<number> {
     const promises = [];
     for await (const apps of context.batched.App.scan()) {
-        promises.push(updateAppSearchIndex(apps));
+        promises.push(updateAppSearchIndex(context, apps));
     }
     let count = 0;
     for (const promise of promises) {
@@ -62,41 +76,59 @@ export async function appFullTextSearch(
     context: RequestContext,
     {
         query,
+        tag,
+        orderBy,
         limit = 100,
         offset = 0,
         minSimilarity = 0.3,
-    }: { query: string; limit?: number; offset?: number; minSimilarity?: number }
+    }: {
+        query?: string | null;
+        orderBy?: GQLAppFullTextSearchOrderBy | null;
+        tag?: string | null;
+        limit?: number | null;
+        offset?: number | null;
+        minSimilarity?: number | null;
+    }
 ): Promise<App[]> {
+    const parameters = [
+        {
+            name: "search_text",
+            value: query ? { stringValue: query } : { isNull: true },
+        },
+        {
+            name: "tag",
+            value: tag ? { stringValue: tag } : { isNull: true },
+        },
+        {
+            name: "orderBy",
+            value: {
+                stringValue: orderBy ?? GQLAppFullTextSearchOrderBy.ExactMatch,
+            },
+        },
+        {
+            name: "limit",
+            value: {
+                longValue: limit ?? 100,
+            },
+        },
+        {
+            name: "offset",
+            value: {
+                longValue: offset ?? 0,
+            },
+        },
+        {
+            name: "similarity",
+            value: {
+                doubleValue: minSimilarity ?? 0.3,
+            },
+        },
+    ];
     const command = new ExecuteStatementCommand({
         resourceArn: auroraResourceArn,
         secretArn: auroraSecretArn,
-        sql: `select name from trigm_search_app(:search_text, :limit, :offset, :similarity)`,
-        parameters: [
-            {
-                name: "search_text",
-                value: {
-                    stringValue: query,
-                },
-            },
-            {
-                name: "limit",
-                value: {
-                    longValue: limit,
-                },
-            },
-            {
-                name: "offset",
-                value: {
-                    longValue: offset,
-                },
-            },
-            {
-                name: "similarity",
-                value: {
-                    doubleValue: minSimilarity,
-                },
-            },
-        ],
+        sql: `select name from trigm_search_app(:search_text, :tag, :orderBy, :limit, :offset, :similarity)`,
+        parameters,
     });
     const response = await rdsClient.send(command, {
         requestTimeout: 60_000,
