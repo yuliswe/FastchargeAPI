@@ -4,6 +4,7 @@ import { resolvers as scalarResolvers, typeDefs as scalarTypeDefs } from "graphq
 import process from "node:process";
 import { RequestContext } from "./RequestContext";
 import { GQLResolvers } from "./__generated__/resolvers-types";
+import { wakeUpAurora } from "./aurora";
 import { initializeDB } from "./dynamoose";
 import { handleError } from "./errors";
 import { accountActivityResolvers } from "./resolvers/account";
@@ -67,6 +68,11 @@ const resolvers: GQLResolvers = {
         ...accountHistoryResolvers.Query,
         ...accountActivityResolvers.Query,
         ...userAppTokenResolvers.Query,
+
+        async ping(): Promise<boolean> {
+            await wakeUpAurora();
+            return true;
+        },
     },
     Mutation: {
         ...gatewayResolvers.Mutation,

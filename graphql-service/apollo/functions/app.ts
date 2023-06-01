@@ -4,13 +4,9 @@ import { RequestContext } from "../RequestContext";
 import { GQLAppFullTextSearchOrderBy } from "../__generated__/resolvers-types";
 import { App } from "../dynamoose/models";
 import { AppPK } from "../pks/AppPK";
+import { auroraResourceArn, auroraSecretArn, rdsClient } from "../aurora";
 
 const chalk = new Chalk({ level: 3 });
-export const auroraResourceArn = "arn:aws:rds:us-east-1:887279901853:cluster:fastcharge-search-cluster";
-export const auroraSecretArn =
-    "arn:aws:secretsmanager:us-east-1:887279901853:secret:AuroraDBSecret-ie6utwL7NgUH-7TUv3G";
-export const rdsClient = new RDSDataClient({});
-
 export async function getAppByPK(context: RequestContext, pk: string): Promise<App> {
     return context.batched.App.get(AppPK.parse(pk));
 }

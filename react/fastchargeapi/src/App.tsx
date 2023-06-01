@@ -1,3 +1,4 @@
+import { gql } from "@apollo/client";
 import { CssBaseline, useMediaQuery } from "@mui/material";
 import { Theme, ThemeProvider } from "@mui/material/styles";
 import { User as FirebaseUser, getAuth, signInAnonymously } from "firebase/auth";
@@ -14,6 +15,7 @@ import {
 import { HashLink } from "react-router-hash-link";
 import { AppContext, AppContextProvider, ReactAppContextType, defaulAppContext } from "./AppContext";
 import { initializeFirebase } from "./firebase";
+import { getGQLClient } from "./graphql-client";
 import { RouteURL, createRouter } from "./routes";
 import { getTheme } from "./theme";
 
@@ -44,6 +46,46 @@ function WithRouteContext(props: WithRouteContextProps) {
             );
         }
     });
+
+    void getGQLClient(context).then(({ client, currentUser }) => {
+        return client.query({
+            query: gql`
+                query Ping {
+                    ping
+                }
+            `,
+        });
+    });
+
+    let shouldPing = false;
+    setTimeout(() => {
+        shouldPing = true;
+    }, 30_000);
+    function pingWhenActive() {
+        if (shouldPing) {
+            shouldPing = false;
+            void getGQLClient(context).then(async ({ client, currentUser }) => {
+                await client.query({
+                    query: gql`
+                        query Ping {
+                            ping
+                        }
+                    `,
+                });
+                setTimeout(() => {
+                    shouldPing = true;
+                }, 30_000);
+            });
+        }
+    }
+    useEffect(() => {
+        window.addEventListener("mousemove", pingWhenActive);
+        window.addEventListener("scroll", pingWhenActive);
+        return () => {
+            window.removeEventListener("mousemove", pingWhenActive);
+            window.removeEventListener("scroll", pingWhenActive);
+        };
+    }, []);
 
     return (
         <AppContextProvider
@@ -101,8 +143,6 @@ function App() {
             };
         }, []);
     });
-
-    console.warn("Note recreated userPromise");
 
     const theme = getTheme();
     const mediaQueryXsDown = useMediaQuery(theme.breakpoints.down("xs"));

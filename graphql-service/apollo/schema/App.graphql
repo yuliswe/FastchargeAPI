@@ -37,6 +37,8 @@ type Query {
 
     stripeTransfer(pk: ID): StripeTransfer!
     appTags(tag: String): [AppTag!]!
+
+    ping: Boolean!
 }
 
 enum AppFullTextSearchOrderBy {
