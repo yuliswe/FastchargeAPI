@@ -1,11 +1,27 @@
-import { Button, Card, CardActions, CardContent, Chip, Grid, Link, Stack, Typography } from "@mui/material";
+import { ArrowForwardRounded } from "@mui/icons-material";
+import SubscriptionIcon from "@mui/icons-material/Replay30";
+import {
+    Avatar,
+    Button,
+    Card,
+    CardActions,
+    CardContent,
+    Chip,
+    Grid,
+    Link,
+    Paper,
+    Stack,
+    Typography,
+} from "@mui/material";
 import React from "react";
 import { connect } from "react-redux";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { SubscriptionEvent, UserSubscription } from "../events/SubscriptionEvent";
+import { RouteURL } from "../routes";
 import { RootAppState } from "../states/RootAppState";
 import { SubscriptionsAppState } from "../states/SubscriptionsAppState";
 import { appStore } from "../store-config";
+
 type Props = {
     appState: SubscriptionsAppState;
 };
@@ -67,6 +83,35 @@ class _SubscriptionsPage extends React.Component<Props> {
                         </Card>
                     </Grid>
                 ))}
+                {this.subscriptions().length === 0 && (
+                    <Grid item>
+                        <Paper
+                            sx={{
+                                bgcolor: "primary.light",
+                                p: 3,
+                                maxWidth: "20em",
+                            }}
+                        >
+                            <Avatar sx={{ height: 40, width: 40, bgcolor: "primary.dark" }}>
+                                <SubscriptionIcon sx={{ height: "70%", width: "70%" }} />
+                            </Avatar>
+                            <Typography variant="h4" my={3}>
+                                You are not subscribed to any app.
+                            </Typography>
+                            <Typography variant="body1" my={3}>
+                                Search for an app and subscribe to it to get started.
+                            </Typography>
+                            <Button
+                                variant="contained"
+                                color="secondary"
+                                endIcon={<ArrowForwardRounded />}
+                                href={RouteURL.homePage()}
+                            >
+                                Search
+                            </Button>
+                        </Paper>
+                    </Grid>
+                )}
             </Grid>
         );
     }

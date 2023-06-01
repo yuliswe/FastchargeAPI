@@ -157,6 +157,11 @@ class _MyAppsPage extends React.Component<_Props, _State> {
                             ))}
                         </TableBody>
                     </Table>
+                    {this.appsList().length === 0 && (
+                        <Typography variant="body2" m={2} color="grey.700">
+                            Create an app to get started.
+                        </Typography>
+                    )}
                 </Paper>
                 <DocumentationDialog parent={this} />
             </Stack>

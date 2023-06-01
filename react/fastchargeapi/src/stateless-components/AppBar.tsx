@@ -88,7 +88,6 @@ export class AppBar extends React.Component<Props, State> {
                 variant="text"
                 startIcon={<Logo style={{ width: 35 }} />}
                 sx={{
-                    mr: 4,
                     display: "none",
                     [this._context.theme.breakpoints.up("lg")]: {
                         display: "flex",
@@ -195,6 +194,7 @@ export class AppBar extends React.Component<Props, State> {
     renderToolbarMenu() {
         return (
             <Stack
+                ml={4}
                 direction="row"
                 alignItems="center"
                 spacing={3}
@@ -217,6 +217,7 @@ export class AppBar extends React.Component<Props, State> {
             <Stack
                 sx={{
                     display: this._context.mediaQuery.md.up ? "flex" : "none",
+                    ml: 4,
                 }}
             >
                 {this._context.firebase.isAnonymousUser && (
@@ -391,10 +392,10 @@ export class AppBar extends React.Component<Props, State> {
                                 {this.renderLogo()}
                                 {this.renderSmallLogo()}
                                 {this.renderMobileMenuButton()}
-                                {this.renderToolbarMenu()}
-                                <Box my={1} ml={4} mr={4} flexGrow={1}>
+                                <Box my={1} ml={4} flexGrow={1}>
                                     <AppSearchBar onSearch={this.props.onSearch} />
                                 </Box>
+                                {this.renderToolbarMenu()}
                                 {this.renderSignInButton()}
                             </Toolbar>
                         </Container>

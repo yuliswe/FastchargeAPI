@@ -329,9 +329,15 @@ export function getTheme(extraThemeOpts?: ThemeOptions) {
                         },
                     },
                     MuiSkeleton: {
+                        styleOverrides: {
+                            root: {
+                                borderRadius: 20,
+                            },
+                        },
                         defaultProps: {
                             animation: "wave",
                             variant: "rounded",
+                            color: "grey.100",
                         },
                     },
                 },

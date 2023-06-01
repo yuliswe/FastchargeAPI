@@ -221,8 +221,8 @@ export class LogTable<Activity> extends React.Component<LogTableProps<Activity>,
                             </TableBody>
                         </Table>
                         {this.props.activities.length === 0 && (
-                            <Typography variant="body1" m={2} sx={{ opacity: 0.8 }}>
-                                No Content
+                            <Typography variant="body2" m={2} color="grey.700">
+                                No activities.
                             </Typography>
                         )}
                     </Box>

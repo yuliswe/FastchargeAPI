@@ -1,4 +1,4 @@
-import { Avatar, Box, Button, Container, Divider, Grid, Link, Stack, Typography } from "@mui/material";
+import { Avatar, Box, Button, Container, Divider, Grid, Link, Skeleton, Stack, Typography } from "@mui/material";
 import "highlight.js/styles/github.css";
 import React from "react";
 import ReactMarkdown from "react-markdown";
@@ -39,8 +39,8 @@ class _AppDetailPage extends React.Component<_Props, _State> {
         };
     }
 
-    getPricingList(): AppDetailPricing[] {
-        return this.appState.pricings;
+    getPricingList(): (AppDetailPricing | null)[] {
+        return this.loading() ? [null, null] : this.appState.pricings;
     }
 
     get appState(): AppDetailAppState {
@@ -70,12 +70,19 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                 app: this.getAppPK(),
             })
         );
-
         appStore.dispatch(
             new AppDetailEvent.LoadPricings(this._context, {
                 app: this.getAppPK(),
             })
         );
+    }
+
+    loading() {
+        return this.appState.loadingAppInfo || this.appState.loadingEndpoints || this.appState.loadingPricing;
+    }
+
+    getEndpoints(): (AppDetailEndpoint | null)[] {
+        return this.loading() ? new Array(3).fill(null) : this.appState.endpoints;
     }
 
     renderChangeSubscriptionDocumentation({ plan, app }: { plan: string; app: string }) {
@@ -96,6 +103,38 @@ class _AppDetailPage extends React.Component<_Props, _State> {
         );
     }
 
+    renderPricingSkeleton(idx: number) {
+        return (
+            <Stack key={idx} spacing={2}>
+                <Skeleton variant="rounded" sx={{ borderRadius: 20 }} height="12em" width="100%" />
+                <Skeleton variant="rounded" sx={{ borderRadius: 20 }} height="2em" width="40%" />
+            </Stack>
+        );
+    }
+
+    renderAPISkeleton(idx: number) {
+        return (
+            <Stack key={idx} spacing={1}>
+                <Skeleton variant="rounded" sx={{ borderRadius: 20 }} height="1em" width="30%" />
+                <Skeleton variant="rounded" sx={{ borderRadius: 20 }} height="1em" width="80%" />
+            </Stack>
+        );
+    }
+
+    renderEndpoint(endpoint: AppDetailEndpoint, idx: number) {
+        return (
+            <Box key={idx}>
+                <Stack direction="row" spacing={1}>
+                    <Typography variant="h6">{endpoint.method}</Typography>
+                    <code>{endpoint.path}</code>
+                </Stack>
+                <Typography variant="body2">
+                    {endpoint.description || "No description provided for this API."}
+                </Typography>
+            </Box>
+        );
+    }
+
     render() {
         return (
             <SiteLayout>
@@ -105,95 +144,102 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                             <Stack spacing={5}>
                                 <Box>
                                     <Stack direction="row" spacing={1} mt={5} alignItems="center">
-                                        <Typography
-                                            variant="h3"
-                                            id="description"
-                                            noWrap
-                                            maxWidth="20em"
-                                            component="span"
-                                        >
-                                            {this.appState?.appInfo?.title || this.appState?.appInfo?.name}
-                                        </Typography>
-                                        <Typography variant="body1" noWrap maxWidth="20em" component="span">
-                                            @{this.appState?.appInfo?.name}
-                                        </Typography>
-                                        {/* <Typography variant="body1">1.3.7</Typography>
+                                        {this.loading() ? (
+                                            // <Skeleton
+                                            //     variant="rounded"
+                                            //     sx={{ borderRadius: 20 }}
+                                            //     height="2em"
+                                            //     width="30%"
+                                            // />
+                                            <React.Fragment>
+                                                <Typography variant="h3" sx={{ letterSpacing: 10 }}>
+                                                    ...
+                                                </Typography>
+                                            </React.Fragment>
+                                        ) : (
+                                            <React.Fragment>
+                                                <Typography
+                                                    variant="h3"
+                                                    id="description"
+                                                    noWrap
+                                                    maxWidth="20em"
+                                                    component="span"
+                                                >
+                                                    {this.appState?.appInfo?.title || this.appState?.appInfo?.name}
+                                                </Typography>
+                                                <Typography variant="body1" noWrap maxWidth="20em" component="span">
+                                                    @{this.appState?.appInfo?.name}
+                                                </Typography>
+                                                {/* <Typography variant="body1">1.3.7</Typography>
                                         <Typography variant="body1">Published 10 months ago</Typography> */}
+                                            </React.Fragment>
+                                        )}
                                     </Stack>
-                                    <Divider sx={{ mt: 1, mb: 3 }} />
-                                    <Typography variant="body1">
-                                        {this.appState?.appInfo?.description ||
-                                            "The author did not provide a description for this app."}
-                                    </Typography>
+                                    <Divider
+                                        sx={{
+                                            mt: 1,
+                                            mb: 3,
+                                            visibility: this.loading() ? "hidden" : "visible",
+                                        }}
+                                    />
+                                    {this.loading() ? (
+                                        <Skeleton
+                                            variant="rounded"
+                                            sx={{ borderRadius: 20 }}
+                                            height="5em"
+                                            width="100%"
+                                        />
+                                    ) : (
+                                        <Typography variant="body1">
+                                            {this.appState?.appInfo?.description ||
+                                                "The author did not provide a description for this app."}
+                                        </Typography>
+                                    )}
                                 </Box>
                                 <Box>
                                     <Typography variant="h4" id="pricing">
+                                        {/* {this.loading() ? (
+                                            <Skeleton variant="rounded" width="4em" height="2em" />
+                                        ) : (
+                                            "Pricing"
+                                        )} */}
                                         Pricing
                                     </Typography>
-                                    <Divider sx={{ mt: 1, mb: 3 }} />
+                                    <Divider
+                                        sx={{
+                                            mt: 1,
+                                            mb: 3,
+                                            visibility: this.loading() ? "hidden" : "visible",
+                                        }}
+                                    />
                                     <Grid container spacing={3}>
-                                        {this.getPricingList().map((pricing: AppDetailPricing, idx) => (
+                                        {this.getPricingList().map((pricing, idx) => (
                                             <Grid item xs={12} md={6} lg={4.5} xl={4.5} key={idx}>
-                                                <PricingCard
-                                                    {...pricing}
-                                                    actionButton={
-                                                        <Button
-                                                            variant="outlined"
-                                                            color="secondary"
-                                                            onClick={() =>
-                                                                openDocumentationDialog(this, () =>
-                                                                    this.renderChangeSubscriptionDocumentation({
-                                                                        app: this.getAppNameFromUrl(),
-                                                                        plan: pricing.name,
-                                                                    })
-                                                                )
-                                                            }
-                                                        >
-                                                            Subscribe
-                                                        </Button>
-                                                    }
-                                                />
+                                                {pricing == null ? (
+                                                    this.renderPricingSkeleton(idx)
+                                                ) : (
+                                                    <PricingCard
+                                                        {...pricing}
+                                                        actionButton={
+                                                            <Button
+                                                                variant="outlined"
+                                                                color="secondary"
+                                                                onClick={() =>
+                                                                    openDocumentationDialog(this, () =>
+                                                                        this.renderChangeSubscriptionDocumentation({
+                                                                            app: this.getAppNameFromUrl(),
+                                                                            plan: pricing.name,
+                                                                        })
+                                                                    )
+                                                                }
+                                                            >
+                                                                Subscribe
+                                                            </Button>
+                                                        }
+                                                    />
+                                                )}
                                             </Grid>
                                         ))}
-                                        {/* <Card
-                                                variant="outlined"
-                                                elevation={100}
-                                                sx={{
-                                                    p: 2,
-                                                    borderRadius: 5,
-                                                    // bgcolor: "",
-                                                    border: "none",
-                                                    // backgroundImage:
-                                                    //     "linear-gradient(to right, #ffecd2 0%, #fcb69f 100%)",
-                                                }}
-                                            >
-                                                <CardContent>
-                                                    <Typography
-                                                        variant="body1"
-                                                        mb={2}
-                                                    >
-                                                        Basic Plan
-                                                    </Typography>
-                                                    <Typography>
-                                                        <b>Per request:</b>{" "}
-                                                        $0.01
-                                                    </Typography>
-                                                    <Typography>
-                                                        <b>
-                                                            First request in 30
-                                                            days:
-                                                        </b>{" "}
-                                                        $0.01
-                                                    </Typography>
-                                                    <Typography>
-                                                        <b>Free quota:</b> first
-                                                        1000 requests
-                                                    </Typography>
-                                                </CardContent>
-                                                <CardActions>
-                                                    
-                                                </CardActions>
-                                            </Card> */}
                                     </Grid>
                                 </Box>
                                 {this.appState.appReadmeContent && (
@@ -201,14 +247,19 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                                         <Typography variant="h4" id="readme">
                                             README.md
                                         </Typography>
-                                        <Divider sx={{ mt: 1, mb: 3 }} />
+                                        <Divider
+                                            sx={{
+                                                mt: 1,
+                                                mb: 3,
+                                                visibility: this.loading() ? "hidden" : "visible",
+                                            }}
+                                        />
 
                                         <ReactMarkdown
                                             children={this.appState.appReadmeContent}
                                             skipHtml={true}
                                             remarkPlugins={(() => {
                                                 let plugins: PluggableList = [remarkGfm];
-                                                console.log(this.appState.appInfo?.repository);
                                                 // if (this.appState.appInfo!.repository) {
                                                 //     plugins.push([
                                                 //         remarkGithub,
@@ -223,21 +274,26 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                                 )}
                                 <Box>
                                     <Typography variant="h4" id="endpoints">
+                                        {/* {this.loading() ? (
+                                            <Skeleton variant="rounded" width="4em" height="2em" />
+                                        ) : (
+                                            "APIs"
+                                        )} */}
                                         APIs
                                     </Typography>
-                                    <Divider sx={{ mt: 1, mb: 3 }} />
+                                    <Divider
+                                        sx={{
+                                            mt: 1,
+                                            mb: 3,
+                                            visibility: this.loading() ? "hidden" : "visible",
+                                        }}
+                                    />
                                     <Stack spacing={3}>
-                                        {this.appState?.endpoints?.map((endpoint: AppDetailEndpoint, idx) => (
-                                            <Box key={idx}>
-                                                <Stack direction="row" spacing={1}>
-                                                    <Typography variant="h6">{endpoint.method}</Typography>
-                                                    <code>{endpoint.path}</code>
-                                                </Stack>
-                                                <Typography variant="body2">
-                                                    {endpoint.description || "No description provided for this API."}
-                                                </Typography>
-                                            </Box>
-                                        ))}
+                                        {this.getEndpoints().map((endpoint, idx) =>
+                                            endpoint == null
+                                                ? this.renderAPISkeleton(idx)
+                                                : this.renderEndpoint(endpoint, idx)
+                                        )}
                                     </Stack>
                                 </Box>
                             </Stack>
@@ -245,9 +301,11 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                         <Grid item xs={3} my={5}>
                             <Box position="sticky" top={50}>
                                 <Typography variant="h6">Repository</Typography>
-                                {this.appState.appInfo?.repository ? (
+                                {this.loading() ? (
+                                    <Skeleton variant="text" sx={{ width: "50%", height: "1.5em", borderRadius: 5 }} />
+                                ) : this.appState.appInfo?.repository ? (
                                     <Link href={this.appState.appInfo?.repository} target="_blank" variant="body2">
-                                        {this.appState.appInfo?.repository}
+                                        this.appState.appInfo?.repository
                                     </Link>
                                 ) : (
                                     <Typography variant="body2">Not provided</Typography>
@@ -263,7 +321,10 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                                 >
                                     Homepage
                                 </Typography>
-                                {this.appState.appInfo?.homepage ? (
+
+                                {this.loading() ? (
+                                    <Skeleton variant="text" sx={{ width: "50%", height: "1.5em", borderRadius: 5 }} />
+                                ) : this.appState.appInfo?.homepage ? (
                                     <Link href={this.appState.appInfo?.homepage} target="_blank" variant="body2">
                                         {this.appState.appInfo?.homepage}
                                     </Link>
@@ -281,7 +342,9 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                                 >
                                     README.md
                                 </Typography>
-                                {this.appState.appInfo?.readme ? (
+                                {this.loading() ? (
+                                    <Skeleton variant="text" sx={{ width: "50%", height: "1.5em", borderRadius: 5 }} />
+                                ) : this.appState.appInfo?.readme ? (
                                     <Link href={this.appState.appInfo?.readme} target="_blank" variant="body2">
                                         {this.appState.appInfo?.readme}
                                     </Link>
@@ -299,12 +362,19 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                                 >
                                     Author
                                 </Typography>
-                                <Stack direction="row" spacing={1} alignItems="center">
-                                    <Avatar src="./logo192.png" />
-                                    <Typography variant="body2" component={Link}>
-                                        {this.appState.appInfo?.owner.author || "Anonymous Author"}
-                                    </Typography>
-                                </Stack>
+                                {this.loading() ? (
+                                    <Stack direction="row" spacing={1} alignItems="center">
+                                        <Skeleton variant="circular" sx={{ width: 40, height: 40 }} />
+                                        {/* <Skeleton variant="rounded" sx={{ width: 100, height: 40, borderRadius: 5 }} /> */}
+                                    </Stack>
+                                ) : (
+                                    <Stack direction="row" spacing={1} alignItems="center">
+                                        <Avatar src="./logo192.png" sx={{ height: 40, width: 40 }} />
+                                        <Typography variant="body1" component={Link}>
+                                            {this.appState.appInfo?.owner.author || "Anonymous"}
+                                        </Typography>
+                                    </Stack>
+                                )}
                                 <Typography
                                     variant="h6"
                                     mt={2}

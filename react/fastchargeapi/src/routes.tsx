@@ -46,6 +46,9 @@ export const RouteURL = {
     termsPage(): string {
         return "/terms-of-service#";
     },
+    homePage(): string {
+        return "/";
+    },
     documentationPage(): string {
         if (process.env.REACT_APP_LOCAL_DOC === "1") {
             return "http://localhost:3000";
