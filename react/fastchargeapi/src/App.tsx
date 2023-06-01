@@ -33,52 +33,56 @@ function WithRouteContext(props: WithRouteContextProps) {
     const params = useParams();
     const [searchParam, setSearchParam] = useSearchParams();
 
-    void context.firebase.isAnonymousUserPromise.then((isAnonymous) => {
-        const requireAuth = new URLSearchParams(location.search).get("auth") === "true";
-        if (isAnonymous && requireAuth) {
-            navigate(
-                RouteURL.authPage({
-                    query: {
-                        redirect: location.pathname + location.search + location.hash,
-                    },
-                }),
-                { replace: true }
-            );
-        }
-    });
-
-    void getGQLClient(context).then(({ client, currentUser }) => {
-        return client.query({
-            query: gql`
-                query Ping {
-                    ping
-                }
-            `,
-        });
-    });
-
-    let shouldPing = false;
-    setTimeout(() => {
-        shouldPing = true;
-    }, 30_000);
-    function pingWhenActive() {
-        if (shouldPing) {
-            shouldPing = false;
-            void getGQLClient(context).then(async ({ client, currentUser }) => {
-                await client.query({
-                    query: gql`
-                        query Ping {
-                            ping
-                        }
-                    `,
-                });
-                setTimeout(() => {
-                    shouldPing = true;
-                }, 30_000);
-            });
-        }
-    }
+    const requireAuth = props.requireAuth ?? false;
+    // Hide content so that it doesn't flash before the user is redirected.
+    const [hideContent, setHideContent] = useState(requireAuth);
+    // This promise is resolved immediately except in the initial load of the app.
     useEffect(() => {
+        void context.firebase.isAnonymousUserPromise.then((isAnonymous) => {
+            if (hideContent) {
+                setHideContent(false);
+            }
+            if (isAnonymous && requireAuth) {
+                navigate(
+                    RouteURL.authPage({
+                        query: {
+                            redirect: location.pathname + location.search + location.hash,
+                        },
+                    }),
+                    { replace: true }
+                );
+            }
+        });
+        void getGQLClient(context).then(({ client, currentUser }) => {
+            return client.query({
+                query: gql`
+                    query Ping {
+                        ping
+                    }
+                `,
+            });
+        });
+        let shouldPing = false;
+        setTimeout(() => {
+            shouldPing = true;
+        }, 200_000);
+        function pingWhenActive() {
+            if (shouldPing) {
+                shouldPing = false;
+                void getGQLClient(context).then(async ({ client, currentUser }) => {
+                    await client.query({
+                        query: gql`
+                            query Ping {
+                                ping
+                            }
+                        `,
+                    });
+                    setTimeout(() => {
+                        shouldPing = true;
+                    }, 200_000);
+                });
+            }
+        }
         window.addEventListener("mousemove", pingWhenActive);
         window.addEventListener("scroll", pingWhenActive);
         return () => {
@@ -112,7 +116,7 @@ function WithRouteContext(props: WithRouteContextProps) {
                 },
             }}
         >
-            {props.children}
+            {hideContent || props.children}
         </AppContextProvider>
     );
 }
