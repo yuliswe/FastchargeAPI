@@ -84,7 +84,7 @@ export class AppBar extends React.Component<Props, State> {
     renderLogo() {
         return (
             <Button
-                href="/"
+                href={RouteURL.homePage()}
                 variant="text"
                 startIcon={<Logo style={{ width: 35 }} />}
                 sx={{
@@ -111,7 +111,7 @@ export class AppBar extends React.Component<Props, State> {
     renderSmallLogo() {
         return (
             <IconButton
-                href="/"
+                href={RouteURL.homePage()}
                 sx={{
                     display: this._context.mediaQuery.md.only ? "inline-flex" : "none",
                 }}
@@ -200,7 +200,12 @@ export class AppBar extends React.Component<Props, State> {
                 spacing={3}
                 display={this._context.mediaQuery.md.down ? "none" : "initial"}
             >
-                <Link key="/" target="_self" href="/" display={this._context.mediaQuery.lg.up ? "initial" : "none"}>
+                <Link
+                    key="/"
+                    target="_self"
+                    href={RouteURL.homePage()}
+                    display={this._context.mediaQuery.lg.up ? "initial" : "none"}
+                >
                     Home
                 </Link>
                 {this.mainMenuLinks.map((link) => (

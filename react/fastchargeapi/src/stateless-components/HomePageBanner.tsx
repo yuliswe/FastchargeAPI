@@ -1,6 +1,7 @@
 import { Box, Button, Container, Grid, Paper, Stack, Typography } from "@mui/material";
 import React from "react";
 import Terminal, { ColorMode, TerminalInput, TerminalOutput } from "react-terminal-ui";
+import { RouteURL } from "../routes";
 
 export class HomePageBanner extends React.PureComponent {
     render() {
@@ -28,7 +29,11 @@ export class HomePageBanner extends React.PureComponent {
                                 </Typography>
                                 <Box>
                                     <Button
-                                        href="/auth?redirect=/account/my-apps"
+                                        href={RouteURL.authPage({
+                                            query: {
+                                                redirect: RouteURL.myAppsPage(),
+                                            },
+                                        })}
                                         variant="contained"
                                         sx={{
                                             fontSize: 18,

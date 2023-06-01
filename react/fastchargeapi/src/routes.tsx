@@ -19,6 +19,7 @@ type SearchResultPageParams = {};
 type SearchResultPageQuery = { q?: string; tag?: string; sort?: string; page?: string };
 type AppDetailPageParams = { app: string };
 type AuthPageQuery = { redirect?: string };
+type TermsPageTag = "pricing" | "privacy" | "tos";
 
 export function buildSearchParams(query: any): string {
     const search = new URLSearchParams();
@@ -28,23 +29,18 @@ export function buildSearchParams(query: any): string {
     return search.toString();
 }
 
-/**
- * Note that some routes contain ?auth=true in the URL. This is so that before
- * nagivating to the route, we can check if the user is logged in, and redirect
- * to the auth page if log in is required.
- */
 export const RouteURL = {
     searchResultPage({
         params = {},
         query = {},
     }: { params?: SearchResultPageParams; query?: SearchResultPageQuery } = {}) {
-        return `/search?${buildSearchParams(query)}` + "#";
+        return `/search/?${buildSearchParams(query)}` + "#";
     },
     appDetailPage({ params }: { params: AppDetailPageParams }): string {
-        return `/app/${params.app}` + "#";
+        return `/app/${params.app}/` + "#";
     },
-    termsPage(): string {
-        return "/terms-of-service#";
+    termsPage({ tag }: { tag?: TermsPageTag } = {}): string {
+        return `/terms-of-service/#${tag ?? ""}`;
     },
     homePage(): string {
         return "/";
@@ -56,12 +52,19 @@ export const RouteURL = {
         return "https://doc.fastchargeapi.com";
     },
     accountPage(): string {
-        return `/account?${buildSearchParams({
-            auth: true,
-        })}#`;
+        return `/account/#`;
+    },
+    myAppsPage(): string {
+        return `/account/my-apps/#`;
     },
     authPage({ query }: { query?: AuthPageQuery } = {}): string {
-        return `/auth?${buildSearchParams(query)}` + "#";
+        return `/auth/?${buildSearchParams(query)}` + "#";
+    },
+    onboardPage(): string {
+        return `/onboard/#`;
+    },
+    subscriptionsPage(): string {
+        return `/account/subscriptions/#`;
     },
 };
 
@@ -73,11 +76,11 @@ export function createRouter(WithContext: (props: WithRouteContextProps) => Reac
         },
         {
             path: "/onboard",
-            element: <WithContext children={<OnboardPage />} />,
+            element: <WithContext requireAuth={true} children={<OnboardPage />} />,
         },
         {
             path: "/topup",
-            element: <WithContext children={<TopUpPage />} />,
+            element: <WithContext requireAuth={true} children={<TopUpPage />} />,
         },
         {
             path: "/",
@@ -97,23 +100,23 @@ export function createRouter(WithContext: (props: WithRouteContextProps) => Reac
             children: [
                 {
                     path: "",
-                    element: <WithContext children={<DashboardPage />} />,
+                    element: <WithContext requireAuth={true} children={<DashboardPage />} />,
                 },
                 {
                     path: "my-apps",
-                    element: <WithContext children={<MyAppsPage />} />,
+                    element: <WithContext requireAuth={true} children={<MyAppsPage />} />,
                 },
                 {
                     path: "my-apps/:app",
-                    element: <WithContext children={<MyAppDetailPage />} />,
+                    element: <WithContext requireAuth={true} children={<MyAppDetailPage />} />,
                 },
                 {
                     path: "subscriptions",
-                    element: <WithContext children={<SubscriptionsPage />} />,
+                    element: <WithContext requireAuth={true} children={<SubscriptionsPage />} />,
                 },
                 {
                     path: "subscriptions/:app",
-                    element: <WithContext children={<SubscriptionDetailPage />} />,
+                    element: <WithContext requireAuth={true} children={<SubscriptionDetailPage />} />,
                 },
             ],
         },

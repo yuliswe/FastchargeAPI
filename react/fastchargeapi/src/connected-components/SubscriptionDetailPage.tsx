@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import Terminal, { ColorMode, TerminalInput } from "react-terminal-ui";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { AvailablePlan, SubscriotionDetailEvent, UsageSummary } from "../events/SubscriptionDetailEvent";
+import { RouteURL } from "../routes";
 import {
     DocumentationDialog,
     SupportDocumentation,
@@ -115,7 +116,7 @@ class _SubscriptionDetailPage extends React.Component<_Props, _State> {
                 <TerminalInput>{`fastapi subscription sub "${app}" \\\n    --plan "${plan}"`}</TerminalInput>
                 <Typography variant="body2" mt={2} gutterBottom>
                     For details on switching a subscription plan,{" "}
-                    <Link href="/terms-of-service#pricing" target="_blank" color="info.main">
+                    <Link href={RouteURL.termsPage({ tag: "pricing" })} target="_blank" color="info.main">
                         see the pricing documentation.
                     </Link>
                 </Typography>
@@ -151,7 +152,7 @@ class _SubscriptionDetailPage extends React.Component<_Props, _State> {
                     <Paper sx={{ padding: 5 }}>
                         <Stack>
                             <Breadcrumbs sx={{ display: "flex", alignItems: "center" }}>
-                                <Link underline="hover" color="inherit" href="/account/subscriptions">
+                                <Link underline="hover" color="inherit" href={RouteURL.subscriptionsPage()}>
                                     Subscriptions
                                 </Link>
                                 {/* <Typography color="text.primary">

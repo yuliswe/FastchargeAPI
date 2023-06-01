@@ -11,6 +11,7 @@ import remarkGfm from "remark-gfm";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { SiteLayout } from "../SiteLayout";
 import { AppDetailEndpoint, AppDetailEvent, AppDetailPricing } from "../events/AppDetailEvent";
+import { RouteURL } from "../routes";
 import {
     DocumentationDialog,
     SupportDocumentation,
@@ -95,7 +96,7 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                 <TerminalInput>{`fastapi subscription sub "${app}" \\\n    --plan "${plan}"`}</TerminalInput>
                 <Typography variant="body2" mt={2} gutterBottom>
                     For details on switching a subscription plan,{" "}
-                    <Link href="/terms-of-service#pricing" target="_blank" color="info.main">
+                    <Link href={RouteURL.termsPage({ tag: "pricing" })} target="_blank" color="info.main">
                         see the pricing documentation.
                     </Link>
                 </Typography>

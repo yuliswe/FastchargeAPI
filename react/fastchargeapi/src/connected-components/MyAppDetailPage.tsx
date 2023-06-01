@@ -27,6 +27,7 @@ import Terminal, { ColorMode, TerminalInput } from "react-terminal-ui";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { GQLAppVisibility } from "../__generated__/gql-operations";
 import { MyAppDetailEvent } from "../events/MyAppDetailEvent";
+import { RouteURL } from "../routes";
 import {
     DocumentationDialog,
     SupportDocumentation,
@@ -548,7 +549,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
         return (
             <Paper sx={{ padding: 5 }}>
                 <Breadcrumbs aria-label="breadcrumb">
-                    <Link underline="hover" color="inherit" href="/account/my-apps">
+                    <Link underline="hover" color="inherit" href={RouteURL.myAppsPage()}>
                         My Apps
                     </Link>
                     <Stack direction="row" alignItems="center">

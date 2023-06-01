@@ -1,10 +1,10 @@
 import { Box, ButtonBase, Container, Grid, IconButton, Link, Stack, Typography } from "@mui/material";
 import React from "react";
 import { AppContext, ReactAppContextType } from "../AppContext";
+import { RouteURL } from "../routes";
 import { ReactComponent as DiscordIcon } from "../svg/discord.svg";
 import { ReactComponent as GithubIcon } from "../svg/github-solid.svg";
 import { ReactComponent as Logo } from "../svg/logo5.svg";
-import { RouteURL } from "../routes";
 
 const githubRepoLink = "https://github.com/FastchargeAPI/fastchargeapi-cli/issues";
 const discordInviteLink = "https://discord.gg/HfQDWjkJ7n";
@@ -17,7 +17,7 @@ export class SiteFooter extends React.PureComponent {
 
     renderLogo() {
         return (
-            <ButtonBase href="/" sx={{ p: 0 }}>
+            <ButtonBase href={RouteURL.homePage()} sx={{ p: 0 }}>
                 <Stack direction="row" alignItems="center">
                     <Logo style={{ width: 35 }} />
                     <Typography variant="h3">FastchargeAPI</Typography>
@@ -72,7 +72,7 @@ export class SiteFooter extends React.PureComponent {
                                 Resources
                             </Typography>
                             <Stack spacing={1}>
-                                <Link href="/terms-of-service#pricing">Pricing</Link>
+                                <Link href={RouteURL.termsPage({ tag: "pricing" })}>Pricing</Link>
                                 <Link href={RouteURL.documentationPage()} target="_blank">
                                     <Typography variant="body1">Documentation</Typography>
                                 </Link>
@@ -96,8 +96,8 @@ export class SiteFooter extends React.PureComponent {
                                 Legal
                             </Typography>
                             <Stack spacing={1}>
-                                <Link href="/terms-of-service#privacy">Privacy</Link>
-                                <Link href="/terms-of-service#tos">Terms of Service</Link>
+                                <Link href={RouteURL.termsPage({ tag: "privacy" })}>Privacy</Link>
+                                <Link href={RouteURL.termsPage({ tag: "tos" })}>Terms of Service</Link>
                             </Stack>
                         </Grid>
                     </Grid>

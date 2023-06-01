@@ -14,6 +14,7 @@ import {
     GQLStripeTransferStatus,
 } from "../__generated__/gql-operations";
 import { AccountActivity, DashboardEvent } from "../events/DashboardEvent";
+import { RouteURL } from "../routes";
 import {
     DocumentationDialog,
     SupportDocumentation,
@@ -371,7 +372,7 @@ class _DashboardPage extends React.Component<Props, State> {
                             </Typography>
                             <Typography variant="body1" component="div" gutterBottom>
                                 To set up a Stripe account,{" "}
-                                <Link href="/onboard" target="_blank" color="info.main">
+                                <Link href={RouteURL.onboardPage()} target="_blank" color="info.main">
                                     go to the onboarding page
                                 </Link>{" "}
                                 and complete the registration.
@@ -502,7 +503,7 @@ class _DashboardPage extends React.Component<Props, State> {
                         Add funds
                     </MenuItem>
                     <MenuItem
-                        href="/account"
+                        href={RouteURL.accountPage()}
                         onClick={() => {
                             openDocumentationDialog(this, () => this.renderTransferDocumentation());
                             this.handleClose();
