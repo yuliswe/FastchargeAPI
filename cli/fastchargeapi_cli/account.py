@@ -1,6 +1,4 @@
-import textwrap
 import webbrowser
-from dataclasses import dataclass
 from typing import Optional
 
 from blessings import Terminal

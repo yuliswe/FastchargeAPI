@@ -12,7 +12,7 @@
     "coverage:report": "coverage xml && coverage report --sort=Cover",
     "coverage": "(npm run coverage:update) && (npm run coverage:report)",
     "test:single": "pytest -s",
-    "deploy": "(npm run build) && (poetry publish -r testpypi)",
+    "deploy": "(npm run build) && (poetry publish)",
     "watch": "nodemon --exec 'echo \\x1Bc && (npm run gen) && (npm run typecheck)' --watch . --ext py,json,graphql,yaml --delay 1 --ignore '**/__pycache__/' --ignore '**/__generated__/**'"
   },
   "author": "",

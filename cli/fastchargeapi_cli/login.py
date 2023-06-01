@@ -5,6 +5,7 @@ from typing import Optional
 from uuid import uuid4
 
 import click
+from blessings import Terminal
 from click import echo
 
 from . import config
@@ -21,6 +22,8 @@ from .exceptions import NotFound
 from .graphql_client import GQLClient
 from .groups import fastapi, fastcharge
 from .remote_secret import get_remote_secret
+
+term = Terminal()
 
 
 @fastapi.command("login")
@@ -59,13 +62,14 @@ def do_login(profile: Optional[str]):
     key = uuid4().hex
     jwe_secret = os.urandom(64)  # 512 bits
     jwt_secret = os.urandom(64)  # 512 bits
-    webbrowser.open_new(
-        f"{config.react_host}/auth?relogin=true&behavior=putsecret&jwe={jwe_secret.hex()}&jwt={jwt_secret.hex()}&key={key}"
-    )
+    url = f"{config.react_host}/auth/?relogin=true&behavior=putsecret&jwe={jwe_secret.hex()}&jwt={jwt_secret.hex()}&key={key}"
+    webbrowser.open_new(url)
     echo("Please authenticate in the browser.")
+    echo("If the browser does not open, please visit:")
+    echo(term.blue(" " + url))
     tries = 0
     while True:
-        time.sleep(5)
+        time.sleep(3)
         tries += 1
         try:
             if value := get_remote_secret(client, key, jwe_secret, jwt_secret):
@@ -73,7 +77,7 @@ def do_login(profile: Optional[str]):
                 break
         except NotFound as e:
             pass
-        if tries > 20:
+        if tries > 40:
             input("Timed out. Press enter to retry.")
             continue
     user_email = verify_id_token(id_token)

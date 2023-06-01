@@ -27,11 +27,9 @@ def get_latest_version(package, url_pattern=URL_PATTERN):
 @cache
 def get_current_version():
     """Return current version of package."""
-    pyproject_file = Path(__file__).parent.parent / "pyproject.toml"
-    with open(pyproject_file, "rb") as f:
-        content = tomli.load(f)
-        version = content["tool"]["poetry"]["version"]
-    return parse(version)
+    from . import __version__
+
+    return parse(__version__)
 
 
 def check_version_or_exit():
