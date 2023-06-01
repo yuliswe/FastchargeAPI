@@ -136,12 +136,127 @@ class _AppDetailPage extends React.Component<_Props, _State> {
         );
     }
 
+    renderSidebar() {
+        return (
+            <Box position={this._context.mediaQuery.md.up ? "sticky" : "static"} top={50}>
+                <Typography variant="h6">Repository</Typography>
+                {this.loading() ? (
+                    <Skeleton variant="text" sx={{ width: "50%", height: "1.5em", borderRadius: 5 }} />
+                ) : this.appState.appInfo?.repository ? (
+                    <Link href={this.appState.appInfo?.repository} target="_blank" variant="body2">
+                        this.appState.appInfo?.repository
+                    </Link>
+                ) : (
+                    <Typography variant="body2">Not provided</Typography>
+                )}
+                <Typography
+                    variant="h6"
+                    mt={2}
+                    pt={2}
+                    sx={{
+                        borderTop: 1,
+                        borderTopColor: "divider",
+                    }}
+                >
+                    Homepage
+                </Typography>
+
+                {this.loading() ? (
+                    <Skeleton variant="text" sx={{ width: "50%", height: "1.5em", borderRadius: 5 }} />
+                ) : this.appState.appInfo?.homepage ? (
+                    <Link href={this.appState.appInfo?.homepage} target="_blank" variant="body2">
+                        {this.appState.appInfo?.homepage}
+                    </Link>
+                ) : (
+                    <Typography variant="body2">Not provided</Typography>
+                )}
+                <Typography
+                    variant="h6"
+                    mt={2}
+                    pt={2}
+                    sx={{
+                        borderTop: 1,
+                        borderTopColor: "divider",
+                    }}
+                >
+                    README.md
+                </Typography>
+                {this.loading() ? (
+                    <Skeleton variant="text" sx={{ width: "50%", height: "1.5em", borderRadius: 5 }} />
+                ) : this.appState.appInfo?.readme ? (
+                    <Link href={this.appState.appInfo?.readme} target="_blank" variant="body2">
+                        {this.appState.appInfo?.readme}
+                    </Link>
+                ) : (
+                    <Typography variant="body2">Not provided</Typography>
+                )}
+                <Typography
+                    variant="h6"
+                    mt={2}
+                    py={2}
+                    sx={{
+                        borderTop: 1,
+                        borderTopColor: "divider",
+                    }}
+                >
+                    Author
+                </Typography>
+                {this.loading() ? (
+                    <Stack direction="row" spacing={1} alignItems="center">
+                        <Skeleton variant="circular" sx={{ width: 40, height: 40 }} />
+                        {/* <Skeleton variant="rounded" sx={{ width: 100, height: 40, borderRadius: 5 }} /> */}
+                    </Stack>
+                ) : (
+                    <Stack direction="row" spacing={1} alignItems="center">
+                        <Avatar src="./logo192.png" sx={{ height: 40, width: 40 }} />
+                        <Typography variant="body1" component={Link}>
+                            {this.appState.appInfo?.owner.author || "Anonymous"}
+                        </Typography>
+                    </Stack>
+                )}
+                <Typography
+                    variant="h6"
+                    mt={2}
+                    py={2}
+                    sx={{
+                        borderTop: 1,
+                        borderTopColor: "divider",
+                    }}
+                >
+                    Table of Contents
+                </Typography>
+                <Stack spacing={1}>
+                    <Link href="#description" variant="body2">
+                        Description
+                    </Link>
+                    <Link href="#pricing" variant="body2">
+                        Pricing
+                    </Link>
+                    <Link href="#readme" variant="body2">
+                        README.md
+                    </Link>
+                    <Link href="#endpoints" variant="body2">
+                        Endpoints
+                    </Link>
+                </Stack>
+            </Box>
+        );
+    }
+
     render() {
         return (
             <SiteLayout>
                 <Container maxWidth="lg">
-                    <Grid container columnSpacing={5}>
-                        <Grid item px={5} xs={9}>
+                    <Grid
+                        container
+                        columnSpacing={{
+                            xs: 0,
+                            sm: 0,
+                            md: 5,
+                        }}
+                        sx={{ mb: 10 }}
+                    >
+                        <Grid item px={5} xs={12} sm={12} md={9}>
                             <Stack spacing={5}>
                                 <Box>
                                     <Stack direction="row" spacing={1} mt={5} alignItems="center">
@@ -197,6 +312,7 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                                         </Typography>
                                     )}
                                 </Box>
+                                {!this._context.mediaQuery.md.up && this.renderSidebar()}
                                 <Box>
                                     <Typography variant="h4" id="pricing">
                                         {/* {this.loading() ? (
@@ -299,110 +415,11 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                                 </Box>
                             </Stack>
                         </Grid>
-                        <Grid item xs={3} my={5}>
-                            <Box position="sticky" top={50}>
-                                <Typography variant="h6">Repository</Typography>
-                                {this.loading() ? (
-                                    <Skeleton variant="text" sx={{ width: "50%", height: "1.5em", borderRadius: 5 }} />
-                                ) : this.appState.appInfo?.repository ? (
-                                    <Link href={this.appState.appInfo?.repository} target="_blank" variant="body2">
-                                        this.appState.appInfo?.repository
-                                    </Link>
-                                ) : (
-                                    <Typography variant="body2">Not provided</Typography>
-                                )}
-                                <Typography
-                                    variant="h6"
-                                    mt={2}
-                                    pt={2}
-                                    sx={{
-                                        borderTop: 1,
-                                        borderTopColor: "divider",
-                                    }}
-                                >
-                                    Homepage
-                                </Typography>
-
-                                {this.loading() ? (
-                                    <Skeleton variant="text" sx={{ width: "50%", height: "1.5em", borderRadius: 5 }} />
-                                ) : this.appState.appInfo?.homepage ? (
-                                    <Link href={this.appState.appInfo?.homepage} target="_blank" variant="body2">
-                                        {this.appState.appInfo?.homepage}
-                                    </Link>
-                                ) : (
-                                    <Typography variant="body2">Not provided</Typography>
-                                )}
-                                <Typography
-                                    variant="h6"
-                                    mt={2}
-                                    pt={2}
-                                    sx={{
-                                        borderTop: 1,
-                                        borderTopColor: "divider",
-                                    }}
-                                >
-                                    README.md
-                                </Typography>
-                                {this.loading() ? (
-                                    <Skeleton variant="text" sx={{ width: "50%", height: "1.5em", borderRadius: 5 }} />
-                                ) : this.appState.appInfo?.readme ? (
-                                    <Link href={this.appState.appInfo?.readme} target="_blank" variant="body2">
-                                        {this.appState.appInfo?.readme}
-                                    </Link>
-                                ) : (
-                                    <Typography variant="body2">Not provided</Typography>
-                                )}
-                                <Typography
-                                    variant="h6"
-                                    mt={2}
-                                    py={2}
-                                    sx={{
-                                        borderTop: 1,
-                                        borderTopColor: "divider",
-                                    }}
-                                >
-                                    Author
-                                </Typography>
-                                {this.loading() ? (
-                                    <Stack direction="row" spacing={1} alignItems="center">
-                                        <Skeleton variant="circular" sx={{ width: 40, height: 40 }} />
-                                        {/* <Skeleton variant="rounded" sx={{ width: 100, height: 40, borderRadius: 5 }} /> */}
-                                    </Stack>
-                                ) : (
-                                    <Stack direction="row" spacing={1} alignItems="center">
-                                        <Avatar src="./logo192.png" sx={{ height: 40, width: 40 }} />
-                                        <Typography variant="body1" component={Link}>
-                                            {this.appState.appInfo?.owner.author || "Anonymous"}
-                                        </Typography>
-                                    </Stack>
-                                )}
-                                <Typography
-                                    variant="h6"
-                                    mt={2}
-                                    py={2}
-                                    sx={{
-                                        borderTop: 1,
-                                        borderTopColor: "divider",
-                                    }}
-                                >
-                                    Table of Contents
-                                </Typography>
-                                <Stack spacing={1}>
-                                    <Link href="#description" variant="body2">
-                                        Description
-                                    </Link>
-                                    <Link href="#pricing" variant="body2">
-                                        Pricing
-                                    </Link>
-                                    <Link href="#readme" variant="body2">
-                                        README.md
-                                    </Link>
-                                    <Link href="#endpoints" variant="body2">
-                                        Endpoints
-                                    </Link>
-                                </Stack>
-                            </Box>
-                        </Grid>
+                        {this._context.mediaQuery.md.up && (
+                            <Grid item xs={3} my={5}>
+                                {this.renderSidebar()}
+                            </Grid>
+                        )}
                     </Grid>
                 </Container>
                 <DocumentationDialog parent={this} />
