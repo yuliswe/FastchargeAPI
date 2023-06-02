@@ -10,6 +10,9 @@ Parameters:
     Type: String
   Route53ZoneId:
     Type: String
+  EnvDevDomain:
+    Type: String
+    Default: ""
   Stage:
     Type: String
     Default: DEV
@@ -22,6 +25,9 @@ Globals:
   Function:
     Timeout: 1
     MemorySize: 128
+    Environment:
+      Variables:
+        DEV_DOMAIN: !Ref EnvDevDomain
 
 Resources:
   GenerateCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain

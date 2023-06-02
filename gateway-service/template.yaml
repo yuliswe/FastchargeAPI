@@ -10,6 +10,9 @@ Parameters:
     Type: String
   Route53ZoneId:
     Type: String
+  EnvDevDomain:
+    Type: String
+    Default: ""
   Stage:
     Type: String
     Default: DEV
@@ -26,6 +29,9 @@ Globals:
     Timeout: 2
     MemorySize: 3008
     Tracing: Active
+    Environment:
+      Variables:
+        DEV_DOMAIN: !Ref EnvDevDomain
   Api:
     TracingEnabled: true
 
