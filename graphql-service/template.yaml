@@ -6,9 +6,19 @@ Description: >
   Sample SAM Template for graphql-service
 
 Parameters:
+  MainDomain:
+    Type: String
+  Route53ZoneId:
+    Type: String
   Stage:
     Type: String
     Default: DEV
+  SubDomain:
+    Type: String
+    Default: "api.graphql."
+  IAMSubDomain:
+    Type: String
+    Default: "api.iam.graphql."
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -24,6 +34,28 @@ Resources:
     Properties:
       TemplateURL: ./template-dynamodb.yaml
 
+  # Give account permission to log to CloudWatch. Probably only need once per
+  # account.
+  ApiCWLRoleArn:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !GetAtt CloudWatchRole.Arn
+
+  # IAM Role for API Gateway + CloudWatch Logging
+  CloudWatchRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Action: "sts:AssumeRole"
+          Effect: Allow
+          Principal:
+            Service: apigateway.amazonaws.com
+      Path: /
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+
   # This is a custom build layer. See:
   # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/building-layers.html
   CopyDependencies:
@@ -38,11 +70,11 @@ Resources:
   GenerateIAMCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain
     Type: AWS::CertificateManager::Certificate
     Properties:
-      DomainName: "api.iam.graphql.fastchargeapi.com"
+      DomainName: !Join ["", [!Ref IAMSubDomain, !Ref MainDomain]]
       ValidationMethod: DNS
       DomainValidationOptions:
-        - DomainName: "api.iam.graphql.fastchargeapi.com"
-          HostedZoneId: Z0358815GI2I8U5CTHXW
+        - DomainName: !Join ["", [!Ref IAMSubDomain, !Ref MainDomain]]
+          HostedZoneId: !Ref Route53ZoneId
 
   GraphQLServiceRole:
     Type: AWS::IAM::Role
@@ -60,7 +92,7 @@ Resources:
               - sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaRole
-        - arn:aws:iam::887279901853:policy/AuroraDBSearchServicePolicy
+        - !Sub arn:aws:iam::${AWS::AccountId}:policy/AuroraDBSearchServicePolicy
       Policies:
         - PolicyName: GraphQLServicePolicy
           PolicyDocument:
@@ -92,10 +124,10 @@ Resources:
     Type: AWS::Serverless::Api
     Properties:
       Domain:
-        DomainName: "api.iam.graphql.fastchargeapi.com"
+        DomainName: !Join ["", [!Ref IAMSubDomain, !Ref MainDomain]]
         CertificateArn: !Ref GenerateIAMCertificate
         Route53:
-          HostedZoneId: Z0358815GI2I8U5CTHXW
+          HostedZoneId: !Ref Route53ZoneId
       StageName: !Ref Stage
       MethodSettings:
         - LoggingLevel: INFO
@@ -131,20 +163,20 @@ Resources:
   GenerateCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain
     Type: AWS::CertificateManager::Certificate
     Properties:
-      DomainName: "api.graphql.fastchargeapi.com"
+      DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
       ValidationMethod: DNS
       DomainValidationOptions:
-        - DomainName: "api.graphql.fastchargeapi.com"
-          HostedZoneId: Z0358815GI2I8U5CTHXW
+        - DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
+          HostedZoneId: !Ref Route53ZoneId
 
   APIGateway:
     Type: AWS::Serverless::Api
     Properties:
       Domain:
-        DomainName: "api.graphql.fastchargeapi.com"
+        DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
         CertificateArn: !Ref GenerateCertificate
         Route53:
-          HostedZoneId: Z0358815GI2I8U5CTHXW
+          HostedZoneId: !Ref Route53ZoneId
       StageName: !Ref Stage
       MethodSettings:
         - LoggingLevel: INFO
@@ -157,7 +189,7 @@ Resources:
         Authorizers:
           FirebaseTokenAuthorizerAllowingAnonymousUser:
             FunctionPayloadType: REQUEST
-            FunctionArn: arn:aws:lambda:us-east-1:887279901853:function:FirebaseTokenAuthorizerAllowingAnonymousUser
+            FunctionArn: !Sub arn:aws:lambda:us-east-1:${AWS::AccountId}:function:FirebaseTokenAuthorizerAllowingAnonymousUser
             Identity:
               ReauthorizeEvery: 300
               Headers: ["Authorization"]

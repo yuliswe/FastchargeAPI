@@ -2,10 +2,21 @@ version = 0.1
 [default]
 [default.deploy]
 [default.deploy.parameters]
+stack_name = "dev-auth-service"
+resolve_s3 = true
+s3_prefix = "dev-auth-service"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Stage=\"DEV\" MainDomain=\"devfastchargeapi.com\" Route53ZoneId=\"Z07362872NENGXHWMNLU5\""
+image_repositories = []
+
+[live]
+[live.deploy]
+[live.deploy.parameters]
 stack_name = "auth-service"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ku0vhjb0ewl6"
 s3_prefix = "auth-service"
 region = "us-east-1"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Stage=\"DEV\""
+parameter_overrides = "Stage=\"DEV\" MainDomain=\"fastchargeapi.com\" Route53ZoneId=\"Z0358815GI2I8U5CTHXW\""
 image_repositories = []

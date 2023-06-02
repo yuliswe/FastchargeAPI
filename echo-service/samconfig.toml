@@ -2,10 +2,20 @@ version = 0.1
 [default]
 [default.deploy]
 [default.deploy.parameters]
-stack_name = "echo-service"
+stack_name = "dev-echo-service"
+s3_prefix = "dev-echo-service"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Stage=\"DEV\" MainDomain=\"devfastchargeapi.com\" Route53ZoneId=\"Z07362872NENGXHWMNLU5\""
+image_repositories = []
+resolve_s3 = true
+
+[live]
+[live.deploy]
+[live.deploy.parameters]
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ku0vhjb0ewl6"
 s3_prefix = "echo-service"
 region = "us-east-1"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Stage=\"DEV\""
+parameter_overrides = "Stage=\"LIVE\" MainDomain=\"fastchargeapi.com\" Route53ZoneId=\"Z0358815GI2I8U5CTHXW\""
 image_repositories = []

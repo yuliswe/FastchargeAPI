@@ -6,6 +6,10 @@ Description: >
   Sample SAM Template for gateway-service
 
 Parameters:
+  MainDomain:
+    Type: String
+  Route53ZoneId:
+    Type: String
   Stage:
     Type: String
     Default: DEV
@@ -26,23 +30,45 @@ Globals:
     TracingEnabled: true
 
 Resources:
+  # Give account permission to log to CloudWatch. Probably only need once per
+  # account.
+  ApiCWLRoleArn:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !GetAtt CloudWatchRole.Arn
+
+  # IAM Role for API Gateway + CloudWatch Logging
+  CloudWatchRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Action: "sts:AssumeRole"
+          Effect: Allow
+          Principal:
+            Service: apigateway.amazonaws.com
+      Path: /
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+
   GenerateCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain
     Type: AWS::CertificateManager::Certificate
     Properties:
-      DomainName: "*.fastchargeapi.com"
+      DomainName: !Join ["", ["*.", !Ref MainDomain]]
       ValidationMethod: DNS
       DomainValidationOptions:
-        - DomainName: "*.fastchargeapi.com"
-          HostedZoneId: Z0358815GI2I8U5CTHXW
+        - DomainName: !Join ["", ["*.", !Ref MainDomain]]
+          HostedZoneId: !Ref Route53ZoneId
 
   GatewayAPI:
     Type: AWS::Serverless::Api
     Properties:
       Domain: # Configure the domain of the API
-        DomainName: "*.fastchargeapi.com"
+        DomainName: !Join ["", ["*.", !Ref MainDomain]]
         CertificateArn: !Ref GenerateCertificate
         Route53:
-          HostedZoneId: Z0358815GI2I8U5CTHXW
+          HostedZoneId: !Ref Route53ZoneId
       StageName: !Ref Stage
       MethodSettings:
         - LoggingLevel: ERROR
@@ -55,7 +81,7 @@ Resources:
         Authorizers:
           UserAppTokenAuthorizer:
             FunctionPayloadType: REQUEST
-            FunctionArn: arn:aws:lambda:us-east-1:887279901853:function:UserAppTokenAuthorizer
+            FunctionArn: !Sub arn:aws:lambda:us-east-1:${AWS::AccountId}:function:UserAppTokenAuthorizer
             Identity:
               ReauthorizeEvery: 300
               Headers: ["X-FAST-API-KEY"]

@@ -6,12 +6,16 @@ Description: >
   Sample SAM Template for auth-service
 
 Parameters:
+  MainDomain:
+    Type: String
+  Route53ZoneId:
+    Type: String
   Stage:
     Type: String
     Default: DEV
-  GatewayHostNameV2:
+  SubDomain:
     Type: String
-    Default: "api.v2.auth.fastchargeapi.com"
+    Default: "api.v2.auth."
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -65,66 +69,24 @@ Resources:
         Variables:
           AllowAnonymousUser: "1"
 
-  CliAuthBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: cli-auth-bucket
-      CorsConfiguration:
-        CorsRules:
-          - AllowedHeaders:
-              - "*"
-            AllowedMethods:
-              - "GET"
-              - "PUT"
-              - "POST"
-              - "DELETE"
-              - "HEAD"
-            AllowedOrigins:
-              - "https://fastchargeapi.com"
-              - "http://localhost:8000"
-            MaxAge: 3000
-
-  CliAuthBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref CliAuthBucket
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal: "*"
-            Action:
-              - "s3:PutObject"
-            Resource: !Join ["", ["arn:aws:s3:::", !Ref CliAuthBucket, "/*"]]
-            Condition:
-              StringEquals:
-                "s3:x-amz-acl": "public-read-write"
-          - Effect: Allow
-            Principal: "*"
-            Action:
-              - "s3:GetObject"
-              - "s3:DeleteObject"
-            Resource: !Join ["", ["arn:aws:s3:::", !Ref CliAuthBucket, "/*"]]
-
   # V2 API Gateway
-
   GenerateCertificateV2: # Creates a valid certificate for the HTTP API endpoint under the custom domain
     Type: AWS::CertificateManager::Certificate
     Properties:
-      DomainName: !Ref GatewayHostNameV2
+      DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
       ValidationMethod: DNS
       DomainValidationOptions:
-        - DomainName: !Ref GatewayHostNameV2
-          HostedZoneId: Z0358815GI2I8U5CTHXW
+        - DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
+          HostedZoneId: !Ref Route53ZoneId
 
   APIGatewayV2:
     Type: AWS::Serverless::HttpApi
     Properties:
       Domain:
-        DomainName: !Ref GatewayHostNameV2
+        DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
         CertificateArn: !Ref GenerateCertificateV2
         Route53:
-          HostedZoneId: Z0358815GI2I8U5CTHXW
+          HostedZoneId: !Ref Route53ZoneId
       # AccessLogSettings:
       #   DestinationArn: !GetAtt APIGatewayV2AccessLogs.Arn
       #   Format: $context.requestId $context.httpMethod $context.path $context.error.responseType $context.error.messageString $context.authorizer.error $context.integrationErrorMessage
@@ -133,7 +95,7 @@ Resources:
         Authorizers:
           FirebaseTokenAuthorizer:
             AuthorizerPayloadFormatVersion: 2.0
-            FunctionArn: arn:aws:lambda:us-east-1:887279901853:function:FirebaseTokenAuthorizer
+            FunctionArn: arn:aws:lambda:us-east-1:${AWS::AccountId}:function:FirebaseTokenAuthorizer
             FunctionInvokeRole: !GetAtt APIGatewayV2Role.Arn
             Identity:
               ReauthorizeEvery: 300
@@ -145,6 +107,7 @@ Resources:
           - "http://localhost"
           - "http://localhost:8000"
           - "https://fastchargeapi.com"
+          - "https://devfastchargeapi.com"
       DisableExecuteApiEndpoint: True
 
   # APIGatewayV2AccessLogs:
@@ -175,7 +138,7 @@ Resources:
         Statement:
           - Effect: Allow
             Action: lambda:InvokeFunction
-            Resource: arn:aws:lambda:us-east-1:887279901853:function:FirebaseTokenAuthorizer
+            Resource: !Sub arn:aws:lambda:us-east-1:${AWS::AccountId}:function:FirebaseTokenAuthorizer
       Roles:
         - !Ref APIGatewayV2Role
 

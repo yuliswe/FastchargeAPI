@@ -22,5 +22,5 @@ pathadd() {
 
 pathadd "$NPM_BIN"
 
-export AWS_PROFILE=fastchargeapi
+export AWS_PROFILE=dev_fastchargeapi
 export AMPLIFY_MONOREPO_APP_ROOT="$WS_DIR/react/fastchargeapi)"

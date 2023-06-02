@@ -6,9 +6,16 @@ Description: >
   Sample SAM Template for echo-service
 
 Parameters:
+  MainDomain:
+    Type: String
+  Route53ZoneId:
+    Type: String
   Stage:
     Type: String
     Default: DEV
+  SubDomain:
+    Type: String
+    Default: "api.echo."
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -20,20 +27,20 @@ Resources:
   GenerateCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain
     Type: AWS::CertificateManager::Certificate
     Properties:
-      DomainName: "api.echo.fastchargeapi.com"
+      DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
       ValidationMethod: DNS
       DomainValidationOptions:
-        - DomainName: "api.echo.fastchargeapi.com"
-          HostedZoneId: Z0358815GI2I8U5CTHXW
+        - DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
+          HostedZoneId: !Ref Route53ZoneId
 
   EchoAPI:
     Type: AWS::Serverless::Api
     Properties:
       Domain: # Configure the domain of the API
-        DomainName: "api.echo.fastchargeapi.com"
+        DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
         CertificateArn: !Ref GenerateCertificate
         Route53:
-          HostedZoneId: Z0358815GI2I8U5CTHXW
+          HostedZoneId: !Ref Route53ZoneId
       StageName: !Ref Stage
       Auth: # Uses the UserAppTokenAuthorizer to identify the session user.
         ApiKeyRequired: false

@@ -6,12 +6,19 @@ Description: >
   Sample SAM Template for resource-service
 
 Parameters:
+  MainDomain:
+    Type: String
+  Route53ZoneId:
+    Type: String
   Stage:
     Type: String
     Default: DEV
-  GatewayHostNameV2:
-    Type: String
-    Default: "api.v2.search.fastchargeapi.com"
+  # SubDomain:
+  #   Type: String
+  #   Default: "api.graphql."
+  # GatewayHostNameV2:
+  #   Type: String
+  #   Default: "api.v2.search.fastchargeapi.com"
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -21,106 +28,107 @@ Globals:
     TracingEnabled: true
 
 Resources:
-  GenerateCertificateV2: # Creates a valid certificate for the HTTP API endpoint under the custom domain
-    Type: AWS::CertificateManager::Certificate
-    Properties:
-      DomainName: !Ref GatewayHostNameV2
-      ValidationMethod: DNS
-      DomainValidationOptions:
-        - DomainName: !Ref GatewayHostNameV2
-          HostedZoneId: Z0358815GI2I8U5CTHXW
+  # GenerateCertificateV2: # Creates a valid certificate for the HTTP API endpoint under the custom domain
+  #   Type: AWS::CertificateManager::Certificate
+  #   Properties:
+  #     DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
+  #     ValidationMethod: DNS
+  #     DomainValidationOptions:
+  #       - DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
+  #         HostedZoneId: !Ref Route53ZoneId
 
-  APIGatewayV2:
-    Type: AWS::Serverless::HttpApi
-    Properties:
-      Domain:
-        DomainName: !Ref GatewayHostNameV2
-        CertificateArn: !Ref GenerateCertificateV2
-        Route53:
-          HostedZoneId: Z0358815GI2I8U5CTHXW
-      # AccessLogSettings:
-      #   DestinationArn: !GetAtt APIGatewayV2AccessLogs.Arn
-      #   Format: $context.requestId $context.httpMethod $context.path $context.error.responseType $context.error.messageString $context.authorizer.error $context.integrationErrorMessage
-      Auth: # Uses the FirebaseTokenAuthorizer to identify the session user.
-        DefaultAuthorizer: FirebaseTokenAuthorizer
-        Authorizers:
-          FirebaseTokenAuthorizer:
-            AuthorizerPayloadFormatVersion: 2.0
-            FunctionArn: arn:aws:lambda:us-east-1:887279901853:function:FirebaseTokenAuthorizer
-            FunctionInvokeRole: !GetAtt APIGatewayV2Role.Arn
-            Identity:
-              ReauthorizeEvery: 300
-              Headers: ["Authorization"]
-      CorsConfiguration:
-        AllowMethods: ["*"]
-        AllowHeaders: ["*"]
-        AllowOrigins:
-          - "http://localhost"
-          - "http://localhost:8000"
-          - "https://fastchargeapi.com"
-      DisableExecuteApiEndpoint: True
+  # APIGatewayV2:
+  #   Type: AWS::Serverless::HttpApi
+  #   Properties:
+  #     Domain:
+  #       DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
+  #       CertificateArn: !Ref GenerateCertificateV2
+  #       Route53:
+  #         HostedZoneId: !Ref Route53ZoneId
+  #     # AccessLogSettings:
+  #     #   DestinationArn: !GetAtt APIGatewayV2AccessLogs.Arn
+  #     #   Format: $context.requestId $context.httpMethod $context.path $context.error.responseType $context.error.messageString $context.authorizer.error $context.integrationErrorMessage
+  #     Auth: # Uses the FirebaseTokenAuthorizer to identify the session user.
+  #       DefaultAuthorizer: FirebaseTokenAuthorizer
+  #       Authorizers:
+  #         FirebaseTokenAuthorizer:
+  #           AuthorizerPayloadFormatVersion: 2.0
+  #           FunctionArn: !Sub arn:aws:lambda:us-east-1:${AWS::AccountId}:function:FirebaseTokenAuthorizer
+  #           FunctionInvokeRole: !GetAtt APIGatewayV2Role.Arn
+  #           Identity:
+  #             ReauthorizeEvery: 300
+  #             Headers: ["Authorization"]
+  #     CorsConfiguration:
+  #       AllowMethods: ["*"]
+  #       AllowHeaders: ["*"]
+  #       AllowOrigins:
+  #         - "http://localhost"
+  #         - "http://localhost:8000"
+  #         - "https://fastchargeapi.com"
+  #         - "https://devfastchargeapi.com"
+  #     DisableExecuteApiEndpoint: True
 
   # APIGatewayV2AccessLogs:
   #   Type: AWS::Logs::LogGroup
 
-  APIGatewayV2Role:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Action:
-              - sts:AssumeRole
-            Effect: Allow
-            Principal:
-              Service:
-                - apigateway.amazonaws.com
-      Tags:
-        - Key: lambda:createdBy
-          Value: SAM
+  # APIGatewayV2Role:
+  #   Type: AWS::IAM::Role
+  #   Properties:
+  #     AssumeRolePolicyDocument:
+  #       Version: "2012-10-17"
+  #       Statement:
+  #         - Action:
+  #             - sts:AssumeRole
+  #           Effect: Allow
+  #           Principal:
+  #             Service:
+  #               - apigateway.amazonaws.com
+  #     Tags:
+  #       - Key: lambda:createdBy
+  #         Value: SAM
 
-  LambdaInvocationPolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyName: LambdaInvocationPolicy
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Action: lambda:InvokeFunction
-            Resource: arn:aws:lambda:us-east-1:887279901853:function:FirebaseTokenAuthorizer
-      Roles:
-        - !Ref APIGatewayV2Role
+  # LambdaInvocationPolicy:
+  #   Type: AWS::IAM::Policy
+  #   Properties:
+  #     PolicyName: LambdaInvocationPolicy
+  #     PolicyDocument:
+  #       Version: "2012-10-17"
+  #       Statement:
+  #         - Effect: Allow
+  #           Action: lambda:InvokeFunction
+  #           Resource: !Sub arn:aws:lambda:us-east-1:${AWS::AccountId}:function:FirebaseTokenAuthorizer
+  #     Roles:
+  #       - !Ref APIGatewayV2Role
 
-  AppFullTextSearch:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-    Properties:
-      CodeUri: ./
-      Handler: AppFullTextSearch.lambdaHandler
-      Runtime: nodejs18.x
-      Architectures:
-        - arm64 # if you are using Apple M1
-      MemorySize: 512
-      Timeout: 10
-      Policies:
-        - AWSLambdaRole
-        - AmazonDynamoDBReadOnlyAccess # For looking up user's stripe id
-        - AmazonSESFullAccess # For ending email to user
-      Events:
-        GET:
-          Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            Auth:
-              Authorizer: NONE
-            ApiId: !Ref APIGatewayV2
-            Path: /apps
-            Method: get
-    Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        Target: "es2022"
-        EntryPoints:
-          - handlers/AppFullTextSearch.ts
+  # AppFullTextSearch:
+  #   Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+  #   Properties:
+  #     CodeUri: ./
+  #     Handler: AppFullTextSearch.lambdaHandler
+  #     Runtime: nodejs18.x
+  #     Architectures:
+  #       - arm64 # if you are using Apple M1
+  #     MemorySize: 512
+  #     Timeout: 10
+  #     Policies:
+  #       - AWSLambdaRole
+  #       - AmazonDynamoDBReadOnlyAccess # For looking up user's stripe id
+  #       - AmazonSESFullAccess # For ending email to user
+  #     Events:
+  #       GET:
+  #         Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+  #         Properties:
+  #           Auth:
+  #             Authorizer: NONE
+  #           ApiId: !Ref APIGatewayV2
+  #           Path: /apps
+  #           Method: get
+  #   Metadata: # Manage esbuild properties
+  #     BuildMethod: esbuild
+  #     BuildProperties:
+  #       Target: "es2022"
+  #       EntryPoints:
+  #         - handlers/AppFullTextSearch.ts
 
   # AuroraDBClusterSubnetGroup:
   #   Type: "AWS::RDS::DBSubnetGroup"

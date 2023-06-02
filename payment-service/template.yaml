@@ -6,15 +6,16 @@ Description: >
   Sample SAM Template for resource-service
 
 Parameters:
+  MainDomain:
+    Type: String
+  Route53ZoneId:
+    Type: String
   Stage:
     Type: String
     Default: DEV
-  GatewayHostName:
+  SubDomain:
     Type: String
-    Default: "api.payment.fastchargeapi.com"
-  GatewayHostNameV2:
-    Type: String
-    Default: "api.v2.payment.fastchargeapi.com"
+    Default: "api.v2.payment."
 
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -27,17 +28,17 @@ Resources:
   GenerateCertificateV2: # Creates a valid certificate for the HTTP API endpoint under the custom domain
     Type: AWS::CertificateManager::Certificate
     Properties:
-      DomainName: !Ref GatewayHostNameV2
+      DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
       ValidationMethod: DNS
       DomainValidationOptions:
-        - DomainName: !Ref GatewayHostNameV2
+        - DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
           HostedZoneId: Z0358815GI2I8U5CTHXW
 
   APIGatewayV2:
     Type: AWS::Serverless::HttpApi
     Properties:
       Domain:
-        DomainName: !Ref GatewayHostNameV2
+        DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
         CertificateArn: !Ref GenerateCertificateV2
         Route53:
           HostedZoneId: Z0358815GI2I8U5CTHXW
@@ -49,7 +50,7 @@ Resources:
         Authorizers:
           FirebaseTokenAuthorizer:
             AuthorizerPayloadFormatVersion: 2.0
-            FunctionArn: arn:aws:lambda:us-east-1:887279901853:function:FirebaseTokenAuthorizer
+            FunctionArn: arn:aws:lambda:us-east-1:${AWS::AccountId}:function:FirebaseTokenAuthorizer
             FunctionInvokeRole: !GetAtt APIGatewayV2Role.Arn
             Identity:
               ReauthorizeEvery: 300
@@ -91,7 +92,7 @@ Resources:
         Statement:
           - Effect: Allow
             Action: lambda:InvokeFunction
-            Resource: arn:aws:lambda:us-east-1:887279901853:function:FirebaseTokenAuthorizer
+            Resource: !Sub arn:aws:lambda:us-east-1:${AWS::AccountId}:function:FirebaseTokenAuthorizer
       Roles:
         - !Ref APIGatewayV2Role
 
