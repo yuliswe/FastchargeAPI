@@ -1,13 +1,13 @@
+import { getParameterFromAWSSystemsManager } from "graphql-service";
 import { Stripe } from "stripe";
 import { LambdaEventV2 } from "./LambdaContext";
-import { getParameterFromAWSSystemsManager } from "graphql-service";
 
 let stripeClient: Stripe | null = null;
 export async function getStripeClient() {
     if (stripeClient) {
         return stripeClient;
     }
-    const stripeSecretKey = await getParameterFromAWSSystemsManager("payment.stripe_secret_key");
+    const stripeSecretKey = await getParameterFromAWSSystemsManager("payment.stripe.secret_key");
     if (!stripeSecretKey) {
         throw new Error("Missing Stripe secret key");
     }
@@ -30,7 +30,7 @@ export async function parseStripeWebhookEvent(lambdaEvent: LambdaEventV2): Promi
         throw new Error("Missing body");
     }
 
-    let stripeEndpointSecret = await getParameterFromAWSSystemsManager("payment.stripe_endpoint_secret");
+    let stripeEndpointSecret = await getParameterFromAWSSystemsManager("payment.stripe.endpoint_secret");
     if (!stripeEndpointSecret) {
         throw new Error("Missing Stripe endpoint secret");
     }
