@@ -33,8 +33,8 @@ Resources:
         - DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
           HostedZoneId: !Ref Route53ZoneId
 
-  EchoAPI:
-    Type: AWS::Serverless::Api
+  APIGatewayV2:
+    Type: AWS::Serverless::HttpApi
     Properties:
       Domain: # Configure the domain of the API
         DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
@@ -42,9 +42,7 @@ Resources:
         Route53:
           HostedZoneId: !Ref Route53ZoneId
       StageName: !Ref Stage
-      Auth: # Uses the UserAppTokenAuthorizer to identify the session user.
-        ApiKeyRequired: false
-        DefaultAuthorizer: NONE
+      DisableExecuteApiEndpoint: True
 
   EchoGo:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
@@ -58,26 +56,14 @@ Resources:
         - arm64
       Events:
         AnyRoot:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Path: /
             Method: ANY
-            RestApiId: !Ref EchoAPI
+            ApiId: !Ref APIGatewayV2
         Any:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Path: /{proxy+}
             Method: ANY
-            RestApiId: !Ref EchoAPI
-
-Outputs:
-  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  EchoAPI:
-    Description: "API Echo endpoint URL for Prod environment for First Function"
-    Value: !Sub "https://${EchoAPI}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
-  EchoGo:
-    Description: "First Lambda Function ARN"
-    Value: !GetAtt EchoGo.Arn
-  EchoGoIamRole:
-    Description: "Implicit IAM Role created for Hello World function"
-    Value: !GetAtt EchoGoRole.Arn
+            ApiId: !Ref APIGatewayV2

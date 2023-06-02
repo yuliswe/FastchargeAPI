@@ -20,7 +20,7 @@ aws authorizer. The role of this function is upon receiving a request:
  2. Send a request to the resource server to bill the usage (concurrently).
  3. Respond a redirect to the client with the destination url.
 */
-func lambdaHandler(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
+func lambdaHandler(request events.APIGatewayV2HTTPRequest) (*events.APIGatewayV2HTTPResponse, error) {
 	if response, err := handle(request); err == nil {
 		return response, nil
 	} else {
@@ -30,12 +30,12 @@ func lambdaHandler(request events.APIGatewayProxyRequest) (*events.APIGatewayPro
 }
 
 type EchoResponse = struct {
-	Body        string              `json:"body"`
-	Headers     map[string][]string `json:"headers"`
-	QueryParams map[string][]string `json:"queryParams"`
+	Body        string            `json:"body"`
+	Headers     map[string]string `json:"headers"`
+	QueryParams map[string]string `json:"queryParams"`
 }
 
-func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyResponse, error) {
+func handle(request events.APIGatewayV2HTTPRequest) (*events.APIGatewayV2HTTPResponse, error) {
 	// body := string[]string
 	// json.Unmarshal([]byte(request.Body), &body)
 	var bytes []byte
@@ -45,25 +45,25 @@ func handle(request events.APIGatewayProxyRequest) (*events.APIGatewayProxyRespo
 	} else {
 		bytes, err = json.Marshal(EchoResponse{
 			Body:        request.Body,
-			Headers:     request.MultiValueHeaders,
-			QueryParams: request.MultiValueQueryStringParameters,
+			Headers:     request.Headers,
+			QueryParams: request.QueryStringParameters,
 		})
 	}
 	if err != nil {
 		return nil, err
 	}
-	return &events.APIGatewayProxyResponse{
+	return &events.APIGatewayV2HTTPResponse{
 		StatusCode: 200,
 		Body:       string(bytes),
 	}, nil
 }
 
-func apiGatewayErrorResponse(code int, reason string, message string) *events.APIGatewayProxyResponse {
+func apiGatewayErrorResponse(code int, reason string, message string) *events.APIGatewayV2HTTPResponse {
 	body, _ := json.Marshal(map[string]string{
 		"reason":  reason,
 		"message": message,
 	})
-	resp := events.APIGatewayProxyResponse{
+	resp := events.APIGatewayV2HTTPResponse{
 		StatusCode: code,
 		Body:       string(body),
 	}
