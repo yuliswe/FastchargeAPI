@@ -72,7 +72,7 @@ export function getIsServiceRequest(domain: string, headers: { [header: string]:
     // can access it. Therefore we can trust the X-Service-Name header. For
     // example, when the gateway service sends a graphql request, it
     // must include the X-Service-Name header.
-    if (domain === "api.iam.graphql.fastchargeapi.com") {
+    if (domain.startsWith("api.iam.")) {
         let valid: RequestService[] = ["payment", "gateway", "internal"];
         if (!valid.includes(serviceName)) {
             console.error(chalk.red("X-Service-Name header is missing."));

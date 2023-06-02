@@ -1,2 +1,6 @@
 #!/bin/bash
-aws rds-data execute-statement --resource-arn arn:aws:rds:us-east-1:887279901853:cluster:fastcharge-search-cluster --secret-arn arn:aws:secretsmanager:us-east-1:887279901853:secret:AuroraDBSecret-ie6utwL7NgUH-7TUv3G --sql "$1"
+if [ "$DEV_DOMAIN" == "1" ]; then
+    aws rds-data execute-statement --resource-arn arn:aws:rds:us-east-1:209991057786:cluster:fastcharge-search-cluster --secret-arn arn:aws:secretsmanager:us-east-1:209991057786:secret:AuroraDBSecret-yDL7gy9eiEwz-d5N6NI --sql "$1"
+else
+    aws rds-data execute-statement --resource-arn arn:aws:rds:us-east-1:887279901853:cluster:fastcharge-search-cluster --secret-arn arn:aws:secretsmanager:us-east-1:887279901853:secret:AuroraDBSecret-ie6utwL7NgUH-7TUv3G --sql "$1"
+fi
