@@ -1,9 +1,8 @@
-import { RequestContext } from "../RequestContext";
-import { PRIVATE_KEY_PARAM_NAME } from "../resolvers/constants";
-import { getParameterFromAWSSystemsManager } from "./aws";
-import { v4 as uuidv4 } from "uuid";
 import jwt from "jsonwebtoken";
+import { v4 as uuidv4 } from "uuid";
+import { RequestContext } from "../RequestContext";
 import { UserAppToken } from "../dynamoose/models";
+import { getParameterFromAWSSystemsManager } from "./aws";
 
 export async function createUserAppToken(
     context: RequestContext,
@@ -43,7 +42,7 @@ async function makeAppTokenForUser(
         app: string;
     }
 ): Promise<{ token: string; signature: string }> {
-    const privateKey = await getParameterFromAWSSystemsManager(PRIVATE_KEY_PARAM_NAME);
+    const privateKey = await getParameterFromAWSSystemsManager("auth.user_app_token.private_key");
     if (!privateKey) {
         throw new Error("Failed to get private key from AWS Systems Manager");
     }
