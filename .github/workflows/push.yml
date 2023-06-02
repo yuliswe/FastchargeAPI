@@ -3,9 +3,9 @@ on:
   push:
     branches-ignore:
       - "releases/**"
-      - "deploy/no-test/**"
-      - "deploy/amplify"
-      - "deploy/docs"
+      - "deploy/dev/no-test/**"
+      - "deploy/dev/amplify"
+      - "deploy/dev/docs"
 
 permissions:
   id-token: write
