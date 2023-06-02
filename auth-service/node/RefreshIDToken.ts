@@ -32,7 +32,7 @@ async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredRe
             body: "Required in body: { refreshToken: string }",
         };
     }
-    const API_KEY = await getParameterFromAWSSystemsManager("fastcharge.auth.google_api_key.for_refresh_token");
+    const API_KEY = await getParameterFromAWSSystemsManager("auth.google_api_key.for_refresh_token");
     let response = await fetch(`https://securetoken.googleapis.com/v1/token?key=${API_KEY}`, {
         method: "POST",
         body: JSON.stringify({
