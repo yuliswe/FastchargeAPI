@@ -12,6 +12,7 @@ from .context_obj import ContextObject
 from .graphql_client import get_client_info
 from .groups import fastcharge
 from .http import HttpClient
+from .config import base_domain
 
 terminal = Terminal()
 
@@ -133,7 +134,7 @@ def fastcharge_account_withdraw(ctx_obj: ContextObject, amount: str, yes: bool):
         )
         echo("Note that it may take up to 1 business day for the funds to arrive.")
         echo("Login to the account dashboard to view your payout status:")
-        echo(terminal.blue + " https://fastchargeapi.com/account" + terminal.normal)
+        echo(terminal.blue + f" https://{base_domain}/account/" + terminal.normal)
 
 
 @fastcharge_account.command("topup")

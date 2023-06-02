@@ -4,6 +4,7 @@ from click import echo
 from click_aliases import ClickAliasedGroup
 
 from .__generated__ import gql_operations as GQL
+from .config import base_domain
 from .context_obj import ContextObject
 from .fastcharge_app import get_app_or_prompt_exit
 from .graphql_client import get_client_info
@@ -31,7 +32,7 @@ def fastapi_api_list(ctx_obj: ContextObject, app_name: str):
     # echo(f"\n Gateway mode: {app['gatewayMode']}\n")
     if app.endpoints:
         for endpoint in app.endpoints:
-            url = f"https://{app.name}.fastchargeapi.com{endpoint.path}"
+            url = f"https://{app.name}.{base_domain}{endpoint.path}"
             echo(" ID:\t\t" + endpoint.pk)
             echo(" HTTP Method:\t" + endpoint.method)
             echo(" Endpoint:\t" + url)

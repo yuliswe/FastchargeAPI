@@ -3,14 +3,15 @@ from json import dumps as json_dumps
 from typing import Optional
 
 import boto3
+from fastchargeapi_cli.config import aws_account_id
 from gql import Client
 from gql.transport.requests import RequestsHTTPTransport
 from requests import Response
 
 
 class PredefinedSQSQueue(Enum):
-    billing_fifo_queue = "https://sqs.us-east-1.amazonaws.com/887279901853/graphql-service-billing-queue.fifo"
-    usage_log_queue = "https://sqs.us-east-1.amazonaws.com/887279901853/graphql-service-usage-log-queue"
+    billing_fifo_queue = f"https://sqs.us-east-1.amazonaws.com/{aws_account_id}/graphql-service-billing-queue.fifo"
+    usage_log_queue = f"https://sqs.us-east-1.amazonaws.com/{aws_account_id}/graphql-service-usage-log-queue"
 
 
 class SQSHttpTransport(RequestsHTTPTransport):

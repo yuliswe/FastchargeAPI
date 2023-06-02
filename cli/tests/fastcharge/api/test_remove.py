@@ -34,7 +34,7 @@ class TestFastchargeAPIRemove:
             app=self.test_app.name,
             path="/echo",
             method=GQL.HTTPMethod.POST,
-            destination="https://example.fastchargeapi.com",
+            destination="https://example.devfastchargeapi.com",
             description="Echo API",
         )
 

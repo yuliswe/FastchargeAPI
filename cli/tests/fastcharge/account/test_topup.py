@@ -2,6 +2,7 @@ import re
 from uuid import uuid4
 
 from click.testing import CliRunner
+from fastchargeapi_cli.config import base_domain
 from fastchargeapi_cli.main import fastcharge
 from tests.utils import create_test_user, login_as_user, logout_user
 
@@ -34,7 +35,7 @@ class TestFastchargeAccountTopup:
         assert result.exit_code == 0, result.stdout
         assert "Please complete payment in browser:" in result.stdout
         match_result = re.search(
-            r"^\s+https://fastchargeapi\.com/topup\?amount=(\d+)&jwe=(\w+)&jwt=(\w+)&key=(\w+)",
+            rf"^\s+https://{base_domain}/topup\?amount=(\d+)&jwe=(\w+)&jwt=(\w+)&key=(\w+)",
             result.stdout,
             re.MULTILINE,
         )

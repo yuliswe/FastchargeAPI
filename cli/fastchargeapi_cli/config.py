@@ -1,9 +1,17 @@
 import os
 
-graphql_host = "https://api.graphql.fastchargeapi.com"
-payment_service_host = "https://api.v2.payment.fastchargeapi.com"
-auth_service_host = "https://api.v2.auth.fastchargeapi.com"
-react_host = "https://fastchargeapi.com"
+base_domain = (
+    "devfastchargeapi.com"
+    if os.environ.get("DEV_DOMAIN") == "1"
+    else "fastchargeapi.com"
+)
+aws_account_id = (
+    "209991057786" if os.environ.get("DEV_DOMAIN") == "1" else "887279901853"
+)
+graphql_host = f"https://api.graphql.{base_domain}"
+payment_service_host = f"https://api.v2.payment.{base_domain}"
+auth_service_host = f"https://api.v2.auth.{base_domain}"
+react_host = f"https://{base_domain}"
 
 if os.environ.get("TEST") == "1":
     graphql_host = "http://localhost:4001"

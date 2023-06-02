@@ -41,10 +41,10 @@ def delete_auth_file(profile: Optional[str]) -> None:
 @dataclass
 class AuthFileContent:
     id_token: str
-    refresh_token: Union[Literal["firebase"], Literal["fastchargeapi"]]
+    refresh_token: str
     user_pk: str
     email: str
-    issuer: str
+    issuer: Union[Literal["firebase"], Literal["fastchargeapi"]]
 
 
 def write_to_auth_file(

@@ -34,7 +34,7 @@ class TestFastchargeAPIAdd:
             app=self.test_app.name,
             path="/echo",
             method=GQL.HTTPMethod.POST,
-            destination="https://example.fastchargeapi.com",
+            destination="https://example.devfastchargeapi.com",
             description="Echo API",
         )
 
@@ -50,7 +50,7 @@ class TestFastchargeAPIAdd:
                 "--path",
                 "/echo",
                 "--destination",
-                "https://example.fastchargeapi.com",
+                "https://example.devfastchargeapi.com",
                 "--description",
                 "Echo API",
             ],
@@ -58,6 +58,6 @@ class TestFastchargeAPIAdd:
         )
         assert result.exit_code == 0, result.stdout
         assert (
-            "Successfully created an API endpoint '/echo' ~> 'https://example.fastchargeapi.com'"
+            "Successfully created an API endpoint '/echo' ~> 'https://example.devfastchargeapi.com'"
             in result.stdout
         )

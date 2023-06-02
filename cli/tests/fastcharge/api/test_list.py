@@ -36,7 +36,7 @@ class TestFastchargeAPIList:
             path=path,
             app=self.test_app.name,
             method=GQL.HTTPMethod.POST,
-            destination="https://example.fastchargeapi.com",
+            destination="https://example.devfastchargeapi.com",
             description=f"Echo API from {path}",
         )
 
@@ -66,10 +66,10 @@ class TestFastchargeAPIList:
         )
         assert endpoint is not None, "Should show Endpoint."
         assert (
-            endpoint.group(1) == f"https://{self.test_app.name}.fastchargeapi.com/echo1"
+            endpoint.group(1) == f"https://{self.test_app.name}.devfastchargeapi.com/echo1"
         ), "Should show correct endpoint."
         assert (
-            endpoint.group(2) == "https://example.fastchargeapi.com"
+            endpoint.group(2) == "https://example.devfastchargeapi.com"
         ), "Should show correct destination."
 
         assert "Echo API from /echo1" in result.output, "Should show description."

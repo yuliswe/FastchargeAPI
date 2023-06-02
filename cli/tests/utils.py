@@ -29,8 +29,7 @@ def get_admin_gqlclient() -> GQLClient:
     auth = AuthFileContent(
         **json.loads(
             get_from_system_parameter_store("cli.testing.admin_user_credentials")
-        ),
-        issuer="fastchargeapi",
+        )
     )
     result = refresh_id_token(auth.refresh_token)
     return GQLClient(
