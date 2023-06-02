@@ -7,17 +7,21 @@ import { v4 as uuidv4 } from "uuid";
 import { AppContext } from "./AppContext";
 
 // debug
-const DEBUG_USE_LOCAL_GRAPHQL = process.env.REACT_APP_LOCAL_GRAPHQL === "1";
+const ENV_LOCAL_GRAPHQL = process.env.REACT_APP_LOCAL_GRAPHQL === "1";
+const ENV_DEV_DOMAIN = process.env.REACT_APP_DEV_DOMAIN === "1";
+const baseDomain = ENV_DEV_DOMAIN ? "devfastchargeapi.com" : "fastchargeapi.com";
+const graphqlURL = ENV_LOCAL_GRAPHQL ? "http://localhost:4000" : `https://api.graphql.${baseDomain}`;
+
+if (ENV_DEV_DOMAIN) {
+    console.warn("Using dev domain:", baseDomain);
+}
+
+if (ENV_LOCAL_GRAPHQL) {
+    console.warn("Using local graphql server:", graphqlURL);
+}
 
 const sqsClient = new SQSClient({ region: "us-east-1" });
 const cache = new InMemoryCache();
-
-let graphql_url = "https://api.graphql.fastchargeapi.com";
-
-if (DEBUG_USE_LOCAL_GRAPHQL) {
-    graphql_url = "http://localhost:4000";
-    console.warn("Using local graphql server", graphql_url);
-}
 
 /**
  * Connects to the graphql server specified by uri.
@@ -28,7 +32,7 @@ export async function getGQLClient(
     context: AppContext
 ): Promise<{ client: ApolloClient<unknown>; currentUser?: string }> {
     const httpLink = createHttpLink({
-        uri: graphql_url,
+        uri: graphqlURL,
     });
 
     let user = await context.firebase.userPromise;
@@ -42,7 +46,7 @@ export async function getGQLClient(
             headers: {
                 ...headers,
                 authorization: idToken,
-                "x-user-email": DEBUG_USE_LOCAL_GRAPHQL ? user?.email ?? undefined : undefined,
+                "x-user-email": ENV_LOCAL_GRAPHQL ? user?.email ?? undefined : undefined,
             },
         };
     });
