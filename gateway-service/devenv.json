@@ -2,6 +2,7 @@
     "GatewayFunction": {
         "TRUST_X_USER_EMAIL_HEADER": "0",
         "TRUST_X_USER_PK_HEADER": "1",
-        "LOCAL_GRAPHQL": "1"
+        "LOCAL_GRAPHQL": "1",
+        "DEV_DOMAIN": "1"
     }
 }

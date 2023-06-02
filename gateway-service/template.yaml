@@ -146,6 +146,7 @@ Resources:
           TRUST_X_USER_EMAIL_HEADER: "" # Set to 1 to bypass authentication
           TRUST_X_USER_PK_HEADER: "" # Set to 1 to bypass authentication
           LOCAL_GRAPHQL: "" # Set to 1 to use http://host.docker.internal:4000 as the graphql server
+          DEV_DOMAIN: "" # Set to 1 to use https://devfastchargeapi.com
 
 Outputs:
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api

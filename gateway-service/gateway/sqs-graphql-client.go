@@ -23,8 +23,8 @@ type SQSTransport struct {
 }
 
 const (
-	BillingFifoQueueUrl = "https://sqs.us-east-1.amazonaws.com/887279901853/graphql-service-billing-queue.fifo"
-	UsageLogQueueUrl    = "https://sqs.us-east-1.amazonaws.com/887279901853/graphql-service-usage-log-queue"
+	BillingFifoQueue = "graphql-service-billing-queue.fifo"
+	UsageLogQueue    = "graphql-service-usage-log-queue"
 )
 
 func (self *SQSTransport) RoundTrip(req *http.Request) (*http.Response, error) {
@@ -66,7 +66,7 @@ func (self *SQSTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 type SQSGraphQLClientConfig struct {
 	MessageDeduplicationId string
 	MessageGroupId         string
-	QueueUrl               string
+	QueueName              string
 }
 
 // Returns a GraphQL client that uses SQS as a transport layer.
@@ -85,9 +85,10 @@ func getSQSGraphQLClient(config SQSGraphQLClientConfig) *graphql.Client {
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region: aws.String("us-east-1"),
 	}))
-	if config.QueueUrl == BillingFifoQueueUrl {
+	if config.QueueName == BillingFifoQueue {
 		config.MessageGroupId = "main"
 	}
+	runtimeConfig := getRuntimeConfig()
 	baseClient := http.Client{
 		Transport: &SQSTransport{
 			Headers: map[string]string{
@@ -96,7 +97,7 @@ func getSQSGraphQLClient(config SQSGraphQLClientConfig) *graphql.Client {
 			SQSService:             sqs.New(sess),
 			MessageDeduplicationId: config.MessageDeduplicationId,
 			MessageGroupId:         config.MessageGroupId,
-			QueueUrl:               config.QueueUrl,
+			QueueUrl:               fmt.Sprintf("https://sqs.us-east-1.amazonaws.com/%s/%s", runtimeConfig.awsAccountId, config.QueueName),
 		},
 	}
 	client := graphql.NewClient("", &baseClient)

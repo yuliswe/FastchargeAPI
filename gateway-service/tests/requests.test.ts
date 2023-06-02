@@ -194,6 +194,7 @@ describe("Test request header passthrough", () => {
             body: JSON.stringify({ a: 1, b: 2 }),
             timeout: 10_000,
         });
+        console.log(resp.status, resp.statusText, await resp.text());
         expect(resp.status).toEqual(200);
         const echo: EchoEndpointResponse = await resp.json();
         const body = JSON.parse(echo.body!);
@@ -214,6 +215,7 @@ describe("Test request header passthrough", () => {
             },
             timeout: 10_000,
         });
+        console.log(resp.status, resp.statusText, await resp.text());
         expect(resp.status).toEqual(200);
         const echo: EchoEndpointResponse = await resp.json();
         expect(echo.queryParams).toStrictEqual({ a: ["1", "2"], b: ["3"], c: [""] });
@@ -317,6 +319,7 @@ type CreateUserAndSubscribeToExampleAppResult = {
     testUser: User;
     token: string;
 };
+// TODO: Create example app here on the fly
 async function createUserAndSubscribeToExampleApp(context: RequestContext) {
     const testUserEmail = `testuser_${uuidv4()}@gmail_mock.com`;
     let testUser = await getOrCreateTestUser(context, { email: testUserEmail });

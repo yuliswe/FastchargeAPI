@@ -437,7 +437,7 @@ func billUsage(graphqlClient *graphql.Client, user string, app string, path stri
 		billingGQLClient = getSQSGraphQLClient(SQSGraphQLClientConfig{
 			MessageDeduplicationId: fmt.Sprintf("trigger-billing-%s-%d", user, time.Now().Unix()),
 			MessageGroupId:         "main",
-			QueueUrl:               BillingFifoQueueUrl,
+			QueueName:              BillingFifoQueue,
 		})
 	}
 	if _, err := GQL.TriggerBilling(

@@ -35,6 +35,9 @@ func getGraphQLClient(additionalHeaders map[string]string) *graphql.Client {
 	if os.Getenv("LOCAL_GRAPHQL") == "1" {
 		graphqlService = "http://host.docker.internal:4000"
 		fmt.Println(color.Red, "Connecting to", graphqlService, color.Reset)
+	} else if os.Getenv("DEV_DOMAIN") == "1" {
+		graphqlService = "https://api.iam.graphql.devfastchargeapi.com"
+		fmt.Println(color.Green, "Connecting to", graphqlService, color.Reset)
 	} else {
 		graphqlService = "https://api.iam.graphql.fastchargeapi.com"
 		fmt.Println(color.Green, "Connecting to", graphqlService, color.Reset)
