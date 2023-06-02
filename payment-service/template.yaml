@@ -32,7 +32,7 @@ Resources:
       ValidationMethod: DNS
       DomainValidationOptions:
         - DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
-          HostedZoneId: Z0358815GI2I8U5CTHXW
+          HostedZoneId: !Ref Route53ZoneId
 
   APIGatewayV2:
     Type: AWS::Serverless::HttpApi
@@ -41,7 +41,7 @@ Resources:
         DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
         CertificateArn: !Ref GenerateCertificateV2
         Route53:
-          HostedZoneId: Z0358815GI2I8U5CTHXW
+          HostedZoneId: !Ref Route53ZoneId
       # AccessLogSettings:
       #   DestinationArn: !GetAtt APIGatewayV2AccessLogs.Arn
       #   Format: $context.requestId $context.httpMethod $context.path $context.error.responseType $context.error.messageString $context.authorizer.error $context.integrationErrorMessage
@@ -61,6 +61,7 @@ Resources:
         AllowOrigins:
           - "http://localhost"
           - "http://localhost:8000"
+          - "https://devfastchargeapi.com"
           - "https://fastchargeapi.com"
       DisableExecuteApiEndpoint: True
 
