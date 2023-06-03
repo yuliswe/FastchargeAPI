@@ -135,6 +135,7 @@ Resources:
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
+        UseNpmCi: True
         Target: "es2022"
         EntryPoints:
           - cron-jobs/ExecuteDailyStripeTransfer.ts
@@ -164,6 +165,7 @@ Resources:
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
+        UseNpmCi: True
         Target: "es2022"
         EntryPoints:
           - handlers/SendStripeDashboardLink.ts
@@ -192,6 +194,7 @@ Resources:
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
+        UseNpmCi: True
         Target: "es2022"
         EntryPoints:
           - handlers/GetStripeOnBoardLink.ts
@@ -223,6 +226,7 @@ Resources:
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
+        UseNpmCi: True
         Target: "es2022"
         EntryPoints:
           - handlers/AcceptStripePayment.ts
@@ -252,6 +256,7 @@ Resources:
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
+        UseNpmCi: True
         Target: "es2022"
         EntryPoints:
           - handlers/GetStripeCheckoutLink.ts
@@ -281,6 +286,7 @@ Resources:
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
+        UseNpmCi: True
         Target: "es2022"
         EntryPoints:
           - handlers/CreateStripeTransfer.ts
@@ -311,6 +317,7 @@ Resources:
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
+        UseNpmCi: True
         Target: "es2022"
         EntryPoints:
           - handlers/FinishStripeOnboard.ts

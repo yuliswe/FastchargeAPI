@@ -33,6 +33,25 @@ Globals:
         DEV_DOMAIN: !Ref EnvDevDomain
     Tags:
       service-name: graphql-service
+  Api:
+    TracingEnabled: True
+    MethodSettings:
+      - LoggingLevel: INFO
+        MetricsEnabled: True
+        ResourcePath: "/*" # allows for logging on any resource
+        HttpMethod: "*" # allows for logging on any method
+    Cors:
+      AllowMethods: "'*'"
+      AllowHeaders: "'*'"
+      AllowOrigin: "'*'"
+    GatewayResponses:
+      UNAUTHORIZED: # This is hacky but right now the only way to handle an OPTION request without failing
+        StatusCode: 200
+        ResponseParameters:
+          Headers:
+            Access-Control-Allow-Methods: "'*'"
+            Access-Control-Allow-Headers: "'*'"
+            Access-Control-Allow-Origin: "'*'"
 
 Resources:
   NestedStack:
@@ -135,11 +154,6 @@ Resources:
         Route53:
           HostedZoneId: !Ref Route53ZoneId
       StageName: !Ref Stage
-      MethodSettings:
-        - LoggingLevel: INFO
-          MetricsEnabled: True
-          ResourcePath: "/*" # allows for logging on any resource
-          HttpMethod: "*" # allows for logging on any method
       Auth:
         DefaultAuthorizer: AWS_IAM
 
@@ -162,6 +176,7 @@ Resources:
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
+        UseNpmCi: True
         Target: "es2022"
         EntryPoints:
           - lambdaHandler.ts
@@ -184,11 +199,6 @@ Resources:
         Route53:
           HostedZoneId: !Ref Route53ZoneId
       StageName: !Ref Stage
-      MethodSettings:
-        - LoggingLevel: INFO
-          MetricsEnabled: True
-          ResourcePath: "/*" # allows for logging on any resource
-          HttpMethod: "*" # allows for logging on any method
       Auth: # Uses the FirebaseTokenAuthorizerAllowingAnonymousUser to identify the session user.
         ApiKeyRequired: false
         DefaultAuthorizer: FirebaseTokenAuthorizerAllowingAnonymousUser
@@ -199,18 +209,6 @@ Resources:
             Identity:
               ReauthorizeEvery: 300
               Headers: ["Authorization"]
-      Cors:
-        AllowMethods: "'*'"
-        AllowHeaders: "'*'"
-        AllowOrigin: "'*'"
-      GatewayResponses:
-        UNAUTHORIZED: # This is hacky but right now the only way to handle an OPTION request without failing
-          StatusCode: 200
-          ResponseParameters:
-            Headers:
-              Access-Control-Allow-Methods: "'*'"
-              Access-Control-Allow-Headers: "'*'"
-              Access-Control-Allow-Origin: "'*'"
       Tags:
         service-name: graphql-service
 
@@ -245,6 +243,7 @@ Resources:
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
+        UseNpmCi: True
         Target: "es2022"
         EntryPoints:
           - lambdaHandler.ts
@@ -278,6 +277,7 @@ Resources:
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
+        UseNpmCi: True
         Target: "es2022"
         EntryPoints:
           - sqsHandler.ts
@@ -344,6 +344,7 @@ Resources:
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
+        UseNpmCi: True
         Target: "es2022"
         EntryPoints:
           - settleAccountActivities.ts

@@ -1,18 +1,21 @@
 version = 0.1
 [default.deploy.parameters]
 stack_name = "dev-search-service"
-resolve_s3 = true
 s3_prefix = "dev-search-service"
 region = "us-east-1"
 capabilities = "CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM"
 parameter_overrides = "Stage=\"DEV\" MainDomain=\"devfastchargeapi.com\" Route53ZoneId=\"Z07362872NENGXHWMNLU5\" EnvDevDomain=\"1\""
+resolve_s3 = true
 image_repositories = []
+no_fail_on_empty_changeset =  true
 
 [live.deploy.parameters]
-stack_name = "search-service"
-resolve_s3 = true
-s3_prefix = "search-service"
+profile = "live_fastchargeapi"
+stack_name = "live-search-service"
+s3_prefix = "live-search-service"
 region = "us-east-1"
 capabilities = "CAPABILITY_AUTO_EXPAND CAPABILITY_NAMED_IAM CAPABILITY_IAM"
 parameter_overrides = "Stage=\"DEV\" MainDomain=\"fastchargeapi.com\" Route53ZoneId=\"Z0358815GI2I8U5CTHXW\""
+resolve_s3 = true
 image_repositories = []
+no_fail_on_empty_changeset =  true

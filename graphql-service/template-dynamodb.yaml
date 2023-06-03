@@ -1,11 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 
-Parameters:
-  TablePrefix:
-    Type: String
-    Default: dev__
-
 Resources:
   AccountActivityTable:
     Type: "AWS::DynamoDB::Table"
@@ -20,7 +15,10 @@ Resources:
         - AttributeName: "user"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "AccountActivity"]]
+      TableName: "AccountActivity"
+      DeletionProtectionEnabled: True
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: True
       KeySchema:
         - AttributeName: "user"
           KeyType: "HASH"
@@ -45,7 +43,10 @@ Resources:
         - AttributeName: "createdAt"
           AttributeType: "N"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "Endpoint"]]
+      TableName: "Endpoint"
+      DeletionProtectionEnabled: True
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: True
       KeySchema:
         - AttributeName: "app"
           KeyType: "HASH"
@@ -61,7 +62,10 @@ Resources:
         - AttributeName: "user"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "AccountHistory"]]
+      TableName: "AccountHistory"
+      DeletionProtectionEnabled: True
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: True
       KeySchema:
         - AttributeName: "user"
           KeyType: "HASH"
@@ -77,7 +81,10 @@ Resources:
         - AttributeName: "subscriber"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "FreeQuotaUsage"]]
+      TableName: "FreeQuotaUsage"
+      DeletionProtectionEnabled: True
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: True
       KeySchema:
         - AttributeName: "subscriber"
           KeyType: "HASH"
@@ -93,7 +100,10 @@ Resources:
         - AttributeName: "requester"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "GatewayRequestCounter"]]
+      TableName: "GatewayRequestCounter"
+      DeletionProtectionEnabled: True
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: True
       KeySchema:
         - AttributeName: "requester"
           KeyType: "HASH"
@@ -109,7 +119,10 @@ Resources:
         - AttributeName: "owner"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "App"]]
+      TableName: "App"
+      DeletionProtectionEnabled: True
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: True
       KeySchema:
         - AttributeName: "name"
           KeyType: "HASH"
@@ -130,7 +143,10 @@ Resources:
         - AttributeName: "createdAt"
           AttributeType: "N"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "Pricing"]]
+      TableName: "Pricing"
+      DeletionProtectionEnabled: True
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: True
       KeySchema:
         - AttributeName: "app"
           KeyType: "HASH"
@@ -144,7 +160,10 @@ Resources:
         - AttributeName: "key"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "Secret"]]
+      TableName: "Secret"
+      DeletionProtectionEnabled: True
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: True
       KeySchema:
         - AttributeName: "key"
           KeyType: "HASH"
@@ -158,7 +177,10 @@ Resources:
         - AttributeName: "user"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "StripePaymentAccept"]]
+      TableName: "StripePaymentAccept"
+      DeletionProtectionEnabled: True
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: True
       KeySchema:
         - AttributeName: "user"
           KeyType: "HASH"
@@ -174,7 +196,10 @@ Resources:
         - AttributeName: "subscriber"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "Subscribe"]]
+      TableName: "Subscribe"
+      DeletionProtectionEnabled: True
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: True
       KeySchema:
         - AttributeName: "subscriber"
           KeyType: "HASH"
@@ -194,7 +219,10 @@ Resources:
         - AttributeName: "transferAt"
           AttributeType: "N"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "StripeTransfer"]]
+      TableName: "StripeTransfer"
+      DeletionProtectionEnabled: True
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: True
       KeySchema:
         - AttributeName: "receiver"
           KeyType: "HASH"
@@ -219,7 +247,10 @@ Resources:
         - AttributeName: "subscriber"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "Subscription"]]
+      TableName: "Subscription"
+      DeletionProtectionEnabled: True
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: True
       KeySchema:
         - AttributeName: "subscriber"
           KeyType: "HASH"
@@ -235,7 +266,10 @@ Resources:
         - AttributeName: "subscriber"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "UsageSummary"]]
+      TableName: "UsageSummary"
+      DeletionProtectionEnabled: True
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: True
       KeySchema:
         - AttributeName: "subscriber"
           KeyType: "HASH"
@@ -251,7 +285,10 @@ Resources:
         - AttributeName: "uid"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "User"]]
+      TableName: "User"
+      DeletionProtectionEnabled: True
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: True
       KeySchema:
         - AttributeName: "uid"
           KeyType: "HASH"
@@ -272,7 +309,10 @@ Resources:
         - AttributeName: "subscriber"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "UserAppToken"]]
+      TableName: "UserAppToken"
+      DeletionProtectionEnabled: True
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: True
       KeySchema:
         - AttributeName: "subscriber"
           KeyType: "HASH"
@@ -288,7 +328,10 @@ Resources:
         - AttributeName: "subscriber"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "UsageLog"]]
+      TableName: "UsageLog"
+      DeletionProtectionEnabled: True
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: True
       KeySchema:
         - AttributeName: "subscriber"
           KeyType: "HASH"
@@ -304,7 +347,10 @@ Resources:
         - AttributeName: "requester"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "GatewayRequestDecisionCache"]]
+      TableName: "GatewayRequestDecisionCache"
+      DeletionProtectionEnabled: True
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: True
       KeySchema:
         - AttributeName: "requester"
           KeyType: "HASH"
@@ -320,7 +366,10 @@ Resources:
         - AttributeName: "tag"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "AppTag"]]
+      TableName: "AppTag"
+      DeletionProtectionEnabled: True
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: True
       KeySchema:
         - AttributeName: "app"
           KeyType: "HASH"

@@ -18,7 +18,8 @@
     "start": "npm run build && sam local start-api -p 6000 --warm-containers eager --env-vars ./devenv.json",
     "watch": "nodemon -e go,graphql,yaml -i __generated__/ --signal SIGINT -x 'npm run start || exit 1'",
     "logs": "sam logs --stack-name dev-gateway-service --tail",
-    "deploy": "npm run build && sam deploy --no-fail-on-empty-changeset",
+    "deploy": "npm run build && sam deploy",
+    "deploy:live": "npm run build && sam deploy --config-env live",
     "typecheck": "(npm run gen) && (npm run try-build-all)",
     "test": "jest"
   },

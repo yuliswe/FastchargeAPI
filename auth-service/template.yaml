@@ -34,7 +34,7 @@ Globals:
 
 Resources:
   FirebaseTokenAuthorizer:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function
     Metadata:
       BuildMethod: go1.x
     Properties:
@@ -46,7 +46,7 @@ Resources:
       FunctionName: FirebaseTokenAuthorizer
 
   UserAppTokenAuthorizer:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function
     Metadata:
       BuildMethod: go1.x
     Properties:
@@ -61,7 +61,7 @@ Resources:
           AllowUserAppToken: "1"
 
   FirebaseTokenAuthorizerAllowingAnonymousUser:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function
     Metadata:
       BuildMethod: go1.x
     Properties:
@@ -175,6 +175,7 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         Target: "es2022"
+        UseNpmCi: True
         EntryPoints:
           - node/RefreshIDToken.ts
 

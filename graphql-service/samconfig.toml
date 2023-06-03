@@ -1,20 +1,21 @@
 version = 0.1
 [default.deploy.parameters]
 stack_name = "dev-graphql-service"
-resolve_s3 = true
 s3_prefix = "dev-graphql-service"
 region = "us-east-1"
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
 parameter_overrides = "Stage=\"DEV\" MainDomain=\"devfastchargeapi.com\" Route53ZoneId=\"Z07362872NENGXHWMNLU5\" EnvDevDomain=\"1\""
+resolve_s3 = true
 image_repositories = []
+no_fail_on_empty_changeset = true
 
-[live]
-[live.deploy]
 [live.deploy.parameters]
-stack_name = "graphql-service"
-s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ku0vhjb0ewl6"
-s3_prefix = "graphql-service"
+profile = "live_fastchargeapi"
+stack_name = "live-graphql-service"
+s3_prefix = "live-graphql-service"
 region = "us-east-1"
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
 parameter_overrides = "Stage=\"DEV\" MainDomain=\"fastchargeapi.com\" Route53ZoneId=\"Z0358815GI2I8U5CTHXW\""
+resolve_s3 = true
 image_repositories = []
+no_fail_on_empty_changeset = true
