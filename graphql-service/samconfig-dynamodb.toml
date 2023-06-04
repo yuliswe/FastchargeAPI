@@ -1,0 +1,30 @@
+version = 0.1
+[default.deploy.parameters]
+template = "template-dynamodb.yaml"
+stack_name = "dev-graphql-service-dynamodb"
+s3_prefix = "dev-graphql-service-dynamodb"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
+parameter_overrides = "Stage=\"DEV\" MainDomain=\"devfastchargeapi.com\" Route53ZoneId=\"Z07362872NENGXHWMNLU5\" EnvDevDomain=\"1\" TablePrefix=\"dev_\""
+resolve_s3 = true
+image_repositories = []
+no_fail_on_empty_changeset = true
+
+[default.logs.parameters]
+stack_name = "dev-graphql-service-dynamodb"
+
+[live.deploy.parameters]
+profile = "live_fastchargeapi"
+template = "template-dynamodb.yaml"
+stack_name = "live-graphql-service-dynamodb"
+s3_prefix = "live-graphql-service-dynamodb"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
+parameter_overrides = "Stage=\"DEV\" MainDomain=\"fastchargeapi.com\" Route53ZoneId=\"Z0358815GI2I8U5CTHXW\" TablePrefix=\"live_\""
+resolve_s3 = true
+image_repositories = []
+no_fail_on_empty_changeset = true
+
+[live.logs.parameters]
+profile = "live_fastchargeapi"
+stack_name = "live-graphql-service-dynamodb"

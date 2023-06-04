@@ -11,6 +11,9 @@ image_repositories = []
 resolve_s3 = true
 no_fail_on_empty_changeset = true
 
+[default.logs.parameters]
+stack_name = "dev-gateway-service"
+
 [live]
 [live.deploy]
 [live.deploy.parameters]
@@ -23,3 +26,7 @@ parameter_overrides = "Stage=\"DEV\" MainDomain=\"fastchargeapi.com\" Route53Zon
 image_repositories = []
 resolve_s3 = true
 no_fail_on_empty_changeset = true
+
+[live.logs.parameters]
+profile = "live_fastchargeapi"
+stack_name = "live-gateway-service"

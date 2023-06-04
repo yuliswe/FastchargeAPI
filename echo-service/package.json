@@ -7,7 +7,8 @@
     "build": "sam build",
     "deploy": "npm run build && sam deploy",
     "deploy:live": "npm run build && sam deploy --config-env live",
-    "logs": "sam logs --stack-name dev-echo-service --tail"
+    "logs": "sam logs --tail",
+    "logs:live": "sam logs --config-env live --tail"
   },
   "devDependencies": {
     "@types/node-fetch": "^2.6.2",

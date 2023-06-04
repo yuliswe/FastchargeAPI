@@ -11,6 +11,9 @@ resolve_s3 = true
 image_repositories = []
 no_fail_on_empty_changeset = true
 
+[default.logs.parameters]
+stack_name = "dev-echo-service"
+
 [live]
 [live.deploy]
 [live.deploy.parameters]
@@ -23,3 +26,7 @@ parameter_overrides = "Stage=\"LIVE\" MainDomain=\"fastchargeapi.com\" Route53Zo
 resolve_s3 = true
 image_repositories = []
 no_fail_on_empty_changeset = true
+
+[live.logs.parameters]
+profile = "live_fastchargeapi"
+stack_name = "live-echo-service"

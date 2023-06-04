@@ -9,6 +9,9 @@ resolve_s3 = true
 image_repositories = []
 no_fail_on_empty_changeset = true
 
+[default.logs.parameters]
+stack_name = "dev-graphql-service"
+
 [live.deploy.parameters]
 profile = "live_fastchargeapi"
 stack_name = "live-graphql-service"
@@ -19,3 +22,7 @@ parameter_overrides = "Stage=\"DEV\" MainDomain=\"fastchargeapi.com\" Route53Zon
 resolve_s3 = true
 image_repositories = []
 no_fail_on_empty_changeset = true
+
+[live.logs.parameters]
+profile = "live_fastchargeapi"
+stack_name = "live-graphql-service"

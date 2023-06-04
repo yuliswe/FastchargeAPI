@@ -11,6 +11,9 @@ parameter_overrides = "Stage=\"DEV\" MainDomain=\"devfastchargeapi.com\" Route53
 image_repositories = []
 no_fail_on_empty_changeset = true
 
+[default.logs.parameters]
+stack_name = "dev-auth-service"
+
 [live]
 [live.deploy]
 [live.deploy.parameters]
@@ -23,3 +26,7 @@ capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Stage=\"DEV\" MainDomain=\"fastchargeapi.com\" Route53ZoneId=\"Z0358815GI2I8U5CTHXW\""
 image_repositories = []
 no_fail_on_empty_changeset = true
+
+[live.logs.parameters]
+profile = "live_fastchargeapi"
+stack_name = "live-auth-service"
