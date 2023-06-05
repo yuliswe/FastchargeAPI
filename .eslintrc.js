@@ -9,10 +9,19 @@ module.exports = {
     parserOptions: {
         // tsconfigRootDir: __dirname, // Disabled because the Amplify build
         // will fail when not all projects are npm installed.
-        project: ["./tsconfig.json", "./**/tsconfig.json"],
+        project: ["./tsconfig.json"],
+        projectFolderIgnoreList: ["**/dist/**", "**/node_modules/**", "**/build/**", "**/.aws-sam/**"],
     },
     plugins: ["@typescript-eslint", "unused-imports"],
     root: true,
+    ignorePatterns: [
+        "**/dist/**",
+        "**/node_modules/**",
+        "**/build/**",
+        "**/.aws-sam/**",
+        ".eslintrc.js",
+        ".eslintrc.cjs",
+    ],
     rules: {
         "@typescript-eslint/no-misused-promises": "error",
         "@typescript-eslint/no-floating-promises": "error",

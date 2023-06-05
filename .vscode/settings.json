@@ -71,4 +71,10 @@
   "eslint.options": {
     "cache": true,
   },
+  "eslint.onIgnoredFiles": "warn",
+  "eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+  ],
 }
