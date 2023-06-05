@@ -12,7 +12,7 @@ import {
 } from "../__generated__/resolvers-types";
 import { App, AppTagTableIndex } from "../dynamoose/models";
 import { BadInput, Denied, TooManyResources } from "../errors";
-import { appFullTextSearch, flushAppSearchIndex, isValidAppName } from "../functions/app";
+import { appFullTextSearch, flushAppSearchIndex, isValidAppName, updateAppSearchIndex } from "../functions/app";
 import { Can } from "../permissions";
 import { AppPK } from "../pks/AppPK";
 import { UserPK } from "../pks/UserPK";
@@ -67,7 +67,7 @@ export const appResolvers: GQLResolvers & {
             if (!(await Can.updateApp(parent, { title, description, homepage, repository }, context))) {
                 throw new Denied();
             }
-            return await context.batched.App.update(parent, {
+            const app = await context.batched.App.update(parent, {
                 title,
                 description,
                 homepage,
@@ -75,6 +75,8 @@ export const appResolvers: GQLResolvers & {
                 readme,
                 visibility,
             });
+            await updateAppSearchIndex(context, [app]);
+            return app;
         },
         async deleteApp(parent: App, args: never, context: RequestContext): Promise<App> {
             if (!(await Can.deleteApp(parent, context))) {

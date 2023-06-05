@@ -8,6 +8,7 @@ import {
 } from "../__generated__/resolvers-types";
 import { AppTag, AppTagModel, AppTagTableIndex } from "../dynamoose/models";
 import { BadInput, Denied } from "../errors";
+import { updateAppSearchIndex } from "../functions/app";
 import { Can } from "../permissions";
 
 export const appTagResolvers: GQLResolvers & {
@@ -53,16 +54,19 @@ export const appTagResolvers: GQLResolvers & {
     Mutation: {
         async createAppTag(
             parent: {},
-            { app, tag }: GQLMutationCreateAppTagArgs,
+            { app: appName, tag: tagName }: GQLMutationCreateAppTagArgs,
             context: RequestContext
         ): Promise<AppTag> {
             if (!(await Can.createAppTag(context))) {
                 throw new Denied();
             }
-            return await context.batched.AppTag.getOrCreate({
-                app,
-                tag,
+            const app = await context.batched.App.get({ name: appName });
+            const tag = await context.batched.AppTag.getOrCreate({
+                app: appName,
+                tag: tagName,
             });
+            await updateAppSearchIndex(context, [app]);
+            return tag;
         },
     },
 };
