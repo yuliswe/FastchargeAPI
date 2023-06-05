@@ -24,6 +24,7 @@
     "eslint-plugin-unused-imports": "^2.0.0",
     "nodeman": "^1.1.2",
     "prettier": "^2.7.1",
+    "ts-node": "^10.9.1",
     "typescript": "^4.9.4"
   }
 }

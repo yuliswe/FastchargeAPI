@@ -10,8 +10,6 @@ require (
 	github.com/Khan/genqlient v0.5.0
 	github.com/TwiN/go-color v1.4.0
 	github.com/aws/aws-lambda-go v1.37.0
-	github.com/golang-jwt/jwt/v4 v4.4.3
-	github.com/google/uuid v1.3.0
 	github.com/hashicorp/golang-lru/v2 v2.0.1
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/julienschmidt/httprouter v1.3.0
