@@ -1,0 +1,3 @@
+#!bash
+
+cd $WS_DIR/graphql-service/tools/backups && ts-node --esm restore-backups.ts "$@"

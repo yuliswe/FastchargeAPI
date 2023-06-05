@@ -4,8 +4,39 @@ Transform: AWS::Serverless-2016-10-31
 Parameters:
   TablePrefix:
     Type: String
+  PointInTimeRecovery:
+    Type: Number
+    AllowedValues: [1, 0]
+  DeletionProtection:
+    Type: Number
+    AllowedValues: [1, 0]
+
+Conditions:
+  PointInTimeRecoveryEnabled: !Equals [1, !Ref PointInTimeRecovery]
+  DeletionProtectionEnabled: !Equals [1, !Ref DeletionProtection]
 
 Resources:
+  RestoreFromBackupVaultRole: # A role that allows the service to restore from AWS backup vault
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service: "backup.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Policies:
+        - PolicyName: "RestoreBackupPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "backup:StartBackupJob"
+                  - "dynamodb:RestoreTableFromAwsBackup"
+                Resource: "*"
+
   AccountActivityTable:
     Type: "AWS::DynamoDB::Table"
     Properties:
@@ -19,10 +50,10 @@ Resources:
         - AttributeName: "user"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "AccountActivity"]]
-      DeletionProtectionEnabled: False
+      TableName: !Join ["_", [!Ref TablePrefix, "AccountActivity"]]
+      DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: False
+        PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
       KeySchema:
         - AttributeName: "user"
           KeyType: "HASH"
@@ -47,10 +78,10 @@ Resources:
         - AttributeName: "createdAt"
           AttributeType: "N"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "Endpoint"]]
-      DeletionProtectionEnabled: False
+      TableName: !Join ["_", [!Ref TablePrefix, "Endpoint"]]
+      DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: False
+        PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
       KeySchema:
         - AttributeName: "app"
           KeyType: "HASH"
@@ -66,10 +97,10 @@ Resources:
         - AttributeName: "user"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "AccountHistory"]]
-      DeletionProtectionEnabled: False
+      TableName: !Join ["_", [!Ref TablePrefix, "AccountHistory"]]
+      DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: False
+        PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
       KeySchema:
         - AttributeName: "user"
           KeyType: "HASH"
@@ -85,10 +116,10 @@ Resources:
         - AttributeName: "subscriber"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "FreeQuotaUsage"]]
-      DeletionProtectionEnabled: False
+      TableName: !Join ["_", [!Ref TablePrefix, "FreeQuotaUsage"]]
+      DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: False
+        PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
       KeySchema:
         - AttributeName: "subscriber"
           KeyType: "HASH"
@@ -104,10 +135,10 @@ Resources:
         - AttributeName: "requester"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "GatewayRequestCounter"]]
-      DeletionProtectionEnabled: False
+      TableName: !Join ["_", [!Ref TablePrefix, "GatewayRequestCounter"]]
+      DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: False
+        PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
       KeySchema:
         - AttributeName: "requester"
           KeyType: "HASH"
@@ -123,10 +154,10 @@ Resources:
         - AttributeName: "owner"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "App"]]
-      DeletionProtectionEnabled: False
+      TableName: !Join ["_", [!Ref TablePrefix, "App"]]
+      DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: False
+        PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
       KeySchema:
         - AttributeName: "name"
           KeyType: "HASH"
@@ -147,10 +178,10 @@ Resources:
         - AttributeName: "createdAt"
           AttributeType: "N"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "Pricing"]]
-      DeletionProtectionEnabled: False
+      TableName: !Join ["_", [!Ref TablePrefix, "Pricing"]]
+      DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: False
+        PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
       KeySchema:
         - AttributeName: "app"
           KeyType: "HASH"
@@ -164,10 +195,10 @@ Resources:
         - AttributeName: "key"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "Secret"]]
-      DeletionProtectionEnabled: False
+      TableName: !Join ["_", [!Ref TablePrefix, "Secret"]]
+      DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: False
+        PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
       KeySchema:
         - AttributeName: "key"
           KeyType: "HASH"
@@ -181,10 +212,10 @@ Resources:
         - AttributeName: "user"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "StripePaymentAccept"]]
-      DeletionProtectionEnabled: False
+      TableName: !Join ["_", [!Ref TablePrefix, "StripePaymentAccept"]]
+      DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: False
+        PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
       KeySchema:
         - AttributeName: "user"
           KeyType: "HASH"
@@ -200,10 +231,10 @@ Resources:
         - AttributeName: "subscriber"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "Subscribe"]]
-      DeletionProtectionEnabled: False
+      TableName: !Join ["_", [!Ref TablePrefix, "Subscribe"]]
+      DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: False
+        PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
       KeySchema:
         - AttributeName: "subscriber"
           KeyType: "HASH"
@@ -223,10 +254,10 @@ Resources:
         - AttributeName: "transferAt"
           AttributeType: "N"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "StripeTransfer"]]
-      DeletionProtectionEnabled: False
+      TableName: !Join ["_", [!Ref TablePrefix, "StripeTransfer"]]
+      DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: False
+        PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
       KeySchema:
         - AttributeName: "receiver"
           KeyType: "HASH"
@@ -251,10 +282,10 @@ Resources:
         - AttributeName: "subscriber"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "Subscription"]]
-      DeletionProtectionEnabled: False
+      TableName: !Join ["_", [!Ref TablePrefix, "Subscription"]]
+      DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: False
+        PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
       KeySchema:
         - AttributeName: "subscriber"
           KeyType: "HASH"
@@ -270,10 +301,10 @@ Resources:
         - AttributeName: "subscriber"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "UsageSummary"]]
-      DeletionProtectionEnabled: False
+      TableName: !Join ["_", [!Ref TablePrefix, "UsageSummary"]]
+      DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: False
+        PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
       KeySchema:
         - AttributeName: "subscriber"
           KeyType: "HASH"
@@ -289,10 +320,10 @@ Resources:
         - AttributeName: "uid"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "User"]]
-      DeletionProtectionEnabled: False
+      TableName: !Join ["_", [!Ref TablePrefix, "User"]]
+      DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: False
+        PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
       KeySchema:
         - AttributeName: "uid"
           KeyType: "HASH"
@@ -313,10 +344,10 @@ Resources:
         - AttributeName: "subscriber"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "UserAppToken"]]
-      DeletionProtectionEnabled: False
+      TableName: !Join ["_", [!Ref TablePrefix, "UserAppToken"]]
+      DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: False
+        PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
       KeySchema:
         - AttributeName: "subscriber"
           KeyType: "HASH"
@@ -332,10 +363,10 @@ Resources:
         - AttributeName: "subscriber"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "UsageLog"]]
-      DeletionProtectionEnabled: False
+      TableName: !Join ["_", [!Ref TablePrefix, "UsageLog"]]
+      DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: False
+        PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
       KeySchema:
         - AttributeName: "subscriber"
           KeyType: "HASH"
@@ -351,10 +382,10 @@ Resources:
         - AttributeName: "requester"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "GatewayRequestDecisionCache"]]
-      DeletionProtectionEnabled: False
+      TableName: !Join ["_", [!Ref TablePrefix, "GatewayRequestDecisionCache"]]
+      DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: False
+        PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
       KeySchema:
         - AttributeName: "requester"
           KeyType: "HASH"
@@ -370,10 +401,10 @@ Resources:
         - AttributeName: "tag"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["", [!Ref TablePrefix, "AppTag"]]
-      DeletionProtectionEnabled: False
+      TableName: !Join ["_", [!Ref TablePrefix, "AppTag"]]
+      DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
-        PointInTimeRecoveryEnabled: False
+        PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
       KeySchema:
         - AttributeName: "app"
           KeyType: "HASH"

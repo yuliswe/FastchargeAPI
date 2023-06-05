@@ -20,9 +20,12 @@ function addCors(event: APIGatewayProxyEvent, result: APIGatewayProxyResult): vo
     let origin = event.headers["Origin"] || event.headers["origin"];
     if (
         origin &&
-        [/^http:\/\/yumbp16.local(:\\d+)?/, /^http:\/\/localhost(:\\d+)?/, /^https:\/\/fastchargeapi.com/].some((x) =>
-            x.test(origin!)
-        )
+        [
+            /^http:\/\/yumbp16.local(:\\d+)?/,
+            /^http:\/\/localhost(:\\d+)?/,
+            /^https:\/\/fastchargeapi.com/,
+            /^https:\/\/devfastchargeapi.com/,
+        ].some((x) => x.test(origin!))
     ) {
         result.headers = {
             ...(result.headers ?? {}),

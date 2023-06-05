@@ -7,18 +7,12 @@ import { isValidAppName } from "../functions/app";
 let MAKE_TABLE = false;
 
 if (process.env.TEST == "1") {
-    // MAKE_TABLE = true;
     dynamoose.aws.ddb.local("http://localhost:9001/");
     console.warn("Using local database http://localhost:9001/");
+} else if (process.env.DEV_DOMAIN === "1") {
+    console.warn("Using remote DEV database us-east-1");
 } else {
-    // Create new DynamoDB instance
-    // const ddb = new dynamoose.aws.ddb.DynamoDB({
-    //     region: "us-east-1",
-    // });
-
-    // // Set DynamoDB instance to the Dynamoose DDB instance
-    // dynamoose.aws.ddb.set(ddb);
-    console.warn("Using remote database us-east-1");
+    console.warn("Using remote LIVE database us-east-1");
 }
 
 export async function enableDBLogging() {
@@ -36,7 +30,7 @@ const tableConfigs = {
     update: false, // do not set this to true. It will whipe the GSI.
     initialize: true,
     throughput: "ON_DEMAND" as const,
-    prefix: "dev__",
+    prefix: process.env.DEV_DOMAIN === "1" ? "dev_restored_1685941200000_live_" : "live_",
     suffix: "",
     waitForActive: {
         enabled: false,

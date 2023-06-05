@@ -7,7 +7,7 @@ export const auroraResourceArn =
 export const auroraSecretArn =
     process.env.DEV_DOMAIN === "1"
         ? "arn:aws:secretsmanager:us-east-1:209991057786:secret:AuroraDBSecret-yDL7gy9eiEwz-d5N6NI"
-        : "arn:aws:secretsmanager:us-east-1:887279901853:secret:AuroraDBSecret-ie6utwL7NgUH-7TUv3G";
+        : "arn:aws:secretsmanager:us-east-1:887279901853:secret:AuroraDBSecret-BHbRTfhpIz4G-LYbLOv";
 
 export const rdsClient = new RDSDataClient({});
 
