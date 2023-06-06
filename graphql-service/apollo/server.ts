@@ -1,4 +1,5 @@
 import { ApolloServer } from "@apollo/server";
+import { ApolloServerPluginCacheControl } from "@apollo/server/plugin/cacheControl";
 import { readFileSync } from "fs";
 import { resolvers as scalarResolvers, typeDefs as scalarTypeDefs } from "graphql-scalars";
 import process from "node:process";
@@ -68,11 +69,6 @@ const resolvers: GQLResolvers = {
         ...accountHistoryResolvers.Query,
         ...accountActivityResolvers.Query,
         ...userAppTokenResolvers.Query,
-
-        async ping(): Promise<boolean> {
-            await wakeUpAurora();
-            return true;
-        },
     },
     Mutation: {
         ...gatewayResolvers.Mutation,
@@ -91,6 +87,11 @@ const resolvers: GQLResolvers = {
         ...accountHistoryResolvers.Mutation,
         ...accountActivityResolvers.Mutation,
         ...userAppTokenResolvers.Mutation,
+
+        async ping(): Promise<boolean> {
+            await wakeUpAurora();
+            return true;
+        },
     },
 };
 
@@ -103,4 +104,9 @@ export const server = new ApolloServer<RequestContext>({
     resolvers,
     includeStacktraceInErrorResponses: true,
     formatError: handleError,
+    plugins: [
+        ApolloServerPluginCacheControl({
+            defaultMaxAge: 60, // cache for 1 second
+        }),
+    ],
 });

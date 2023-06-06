@@ -37,8 +37,6 @@ type Query {
 
     stripeTransfer(pk: ID): StripeTransfer!
     appTags(tag: String): [AppTag!]!
-
-    ping: Boolean!
 }
 
 enum AppFullTextSearchOrderBy {
@@ -128,6 +126,8 @@ type Mutation {
     flushAppSearchIndex: Int!
 
     createAppTag(app: String!, tag: String!): AppTag!
+
+    ping: Boolean!
 }
 
 type Secret {

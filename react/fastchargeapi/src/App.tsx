@@ -53,41 +53,26 @@ function WithRouteContext(props: WithRouteContextProps) {
                 );
             }
         });
-        void getGQLClient(context).then(({ client, currentUser }) => {
-            return client.query({
-                query: gql`
-                    query Ping {
+
+        async function sendPing() {
+            let { client, currentUser } = await getGQLClient(context);
+            await client.mutate({
+                mutation: gql`
+                    mutation SendPing {
                         ping
                     }
                 `,
             });
-        });
-        let shouldPing = false;
-        setTimeout(() => {
-            shouldPing = true;
-        }, 200_000);
-        function pingWhenActive() {
-            if (shouldPing) {
-                shouldPing = false;
-                void getGQLClient(context).then(async ({ client, currentUser }) => {
-                    await client.query({
-                        query: gql`
-                            query Ping {
-                                ping
-                            }
-                        `,
-                    });
-                    setTimeout(() => {
-                        shouldPing = true;
-                    }, 200_000);
-                });
-            }
         }
-        window.addEventListener("mousemove", pingWhenActive);
-        window.addEventListener("scroll", pingWhenActive);
+
+        const throttledSendPing = throttle(sendPing, 200_000);
+
+        void throttledSendPing();
+        window.addEventListener("mousemove", () => void throttledSendPing());
+        window.addEventListener("scroll", () => void throttledSendPing());
         return () => {
-            window.removeEventListener("mousemove", pingWhenActive);
-            window.removeEventListener("scroll", pingWhenActive);
+            window.removeEventListener("mousemove", () => void throttledSendPing());
+            window.removeEventListener("scroll", () => void throttledSendPing());
         };
     }, []);
 
