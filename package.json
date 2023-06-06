@@ -1,7 +1,7 @@
 {
-  "name": "react-appevent-redux",
+  "name": "fastchargeapi-workspace",
   "version": "1.0.0",
-  "description": "React-Redux but event driven.",
+  "description": "Workspace for FastchargeAPI source code.",
   "main": "index.js",
   "scripts": {},
   "repository": {},
