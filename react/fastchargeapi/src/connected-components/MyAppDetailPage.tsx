@@ -324,6 +324,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                     </TableCell>
                                     <TableCell>
                                         <TextField
+                                            size="small"
                                             variant="standard"
                                             disabled
                                             fullWidth
@@ -333,6 +334,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                     </TableCell>
                                     <TableCell>
                                         <TextField
+                                            size="small"
                                             variant="standard"
                                             disabled
                                             placeholder="USD $"
@@ -344,6 +346,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                     </TableCell>
                                     <TableCell>
                                         <TextField
+                                            size="small"
                                             variant="standard"
                                             disabled
                                             placeholder="USD $"
@@ -355,6 +358,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                     </TableCell>
                                     <TableCell>
                                         <TextField
+                                            size="small"
                                             variant="standard"
                                             disabled
                                             fullWidth
@@ -501,12 +505,18 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                             disabled
                                             color="secondary"
                                             renderInput={(params) => (
-                                                <TextField variant="standard" color="secondary" {...params} />
+                                                <TextField
+                                                    {...params}
+                                                    variant="standard"
+                                                    color="secondary"
+                                                    size="small"
+                                                />
                                             )}
                                         />
                                     </TableCell>
                                     <TableCell>
                                         <TextField
+                                            size="small"
                                             variant="standard"
                                             color="secondary"
                                             fullWidth
@@ -516,6 +526,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                     </TableCell>
                                     <TableCell>
                                         <TextField
+                                            size="small"
                                             variant="standard"
                                             fullWidth
                                             color="secondary"
@@ -568,7 +579,13 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                             <Typography mb={1} variant="label">
                                 App ID
                             </Typography>
-                            <TextField variant="standard" value={this.appState.appDetail?.name || ""} disabled />
+                            <TextField
+                                size="small"
+                                variant="standard"
+                                color="secondary"
+                                value={this.appState.appDetail?.name || ""}
+                                disabled
+                            />
                         </Grid>
                         <Grid item xs={6}>
                             <Stack direction="row" alignItems="center" mb={1}>
@@ -590,9 +607,11 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                 </IconButton>
                             </Stack>
                             <TextField
+                                size="small"
                                 fullWidth
                                 disabled
                                 placeholder="Display name for this app"
+                                color="secondary"
                                 value={this.appState.appDetail?.title || ""}
                             />
                         </Grid>
@@ -626,7 +645,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                     bgcolor: "background.default",
                                 }}
                                 renderInput={(params: AutocompleteRenderInputParams) => (
-                                    <TextField variant="outlined" color="secondary" {...params} />
+                                    <TextField {...params} size="small" variant="outlined" color="secondary" />
                                 )}
                             />
                         </Grid>
@@ -650,6 +669,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                 </IconButton>
                             </Stack>
                             <TextField
+                                size="small"
                                 fullWidth
                                 disabled
                                 placeholder="URL to Github repository"
@@ -675,7 +695,13 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                     <Help sx={{ fontSize: 18 }} />
                                 </IconButton>
                             </Stack>
-                            <TextField fullWidth disabled placeholder="URL to project or documentation." />
+                            <TextField
+                                size="small"
+                                color="primary"
+                                disabled
+                                fullWidth
+                                placeholder="URL to project or documentation."
+                            />
                         </Grid>
                         <Grid item xs={12}>
                             <Stack direction="row" alignItems="center" mb={1}>
@@ -697,6 +723,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                 </IconButton>
                             </Stack>
                             <TextField
+                                size="small"
                                 fullWidth
                                 disabled
                                 placeholder="URL to README.md, eg. https://github.com/{user}/{repository}/blob/{branch}/README.md"
@@ -723,6 +750,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                 </IconButton>
                             </Stack>
                             <TextField
+                                size="small"
                                 multiline
                                 rows={4}
                                 fullWidth

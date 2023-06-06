@@ -25,9 +25,6 @@ export class DocumentationDialog extends React.Component<DocumentationDialogProp
                         openDocumentationDialog: false,
                     });
                 }}
-                PaperProps={{
-                    sx: { borderRadius: 5 },
-                }}
             >
                 {this.props.parent.state.renderDocumentation?.()}
             </Dialog>

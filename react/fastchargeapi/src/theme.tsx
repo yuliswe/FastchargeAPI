@@ -222,12 +222,31 @@ export function getTheme(extraThemeOpts?: ThemeOptions) {
                     MuiOutlinedInput: {
                         styleOverrides: {
                             root: {
-                                borderRadius: 5,
+                                borderRadius: 10,
+                                borderColor: "transparent",
+                                "&, &.Mui-disabled": {
+                                    "input::placeholder, input::disabled::placeholder": {
+                                        color: grey[700],
+                                    },
+                                    "fieldset.MuiOutlinedInput-notchedOutline": {
+                                        borderColor: grey[300], // Regular border color
+                                    },
+                                },
+                                "&.Mui-disabled": {
+                                    backgroundColor: grey[100], // Disabled background color
+                                },
+                                "&:hover:not(.Mui-disabled)": {
+                                    "fieldset.MuiOutlinedInput-notchedOutline": {
+                                        borderColor: grey[400], // Hover border color
+                                    },
+                                },
+                                "&:focus-within:not(.Mui-disabled)": {
+                                    "fieldset.MuiOutlinedInput-notchedOutline": {
+                                        borderColor: primary, // Focus border color
+                                    },
+                                },
                             },
                         },
-                    },
-                    MuiTextField: {
-                        styleOverrides: {},
                     },
                     MuiTypography: {
                         styleOverrides: {
