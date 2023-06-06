@@ -1,3 +1,4 @@
+import type { GraphQLResolveInfoWithCacheControl } from "@apollo/cache-control-types";
 import { Chalk } from "chalk";
 import { GraphQLResolveInfo } from "graphql";
 import { RequestContext } from "../RequestContext";
@@ -26,13 +27,18 @@ import { UserPK } from "../pks/UserPK";
 const chalk = new Chalk({ level: 3 });
 
 function makePrivate<T>(
-    getter: (parent: User, args: {}, context: RequestContext) => T
-): (parent: User, args: {}, context: RequestContext) => Promise<T> {
-    return async (parent: User, args: {}, context: RequestContext): Promise<T> => {
+    getter: (parent: User, args: {}, context: RequestContext, info: GraphQLResolveInfoWithCacheControl) => T
+): (parent: User, args: {}, context: RequestContext, info: GraphQLResolveInfoWithCacheControl) => Promise<T> {
+    return async (
+        parent: User,
+        args: {},
+        context: RequestContext,
+        info: GraphQLResolveInfoWithCacheControl
+    ): Promise<T> => {
         if (!(await Can.viewUserPrivateAttributes(parent, context))) {
             throw new Denied();
         }
-        return getter(parent, args, context);
+        return getter(parent, args, context, info);
     };
 }
 
@@ -65,8 +71,10 @@ export const userResolvers: GQLResolvers & {
         /**************************
          * All private attributes
          **************************/
-
-        pk: makePrivate((parent) => UserPK.stringify(parent)),
+        pk: makePrivate((parent, args, context, { cacheControl }) => {
+            cacheControl.setCacheHint({ maxAge: 999 });
+            return UserPK.stringify(parent);
+        }),
         email: makePrivate((parent) => parent.email),
         stripeCustomerId: makePrivate((parent) => parent.stripeCustomerId),
         stripeConnectAccountId: makePrivate((parent) => parent.stripeConnectAccountId),

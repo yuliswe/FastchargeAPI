@@ -1,14 +1,14 @@
+import { GraphQLResolveInfoWithCacheControl } from "@apollo/cache-control-types";
 import { describe, expect, test } from "@jest/globals";
+import Decimal from "decimal.js-light";
+import { v4 as uuidv4 } from "uuid";
 import { RequestContext, createDefaultContextBatched } from "../RequestContext";
 import { User } from "../dynamoose/models";
 import { getUserBalance } from "../functions/account";
-import Decimal from "decimal.js-light";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
-import { stripeTransferResolvers } from "../resolvers/transfer";
-import { GraphQLResolveInfo } from "graphql";
 import { UserPK } from "../pks/UserPK";
+import { stripeTransferResolvers } from "../resolvers/transfer";
 import { addMoneyForUser, getOrCreateTestUser } from "./test-utils";
-import { v4 as uuidv4 } from "uuid";
 
 let context: RequestContext = {
     batched: createDefaultContextBatched(),
@@ -40,14 +40,14 @@ describe("Payout API", () => {
                 currency: "usd",
             },
             context,
-            {} as GraphQLResolveInfo
+            {} as GraphQLResolveInfoWithCacheControl
         );
 
         transfer = await stripeTransferResolvers.StripeTransfer.settleStripeTransfer(
             transfer!,
             {},
             context,
-            {} as GraphQLResolveInfo
+            {} as GraphQLResolveInfoWithCacheControl
         );
 
         expect(transfer.accountActivity).not.toBe(null);

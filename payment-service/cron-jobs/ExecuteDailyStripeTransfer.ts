@@ -1,8 +1,8 @@
 import { EventBridgeEvent, EventBridgeHandler } from "aws-lambda";
-import { StripeTransferPK, UserPK, createDefaultContextBatched } from "graphql-service";
 import { Chalk } from "chalk";
-import { GQLStripeTransferIndex } from "../__generated__/gql-operations";
 import { Decimal } from "decimal.js-light";
+import { StripeTransferPK, UserPK, createDefaultContextBatched } from "graphql-service";
+import { GQLStripeTransferIndex } from "../__generated__/gql-operations";
 import { getStripeClient } from "../utils/stripe-client";
 const chalk = new Chalk({ level: 3 });
 

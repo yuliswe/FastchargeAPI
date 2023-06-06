@@ -22,6 +22,7 @@ generates:
       typesPrefix: GQL
       # avoidOptionals: true
       makeResolverTypeCallable: true
+      customResolveInfo: "@apollo/cache-control-types#GraphQLResolveInfoWithCacheControl"
       # defaultMapper: "{[k in keyof {T}]: {T}[k] | (() => {T})}"
       mappers:
         App: ../dynamoose/models#App

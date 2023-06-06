@@ -1,9 +1,9 @@
 import { ApolloClient, InMemoryCache, createHttpLink, gql } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
-import { HttpLink } from "@apollo/client/link/http/HttpLink";
-import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
+import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
+import { SQSClient } from "@aws-sdk/client-sqs";
+import { sha256 } from "crypto-hash";
 import * as jose from "jose";
-import { v4 as uuidv4 } from "uuid";
 import { AppContext } from "./AppContext";
 
 // debug
@@ -35,11 +35,11 @@ export async function getGQLClient(
         uri: graphqlURL,
     });
 
-    let user = await context.firebase.userPromise;
+    const user = await context.firebase.userPromise;
     if (!user) {
         throw new Error("getGQLClient: User Not logged in");
     }
-    let idToken = await user.getIdToken(true);
+    const idToken = await user.getIdToken(true);
 
     const authLink = setContext((_, { headers }) => {
         return {
@@ -51,8 +51,10 @@ export async function getGQLClient(
         };
     });
 
-    let client = new ApolloClient({
-        link: authLink.concat(httpLink),
+    const cacheLink = createPersistedQueryLink({ sha256, useGETForHashedQueries: true });
+
+    const client = new ApolloClient({
+        link: authLink.concat(cacheLink).concat(httpLink),
         cache: new InMemoryCache(),
     });
 
@@ -60,7 +62,7 @@ export async function getGQLClient(
         return { client };
     }
 
-    let response = await client.query({
+    const response = await client.query({
         query: gql`
             query GetUserPKByEmail($email: Email!) {
                 user(email: $email) {
@@ -73,48 +75,6 @@ export async function getGQLClient(
         },
     });
     return { client, currentUser: response.data.user.pk };
-}
-
-/**
- * Connects to the graphql server that is behind the SQS. By sending the request
- * to SQS, the request completes immediately, and will be asynchronously
- * processed by the graphql server. Furthermore, the request is deduplicated by
- * the dedupId, making it idempotent.
- *
- * @param param0
- * @returns
- */
-export function sqsGQLClient({ dedupId }: { dedupId?: string } = {}) {
-    return new ApolloClient({
-        // Provide required constructor fields
-        cache: cache,
-        link: new HttpLink({
-            fetch: (uri: RequestInfo | URL, options?: RequestInit) => {
-                let body: string = options?.body?.toString() || "";
-                let resp = sqsClient.send(
-                    new SendMessageCommand({
-                        MessageBody: body,
-                        MessageGroupId: "graphql-service",
-                        QueueUrl:
-                            "https://sqs.us-east-1.amazonaws.com/887279901853/graphql-service-ApolloServerQueue-iVEWVstsnedS.fifo",
-                        MessageDeduplicationId: dedupId || uuidv4(),
-                    })
-                );
-                return Promise.resolve({
-                    ok: true,
-                }) as unknown as Promise<Response>; // sqs is async, so we can't return a response
-            },
-        }),
-        // Provide some optional constructor fields
-        //   name: 'react-web-client',
-        // version: "1.3",
-        // queryDeduplication: false,
-        // defaultOptions: {
-        //     watchQuery: {
-        //         fetchPolicy: "cache-and-network",
-        //     },
-        // },
-    });
 }
 
 export function createSecret(): Uint8Array {
