@@ -4,10 +4,10 @@ import { AccountActivity, AccountHistory, UserAccountInfo } from "../events/Dash
 export class DashboardAppState extends AppState {
     loadingBalance = true;
     loadingActivities = true;
+    loadingStripeLoginLink = false;
     activities: AccountActivity[] = [];
     description = "";
     accountHistories: AccountHistory[] = [];
-    loadingStripeLoginLink = false;
     stripeLoginLink = "";
     userAccountInfo: UserAccountInfo | null = null;
 

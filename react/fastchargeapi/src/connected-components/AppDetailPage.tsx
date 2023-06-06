@@ -47,27 +47,28 @@ class _AppDetailPage extends React.Component<_Props, _State> {
             appStore.getState().appDetail.loadingPricing
         );
     }
-    static async fetchData(baseContext: AppContext, { app }: AppDetailPageParams, query: {}): Promise<void> {
-        appStore.dispatch(
-            new AppDetailEvent.LoadAppInfo(baseContext, {
-                app,
-            })
-        );
-        appStore.dispatch(
-            new AppDetailEvent.LoadEndpoints(baseContext, {
-                app,
-            })
-        );
-        appStore.dispatch(
-            new AppDetailEvent.LoadPricings(baseContext, {
-                app,
-            })
-        );
+    static async fetchData(context: AppContext, { app }: AppDetailPageParams, query: {}): Promise<void> {
         return new Promise<void>((resolve) => {
+            appStore.dispatch(
+                new AppDetailEvent.LoadAppInfo(context, {
+                    app,
+                })
+            );
+            appStore.dispatch(
+                new AppDetailEvent.LoadEndpoints(context, {
+                    app,
+                })
+            );
+            appStore.dispatch(
+                new AppDetailEvent.LoadPricings(context, {
+                    app,
+                })
+            );
             const unsub = reduxStore.subscribe(() => {
                 if (!_AppDetailPage.isLoading()) {
                     resolve();
                     unsub();
+                    context.loading.setIsLoading(false);
                 }
             });
         });

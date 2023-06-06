@@ -45,7 +45,7 @@ import { HomePageProductList } from "../stateless-components/HomePageProductList
 import { HomePagePublisherTutorialCarousel } from "../stateless-components/HomePagePublisherTutorialCarousel";
 import { HomeAppState } from "../states/HomeAppState";
 import { RootAppState } from "../states/RootAppState";
-import { appStore } from "../store-config";
+import { appStore, reduxStore } from "../store-config";
 import { ReactComponent as AppDrawingBoardIcon } from "../svg/drawing-board.svg";
 import { ReactComponent as MakeMoneyIcon } from "../svg/make-money.svg";
 import { ReactComponent as MobileProgrammerIcon } from "../svg/mobile-programmer.svg";
@@ -67,10 +67,27 @@ class _Home extends React.Component<_Props, _State> {
         return this.context as AppContext;
     }
 
-    componentDidMount(): void {
-        appStore.dispatch(new HomePageEvent.LoadLatestProducts(this._context));
-        appStore.dispatch(new HomePageEvent.LoadFeaturedProducts(this._context));
-        appStore.dispatch(new HomePageEvent.LoadCategories(this._context));
+    static isLoading(): boolean {
+        return appStore.getState().home.loadingFeaturedProducts || appStore.getState().home.loadingLatestProducts;
+    }
+
+    static async fetchData(context: AppContext, params: {}, query: {}): Promise<void> {
+        return new Promise<void>((resolve) => {
+            appStore.dispatch(new HomePageEvent.LoadLatestProducts(context));
+            appStore.dispatch(new HomePageEvent.LoadFeaturedProducts(context));
+            appStore.dispatch(new HomePageEvent.LoadCategories(context));
+            const unsub = reduxStore.subscribe(() => {
+                if (!_Home.isLoading()) {
+                    resolve();
+                    unsub();
+                    context.loading.setIsLoading(false);
+                }
+            });
+        });
+    }
+
+    async componentDidMount(): Promise<void> {
+        await _Home.fetchData(this._context, {}, {});
     }
 
     renderProductLists() {

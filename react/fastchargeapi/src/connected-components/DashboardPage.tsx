@@ -14,7 +14,7 @@ import {
     GQLStripeTransferStatus,
 } from "../__generated__/gql-operations";
 import { AccountActivity, DashboardEvent } from "../events/DashboardEvent";
-import { RouteURL } from "../routes";
+import { DashboardPageQuery, RouteURL } from "../routes";
 import {
     DocumentationDialog,
     SupportDocumentation,
@@ -24,7 +24,7 @@ import {
 import { LogTable, LogTableOnChangeHandler } from "../stateless-components/LogTable";
 import { DashboardAppState } from "../states/DashboardAppState";
 import { RootAppState } from "../states/RootAppState";
-import { appStore } from "../store-config";
+import { appStore, reduxStore } from "../store-config";
 
 type Props = {
     dashboard: DashboardAppState;
@@ -54,13 +54,35 @@ class _DashboardPage extends React.Component<Props, State> {
         return this.props.dashboard;
     }
 
-    allActivities() {
-        return this.appState.activities;
+    static isLoading(): boolean {
+        return appStore.getState().dashboard.loadingBalance || appStore.getState().dashboard.loadingActivities;
     }
 
-    activityRange(): number {
-        let d = this._context.route.query.get("date");
-        return d ? Number.parseInt(d) : Date.now();
+    static fetchData(context: AppContext, params: {}, query: DashboardPageQuery): Promise<void> {
+        const beforeDate = query.sdate ? Number.parseInt(query.sdate) : Date.now();
+        return new Promise((resolve) => {
+            appStore.dispatch(new DashboardEvent.LoadUserInfo(context));
+            appStore.dispatch(
+                new DashboardEvent.LoadActivities(context, {
+                    beforeDate,
+                })
+            );
+            appStore.dispatch(
+                new DashboardEvent.LoadAccountHistory(context, {
+                    beforeDate,
+                })
+            );
+            const unsub = reduxStore.subscribe(() => {
+                if (!_DashboardPage.isLoading()) {
+                    unsub();
+                    resolve();
+                }
+            });
+        });
+    }
+
+    allActivities() {
+        return this.appState.activities;
     }
 
     handleMenu = (event: React.MouseEvent<HTMLElement>) => {
@@ -75,17 +97,11 @@ class _DashboardPage extends React.Component<Props, State> {
         });
     };
 
-    componentDidMount() {
-        appStore.dispatch(new DashboardEvent.LoadUserInfo(this._context));
-        appStore.dispatch(
-            new DashboardEvent.LoadActivities(this._context, {
-                beforeDate: this.activityRange(),
-            })
-        );
-        appStore.dispatch(
-            new DashboardEvent.LoadAccountHistory(this._context, {
-                beforeDate: this.activityRange(),
-            })
+    async componentDidMount() {
+        await _DashboardPage.fetchData(
+            this._context,
+            this._context.route.params,
+            this._context.route.query.entries() as DashboardPageQuery
         );
     }
 

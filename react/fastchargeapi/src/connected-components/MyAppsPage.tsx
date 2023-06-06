@@ -27,7 +27,7 @@ import {
 } from "../stateless-components/DocumentationDialog";
 import { MyAppsAppState } from "../states/MyAppsAppState";
 import { RootAppState } from "../states/RootAppState";
-import { appStore } from "../store-config";
+import { appStore, reduxStore } from "../store-config";
 type _Props = {
     appState: MyAppsAppState;
 };
@@ -53,8 +53,24 @@ class _MyAppsPage extends React.Component<_Props, _State> {
         return new Date(app.updatedAt).toLocaleDateString();
     }
 
-    componentDidMount(): void {
-        appStore.dispatch(new MyAppsEvent.LoadMyApps(this._context));
+    static isLoading(): boolean {
+        return appStore.getState().myApps.loading;
+    }
+
+    static async fetchData(context: AppContext, params: {}, query: {}): Promise<void> {
+        return new Promise((resolve, reject) => {
+            appStore.dispatch(new MyAppsEvent.LoadMyApps(context));
+            const unsub = reduxStore.subscribe(() => {
+                if (!_MyAppsPage.isLoading()) {
+                    resolve();
+                    unsub();
+                }
+            });
+        });
+    }
+
+    async componentDidMount() {
+        await _MyAppsPage.fetchData(this._context, this._context.route.params, this._context.route.query);
     }
 
     renderCreateAppDocumentation() {

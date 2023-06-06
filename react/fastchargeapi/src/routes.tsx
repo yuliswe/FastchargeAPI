@@ -21,6 +21,7 @@ export type SearchResultPageQuery = { q?: string; tag?: string; sort?: string; p
 export type AppDetailPageParams = { app: string };
 export type AuthPageQuery = { redirect?: string };
 export type TermsPageTag = "pricing" | "privacy" | "tos";
+export type DashboardPageQuery = { sdate?: string; spage?: string };
 
 export function buildSearchParams(query: any): string {
     const search = new URLSearchParams();
@@ -67,12 +68,22 @@ export const RouteURL = {
     subscriptionsPage(): string {
         return `/account/subscriptions/#`;
     },
+    dashboardPage({ query }: { query?: DashboardPageQuery }): string {
+        return `/account/#`;
+    },
 };
 
 enum RoutePattern {
     AppDetailPage = "/app/:app",
+    SubscriptionsPage = "/account/subscriptions",
+    HomePage = "/",
+    MyAppsPage = "/account/my-apps",
+    DashboardPage = "/account",
 }
 
+/**
+ * Every page component should implement a static RouteDataFetcher method.
+ */
 export type RouteDataFetcher = (context: AppContext, params: any, query: any) => Promise<void>;
 export const routeDataFetchers: {
     path: RoutePattern;
@@ -81,6 +92,22 @@ export const routeDataFetchers: {
     {
         path: RoutePattern.AppDetailPage,
         fetchData: (context, params, query) => AppDetailPage.WrappedComponent.fetchData(context, params, query),
+    },
+    {
+        path: RoutePattern.SubscriptionsPage,
+        fetchData: (context, params, query) => SubscriptionsPage.WrappedComponent.fetchData(context, params, query),
+    },
+    {
+        path: RoutePattern.HomePage,
+        fetchData: (context, params, query) => HomePage.WrappedComponent.fetchData(context, params, query),
+    },
+    {
+        path: RoutePattern.MyAppsPage,
+        fetchData: (context, params, query) => MyAppsPage.WrappedComponent.fetchData(context, params, query),
+    },
+    {
+        path: RoutePattern.DashboardPage,
+        fetchData: (context, params, query) => DashboardPage.WrappedComponent.fetchData(context, params, query),
     },
 ];
 
@@ -99,7 +126,7 @@ export function createRouter(WithContext: (props: WithRouteContextProps) => Reac
             element: <WithContext requireAuth={true} children={<TopUpPage />} />,
         },
         {
-            path: "/",
+            path: RoutePattern.HomePage,
             element: <WithContext children={<HomePage />} />,
         },
         {
@@ -116,23 +143,23 @@ export function createRouter(WithContext: (props: WithRouteContextProps) => Reac
             children: [
                 {
                     path: "",
-                    element: <WithContext requireAuth={true} children={<DashboardPage />} />,
+                    element: <DashboardPage />,
                 },
                 {
                     path: "my-apps",
-                    element: <WithContext requireAuth={true} children={<MyAppsPage />} />,
+                    element: <MyAppsPage />,
                 },
                 {
                     path: "my-apps/:app",
-                    element: <WithContext requireAuth={true} children={<MyAppDetailPage />} />,
+                    element: <MyAppDetailPage />,
                 },
                 {
-                    path: "subscriptions",
-                    element: <WithContext requireAuth={true} children={<SubscriptionsPage />} />,
+                    path: RoutePattern.SubscriptionsPage,
+                    element: <SubscriptionsPage />,
                 },
                 {
                     path: "subscriptions/:app",
-                    element: <WithContext requireAuth={true} children={<SubscriptionDetailPage />} />,
+                    element: <SubscriptionDetailPage />,
                 },
             ],
         },

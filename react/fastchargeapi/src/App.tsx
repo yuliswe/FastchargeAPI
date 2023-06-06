@@ -24,6 +24,11 @@ export type WithRouteContextProps = React.PropsWithChildren<{
     requireAuth?: boolean;
     theme?: Theme;
 }>;
+
+/**
+ * This is a wrapper component that provides a unique context to each pages. It
+ * is reconstructed for every route change.
+ */
 function WithRouteContext(props: WithRouteContextProps) {
     // Note: things here are reloaded on every route change.
     const context = useContext(ReactAppContextType);
@@ -31,13 +36,20 @@ function WithRouteContext(props: WithRouteContextProps) {
     const navigate = useNavigate();
     const params = useParams();
     const [searchParam, setSearchParam] = useSearchParams();
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-
+    // A state that is passed in AppContext. It determines when to show the
+    // progress bar on top of the page.
+    const [isLoading, setIsLoading] = useState<boolean>(true);
     const requireAuth = props.requireAuth ?? false;
     // Hide content so that it doesn't flash before the user is redirected.
     const [hideContent, setHideContent] = useState(requireAuth);
     // This promise is resolved immediately except in the initial load of the app.
     useEffect(() => {
+        setTimeout(() => {
+            // Most pages should load in less than 1 second. On initial page
+            // load, the progress bar shows for 1s.
+            setIsLoading(false);
+        }, 1000);
+
         void context.firebase.isAnonymousUserPromise.then((isAnonymous) => {
             if (hideContent) {
                 setHideContent(false);
@@ -112,6 +124,9 @@ function WithRouteContext(props: WithRouteContextProps) {
 
 const router = createRouter(WithRouteContext);
 
+/**
+ * Provides the context for the entire app. It is only constructed once.
+ */
 function App() {
     const firebaseApp = initializeFirebase();
 
@@ -180,22 +195,34 @@ function App() {
                 {...other}
                 // eslint-disable-next-line @typescript-eslint/no-misused-promises
                 onClick={async (event) => {
+                    // If the user has their own onClick handler, call it.
+                    if (other.onClick) {
+                        other.onClick(event);
+                        return;
+                    }
+                    // In this Link we inject our own logic so that before a
+                    // route change, the next page's data is fetched before the
+                    // route is changed.
                     event.preventDefault();
                     const url = new URL(href.toString(), window.location.origin);
                     let found = false;
+                    // Look in the routeDataFetchers to find the matching data
+                    // fetching function.
                     for (const { path, fetchData } of routeDataFetchers) {
                         const match = matchPath(path, url.pathname);
                         if (match) {
                             const queryParams = url.searchParams;
-                            context.loading.setIsLoading(true);
+                            context.loading.setIsLoading(true); // Show loading progress bar.
                             await fetchData(context, match.params, queryParams.entries());
-                            context.loading.setIsLoading(false);
+                            context.loading.setIsLoading(false); // Hide loading progress bar.
                             originalLinkRef.current?.click(); // Click the orignal link.
                             found = true;
                             break;
                         }
                     }
                     if (!found) {
+                        // If no data fetching function is found, just click the
+                        // original link.
                         originalLinkRef.current?.click();
                     }
                 }}
