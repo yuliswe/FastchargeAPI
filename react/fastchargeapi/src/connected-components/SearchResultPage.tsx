@@ -19,6 +19,7 @@ import { AppContext, ReactAppContextType } from "../AppContext";
 import { SiteLayout } from "../SiteLayout";
 import { GQLAppFullTextSearchOrderBy } from "../__generated__/gql-operations";
 import { AppSearchResultEvent, SearchResult } from "../events/AppSearchResultEvent";
+import { RouteURL } from "../routes";
 import { PaginatedList, PaginatedListOnPageChangeHandler } from "../stateless-components/PaginatedList";
 import { AppSearchResultState } from "../states/AppSearchResultState";
 import { RootAppState } from "../states/RootAppState";
@@ -133,7 +134,11 @@ class _SearchResultPage extends React.Component<Props, {}> {
 const generateAppSearchResultComponents = (searchResults: SearchResult[]) => {
     return searchResults.map((result, index) => (
         <Paper key={index} sx={{ p: 3, mb: 2 }}>
-            <Link href={`/app/${result.pk}`}>
+            <Link
+                href={RouteURL.appDetailPage({
+                    params: { app: result.pk },
+                })}
+            >
                 <Stack direction="row" spacing={1} alignItems="center">
                     <Typography variant="h5" maxWidth="20em" noWrap lineHeight="130%">
                         {result.title || result.name}

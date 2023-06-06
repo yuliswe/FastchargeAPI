@@ -1,6 +1,7 @@
 import React from "react";
 import { createBrowserRouter } from "react-router-dom";
 import { WithRouteContextProps } from "./App";
+import { AppContext } from "./AppContext";
 import { AccountPage } from "./connected-components/AccountPage";
 import { AppDetailPage } from "./connected-components/AppDetailPage";
 import { AuthPage } from "./connected-components/AuthPage";
@@ -15,11 +16,11 @@ import { SubscriptionsPage } from "./connected-components/SubscriptionsPage";
 import { TermsPage } from "./connected-components/TermsPage";
 import { TopUpPage } from "./connected-components/TopupPage";
 
-type SearchResultPageParams = {};
-type SearchResultPageQuery = { q?: string; tag?: string; sort?: string; page?: string };
-type AppDetailPageParams = { app: string };
-type AuthPageQuery = { redirect?: string };
-type TermsPageTag = "pricing" | "privacy" | "tos";
+export type SearchResultPageParams = {};
+export type SearchResultPageQuery = { q?: string; tag?: string; sort?: string; page?: string };
+export type AppDetailPageParams = { app: string };
+export type AuthPageQuery = { redirect?: string };
+export type TermsPageTag = "pricing" | "privacy" | "tos";
 
 export function buildSearchParams(query: any): string {
     const search = new URLSearchParams();
@@ -68,6 +69,21 @@ export const RouteURL = {
     },
 };
 
+enum RoutePattern {
+    AppDetailPage = "/app/:app",
+}
+
+export type RouteDataFetcher = (context: AppContext, params: any, query: any) => Promise<void>;
+export const routeDataFetchers: {
+    path: RoutePattern;
+    fetchData: RouteDataFetcher;
+}[] = [
+    {
+        path: RoutePattern.AppDetailPage,
+        fetchData: (context, params, query) => AppDetailPage.WrappedComponent.fetchData(context, params, query),
+    },
+];
+
 export function createRouter(WithContext: (props: WithRouteContextProps) => React.ReactElement) {
     const router = createBrowserRouter([
         {
@@ -91,7 +107,7 @@ export function createRouter(WithContext: (props: WithRouteContextProps) => Reac
             element: <WithContext children={<SearchResultPage />} />,
         },
         {
-            path: "/app/:app",
+            path: RoutePattern.AppDetailPage,
             element: <WithContext children={<AppDetailPage />} />,
         },
         {

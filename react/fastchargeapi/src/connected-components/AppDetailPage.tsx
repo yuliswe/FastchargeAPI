@@ -11,7 +11,7 @@ import remarkGfm from "remark-gfm";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { SiteLayout } from "../SiteLayout";
 import { AppDetailEndpoint, AppDetailEvent, AppDetailPricing } from "../events/AppDetailEvent";
-import { RouteURL } from "../routes";
+import { AppDetailPageParams, RouteURL } from "../routes";
 import {
     DocumentationDialog,
     SupportDocumentation,
@@ -21,7 +21,7 @@ import {
 import { PricingCard } from "../stateless-components/PricingCard";
 import { AppDetailAppState } from "../states/AppDetailAppState";
 import { RootAppState } from "../states/RootAppState";
-import { appStore } from "../store-config";
+import { appStore, reduxStore } from "../store-config";
 
 type _Props = {
     appState: AppDetailAppState;
@@ -38,6 +38,39 @@ class _AppDetailPage extends React.Component<_Props, _State> {
         this.state = {
             ...supportDocumenationDefault,
         };
+    }
+
+    static isLoading(): boolean {
+        return (
+            appStore.getState().appDetail.loadingAppInfo ||
+            appStore.getState().appDetail.loadingEndpoints ||
+            appStore.getState().appDetail.loadingPricing
+        );
+    }
+    static async fetchData(baseContext: AppContext, { app }: AppDetailPageParams, query: {}): Promise<void> {
+        appStore.dispatch(
+            new AppDetailEvent.LoadAppInfo(baseContext, {
+                app,
+            })
+        );
+        appStore.dispatch(
+            new AppDetailEvent.LoadEndpoints(baseContext, {
+                app,
+            })
+        );
+        appStore.dispatch(
+            new AppDetailEvent.LoadPricings(baseContext, {
+                app,
+            })
+        );
+        return new Promise<void>((resolve) => {
+            const unsub = reduxStore.subscribe(() => {
+                if (!_AppDetailPage.isLoading()) {
+                    resolve();
+                    unsub();
+                }
+            });
+        });
     }
 
     getPricingList(): (AppDetailPricing | null)[] {
@@ -60,26 +93,16 @@ class _AppDetailPage extends React.Component<_Props, _State> {
         return app;
     }
 
-    componentDidMount(): void {
-        appStore.dispatch(
-            new AppDetailEvent.LoadAppInfo(this._context, {
-                app: this.getAppPK(),
-            })
-        );
-        appStore.dispatch(
-            new AppDetailEvent.LoadEndpoints(this._context, {
-                app: this.getAppPK(),
-            })
-        );
-        appStore.dispatch(
-            new AppDetailEvent.LoadPricings(this._context, {
-                app: this.getAppPK(),
-            })
+    async componentDidMount() {
+        await _AppDetailPage.fetchData(
+            this._context,
+            this._context.route.params as AppDetailPageParams,
+            this._context.route.query
         );
     }
 
     loading() {
-        return this.appState.loadingAppInfo || this.appState.loadingEndpoints || this.appState.loadingPricing;
+        return _AppDetailPage.isLoading();
     }
 
     getEndpoints(): (AppDetailEndpoint | null)[] {

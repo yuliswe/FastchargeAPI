@@ -1,4 +1,4 @@
-import { Box } from "@mui/material";
+import { Box, LinearProgress } from "@mui/material";
 import React from "react";
 import { AppContext, ReactAppContextType } from "./AppContext";
 import { SiteFooter } from "./connected-components/SiteFooter";
@@ -23,6 +23,11 @@ export class SiteLayout extends React.PureComponent<Props> {
     render() {
         return (
             <React.Fragment>
+                {this._context.loading.isLoading && (
+                    <Box sx={{ position: "fixed", top: 0, left: 0, right: 0, overflow: "visible", zIndex: 99999 }}>
+                        <LinearProgress />
+                    </Box>
+                )}
                 <AppBar
                     onSearch={this.props.onSearch}
                     bgcolor={this.props.bgcolor}

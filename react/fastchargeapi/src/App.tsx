@@ -2,25 +2,24 @@ import { gql } from "@apollo/client";
 import { CssBaseline, useMediaQuery } from "@mui/material";
 import { Theme, ThemeProvider } from "@mui/material/styles";
 import { User as FirebaseUser, getAuth, signInAnonymously } from "firebase/auth";
-import React, { useContext, useEffect, useState } from "react";
+import { throttle } from "lodash";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import {
     LinkProps,
     LinkProps as RouterLinkProps,
     RouterProvider,
+    matchPath,
     useLocation,
     useNavigate,
     useParams,
     useSearchParams,
 } from "react-router-dom";
 import { HashLink } from "react-router-hash-link";
-import { AppContext, AppContextProvider, ReactAppContextType, defaulAppContext } from "./AppContext";
+import { AppContext, AppContextProvider, ReactAppContextType } from "./AppContext";
 import { initializeFirebase } from "./firebase";
 import { getGQLClient } from "./graphql-client";
-import { RouteURL, createRouter } from "./routes";
+import { RouteURL, createRouter, routeDataFetchers } from "./routes";
 import { getTheme } from "./theme";
-
-let firebaseApp = initializeFirebase();
-
 export type WithRouteContextProps = React.PropsWithChildren<{
     requireAuth?: boolean;
     theme?: Theme;
@@ -32,6 +31,7 @@ function WithRouteContext(props: WithRouteContextProps) {
     const navigate = useNavigate();
     const params = useParams();
     const [searchParam, setSearchParam] = useSearchParams();
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const requireAuth = props.requireAuth ?? false;
     // Hide content so that it doesn't flash before the user is redirected.
@@ -114,6 +114,10 @@ function WithRouteContext(props: WithRouteContextProps) {
                         setSearchParam(search.toString());
                     },
                 },
+                loading: {
+                    isLoading,
+                    setIsLoading,
+                },
             }}
         >
             {hideContent || props.children}
@@ -124,6 +128,8 @@ function WithRouteContext(props: WithRouteContextProps) {
 const router = createRouter(WithRouteContext);
 
 function App() {
+    const firebaseApp = initializeFirebase();
+
     const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
     const [isAnonymousUser, setIsAnonymousUser] = useState<boolean>(true);
 
@@ -176,11 +182,49 @@ function App() {
             isHash: boolean;
         }
     >(({ href, ...other }, ref) => {
-        return <HashLink ref={ref} to={href} {...other} />;
+        const originalLinkRef = useRef<HTMLAnchorElement>(null);
+        // This is the hidden link that used to obtain the original behavior of HashLink.
+        const originalLink = <HashLink ref={originalLinkRef} to={href} {...other} style={{ display: "none" }} />;
+        // This is the link that's actually displayed and being clicked on. This
+        // is modified so that we can add our own behavior.
+        const context = useContext(ReactAppContextType);
+        const displayLink = (
+            <HashLink
+                ref={ref}
+                to={href}
+                {...other}
+                // eslint-disable-next-line @typescript-eslint/no-misused-promises
+                onClick={async (event) => {
+                    event.preventDefault();
+                    const url = new URL(href.toString(), window.location.origin);
+                    let found = false;
+                    for (const { path, fetchData } of routeDataFetchers) {
+                        const match = matchPath(path, url.pathname);
+                        if (match) {
+                            const queryParams = url.searchParams;
+                            context.loading.setIsLoading(true);
+                            await fetchData(context, match.params, queryParams.entries());
+                            context.loading.setIsLoading(false);
+                            originalLinkRef.current?.click(); // Click the orignal link.
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        originalLinkRef.current?.click();
+                    }
+                }}
+            />
+        );
+        return (
+            <React.Fragment>
+                {originalLink}
+                {displayLink}
+            </React.Fragment>
+        );
     });
 
-    const context: AppContext = {
-        ...defaulAppContext,
+    const context = {
         mediaQuery,
         firebase: {
             user: firebaseUser,
@@ -189,15 +233,15 @@ function App() {
             isAnonymousUserPromise: userPromise.then((user) => user.isAnonymous),
         },
         theme,
-    };
+    } as AppContext;
 
     return (
         <AppContextProvider value={context}>
             <ThemeProvider
                 theme={getTheme({
-                    spacing: mediaQuery.xs.only ? 4 : 8,
+                    spacing: context.mediaQuery.xs.only ? 4 : 8,
                     typography: {
-                        fontSize: mediaQuery.xs.only ? 12 : 14,
+                        fontSize: context.mediaQuery.xs.only ? 12 : 14,
                     },
                     components: {
                         MuiButtonBase: {

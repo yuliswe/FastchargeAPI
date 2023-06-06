@@ -1,14 +1,14 @@
-import { AppEvent, AppEventStream, mapState, to } from "react-appevent-redux";
-import { RootAppState } from "../states/RootAppState";
-import { getGQLClient } from "../graphql-client";
-import { AppContext } from "../AppContext";
 import { gql } from "@apollo/client";
+import { AppEvent, AppEventStream, mapState, to } from "react-appevent-redux";
+import { AppContext } from "../AppContext";
 import {
     GQLAppDetailLoadAppInfoQuery,
     GQLAppDetailLoadEndpointsQuery,
     GQLAppDetailLoadEndpointsQueryVariables,
     GQLAppDetailLoadPricingsQuery,
 } from "../__generated__/gql-operations";
+import { getGQLClient } from "../graphql-client";
+import { RootAppState } from "../states/RootAppState";
 
 export type AppDetailInfo = GQLAppDetailLoadAppInfoQuery["app"];
 class LoadAppInfo extends AppEvent<RootAppState> {
@@ -18,7 +18,7 @@ class LoadAppInfo extends AppEvent<RootAppState> {
     reducer(state: RootAppState): RootAppState {
         return state.mapState({
             appDetail: mapState({
-                loadingAppInfo: to(true),
+                // loadingAppInfo: to(true),
             }),
         });
     }
@@ -83,7 +83,7 @@ class LoadPricings extends AppEvent<RootAppState> {
     reducer(state: RootAppState): RootAppState {
         return state.mapState({
             appDetail: mapState({
-                loadingPricing: to(true),
+                // loadingPricing: to(true),
             }),
         });
     }
@@ -130,7 +130,7 @@ class LoadEndpoints extends AppEvent<RootAppState> {
     reducer(state: RootAppState): RootAppState {
         return state.mapState({
             appDetail: mapState({
-                loadingEndpoints: to(true),
+                // loadingEndpoints: to(true),
             }),
         });
     }

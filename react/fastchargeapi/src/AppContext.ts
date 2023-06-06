@@ -2,21 +2,20 @@ import { Theme } from "@mui/material/styles";
 import { User as FirebaseUser } from "firebase/auth";
 import React from "react";
 import { Location, NavigateFunction, Params, useSearchParams } from "react-router-dom";
-
-export const defaulAppContext = {
+export type AppContext = {
     mediaQuery: {
-        xs: { down: false, only: false, up: false },
-        sm: { down: false, only: false, up: false },
-        md: { down: false, only: false, up: false },
-        lg: { down: false, only: false, up: false },
-    },
-    firebase: null as unknown as {
+        xs: { down: boolean; only: boolean; up: boolean };
+        sm: { down: boolean; only: boolean; up: boolean };
+        md: { down: boolean; only: boolean; up: boolean };
+        lg: { down: boolean; only: boolean; up: boolean };
+    };
+    firebase: {
         user: FirebaseUser | null;
         userPromise: Promise<FirebaseUser>;
         isAnonymousUser: boolean;
         isAnonymousUserPromise: Promise<boolean>;
-    },
-    route: null as unknown as {
+    };
+    route: {
         location: Location; // Equivalent to window.location
         locationHref: string; // Equivalent to location.pathname + location.search + location.hash
         navigate: NavigateFunction;
@@ -24,10 +23,13 @@ export const defaulAppContext = {
         query: ReturnType<typeof useSearchParams>[0]; // Gets the values of the current route's query string, ie, the part after the ? in /users?search=abc
         setQuery: ReturnType<typeof useSearchParams>[1]; // Sets the query params with an encoded string, eg setQuery("search=abc")
         updateQuery: (query: Record<string, string | null | undefined>) => void; // Sets the query params with a dictionary, eg updateQuery({search: "abc"})
-    },
-    theme: null as unknown as Theme,
+    };
+    theme: Theme;
+    loading: {
+        isLoading: boolean;
+        setIsLoading: (value: boolean) => void;
+    };
 };
 
-export const ReactAppContextType = React.createContext(defaulAppContext);
+export const ReactAppContextType = React.createContext<AppContext>(null!); // We will assign all properties in App.tsx
 export const AppContextProvider = ReactAppContextType.Provider;
-export type AppContext = typeof defaulAppContext;
