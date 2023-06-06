@@ -35,6 +35,7 @@ const config = {
     },
 
     plugins: ["docusaurus-plugin-sass"],
+    trailingSlash: true,
 
     presets: [
         [
