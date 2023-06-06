@@ -28,7 +28,7 @@ curl "https://[APP_NAME].fastchargeapi.com/someresource" -H "X-Fast-API-KEY: [Yo
 ## Getting started
 
 For the purpose of this tutorial, we will use the official `myapp` example
-that's created in the previous tutorial: [Publish API](./intro-publish-api).
+that's created in the previous tutorial: [Publish API](./intro-publish-api.md).
 
 ## Install the FastchargeAPI cli-tools:
 

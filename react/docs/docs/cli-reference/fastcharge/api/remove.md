@@ -25,5 +25,5 @@ fastcharge api remove endp_WyJteWFwcCIsMTY3Nzk3MTMyNTU1OF0
 Type: string. Required.
 
 ID of the endpoint to be deleted. The endpoint id can be obtained by
-[`fastcharge api list`](./list).
+[`fastcharge api list`](./list.md).
 

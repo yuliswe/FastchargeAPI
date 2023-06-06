@@ -27,4 +27,4 @@ Type: string. Required.
 
 Specify a pricing plan to subscribe to an app.
 
-The pricing id can be obtained by [`fastapi pricing list`](../pricing/list).
+The pricing id can be obtained by [`fastapi pricing list`](../pricing/list.md).

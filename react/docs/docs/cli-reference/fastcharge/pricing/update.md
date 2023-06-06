@@ -18,8 +18,7 @@ fastcharge pricing update [PRICING_ID] [OPTIONS]
 
 Type: string. Optional.
 
-The ID of the pricing plan. The ID can be obtained by running [`fastcharge
-pricing list`](./list).
+The ID of the pricing plan. The ID can be obtained by running [`fastcharge pricing list`](./list.md).
 
 ## Available options:
 

@@ -150,4 +150,4 @@ That's it! With 3 simple commands, you have created a live app that charges the
 customer whenever they make a request.
 
 For the next step, you might be interested in learning [how to use an app
-published by someone else](./intro-use-api).
+published by someone else](./intro-use-api.md).

@@ -17,7 +17,7 @@ be able to access the APIs.
 billing period.**
 
 If you simply need to stop accepting new subscriptions, consider using
-[`fastcharge app update --make-private`](./update) instead. This way, existing
+[`fastcharge app update --make-private`](./update.md) instead. This way, existing
 subscribers are not affected.
 
 ## Usage
