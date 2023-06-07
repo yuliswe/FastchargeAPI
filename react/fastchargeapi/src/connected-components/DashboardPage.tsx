@@ -208,6 +208,8 @@ class _DashboardPage extends React.Component<Props, State> {
             values.push(Number.parseFloat(v.closingBalance));
             labels.push(new Date(v.closingTime).toLocaleDateString());
         }
+        values.reverse();
+        labels.reverse();
         const data = {
             labels,
             datasets: [
