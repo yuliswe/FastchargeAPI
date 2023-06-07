@@ -23,6 +23,8 @@ export type AppDetailPageParams = { app: string };
 export type AuthPageQuery = { redirect?: string };
 export type TermsPageTag = "pricing" | "privacy" | "tos";
 export type DashboardPageQuery = { sdate?: string; spage?: string };
+export type SubscriptionDetailPageParams = { app: string };
+export type SubscriptionDetailPageQuery = { sdate?: string; spage?: string };
 
 export function buildSearchParams(query: any): string {
     const search = new URLSearchParams();
@@ -37,10 +39,10 @@ export const RouteURL = {
         params = {},
         query = {},
     }: { params?: SearchResultPageParams; query?: SearchResultPageQuery } = {}) {
-        return `/search/?${buildSearchParams(query)}` + "#";
+        return `/search/?${buildSearchParams(query)}#`;
     },
     appDetailPage({ params }: { params: AppDetailPageParams }): string {
-        return `/app/${params.app}/` + "#";
+        return `/app/${params.app}/#`;
     },
     termsPage({ tag }: { tag?: TermsPageTag } = {}): string {
         return `/terms-of-service/#${tag ?? ""}`;
@@ -61,7 +63,7 @@ export const RouteURL = {
         return `/account/my-apps/#`;
     },
     authPage({ query }: { query?: AuthPageQuery } = {}): string {
-        return `/auth/?${buildSearchParams(query)}` + "#";
+        return `/auth/?${buildSearchParams(query)}#`;
     },
     onboardPage(): string {
         return `/onboard/#`;
@@ -72,11 +74,21 @@ export const RouteURL = {
     dashboardPage({ query }: { query?: DashboardPageQuery }): string {
         return `/account/#`;
     },
+    subscriptionDetailPage({
+        params,
+        query = {},
+    }: {
+        params: SubscriptionDetailPageParams;
+        query?: SubscriptionDetailPageQuery;
+    }): string {
+        return `/account/subscriptions/${params.app}/?${buildSearchParams(query)}#`;
+    },
 };
 
 enum RoutePattern {
     AppDetailPage = "/app/:app",
     SubscriptionsPage = "/account/subscriptions",
+    SubscriptionDetailPage = "/account/subscriptions/:app",
     HomePage = "/",
     MyAppsPage = "/account/my-apps",
     DashboardPage = "/account",
@@ -109,6 +121,11 @@ export const routeDataFetchers: {
     {
         path: RoutePattern.DashboardPage,
         fetchData: (context, params, query) => DashboardPage.WrappedComponent.fetchData(context, params, query),
+    },
+    {
+        path: RoutePattern.SubscriptionDetailPage,
+        fetchData: (context, params, query) =>
+            SubscriptionDetailPage.WrappedComponent.fetchData(context, params, query),
     },
 ];
 
@@ -159,7 +176,7 @@ export function createRouter(WithContext: (props: WithRouteContextProps) => Reac
                     element: <SubscriptionsPage />,
                 },
                 {
-                    path: "subscriptions/:app",
+                    path: RoutePattern.SubscriptionDetailPage,
                     element: <SubscriptionDetailPage />,
                 },
             ],

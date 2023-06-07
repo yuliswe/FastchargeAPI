@@ -10,6 +10,7 @@ import {
 } from "@mui/icons-material";
 import { Avatar, Box, Button, Chip, Paper, Skeleton, Stack, Typography } from "@mui/material";
 import React from "react";
+import { RouteURL } from "../routes";
 
 export function getRandomProductIcons(avatarSize: number, iconSize: number) {
     return [
@@ -96,10 +97,14 @@ export class HomePageProductList extends React.PureComponent<HomePageProductList
                     </Stack>
                 </Box>
                 <Box display="flex" gap={2} flexWrap="wrap" justifyContent="center" alignItems="center">
-                    <Button variant="text" href={product.link}>
+                    <Button variant="text" href={RouteURL.appDetailPage({ params: { app: product.pk } })}>
                         Learn more
                     </Button>
-                    <Button variant="contained" endIcon={<ArrowForwardRounded />} href={product.link}>
+                    <Button
+                        variant="contained"
+                        endIcon={<ArrowForwardRounded />}
+                        href={RouteURL.appDetailPage({ params: { app: product.pk } })}
+                    >
                         Visit
                     </Button>
                 </Box>

@@ -4,7 +4,7 @@ import { connect } from "react-redux";
 import Terminal, { ColorMode, TerminalInput } from "react-terminal-ui";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { AvailablePlan, SubscriotionDetailEvent, UsageSummary } from "../events/SubscriptionDetailEvent";
-import { RouteURL } from "../routes";
+import { RouteURL, SubscriptionDetailPageParams } from "../routes";
 import {
     DocumentationDialog,
     SupportDocumentation,
@@ -15,7 +15,7 @@ import { LogTable, LogTableOnChangeHandler } from "../stateless-components/LogTa
 import { PricingCard } from "../stateless-components/PricingCard";
 import { RootAppState } from "../states/RootAppState";
 import { SubscriptionDetailAppState } from "../states/SubscriptionDetailAppState";
-import { appStore } from "../store-config";
+import { appStore, reduxStore } from "../store-config";
 
 type _Props = {
     appState: SubscriptionDetailAppState;
@@ -61,27 +61,48 @@ class _SubscriptionDetailPage extends React.Component<_Props, _State> {
         return app;
     }
 
-    componentDidMount(): void {
-        appStore.dispatch(
-            new SubscriotionDetailEvent.LoadAvailablePlans(this._context, {
-                appName: this.getAppNameFromUrl(),
-            })
-        );
-        appStore.dispatch(
-            new SubscriotionDetailEvent.LoadUserSubscription(this._context, {
-                appName: this.getAppNameFromUrl(),
-            })
-        );
-        appStore.dispatch(
-            new SubscriotionDetailEvent.LoadAppInfo(this._context, {
-                appName: this.getAppNameFromUrl(),
-            })
-        );
-        appStore.dispatch(
-            new SubscriotionDetailEvent.LoadUsageSummary(this._context, {
-                appName: this.getAppNameFromUrl(),
-                dateRange: { end: Date.now() },
-            })
+    static isLoading() {
+        const st = appStore.getState().subscriptionDetail;
+        return st.loadingAvailablePlans || st.loadingSubscriptionDetail || st.loadingUsageSummary;
+    }
+
+    static async fetchData(context: AppContext, { app }: SubscriptionDetailPageParams, query: {}): Promise<void> {
+        return new Promise((resolve) => {
+            appStore.dispatch(
+                new SubscriotionDetailEvent.LoadAvailablePlans(context, {
+                    appName: app,
+                })
+            );
+            appStore.dispatch(
+                new SubscriotionDetailEvent.LoadUserSubscription(context, {
+                    appName: app,
+                })
+            );
+            appStore.dispatch(
+                new SubscriotionDetailEvent.LoadAppInfo(context, {
+                    appName: app,
+                })
+            );
+            appStore.dispatch(
+                new SubscriotionDetailEvent.LoadUsageSummary(context, {
+                    appName: app,
+                    dateRange: { end: Date.now() },
+                })
+            );
+            const unsub = reduxStore.subscribe(() => {
+                if (!_SubscriptionDetailPage.isLoading()) {
+                    unsub();
+                    resolve();
+                }
+            });
+        });
+    }
+
+    async componentDidMount() {
+        await _SubscriptionDetailPage.fetchData(
+            this._context,
+            this._context.route.params as SubscriptionDetailPageParams,
+            this._context.route.query
         );
     }
 

@@ -8,7 +8,6 @@ import {
     CardContent,
     Chip,
     Grid,
-    Link,
     Paper,
     Skeleton,
     Stack,
@@ -111,8 +110,7 @@ class _SubscriptionsPage extends React.Component<Props> {
                                     <Button
                                         variant="contained"
                                         color="primary"
-                                        LinkComponent={Link}
-                                        href={sub.app.name}
+                                        href={RouteURL.subscriptionDetailPage({ params: { app: sub.app.name } })}
                                     >
                                         Manage
                                     </Button>
