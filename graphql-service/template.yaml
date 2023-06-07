@@ -152,7 +152,7 @@ Resources:
                   - "sqs:ReceiveMessage"
                   - "sqs:SendMessage"
                   - "sqs:GetQueueAttributes"
-                  - "kms:Decrypt"
+                  - "kms:Decrypt" # Needed for using Data API with Aurora Serverless
                   - "rds-data:ExecuteSql"
                   - "rds-data:ExecuteStatement"
                   - "rds-data:BatchExecuteStatement"

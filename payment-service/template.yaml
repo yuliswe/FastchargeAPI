@@ -39,6 +39,49 @@ Resources:
         - DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
           HostedZoneId: !Ref Route53ZoneId
 
+  LambdaFunctionRole: # Lambda functions will run as this role.
+    Type: AWS::IAM::Role
+    Properties:
+      Description: "Role for Lambda functions"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+      Policies:
+        - PolicyName: GraphQLServicePolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Resource: "*"
+                Action:
+                  - "dynamodb:BatchGetItem"
+                  - "dynamodb:BatchWriteItem"
+                  - "dynamodb:ConditionCheckItem"
+                  - "dynamodb:DeleteItem"
+                  - "dynamodb:GetItem"
+                  - "dynamodb:GetRecords"
+                  - "dynamodb:PutItem"
+                  - "dynamodb:Query"
+                  - "dynamodb:Scan"
+                  - "dynamodb:UpdateItem"
+                  # Need to get credentials for the Stripe API
+                  - "ssm:GetParameter"
+                  - "ssm:GetParameters"
+                  - "ssm:GetParametersByPath"
+                  - "sqs:SendMessage"
+                  - "sqs:GetQueueAttributes"
+                  - "secretsmanager:GetSecretValue"
+                  - "secretsmanager:ListSecrets"
+                  - "ses:SendEmail"
+
   APIGatewayV2:
     Type: AWS::Serverless::HttpApi
     Properties:
@@ -48,9 +91,9 @@ Resources:
         CertificateArn: !Ref GenerateCertificateV2
         Route53:
           HostedZoneId: !Ref Route53ZoneId
-      # AccessLogSettings:
-      #   DestinationArn: !GetAtt APIGatewayV2AccessLogs.Arn
-      #   Format: $context.requestId $context.httpMethod $context.path $context.error.responseType $context.error.messageString $context.authorizer.error $context.integrationErrorMessage
+      AccessLogSettings:
+        DestinationArn: !GetAtt APIGatewayV2AccessLogGroup.Arn
+        Format: $context.requestId $context.httpMethod $context.path $context.error.responseType $context.error.messageString $context.authorizer.error $context.integrationErrorMessage
       Auth: # Uses the FirebaseTokenAuthorizer to identify the session user.
         DefaultAuthorizer: FirebaseTokenAuthorizer
         Authorizers:
@@ -71,8 +114,10 @@ Resources:
           - "https://fastchargeapi.com"
       DisableExecuteApiEndpoint: True
 
-  # APIGatewayV2AccessLogs:
-  #   Type: AWS::Logs::LogGroup
+  APIGatewayV2AccessLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "${AWS::StackName}-APIGatewayV2AccessLogGroup"
 
   APIGatewayV2InvocationRole:
     Type: AWS::IAM::Role
@@ -104,9 +149,7 @@ Resources:
       Runtime: nodejs18.x
       Architectures:
         - arm64
-      Policies:
-        - AWSLambdaRole
-        - AmazonDynamoDBFullAccess # Give the Lambda service access to poll your DynamoDB Stream
+      Role: !GetAtt LambdaFunctionRole.Arn
       ReservedConcurrentExecutions: 1
       Timeout: 60
       MemorySize: 3008
@@ -142,13 +185,9 @@ Resources:
       Runtime: nodejs18.x
       Architectures:
         - arm64 # if you are using Apple M1
+      Role: !GetAtt LambdaFunctionRole.Arn
       MemorySize: 512
       Timeout: 10
-      Policies:
-        - AWSLambdaRole
-        - AmazonDynamoDBReadOnlyAccess # For looking up user's stripe id
-        - AmazonSESFullAccess # For ending email to user
-        - AmazonSSMReadOnlyAccess # Need to get credentials for the Stripe API
       Events:
         POST:
           Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -173,12 +212,9 @@ Resources:
       Runtime: nodejs18.x
       Architectures:
         - arm64 # if you are using Apple M1
+      Role: !GetAtt LambdaFunctionRole.Arn
       MemorySize: 512
       Timeout: 10
-      Policies:
-        - AWSLambdaRole
-        - AmazonDynamoDBFullAccess # For looking up or update user's stripe id
-        - AmazonSSMReadOnlyAccess # Need to get credentials for the Stripe API
       Events:
         POST:
           Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -203,13 +239,9 @@ Resources:
       Runtime: nodejs18.x
       Architectures:
         - arm64 # if you are using Apple M1
+      Role: !GetAtt LambdaFunctionRole.Arn
       MemorySize: 3008
       Timeout: 10
-      Policies:
-        - AWSLambdaRole
-        - AmazonDynamoDBFullAccess # Create and update order, user
-        - AmazonSSMReadOnlyAccess # Need to get credentials for the Stripe API
-        - AmazonSQSFullAccess # Need to send SQS billing request to settle stripePaymentAccept
       Events:
         POST:
           Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -236,13 +268,9 @@ Resources:
       Runtime: nodejs18.x
       Architectures:
         - arm64 # if you are using Apple M1
+      Role: !GetAtt LambdaFunctionRole.Arn
       MemorySize: 512
       Timeout: 10
-      Policies:
-        - AWSLambdaRole
-        - AmazonDynamoDBFullAccess # Create and update order
-        - AmazonSSMReadOnlyAccess # Need to get credentials for the Stripe API
-        - AmazonSQSFullAccess # Need to send SQS billing request to settle stripePaymentAccept
       Events:
         POST:
           Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -267,13 +295,9 @@ Resources:
       Runtime: nodejs18.x
       Architectures:
         - arm64 # if you are using Apple M1
+      Role: !GetAtt LambdaFunctionRole.Arn
       MemorySize: 512
       Timeout: 10
-      Policies:
-        - AWSLambdaRole
-        - AmazonDynamoDBFullAccess # Create and update order
-        - AmazonSSMReadOnlyAccess # Need to get credentials for the Stripe API
-        - AmazonSQSFullAccess # Need to send SQS billing request to settle stripePaymentAccept
       Events:
         POST:
           Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -298,12 +322,9 @@ Resources:
       Runtime: nodejs18.x
       Architectures:
         - arm64 # if you are using Apple M1
+      Role: !GetAtt LambdaFunctionRole.Arn
       MemorySize: 512
       Timeout: 10
-      Policies:
-        - AWSLambdaRole
-        - AmazonDynamoDBFullAccess # Update user for connect account id
-        - AmazonSSMReadOnlyAccess # Need to get credentials for the Stripe API
       Events:
         POST:
           Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
