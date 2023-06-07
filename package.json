@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "echo-build-order": "echo auth search graphql payment gateway echo",
+    "test": "for s in $(npm run --silent echo-build-order | sed 's/ /\\n/g'); do (cd ${s}-service && npm run test); done",
     "deploy": "for s in $(npm run --silent echo-build-order | sed 's/ /\\n/g'); do (cd ${s}-service && npm run deploy); done",
     "deploy:live": "for s in $(npm run --silent echo-build-order | sed 's/ /\\n/g'); do (cd ${s}-service && npm run deploy:live); done"
   },

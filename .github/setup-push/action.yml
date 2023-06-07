@@ -1,7 +1,4 @@
 name: "Setup"
-inputs:
-  AWS_GITHUBACTIONROLE_ARN:
-    required: true
 runs:
   using: "composite"
   steps:
@@ -18,10 +15,10 @@ runs:
     - uses: aws-actions/setup-sam@v2
       with:
         use-installer: true
-    - uses: aws-actions/configure-aws-credentials@master
+    - uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-region: us-east-1
-        role-to-assume: ${{ inputs.AWS_GITHUBACTIONROLE_ARN }}
+        role-to-assume: "arn:aws:iam::209991057786:role/github-action-permissions-GithubActionRole"
     - name: Install
       run: |
         npm i -g prettier esbuild

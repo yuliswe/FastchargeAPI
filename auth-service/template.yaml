@@ -120,6 +120,7 @@ Resources:
   APIGatewayV2Role:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: !Sub ${AWS::StackName}-APIGatewayV2Role
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -130,7 +131,7 @@ Resources:
               Service:
                 - apigateway.amazonaws.com
       Policies:
-        - PolicyName: APIGatewayInvokePolicy
+        - PolicyName: !Sub ${AWS::StackName}-APIGatewayV2Policy
           PolicyDocument:
             Version: "2012-10-17"
             Statement:

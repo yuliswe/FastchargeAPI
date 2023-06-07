@@ -1,0 +1,11 @@
+{
+  "name": "github-permissions",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "deploy": "sam deploy",
+    "deploy:live": "sam deploy --config-env live"
+  },
+  "author": "",
+  "license": "ISC"
+}

@@ -5,7 +5,7 @@ version = 0.1
 stack_name = "dev-gateway-service"
 s3_prefix = "dev-gateway-service"
 region = "us-east-1"
-capabilities = "CAPABILITY_IAM"
+capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
 parameter_overrides = "ServicePrefix=\"dev\" MainDomain=\"devfastchargeapi.com\" Route53ZoneId=\"Z07362872NENGXHWMNLU5\" EnvDevDomain=\"1\""
 image_repositories = []
 resolve_s3 = true
@@ -21,7 +21,7 @@ profile = "live_fastchargeapi"
 stack_name = "live-gateway-service"
 s3_prefix = "live-gateway-service"
 region = "us-east-1"
-capabilities = "CAPABILITY_IAM"
+capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
 parameter_overrides = "ServicePrefix=\"live\" MainDomain=\"fastchargeapi.com\" Route53ZoneId=\"Z0358815GI2I8U5CTHXW\""
 image_repositories = []
 resolve_s3 = true

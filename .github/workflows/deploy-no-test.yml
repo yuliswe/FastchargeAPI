@@ -21,8 +21,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/setup-push
-        with:
-          AWS_GITHUBACTIONROLE_ARN: ${{ secrets.AWS_GITHUBACTIONROLE_ARN }}
       - name: Build dependency
         run: |
           (cd graphql-service/apollo && npm ci && npm run prebuild)
@@ -37,8 +35,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/setup-push
-        with:
-          AWS_GITHUBACTIONROLE_ARN: ${{ secrets.AWS_GITHUBACTIONROLE_ARN }}
       - name: Build dependency
         run: |
           (cd graphql-service/apollo && npm ci && npm run prebuild)
@@ -52,8 +48,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/setup-push
-        with:
-          AWS_GITHUBACTIONROLE_ARN: ${{ secrets.AWS_GITHUBACTIONROLE_ARN }}
       - name: Build dependency
         run: |
           (cd graphql-service/apollo && npm ci && npm run prebuild)
@@ -68,8 +62,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/setup-push
-        with:
-          AWS_GITHUBACTIONROLE_ARN: ${{ secrets.AWS_GITHUBACTIONROLE_ARN }}
       - name: Build dependency
         run: |
           (cd graphql-service/apollo && npm ci && npm run prebuild)

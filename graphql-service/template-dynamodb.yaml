@@ -19,6 +19,7 @@ Resources:
   RestoreFromBackupVaultRole: # A role that allows the service to restore from AWS backup vault
     Type: "AWS::IAM::Role"
     Properties:
+      RoleName: !Sub ${AWS::StackName}-RestoreFromBackupVaultRole
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -27,7 +28,7 @@ Resources:
               Service: "backup.amazonaws.com"
             Action: "sts:AssumeRole"
       Policies:
-        - PolicyName: "RestoreBackupPolicy"
+        - PolicyName: !Sub ${AWS::StackName}-RestoreFromBackupVaultPolicy
           PolicyDocument:
             Version: "2012-10-17"
             Statement:

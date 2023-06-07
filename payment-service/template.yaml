@@ -42,6 +42,7 @@ Resources:
   LambdaFunctionRole: # Lambda functions will run as this role.
     Type: AWS::IAM::Role
     Properties:
+      RoleName: !Sub ${AWS::StackName}-LambdaFunctionRole
       Description: "Role for Lambda functions"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -55,7 +56,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
       Policies:
-        - PolicyName: GraphQLServicePolicy
+        - PolicyName: !Sub "${AWS::StackName}-LambdaFunctionPolicy"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -78,8 +79,6 @@ Resources:
                   - "ssm:GetParametersByPath"
                   - "sqs:SendMessage"
                   - "sqs:GetQueueAttributes"
-                  - "secretsmanager:GetSecretValue"
-                  - "secretsmanager:ListSecrets"
                   - "ses:SendEmail"
 
   APIGatewayV2:
@@ -122,6 +121,7 @@ Resources:
   APIGatewayV2InvocationRole:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: !Sub ${AWS::StackName}-APIGatewayV2InvocationRole
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -132,7 +132,7 @@ Resources:
               Service:
                 - apigateway.amazonaws.com
       Policies:
-        - PolicyName: LambdaInvocationPolicy
+        - PolicyName: !Sub "${AWS::StackName}-APIGatewayV2InvocationPolicy"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:

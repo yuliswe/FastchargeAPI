@@ -17,6 +17,7 @@ defaults:
 
 env:
   NODE_OPTIONS: "--max_old_space_size=6144"
+  DEV_DOMAIN: "1"
 
 jobs:
   test-graphql-service:
@@ -24,8 +25,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/setup-push
-        with:
-          AWS_GITHUBACTIONROLE_ARN: ${{ secrets.AWS_GITHUBACTIONROLE_ARN }}
       - name: Build
         run: |
           (cd graphql-service/apollo && npm ci && npm run prebuild)
@@ -39,8 +38,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/setup-push
-        with:
-          AWS_GITHUBACTIONROLE_ARN: ${{ secrets.AWS_GITHUBACTIONROLE_ARN }}
       - name: Build
         run: |
           (cd graphql-service/apollo && npm ci && npm run prebuild)
@@ -55,8 +52,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/setup-push
-        with:
-          AWS_GITHUBACTIONROLE_ARN: ${{ secrets.AWS_GITHUBACTIONROLE_ARN }}
       - name: Build
         run: |
           (cd graphql-service/apollo && npm ci && npm run prebuild)
@@ -71,8 +66,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/setup-push
-        with:
-          AWS_GITHUBACTIONROLE_ARN: ${{ secrets.AWS_GITHUBACTIONROLE_ARN }}
       - name: Build
         run: |
           poetry install

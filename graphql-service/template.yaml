@@ -67,6 +67,7 @@ Resources:
   ApiGatewayLoggingRole:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: !Sub "${AWS::StackName}-ApiGatewayLoggingRole"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -114,6 +115,7 @@ Resources:
   LambdaFunctionRole: # Lambda functions will run as this role.
     Type: AWS::IAM::Role
     Properties:
+      RoleName: !Sub "${AWS::StackName}-LambdaFunctionRole"
       Description: "Apollo GraphQL Service Role"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -127,44 +129,49 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
         - arn:aws:iam::aws:policy/service-role/AWSLambdaRole
-      Policies:
-        - PolicyName: GraphQLServicePolicy
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Resource: "*"
-                Action:
-                  - "dynamodb:BatchGetItem"
-                  - "dynamodb:BatchWriteItem"
-                  - "dynamodb:ConditionCheckItem"
-                  - "dynamodb:DeleteItem"
-                  - "dynamodb:GetItem"
-                  - "dynamodb:GetRecords"
-                  - "dynamodb:PutItem"
-                  - "dynamodb:Query"
-                  - "dynamodb:Scan"
-                  - "dynamodb:UpdateItem"
-                  - "ssm:GetParameter"
-                  - "ssm:GetParameters"
-                  - "ssm:GetParametersByPath"
-                  - "sqs:DeleteMessage"
-                  - "sqs:ReceiveMessage"
-                  - "sqs:SendMessage"
-                  - "sqs:GetQueueAttributes"
-                  - "kms:Decrypt" # Needed for using Data API with Aurora Serverless
-                  - "rds-data:ExecuteSql"
-                  - "rds-data:ExecuteStatement"
-                  - "rds-data:BatchExecuteStatement"
-                  - "rds-data:BeginTransaction"
-                  - "rds-data:CommitTransaction"
-                  - "rds-data:RollbackTransaction"
-                  - "secretsmanager:GetSecretValue"
-                  - "secretsmanager:ListSecrets"
+        - !Ref LambdaFunctionPolicy
+
+  LambdaFunctionPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub "${AWS::StackName}-LambdaFunctionPolicy"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Resource: "*"
+            Action:
+              - "dynamodb:BatchGetItem"
+              - "dynamodb:BatchWriteItem"
+              - "dynamodb:ConditionCheckItem"
+              - "dynamodb:DeleteItem"
+              - "dynamodb:GetItem"
+              - "dynamodb:GetRecords"
+              - "dynamodb:PutItem"
+              - "dynamodb:Query"
+              - "dynamodb:Scan"
+              - "dynamodb:UpdateItem"
+              - "ssm:GetParameter"
+              - "ssm:GetParameters"
+              - "ssm:GetParametersByPath"
+              - "sqs:DeleteMessage"
+              - "sqs:ReceiveMessage"
+              - "sqs:SendMessage"
+              - "sqs:GetQueueAttributes"
+              - "kms:Decrypt" # Needed for using Data API with Aurora Serverless
+              - "rds-data:ExecuteSql"
+              - "rds-data:ExecuteStatement"
+              - "rds-data:BatchExecuteStatement"
+              - "rds-data:BeginTransaction"
+              - "rds-data:CommitTransaction"
+              - "rds-data:RollbackTransaction"
+              - "secretsmanager:GetSecretValue"
+              - "secretsmanager:ListSecrets"
 
   APIGatewayInvokeRole: # This role gives API Gateway permission to invoke all lambda functions
     Type: AWS::IAM::Role
     Properties:
+      RoleName: !Sub "${AWS::StackName}-APIGatewayInvokeRole"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -177,7 +184,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
       Policies:
-        - PolicyName: APIGatewayInvokePolicy
+        - PolicyName: !Sub "${AWS::StackName}-APIGatewayInvokePolicy"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:

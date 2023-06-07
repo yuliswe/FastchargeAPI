@@ -163,21 +163,26 @@ describe("Test request header passthrough", () => {
                 "X-User-Email": testUser.email, // requires trust user email header test mode enabled
                 "X-FAST-API-KEY": "X-FAST-API-KEY",
                 "Custom-Header": "Custom-Header",
+                "Custom-Header-Multi": ["Custom-Header-Multi0", "Custom-Header-Multi1"],
             },
             timeout: 10_000,
         });
+
+        const respText = await resp.text();
+        console.log(resp.status, resp.statusText, respText);
         expect(resp.status).toEqual(200);
-        const echo: EchoEndpointResponse = await resp.json();
+        const echo = JSON.parse(respText) as EchoEndpointResponse;
         const headersLowerCased: { [header: string]: string } = {};
         for (const [header, value] of Object.entries(echo.headers)) {
             if (value) {
                 headersLowerCased[header.toLowerCase()] = value;
             }
         }
-        expect(headersLowerCased["x-fast-user"]).toStrictEqual([UserPK.stringify(testUser)]); // Check that X-Fast-User is set
+        expect(headersLowerCased["x-fast-user"]).toStrictEqual(UserPK.stringify(testUser)); // Check that X-Fast-User is set
         expect(headersLowerCased["x-user-pk"]).toStrictEqual(undefined);
         expect(headersLowerCased["x-fast-api-key"]).toStrictEqual(undefined); // Check that X-FAST-API-KEY is not leaked
-        expect(headersLowerCased["custom-header"]).toStrictEqual(["Custom-Header"]); // Any custom header should be kept
+        expect(headersLowerCased["custom-header"]).toStrictEqual("Custom-Header"); // Any custom header should be kept
+        expect(headersLowerCased["custom-header-multi"]).toStrictEqual("Custom-Header-Multi0,Custom-Header-Multi1"); // Any custom header should be kept
     });
 
     test(`Send request to http://example.${gatewayHost}/echo and check the body is passed`, async () => {
@@ -194,11 +199,11 @@ describe("Test request header passthrough", () => {
             body: JSON.stringify({ a: 1, b: 2 }),
             timeout: 10_000,
         });
-        console.log(resp.status, resp.statusText, await resp.text());
+        const respText = await resp.text();
+        console.log(resp.status, resp.statusText, respText);
         expect(resp.status).toEqual(200);
-        const echo: EchoEndpointResponse = await resp.json();
-        const body = JSON.parse(echo.body!);
-        expect(body).toStrictEqual({ a: 1, b: 2 });
+        const echo = JSON.parse(respText) as EchoEndpointResponse;
+        expect(JSON.parse(echo.body)).toStrictEqual({ a: 1, b: 2 });
     });
 
     test(`Send request to http://example.${gatewayHost}/echo?a=1&a=2&b=3&c and check the URL query is passed`, async () => {
@@ -215,10 +220,11 @@ describe("Test request header passthrough", () => {
             },
             timeout: 10_000,
         });
-        console.log(resp.status, resp.statusText, await resp.text());
+        const respText = await resp.text();
+        console.log(resp.status, resp.statusText, respText);
         expect(resp.status).toEqual(200);
-        const echo: EchoEndpointResponse = await resp.json();
-        expect(echo.queryParams).toStrictEqual({ a: ["1", "2"], b: ["3"], c: [""] });
+        const echo = JSON.parse(respText) as EchoEndpointResponse;
+        expect(echo.queryParams).toStrictEqual({ a: "1,2", b: "3", c: "" });
     });
 
     test("Stop SAM", async () => {

@@ -6,7 +6,7 @@ stack_name = "dev-payment-service"
 s3_prefix = "dev-payment-service"
 resolve_s3 = true
 region = "us-east-1"
-capabilities = "CAPABILITY_IAM"
+capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
 parameter_overrides = "ServicePrefix=\"dev\" MainDomain=\"devfastchargeapi.com\" Route53ZoneId=\"Z07362872NENGXHWMNLU5\" EnvDevDomain=\"1\""
 image_repositories = []
 no_fail_on_empty_changeset =  true
@@ -22,7 +22,7 @@ stack_name = "live-payment-service"
 s3_prefix = "live-payment-service"
 resolve_s3 = true
 region = "us-east-1"
-capabilities = "CAPABILITY_IAM"
+capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
 parameter_overrides = "ServicePrefix=\"live\" MainDomain=\"fastchargeapi.com\" Route53ZoneId=\"Z0358815GI2I8U5CTHXW\""
 image_repositories = []
 no_fail_on_empty_changeset =  true

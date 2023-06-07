@@ -1,0 +1,11 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "github-action-permissions"
+s3_prefix = "github-action-permissions"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
+image_repositories = []
+resolve_s3 = true
+no_fail_on_empty_changeset = true

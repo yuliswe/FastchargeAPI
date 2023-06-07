@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Set up github action permissions
+
+Resources:
+  GithubIDP:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      ClientIdList:
+        - sts.amazonaws.com
+      ThumbprintList:
+        - 6938fd4d98bab03faadb97b34396831e3780aea1
+      Url: https://token.actions.githubusercontent.com
+
+  GithubActionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-GithubActionRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Ref GithubIDP
+            Action: "sts:AssumeRoleWithWebIdentity"
+            Condition:
+              StringLike:
+                "token.actions.githubusercontent.com:sub": "repo:yuliswe/FastchargeAPI:*"
+              StringEquals:
+                "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+      ManagedPolicyArns:
+        - "arn:aws:iam::209991057786:policy/dev-graphql-service-LambdaFunctionPolicy"
+
+Outputs:
+  GithubActionRoleArn:
+    Description: "ARN of the GithubActionRole"
+    Value: !GetAtt GithubActionRole.Arn
