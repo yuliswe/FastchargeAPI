@@ -11,6 +11,7 @@ import {
 } from "../__generated__/gql-operations";
 import { fetchWithAuth } from "../fetch";
 import { getGQLClient } from "../graphql-client";
+import { paymentServiceBaseURL } from "../runtime";
 import { RootAppState } from "../states/RootAppState";
 
 export type UserAccountInfo = GQLGetAccountInfoQuery["user"];
@@ -188,13 +189,9 @@ class SendStripeLoginLink extends AppEvent<RootAppState> {
     }
 
     async *run(state: RootAppState): AppEventStream<RootAppState> {
-        let result = await fetchWithAuth(
-            this.context,
-            "https://api.v2.payment.fastchargeapi.com/send-stripe-login-link",
-            {
-                method: "POST",
-            }
-        );
+        await fetchWithAuth(this.context, `${paymentServiceBaseURL}/send-stripe-login-link`, {
+            method: "POST",
+        });
         yield new StripeLinkReady(this.context);
     }
 

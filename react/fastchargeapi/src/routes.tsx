@@ -15,6 +15,7 @@ import { SubscriptionDetailPage } from "./connected-components/SubscriptionDetai
 import { SubscriptionsPage } from "./connected-components/SubscriptionsPage";
 import { TermsPage } from "./connected-components/TermsPage";
 import { TopUpPage } from "./connected-components/TopupPage";
+import { baseDomain } from "./runtime";
 
 export type SearchResultPageParams = {};
 export type SearchResultPageQuery = { q?: string; tag?: string; sort?: string; page?: string };
@@ -51,7 +52,7 @@ export const RouteURL = {
         if (process.env.REACT_APP_LOCAL_DOC === "1") {
             return "http://localhost:3000";
         }
-        return "https://doc.fastchargeapi.com";
+        return `https://doc.${baseDomain}`;
     },
     accountPage(): string {
         return `/account/#`;

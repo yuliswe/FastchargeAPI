@@ -18,7 +18,7 @@
     "build": "npm run build:arm",
     "deploy": "npm run build && sam deploy",
     "deploy:live": "npm run build && sam deploy --config-env live",
-    "stripe": "stripe listen --forward-to https://api.v2.payment.fastchargeapi.com/accept-stripe-payment -e 'checkout.session.completed,checkout.session.expired,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed' & stripe listen --forward-to https://api.v2.payment.fastchargeapi.com/finish-stripe-onboard -e 'account.updated'",
+    "stripe": "stripe listen --forward-to https://api.v2.payment.devfastchargeapi.com/accept-stripe-payment -e 'checkout.session.completed,checkout.session.expired,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed' & stripe listen --forward-to https://api.v2.payment.devfastchargeapi.com/finish-stripe-onboard -e 'account.updated'",
     "logs": "sam logs --tail",
     "logs:live": "sam logs --config-env live --tail",
     "start": "npm run build && sam local start-api -p 3000 --warm-containers lazy",

@@ -5,6 +5,7 @@ import { AppContext, ReactAppContextType } from "../AppContext";
 import { fetchWithAuth } from "../fetch";
 import { OnboardAppState } from "../states/OnBoardAppState";
 import { RootAppState } from "../states/RootAppState";
+import { paymentServiceBaseURL } from "../runtime";
 type _State = {};
 
 type _Props = {
@@ -51,7 +52,7 @@ class _Onboard extends React.Component<_Props, _State> {
     }
 
     getBackendUrl(): string {
-        let url = new URL("https://api.v2.payment.fastchargeapi.com/get-stripe-onboard-link");
+        const url = new URL(`${paymentServiceBaseURL}/get-stripe-onboard-link`);
         url.searchParams.append("return_url", document.location.href + "?success=true");
         url.searchParams.append("refresh_url", document.location.href);
         return url.href;
@@ -116,9 +117,7 @@ class _Onboard extends React.Component<_Props, _State> {
                 <Typography variant="h3" mb={1}>
                     Onboarding completed.
                 </Typography>
-                <Typography variant="body1">
-                    Welcome to FastchargeAPI! You can now close this page.
-                </Typography>
+                <Typography variant="body1">Welcome to FastchargeAPI! You can now close this page.</Typography>
             </Stack>
         );
     }
@@ -154,41 +153,53 @@ class _Onboard extends React.Component<_Props, _State> {
         return (
             <React.Fragment>
                 <Grid container sx={{ height: "100vh", bgcolor: "background.paper" }}>
-                    {this._context.mediaQuery.md.up && <Grid
+                    {this._context.mediaQuery.md.up && (
+                        <Grid
+                            item
+                            md={6}
+                            display="flex"
+                            justifyContent="center"
+                            alignItems="center"
+                            bgcolor="primary.light"
+                            height="100%"
+                        >
+                            <Container maxWidth="md">
+                                <Stack spacing={5} padding={10} mb={10}>
+                                    <Fade
+                                        in={true}
+                                        style={{
+                                            transitionDuration: "1s",
+                                        }}
+                                    >
+                                        <Typography variant="h1">Focus on solving what's important.</Typography>
+                                    </Fade>
+                                    <Fade
+                                        in={true}
+                                        style={{
+                                            transitionDuration: "2s",
+                                        }}
+                                    >
+                                        <Typography variant="body1">
+                                            Let us take care of metering and billing.
+                                        </Typography>
+                                    </Fade>
+                                </Stack>
+                            </Container>
+                        </Grid>
+                    )}
+                    <Grid
                         item
+                        xs={12}
+                        sm={12}
                         md={6}
+                        lg={6}
+                        xl={6}
                         display="flex"
                         justifyContent="center"
                         alignItems="center"
-                        bgcolor="primary.light"
-                        height="100%"
+                        p={10}
+                        pb={20}
                     >
-                        <Container maxWidth="md">
-                            <Stack spacing={5} padding={10} mb={10}>
-                                <Fade
-                                    in={true}
-                                    style={{
-                                        transitionDuration: "1s",
-                                    }}
-                                >
-                                    <Typography variant="h1" >
-                                        Focus on solving what's important.
-                                    </Typography>
-                                </Fade>
-                                <Fade
-                                    in={true}
-                                    style={{
-                                        transitionDuration: "2s",
-                                    }}
-                                >
-                                    <Typography variant="body1">
-                                        Let us take care of metering and billing.
-                                    </Typography>
-                                </Fade>
-                            </Stack>
-                        </Container>
-                    </Grid>}
-                    <Grid item xs={12} sm={12} md={6} lg={6} xl={6} display="flex" justifyContent="center" alignItems="center" p={10} pb={20}>
                         {this.renderOnboardingPage()}
                     </Grid>
                 </Grid>
