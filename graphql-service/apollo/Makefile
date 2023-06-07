@@ -16,4 +16,4 @@ build-CopyDependencies:
 	cp -r ./schema "$(BUILD_DIR)/SQSApolloServer/schema"
 	cp -r ./schema "$(BUILD_DIR)/SettleAccountActivitiesCronJob/schema"
 
-	cp rtwrapper "$(BUILD_DIR)/ApolloServer/rtwrapper"
+# cp rtwrapper "$(BUILD_DIR)/ApolloServer/rtwrapper"

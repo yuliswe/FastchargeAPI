@@ -69,9 +69,6 @@ let handle = startServerAndCreateLambdaHandler<RequestHandler<LambdaEvent, Lambd
             },
             parseQueryParams(event) {
                 const params = new URLSearchParams();
-                for (const [key, value] of Object.entries(event.queryStringParameters ?? {})) {
-                    params.append(key, value ?? "");
-                }
                 for (const [key, value] of Object.entries(event.multiValueQueryStringParameters ?? {})) {
                     for (const v of value ?? []) {
                         params.append(key, v);

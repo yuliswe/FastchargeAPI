@@ -19,6 +19,5 @@
         "fix": "cd apollo && eslint --fix ./"
     },
     "author": "",
-    "license": "ISC",
-    "dependencies": {}
+    "license": "ISC"
 }

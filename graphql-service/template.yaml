@@ -32,7 +32,7 @@ Globals:
       Variables:
         DEV_DOMAIN: !Ref EnvDevDomain
     Tags:
-      service-name: graphql-service
+      service-name: !Sub "${AWS::StackName}"
   Api:
     TracingEnabled: True
     MethodSettings:
@@ -40,6 +40,9 @@ Globals:
         MetricsEnabled: True
         ResourcePath: "/*" # allows for logging on any resource
         HttpMethod: "*" # allows for logging on any method
+    AccessLogSetting:
+      DestinationArn: !GetAtt APIGatewayAccessLogGroup.Arn
+      Format: '{"requestId":"$context.requestId","ip":"$context.identity.sourceIp","caller":"$context.identity.caller","user":"$context.identity.user","requestTime":"$context.requestTime","httpMethod":"$context.httpMethod","resourcePath":"$context.resourcePath","status":"$context.status","protocol":"$context.protocol","responseLength":"$context.responseLength"}'
     Cors:
       AllowMethods: "'*'"
       AllowHeaders: "'*'"
@@ -56,25 +59,29 @@ Globals:
 Resources:
   # Give account permission to log to CloudWatch. Probably only need once per
   # account.
-  # ApiCWLRoleArn:
-  #   Type: AWS::ApiGateway::Account
-  #   Properties:
-  #     CloudWatchRoleArn: !GetAtt CloudWatchRole.Arn
+  SetApiGatewayLoggingRole:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !GetAtt ApiGatewayLoggingRole.Arn
 
   # # IAM Role for API Gateway + CloudWatch Logging
-  # CloudWatchRole:
-  #   Type: AWS::IAM::Role
-  #   Properties:
-  #     AssumeRolePolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         Action: "sts:AssumeRole"
-  #         Effect: Allow
-  #         Principal:
-  #           Service: apigateway.amazonaws.com
-  #     Path: /
-  #     ManagedPolicyArns:
-  #       - "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+  ApiGatewayLoggingRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Action: "sts:AssumeRole"
+          Effect: Allow
+          Principal:
+            Service: apigateway.amazonaws.com
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+
+  APIGatewayAccessLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Join ["", [!Ref AWS::StackName, "-access-logs"]]
 
   # This is a custom build layer. See:
   # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/building-layers.html
@@ -87,7 +94,7 @@ Resources:
     Metadata:
       BuildMethod: makefile # Required to have AWS SAM build this layer
 
-  GenerateIAMCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain
+  IAMGenerateCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain
     Type: AWS::CertificateManager::Certificate
     Properties:
       DomainName: !Join ["", [!Ref IAMSubDomain, !Ref MainDomain]]
@@ -96,7 +103,16 @@ Resources:
         - DomainName: !Join ["", [!Ref IAMSubDomain, !Ref MainDomain]]
           HostedZoneId: !Ref Route53ZoneId
 
-  GraphQLServiceRole:
+  GenerateCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
+          HostedZoneId: !Ref Route53ZoneId
+
+  LambdaFunctionRole: # Lambda functions will run as this role.
     Type: AWS::IAM::Role
     Properties:
       Description: "Apollo GraphQL Service Role"
@@ -110,6 +126,7 @@ Resources:
             Action:
               - sts:AssumeRole
       ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
         - arn:aws:iam::aws:policy/service-role/AWSLambdaRole
         - !Sub arn:aws:iam::${AWS::AccountId}:policy/AuroraDBSearchServicePolicy
       Policies:
@@ -138,8 +155,7 @@ Resources:
                   - "sqs:SendMessage"
                   - "sqs:GetQueueAttributes"
 
-  # This role gives API Gateway permission to invoke all lambda functions
-  APIGatewayInvokeRole:
+  APIGatewayInvokeRole: # This role gives API Gateway permission to invoke all lambda functions
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -151,6 +167,8 @@ Resources:
                 - apigateway.amazonaws.com
             Action:
               - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
       Policies:
         - PolicyName: APIGatewayInvokePolicy
           PolicyDocument:
@@ -162,60 +180,35 @@ Resources:
                   - "lambda:InvokeFunction"
 
   # Create another gateway with IAM based authentication
-  APIGatewayIAM:
+  IAMAPIGateway:
     Type: AWS::Serverless::Api
     Properties:
+      Name: !Sub "${AWS::StackName}-IAMAPIGateway"
       Domain:
         DomainName: !Join ["", [!Ref IAMSubDomain, !Ref MainDomain]]
-        CertificateArn: !Ref GenerateIAMCertificate
+        CertificateArn: !Ref IAMGenerateCertificate
         Route53:
           HostedZoneId: !Ref Route53ZoneId
+      TracingEnabled: True
+      DisableExecuteApiEndpoint: True
       StageName: !Ref Stage
       Auth:
         DefaultAuthorizer: AWS_IAM
         InvokeRole: !GetAtt APIGatewayInvokeRole.Arn
-
-  ApolloServerIAM:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-    Properties:
-      CodeUri: ./apollo
-      Handler: lambdaHandler.lambdaHandler
-      Runtime: nodejs18.x
-      Architectures:
-        - arm64
-      Role: !GetAtt GraphQLServiceRole.Arn
-      Events:
-        PostIAM:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-          Properties:
-            Path: /
-            Method: post
-            RestApiId: !Ref APIGatewayIAM
-    Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        UseNpmCi: True
-        Target: "es2022"
-        EntryPoints:
-          - lambdaHandler.ts
-
-  GenerateCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain
-    Type: AWS::CertificateManager::Certificate
-    Properties:
-      DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
-      ValidationMethod: DNS
-      DomainValidationOptions:
-        - DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
-          HostedZoneId: !Ref Route53ZoneId
+      Tags:
+        service-name: !Sub "${AWS::StackName}"
 
   APIGateway:
     Type: AWS::Serverless::Api
     Properties:
+      Name: !Sub "${AWS::StackName}-APIGateway"
       Domain:
         DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
         CertificateArn: !Ref GenerateCertificate
         Route53:
           HostedZoneId: !Ref Route53ZoneId
+      TracingEnabled: True
+      DisableExecuteApiEndpoint: True
       StageName: !Ref Stage
       Auth: # Uses the FirebaseTokenAuthorizerAllowingAnonymousUser to identify the session user.
         ApiKeyRequired: false
@@ -235,12 +228,13 @@ Resources:
   ApolloServer:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
+      FunctionName: !Sub ${AWS::StackName}-ApolloServer
       CodeUri: ./apollo
       Handler: lambdaHandler.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
         - arm64
-      Role: !GetAtt GraphQLServiceRole.Arn
+      Role: !GetAtt LambdaFunctionRole.Arn
       Events:
         Get:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -254,6 +248,18 @@ Resources:
             Path: /
             Method: post
             RestApiId: !Ref APIGateway
+        IAMGet:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /
+            Method: get
+            RestApiId: !Ref IAMAPIGateway
+        IAMPost:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            Path: /
+            Method: post
+            RestApiId: !Ref IAMAPIGateway
       Environment:
         Variables:
           TRUST_X_USER_EMAIL_HEADER: "" # WARNING: Must not be trusted in production.
@@ -271,12 +277,13 @@ Resources:
   SQSApolloServer:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub ${AWS::StackName}-SQSApolloServer
       CodeUri: ./apollo
       Handler: sqsHandler.handler
       Runtime: nodejs18.x
       Architectures:
         - arm64
-      Role: !GetAtt GraphQLServiceRole.Arn
+      Role: !GetAtt LambdaFunctionRole.Arn
       Timeout: 30
       Events:
         UsageLogQueueEvent:
@@ -348,12 +355,13 @@ Resources:
   SettleAccountActivitiesCronJob:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub ${AWS::StackName}-SettleAccountActivitiesCronJob
       CodeUri: ./apollo/cron-jobs
       Handler: settleAccountActivities.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
         - arm64
-      Role: !GetAtt GraphQLServiceRole.Arn
+      Role: !GetAtt LambdaFunctionRole.Arn
       Timeout: 300
       Events:
         ScheduledTrigger:
