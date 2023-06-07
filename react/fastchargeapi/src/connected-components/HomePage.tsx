@@ -167,7 +167,7 @@ class _Home extends React.Component<_Props, _State> {
                     color="secondary"
                     size="large"
                     endIcon={<ArrowForwardRounded />}
-                    href={RouteURL.documentationPage() + "/docs/intro-publish-api"}
+                    href={RouteURL.documentationPage() + "/docs/intro-publish-api/"}
                 >
                     Get started
                 </Button>
@@ -211,7 +211,7 @@ class _Home extends React.Component<_Props, _State> {
                         color="secondary"
                         size="large"
                         endIcon={<ArrowForwardRounded />}
-                        href={RouteURL.documentationPage() + "/docs/intro-publish-api"}
+                        href={RouteURL.documentationPage() + "/docs/intro-publish-api/"}
                     >
                         Get started
                     </Button>
@@ -270,28 +270,28 @@ class _Home extends React.Component<_Props, _State> {
             {
                 title: "Create an app",
                 description: "Start by creating an app that hosts your APIs.",
-                link: RouteURL.documentationPage() + "/docs/cli-reference/fastcharge/app/create",
+                link: RouteURL.documentationPage() + "/docs/cli-reference/fastcharge/app/create/",
                 icon: <AppDrawingBoardIcon style={{ height: 150 }} />,
                 target: "_blank",
             },
             {
                 title: "Set a price",
                 description: "Create pricing plans for your app.",
-                link: RouteURL.documentationPage() + "/docs/cli-reference/fastcharge/pricing/add",
+                link: RouteURL.documentationPage() + "/docs/cli-reference/fastcharge/pricing/add/",
                 icon: <SetAPriceIcon style={{ height: 150 }} />,
                 target: "_blank",
             },
             {
                 title: "Publish API",
                 description: "Make your app discoverable in search.",
-                link: RouteURL.documentationPage() + "/docs/cli-reference/fastcharge/app/publish",
+                link: RouteURL.documentationPage() + "/docs/cli-reference/fastcharge/app/publish/",
                 icon: <PublishAPIIcon style={{ height: 150 }} />,
                 target: "_blank",
             },
             {
                 title: "Use API",
                 description: "Learn how to use an API published here.",
-                link: RouteURL.documentationPage() + "/docs/cli-reference/fastapi/subscription/add",
+                link: RouteURL.documentationPage() + "/docs/cli-reference/fastapi/subscription/add/",
                 icon: (
                     <Box sx={{ color: "primary.main" }}>
                         <MobileProgrammerIcon
