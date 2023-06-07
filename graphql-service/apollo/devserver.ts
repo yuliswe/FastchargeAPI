@@ -1,7 +1,13 @@
 import { startStandaloneServer } from "@apollo/server/standalone";
 import { IncomingMessage } from "http";
 import { RequestContext, createDefaultContextBatched } from "./RequestContext";
-import { getCurrentUser, getIsAdminUser, getIsServiceRequest, normalizeHeaders } from "./lambdaHandlerUtils";
+import {
+    getCurrentUser,
+    getIsAdminUser,
+    getIsServiceRequest,
+    normalizeHeaders,
+    printWarnings,
+} from "./lambdaHandlerUtils";
 import { server } from "./server";
 
 let { url } = await startStandaloneServer<RequestContext>(server, {
@@ -9,6 +15,7 @@ let { url } = await startStandaloneServer<RequestContext>(server, {
         port: process.env.PORT ? Number.parseInt(process.env.PORT) : 4000,
     },
     context: async ({ req }: { req: IncomingMessage }) => {
+        printWarnings();
         const batched = createDefaultContextBatched();
         const headers: { [header: string]: string } = normalizeHeaders(req.headers as any);
         const currentUser = await getCurrentUser(batched, headers, undefined);

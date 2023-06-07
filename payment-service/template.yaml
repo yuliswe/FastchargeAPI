@@ -6,6 +6,8 @@ Description: >
   Sample SAM Template for resource-service
 
 Parameters:
+  ServicePrefix:
+    Type: String
   MainDomain:
     Type: String
   Route53ZoneId:
@@ -13,9 +15,6 @@ Parameters:
   EnvDevDomain:
     Type: String
     Default: ""
-  Stage:
-    Type: String
-    Default: DEV
   SubDomain:
     Type: String
     Default: "api.v2.payment."
@@ -43,6 +42,7 @@ Resources:
   APIGatewayV2:
     Type: AWS::Serverless::HttpApi
     Properties:
+      Name: !Sub ${AWS::StackName}-APIGatewayV2
       Domain:
         DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
         CertificateArn: !Ref GenerateCertificateV2
@@ -56,8 +56,8 @@ Resources:
         Authorizers:
           FirebaseTokenAuthorizer:
             AuthorizerPayloadFormatVersion: 2.0
-            FunctionArn: arn:aws:lambda:us-east-1:${AWS::AccountId}:function:FirebaseTokenAuthorizer
-            FunctionInvokeRole: !GetAtt APIGatewayV2Role.Arn
+            FunctionArn: !Sub arn:aws:lambda:us-east-1:${AWS::AccountId}:function:${ServicePrefix}-auth-service-FirebaseTokenAuthorizer
+            FunctionInvokeRole: !GetAtt APIGatewayV2InvocationRole.Arn
             Identity:
               ReauthorizeEvery: 300
               Headers: ["Authorization"]
@@ -74,7 +74,7 @@ Resources:
   # APIGatewayV2AccessLogs:
   #   Type: AWS::Logs::LogGroup
 
-  APIGatewayV2Role:
+  APIGatewayV2InvocationRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -86,26 +86,19 @@ Resources:
             Principal:
               Service:
                 - apigateway.amazonaws.com
-      Tags:
-        - Key: lambda:createdBy
-          Value: SAM
-
-  LambdaInvocationPolicy:
-    Type: AWS::IAM::Policy
-    Properties:
-      PolicyName: LambdaInvocationPolicy
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Action: lambda:InvokeFunction
-            Resource: !Sub arn:aws:lambda:us-east-1:${AWS::AccountId}:function:FirebaseTokenAuthorizer
-      Roles:
-        - !Ref APIGatewayV2Role
+      Policies:
+        - PolicyName: LambdaInvocationPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: lambda:InvokeFunction
+                Resource: "*"
 
   ExecuteDailyStripeTransferCronJob:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub ${AWS::StackName}-ExecuteDailyStripeTransferCronJob
       CodeUri: ./
       Handler: ExecuteDailyStripeTransfer.lambdaHandler
       Runtime: nodejs18.x
@@ -143,6 +136,7 @@ Resources:
   SendStripeDashboardLink:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
+      FunctionName: !Sub ${AWS::StackName}-SendStripeDashboardLink
       CodeUri: ./
       Handler: SendStripeDashboardLink.lambdaHandler
       Runtime: nodejs18.x
@@ -173,6 +167,7 @@ Resources:
   GetStripeOnBoardLink:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
+      FunctionName: !Sub ${AWS::StackName}-GetStripeOnBoardLink
       CodeUri: ./
       Handler: GetStripeOnBoardLink.lambdaHandler
       Runtime: nodejs18.x
@@ -202,6 +197,7 @@ Resources:
   AcceptStripePayment:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
+      FunctionName: !Sub ${AWS::StackName}-AcceptStripePayment
       CodeUri: ./
       Handler: AcceptStripePayment.lambdaHandler
       Runtime: nodejs18.x
@@ -234,6 +230,7 @@ Resources:
   GetStripeCheckoutLink:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
+      FunctionName: !Sub ${AWS::StackName}-GetStripeCheckoutLink
       CodeUri: ./
       Handler: GetStripeCheckoutLink.lambdaHandler
       Runtime: nodejs18.x
@@ -264,6 +261,7 @@ Resources:
   CreateStripeTransfer:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
+      FunctionName: !Sub ${AWS::StackName}-CreateStripeTransfer
       CodeUri: ./
       Handler: CreateStripeTransfer.lambdaHandler
       Runtime: nodejs18.x
@@ -294,6 +292,7 @@ Resources:
   FinishStripeOnboard:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
+      FunctionName: !Sub ${AWS::StackName}-FinishStripeOnboard
       CodeUri: ./
       Handler: FinishStripeOnboard.lambdaHandler
       Runtime: nodejs18.x
@@ -321,7 +320,3 @@ Resources:
         Target: "es2022"
         EntryPoints:
           - handlers/FinishStripeOnboard.ts
-# Outputs:
-#   APIGateway:
-#     Description: API APIGateway endpoint URL for DEV stage for Hello World function
-#     Value: !Sub "https://${APIGateway}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/echo"

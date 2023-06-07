@@ -1,10 +1,10 @@
-import { BatchExecuteStatementCommand, ExecuteStatementCommand, RDSDataClient } from "@aws-sdk/client-rds-data";
+import { BatchExecuteStatementCommand, ExecuteStatementCommand } from "@aws-sdk/client-rds-data";
 import { Chalk } from "chalk";
 import { RequestContext } from "../RequestContext";
 import { GQLAppFullTextSearchOrderBy } from "../__generated__/resolvers-types";
+import { auroraResourceArn, auroraSecretArn, rdsClient } from "../aurora";
 import { App } from "../dynamoose/models";
 import { AppPK } from "../pks/AppPK";
-import { auroraResourceArn, auroraSecretArn, rdsClient } from "../aurora";
 
 const chalk = new Chalk({ level: 3 });
 export async function getAppByPK(context: RequestContext, pk: string): Promise<App> {
@@ -48,7 +48,7 @@ export async function updateAppSearchIndex(context: RequestContext, apps: App[])
     ]);
     const command = new BatchExecuteStatementCommand({
         resourceArn: auroraResourceArn,
-        secretArn: auroraSecretArn,
+        secretArn: await auroraSecretArn(),
         sql: `select count(*) from update_app(:name, :title, :description, :tags, :github_popularity)`,
         parameterSets: await Promise.all(parameterSets),
     });
@@ -122,7 +122,7 @@ export async function appFullTextSearch(
     ];
     const command = new ExecuteStatementCommand({
         resourceArn: auroraResourceArn,
-        secretArn: auroraSecretArn,
+        secretArn: await auroraSecretArn(),
         sql: `select name from trigm_search_app(:search_text, :tag, :orderBy, :limit, :offset, :similarity)`,
         parameters,
     });

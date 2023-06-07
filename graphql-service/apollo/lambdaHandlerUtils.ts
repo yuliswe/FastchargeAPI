@@ -9,6 +9,12 @@ import { UserPK } from "./pks/UserPK";
 
 const chalk = new Chalk({ level: 3 });
 
+export function printWarnings() {
+    if (process.env.DEV_DOMAIN === "0") {
+        console.warn(chalk.red("DEV_DOMAIN is not set to 0. You are now connected to the production database!"));
+    }
+}
+
 export function normalizeHeaders(headers: APIGatewayProxyEventHeaders): { [header: string]: string } {
     const normalized: { [header: string]: string } = {};
     for (const [key, value] of Object.entries(headers ?? {})) {

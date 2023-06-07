@@ -1,0 +1,12 @@
+#!/bin/bash
+
+cd "$(dirname $0)"
+
+for sql in $(find . -name "*.sql" | sort); do
+    echo "Applying migration: $sql"
+    ../rds-exec-stmt "$(cat $sql)"
+    if [ $? -ne 0 ]; then
+        echo "Failed to apply migration: $sql"
+        exit 1
+    fi
+done

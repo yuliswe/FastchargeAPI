@@ -6,6 +6,8 @@ Description: >
   Sample SAM Template for graphql-service
 
 Parameters:
+  ServicePrefix:
+    Type: String
   MainDomain:
     Type: String
   Route53ZoneId:
@@ -13,9 +15,6 @@ Parameters:
   EnvDevDomain:
     Type: String
     Default: ""
-  Stage:
-    Type: String
-    Default: DEV
   SubDomain:
     Type: String
     Default: "api.graphql."
@@ -81,7 +80,7 @@ Resources:
   APIGatewayAccessLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Join ["", [!Ref AWS::StackName, "-access-logs"]]
+      LogGroupName: !Sub "${AWS::StackName}-APIGatewayAccessLogGroup"
 
   # This is a custom build layer. See:
   # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/building-layers.html
@@ -128,7 +127,6 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
         - arn:aws:iam::aws:policy/service-role/AWSLambdaRole
-        - !Sub arn:aws:iam::${AWS::AccountId}:policy/AuroraDBSearchServicePolicy
       Policies:
         - PolicyName: GraphQLServicePolicy
           PolicyDocument:
@@ -154,6 +152,14 @@ Resources:
                   - "sqs:ReceiveMessage"
                   - "sqs:SendMessage"
                   - "sqs:GetQueueAttributes"
+                  - "kms:Decrypt"
+                  - "rds-data:ExecuteSql"
+                  - "rds-data:ExecuteStatement"
+                  - "rds-data:BatchExecuteStatement"
+                  - "rds-data:BeginTransaction"
+                  - "rds-data:CommitTransaction"
+                  - "rds-data:RollbackTransaction"
+                  - "secretsmanager:GetSecretValue"
 
   APIGatewayInvokeRole: # This role gives API Gateway permission to invoke all lambda functions
     Type: AWS::IAM::Role
@@ -191,7 +197,7 @@ Resources:
           HostedZoneId: !Ref Route53ZoneId
       TracingEnabled: True
       DisableExecuteApiEndpoint: True
-      StageName: !Ref Stage
+      StageName: !Ref ServicePrefix
       Auth:
         DefaultAuthorizer: AWS_IAM
         InvokeRole: !GetAtt APIGatewayInvokeRole.Arn
@@ -209,7 +215,7 @@ Resources:
           HostedZoneId: !Ref Route53ZoneId
       TracingEnabled: True
       DisableExecuteApiEndpoint: True
-      StageName: !Ref Stage
+      StageName: !Ref ServicePrefix
       Auth: # Uses the FirebaseTokenAuthorizerAllowingAnonymousUser to identify the session user.
         ApiKeyRequired: false
         DefaultAuthorizer: FirebaseTokenAuthorizerAllowingAnonymousUser
@@ -218,7 +224,7 @@ Resources:
           FirebaseTokenAuthorizerAllowingAnonymousUser:
             FunctionPayloadType: REQUEST
             FunctionInvokeRole: !GetAtt APIGatewayInvokeRole.Arn
-            FunctionArn: !Sub arn:aws:lambda:us-east-1:${AWS::AccountId}:function:FirebaseTokenAuthorizerAllowingAnonymousUser
+            FunctionArn: !Sub arn:aws:lambda:us-east-1:${AWS::AccountId}:function:${ServicePrefix}-auth-service-FirebaseTokenAuthorizerAllowingAnonymousUser
             Identity:
               ReauthorizeEvery: 300
               Headers: ["Authorization"]

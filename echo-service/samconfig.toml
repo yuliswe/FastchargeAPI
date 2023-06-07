@@ -6,7 +6,7 @@ stack_name = "dev-echo-service"
 s3_prefix = "dev-echo-service"
 region = "us-east-1"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Stage=\"DEV\" MainDomain=\"devfastchargeapi.com\" Route53ZoneId=\"Z07362872NENGXHWMNLU5\" EnvDevDomain=\"1\""
+parameter_overrides = "MainDomain=\"devfastchargeapi.com\" Route53ZoneId=\"Z07362872NENGXHWMNLU5\" EnvDevDomain=\"1\""
 resolve_s3 = true
 image_repositories = []
 no_fail_on_empty_changeset = true
@@ -22,7 +22,7 @@ stack_name = "live-echo-service"
 s3_prefix = "live-echo-service"
 region = "us-east-1"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Stage=\"LIVE\" MainDomain=\"fastchargeapi.com\" Route53ZoneId=\"Z0358815GI2I8U5CTHXW\""
+parameter_overrides = "MainDomain=\"fastchargeapi.com\" Route53ZoneId=\"Z0358815GI2I8U5CTHXW\""
 resolve_s3 = true
 image_repositories = []
 no_fail_on_empty_changeset = true
