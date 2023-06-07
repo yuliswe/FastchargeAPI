@@ -13,9 +13,6 @@ Parameters:
   EnvDevDomain:
     Type: String
     Default: ""
-  Stage:
-    Type: String
-    Default: DEV
   SubDomain:
     Type: String
     Default: "api.v2.auth."
@@ -38,24 +35,24 @@ Resources:
     Metadata:
       BuildMethod: go1.x
     Properties:
+      FunctionName: !Sub ${AWS::StackName}-FirebaseTokenAuthorizer
       CodeUri: ./app
       Handler: bootstrap
       Runtime: provided.al2
       Architectures:
         - arm64
-      FunctionName: FirebaseTokenAuthorizer
 
   UserAppTokenAuthorizer:
     Type: AWS::Serverless::Function
     Metadata:
       BuildMethod: go1.x
     Properties:
+      FunctionName: !Sub ${AWS::StackName}-UserAppTokenAuthorizer
       CodeUri: ./app
       Handler: bootstrap
       Runtime: provided.al2
       Architectures:
         - arm64
-      FunctionName: UserAppTokenAuthorizer
       Environment:
         Variables:
           AllowUserAppToken: "1"
@@ -65,12 +62,12 @@ Resources:
     Metadata:
       BuildMethod: go1.x
     Properties:
+      FunctionName: !Sub ${AWS::StackName}-FirebaseTokenAuthorizerAllowingAnonymousUser
       CodeUri: ./app
       Handler: bootstrap
       Runtime: provided.al2
       Architectures:
         - arm64
-      FunctionName: FirebaseTokenAuthorizerAllowingAnonymousUser
       Environment:
         Variables:
           AllowAnonymousUser: "1"
@@ -88,6 +85,7 @@ Resources:
   APIGatewayV2:
     Type: AWS::Serverless::HttpApi
     Properties:
+      Name: !Sub ${AWS::StackName}-APIGatewayV2
       Domain:
         DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
         CertificateArn: !Ref GenerateCertificateV2
@@ -101,7 +99,7 @@ Resources:
         Authorizers:
           FirebaseTokenAuthorizer:
             AuthorizerPayloadFormatVersion: 2.0
-            FunctionArn: arn:aws:lambda:us-east-1:${AWS::AccountId}:function:FirebaseTokenAuthorizer
+            FunctionArn: !GetAtt FirebaseTokenAuthorizer.Arn
             FunctionInvokeRole: !GetAtt APIGatewayV2Role.Arn
             Identity:
               ReauthorizeEvery: 300
@@ -144,6 +142,7 @@ Resources:
   RefreshIDToken:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
+      FunctionName: !Sub ${AWS::StackName}-RefreshIDToken
       CodeUri: ./
       Handler: RefreshIDToken.lambdaHandler
       Runtime: nodejs18.x
@@ -171,11 +170,3 @@ Resources:
         UseNpmCi: True
         EntryPoints:
           - node/RefreshIDToken.ts
-
-Outputs:
-  FirebaseTokenAuthorizer:
-    Description: FirebaseTokenAuthorizer ARN
-    Value: !GetAtt FirebaseTokenAuthorizer.Arn
-  FirebaseTokenAuthorizerIamRole:
-    Description: Implicit IAM Role created for FirebaseTokenAuthorizer
-    Value: !GetAtt FirebaseTokenAuthorizerRole.Arn

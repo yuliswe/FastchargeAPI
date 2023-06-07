@@ -1,6 +1,10 @@
 #!/bin/bash
 if [ "$DEV_DOMAIN" == "1" ]; then
-    aws rds-data execute-statement --resource-arn arn:aws:rds:us-east-1:209991057786:cluster:fastcharge-search-cluster --secret-arn arn:aws:secretsmanager:us-east-1:209991057786:secret:AuroraDBSecret-yDL7gy9eiEwz-d5N6NI --sql "$1"
+    secretArn=$(aws secretsmanager list-secrets --filter Key="name",Values="dev-search-service-AuroraDBSecret"  --query 'SecretList[0].ARN' --output text)
+    dbArn="arn:aws:rds:us-east-1:209991057786:cluster:dev-search-service-auroradbcluster"
+    aws rds-data execute-statement --resource-arn "$dbArn" --secret-arn "$secretArn" --sql "$1"
 else
-    aws --profile live_fastchargeapi rds-data execute-statement --resource-arn arn:aws:rds:us-east-1:887279901853:cluster:fastcharge-search-cluster --secret-arn arn:aws:secretsmanager:us-east-1:887279901853:secret:AuroraDBSecret-BHbRTfhpIz4G-LYbLOv --sql "$1"
+    secretArn=$(aws secretsmanager list-secrets --filter Key="name",Values="live-search-service-AuroraDBSecret"  --query 'SecretList[0].ARN' --output text)
+    dbArn="arn:aws:rds:us-east-1:887279901853:cluster:live-search-service-auroradbcluster"
+    aws --profile live_fastchargeapi rds-data execute-statement --resource-arn "$dbArn" --secret-arn "$secretArn" --sql "$1"
 fi

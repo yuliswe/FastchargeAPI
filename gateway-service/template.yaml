@@ -6,6 +6,8 @@ Description: >
   Sample SAM Template for gateway-service
 
 Parameters:
+  ServicePrefix:
+    Type: String
   MainDomain:
     Type: String
   Route53ZoneId:
@@ -13,9 +15,6 @@ Parameters:
   EnvDevDomain:
     Type: String
     Default: ""
-  Stage:
-    Type: String
-    Default: DEV
   Architecture:
     Type: String
     Default: arm64
@@ -70,12 +69,13 @@ Resources:
   GatewayAPI:
     Type: AWS::Serverless::Api
     Properties:
+      Name: !Sub ${AWS::StackName}-GatewayAPI
       Domain: # Configure the domain of the API
         DomainName: !Join ["", ["*.", !Ref MainDomain]]
         CertificateArn: !Ref GenerateCertificate
         Route53:
           HostedZoneId: !Ref Route53ZoneId
-      StageName: !Ref Stage
+      StageName: !Ref ServicePrefix
       MethodSettings:
         - LoggingLevel: ERROR
           MetricsEnabled: True
@@ -87,7 +87,7 @@ Resources:
         Authorizers:
           UserAppTokenAuthorizer:
             FunctionPayloadType: REQUEST
-            FunctionArn: !Sub arn:aws:lambda:us-east-1:${AWS::AccountId}:function:UserAppTokenAuthorizer
+            FunctionArn: !Sub arn:aws:lambda:us-east-1:${AWS::AccountId}:function:${ServicePrefix}-auth-service-UserAppTokenAuthorizer
             Identity:
               ReauthorizeEvery: 300
               Headers: ["X-FAST-API-KEY"]
@@ -97,6 +97,7 @@ Resources:
     Metadata:
       BuildMethod: go1.x
     Properties:
+      FunctionName: !Sub ${AWS::StackName}-CorsFunction
       CodeUri: ./cors
       Handler: bootstrap
       Runtime: provided.al2
@@ -125,6 +126,7 @@ Resources:
     Metadata:
       BuildMethod: go1.x
     Properties:
+      FunctionName: !Sub ${AWS::StackName}-GatewayFunction
       CodeUri: ./gateway
       Handler: bootstrap
       Runtime: provided.al2
@@ -153,15 +155,3 @@ Resources:
           TRUST_X_USER_PK_HEADER: "" # Set to 1 to bypass authentication
           LOCAL_GRAPHQL: "" # Set to 1 to use http://host.docker.internal:4000 as the graphql server
           DEV_DOMAIN: "" # Set to 1 to use https://devfastchargeapi.com
-
-Outputs:
-  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  GatewayAPI:
-    Description: "API Gateway endpoint URL for Prod environment for First Function"
-    Value: !Sub "https://${GatewayAPI}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
-  GatewayFunction:
-    Description: "First Lambda Function ARN"
-    Value: !GetAtt GatewayFunction.Arn
-  GatewayFunctionIamRole:
-    Description: "Implicit IAM Role created for Hello World function"
-    Value: !GetAtt GatewayFunctionRole.Arn

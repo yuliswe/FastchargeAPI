@@ -1,177 +1,15 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
-Description: >
-  resource-service
-
-  Sample SAM Template for resource-service
-
-Parameters:
-  MainDomain:
-    Type: String
-  Route53ZoneId:
-    Type: String
-  EnvDevDomain:
-    Type: String
-    Default: ""
-  Stage:
-    Type: String
-    Default: DEV
-  # SubDomain:
-  #   Type: String
-  #   Default: "api.graphql."
-  # GatewayHostNameV2:
-  #   Type: String
-  #   Default: "api.v2.search.fastchargeapi.com"
-
-# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
-Globals:
-  Function:
-    Tracing: Active
-    Environment:
-      Variables:
-        DEV_DOMAIN: !Ref EnvDevDomain
-  Api:
-    TracingEnabled: true
+Description: search-service
 
 Resources:
-  # GenerateCertificateV2: # Creates a valid certificate for the HTTP API endpoint under the custom domain
-  #   Type: AWS::CertificateManager::Certificate
-  #   Properties:
-  #     DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
-  #     ValidationMethod: DNS
-  #     DomainValidationOptions:
-  #       - DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
-  #         HostedZoneId: !Ref Route53ZoneId
-
-  # APIGatewayV2:
-  #   Type: AWS::Serverless::HttpApi
-  #   Properties:
-  #     Domain:
-  #       DomainName: !Join ["", [!Ref SubDomain, !Ref MainDomain]]
-  #       CertificateArn: !Ref GenerateCertificateV2
-  #       Route53:
-  #         HostedZoneId: !Ref Route53ZoneId
-  #     # AccessLogSettings:
-  #     #   DestinationArn: !GetAtt APIGatewayV2AccessLogs.Arn
-  #     #   Format: $context.requestId $context.httpMethod $context.path $context.error.responseType $context.error.messageString $context.authorizer.error $context.integrationErrorMessage
-  #     Auth: # Uses the FirebaseTokenAuthorizer to identify the session user.
-  #       DefaultAuthorizer: FirebaseTokenAuthorizer
-  #       Authorizers:
-  #         FirebaseTokenAuthorizer:
-  #           AuthorizerPayloadFormatVersion: 2.0
-  #           FunctionArn: !Sub arn:aws:lambda:us-east-1:${AWS::AccountId}:function:FirebaseTokenAuthorizer
-  #           FunctionInvokeRole: !GetAtt APIGatewayV2Role.Arn
-  #           Identity:
-  #             ReauthorizeEvery: 300
-  #             Headers: ["Authorization"]
-  #     CorsConfiguration:
-  #       AllowMethods: ["*"]
-  #       AllowHeaders: ["*"]
-  #       AllowOrigins:
-  #         - "http://localhost"
-  #         - "http://localhost:8000"
-  #         - "https://fastchargeapi.com"
-  #         - "https://devfastchargeapi.com"
-  #     DisableExecuteApiEndpoint: True
-
-  # APIGatewayV2AccessLogs:
-  #   Type: AWS::Logs::LogGroup
-
-  # APIGatewayV2Role:
-  #   Type: AWS::IAM::Role
-  #   Properties:
-  #     AssumeRolePolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Action:
-  #             - sts:AssumeRole
-  #           Effect: Allow
-  #           Principal:
-  #             Service:
-  #               - apigateway.amazonaws.com
-  #     Tags:
-  #       - Key: lambda:createdBy
-  #         Value: SAM
-
-  # LambdaInvocationPolicy:
-  #   Type: AWS::IAM::Policy
-  #   Properties:
-  #     PolicyName: LambdaInvocationPolicy
-  #     PolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Effect: Allow
-  #           Action: lambda:InvokeFunction
-  #           Resource: !Sub arn:aws:lambda:us-east-1:${AWS::AccountId}:function:FirebaseTokenAuthorizer
-  #     Roles:
-  #       - !Ref APIGatewayV2Role
-
-  # AppFullTextSearch:
-  #   Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-  #   Properties:
-  #     CodeUri: ./
-  #     Handler: AppFullTextSearch.lambdaHandler
-  #     Runtime: nodejs18.x
-  #     Architectures:
-  #       - arm64 # if you are using Apple M1
-  #     MemorySize: 512
-  #     Timeout: 10
-  #     Policies:
-  #       - AWSLambdaRole
-  #       - AmazonDynamoDBReadOnlyAccess # For looking up user's stripe id
-  #       - AmazonSESFullAccess # For ending email to user
-  #     Events:
-  #       GET:
-  #         Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
-  #         Properties:
-  #           Auth:
-  #             Authorizer: NONE
-  #           ApiId: !Ref APIGatewayV2
-  #           Path: /apps
-  #           Method: get
-  #   Metadata: # Manage esbuild properties
-  #     BuildMethod: esbuild
-  #     BuildProperties:
-  #       Target: "es2022"
-  #       EntryPoints:
-  #         - handlers/AppFullTextSearch.ts
-
-  # AuroraDBClusterSubnetGroup:
-  #   Type: "AWS::RDS::DBSubnetGroup"
-  #   Properties:
-  #     DBSubnetGroupDescription: "Subnet group for Aurora DB cluster (search-service)"
-  #     SubnetIds:
-  #       - subnet-0104fd063c1f05447
-  #       - subnet-0b3cfffb9e20fa00f
-  AuroraDBSearchServicePolicy:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      Description: "Aurora DB Search Service Policy"
-      ManagedPolicyName: AuroraDBSearchServicePolicy
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Resource: !GetAtt AuroraDBSecretKey.Arn
-            Action: "kms:Decrypt"
-          - Effect: Allow
-            Resource: "*"
-            Action:
-              - "rds-data:ExecuteSql"
-              - "rds-data:ExecuteStatement"
-              - "rds-data:BatchExecuteStatement"
-              - "rds-data:BeginTransaction"
-              - "rds-data:CommitTransaction"
-              - "rds-data:RollbackTransaction"
-              - "secretsmanager:GetSecretValue"
-
   AuroraDBSecretKey:
     Type: AWS::KMS::Key
     Properties:
       Description: "KMS key for Aurora DB cluster secret (search-service)"
       KeyPolicy:
         Statement:
-          - Sid: "Enable IAM User Permissions"
+          - Sid: "Allow root user to use the KMS key."
             Effect: "Allow"
             Principal:
               AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
@@ -181,6 +19,7 @@ Resources:
   AuroraDBSecret:
     Type: AWS::SecretsManager::Secret
     Properties:
+      Name: !Sub ${AWS::StackName}-AuroraDBSecret
       KmsKeyId: !Ref AuroraDBSecretKey
       GenerateSecretString:
         SecretStringTemplate: '{"username": "postgres"}'
@@ -197,37 +36,11 @@ Resources:
       DatabaseName: db1
       MasterUsername: postgres
       MasterUserPassword: !Join ["", ["{{resolve:secretsmanager:", !Ref AuroraDBSecret, ":SecretString:password}}"]]
-      DBClusterIdentifier: fastcharge-search-cluster
-      EnableHttpEndpoint: true
+      DBClusterIdentifier: !Sub ${AWS::StackName}-AuroraDBCluster
+      EnableHttpEndpoint: True
       ScalingConfiguration:
-        AutoPause: true
+        AutoPause: True
         MinCapacity: 2
         MaxCapacity: 4
         SecondsUntilAutoPause: 300
       Port: 5432
-      # DBSubnetGroupName: !Ref AuroraDBClusterSubnetGroup
-      # VpcSecurityGroupIds:
-      #   - !Ref AuroraDBClusterSecurityGroup
-
-  # AuroraDBClusterSecurityGroup:
-  #   Type: AWS::EC2::SecurityGroup
-  #   Properties:
-  #     GroupDescription: "Security group for Aurora DB cluster (search-service)"
-  #     GroupName: search-service-security-group
-  #     SecurityGroupEgress:
-  #       - CidrIp: 0.0.0.0/0
-  #         Description: Allow all outbound traffic by default
-  #         FromPort: -1
-  #         IpProtocol: -1
-  #         ToPort: -1
-  #     SecurityGroupIngress:
-  #       - CidrIp: 0.0.0.0/0
-  #         Description: Allow all inbound traffic by default
-  #         FromPort: -1
-  #         IpProtocol: -1
-  #         ToPort: -1
-  #     VpcId: vpc-03ef29247739ade2b
-# Outputs:
-#   APIGateway:
-#     Description: API APIGateway endpoint URL for DEV stage for Hello World function
-#     Value: !Sub "https://${APIGateway}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/echo"

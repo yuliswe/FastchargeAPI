@@ -11,6 +11,7 @@ import {
     getIsAdminUser,
     getIsServiceRequest,
     normalizeHeaders,
+    printWarnings,
 } from "./lambdaHandlerUtils";
 import { server } from "./server";
 
@@ -123,6 +124,7 @@ let handle = startServerAndCreateLambdaHandler<RequestHandler<LambdaEvent, Lambd
 export const lambdaHandler = async (event: LambdaEvent, context: never, callback: never): Promise<LambdaResult> => {
     let response: LambdaResult;
     try {
+        printWarnings();
         response = await handle(event, context, callback)!;
     } catch (error) {
         try {

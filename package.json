@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "description": "Workspace for FastchargeAPI source code.",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "echo-build-order": "echo auth search graphql payment gateway echo",
+    "deploy": "for s in $(npm run --silent echo-build-order | sed 's/ /\\n/g'); do (cd ${s}-service && npm run deploy); done",
+    "deploy:live": "for s in $(npm run --silent echo-build-order | sed 's/ /\\n/g'); do (cd ${s}-service && npm run deploy:live); done"
+  },
   "repository": {},
   "keywords": [],
   "author": "Yu Li",
