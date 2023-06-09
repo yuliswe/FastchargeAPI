@@ -93,6 +93,39 @@ Resources:
               ReauthorizeEvery: 300
               Headers: ["X-FAST-API-KEY"]
 
+  LambdaFunctionRole: # Lambda functions will run as this role.
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-LambdaFunctionRole
+      Description: "Role for Lambda functions"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+        - arn:aws:iam::aws:policy/AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaRole # This will allow this lambda to send http request to the graphql api
+        - !Ref LambdaFunctionPolicy
+
+  LambdaFunctionPolicy: # Lambda functions will run as this role.
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${AWS::StackName}-LambdaFunctionPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Resource: "*"
+            Action:
+              - "sqs:SendMessage"
+              - "sqs:GetQueueAttributes"
+
   CorsFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Metadata:
@@ -146,10 +179,7 @@ Resources:
             Path: /{proxy+}
             Method: Any
             RestApiId: !Ref GatewayAPI
-      Policies:
-        - AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
-        - AWSLambdaRole # This will allow this lambda to send http request to the graphql api
-        - AmazonSQSFullAccess # Allows sending billing to the graphql service
+      Role: !GetAtt LambdaFunctionRole.Arn
       Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
         Variables:
           TRUST_X_USER_EMAIL_HEADER: "" # Set to 1 to bypass authentication

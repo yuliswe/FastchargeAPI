@@ -29,7 +29,12 @@ Resources:
               StringEquals:
                 "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
       ManagedPolicyArns:
-        - "arn:aws:iam::209991057786:policy/dev-graphql-service-LambdaFunctionPolicy"
+        - arn:aws:iam::209991057786:policy/dev-graphql-service-LambdaFunctionPolicy
+        - arn:aws:iam::209991057786:policy/dev-payment-service-LambdaFunctionPolicy
+        - arn:aws:iam::209991057786:policy/dev-gateway-service-LambdaFunctionPolicy
+        - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+        - arn:aws:iam::aws:policy/AmazonAPIGatewayInvokeFullAccess # This will allow this lambda to send http request to the graphql api
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaRole # This will allow this lambda to send http request to the graphql api
 
 Outputs:
   GithubActionRoleArn:

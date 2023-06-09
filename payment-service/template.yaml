@@ -55,31 +55,35 @@ Resources:
               - sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
-      Policies:
-        - PolicyName: !Sub "${AWS::StackName}-LambdaFunctionPolicy"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: Allow
-                Resource: "*"
-                Action:
-                  - "dynamodb:BatchGetItem"
-                  - "dynamodb:BatchWriteItem"
-                  - "dynamodb:ConditionCheckItem"
-                  - "dynamodb:DeleteItem"
-                  - "dynamodb:GetItem"
-                  - "dynamodb:GetRecords"
-                  - "dynamodb:PutItem"
-                  - "dynamodb:Query"
-                  - "dynamodb:Scan"
-                  - "dynamodb:UpdateItem"
-                  # Need to get credentials for the Stripe API
-                  - "ssm:GetParameter"
-                  - "ssm:GetParameters"
-                  - "ssm:GetParametersByPath"
-                  - "sqs:SendMessage"
-                  - "sqs:GetQueueAttributes"
-                  - "ses:SendEmail"
+        - !Ref LambdaFunctionPolicy
+
+  LambdaFunctionPolicy: # Lambda functions will run as this role.
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${AWS::StackName}-LambdaFunctionPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Resource: "*"
+            Action:
+              - "dynamodb:BatchGetItem"
+              - "dynamodb:BatchWriteItem"
+              - "dynamodb:ConditionCheckItem"
+              - "dynamodb:DeleteItem"
+              - "dynamodb:GetItem"
+              - "dynamodb:GetRecords"
+              - "dynamodb:PutItem"
+              - "dynamodb:Query"
+              - "dynamodb:Scan"
+              - "dynamodb:UpdateItem"
+              # Need to get credentials for the Stripe API
+              - "ssm:GetParameter"
+              - "ssm:GetParameters"
+              - "ssm:GetParametersByPath"
+              - "sqs:SendMessage"
+              - "sqs:GetQueueAttributes"
+              - "ses:SendEmail"
 
   APIGatewayV2:
     Type: AWS::Serverless::HttpApi
