@@ -140,16 +140,16 @@ Resources:
                 Action:
                   - "lambda:InvokeFunction"
 
-  RefreshIDToken:
+  RefreshIdToken:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      FunctionName: !Sub ${AWS::StackName}-RefreshIDToken
+      FunctionName: !Sub ${AWS::StackName}-RefreshIdToken
       CodeUri: ./
-      Handler: RefreshIDToken.lambdaHandler
+      Handler: RefreshIdToken.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
         - arm64 # if you are using Apple M1
-      MemorySize: 256
+      MemorySize: 1024
       Timeout: 10
       Policies:
         - AWSLambdaRole
@@ -170,4 +170,4 @@ Resources:
         Target: "es2022"
         UseNpmCi: True
         EntryPoints:
-          - node/RefreshIDToken.ts
+          - node/RefreshIdToken.ts

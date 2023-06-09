@@ -16,6 +16,7 @@ type RefreshTokenResponse = {
     project_id: string;
 };
 
+let API_KEY: string | undefined;
 async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredResultV2> {
     let refreshToken: string;
     try {
@@ -32,8 +33,10 @@ async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredRe
             body: "Required in body: { refreshToken: string }",
         };
     }
-    const API_KEY = await getParameterFromAWSSystemsManager("auth.google_api_key.for_refresh_token");
-    let response = await fetch(`https://securetoken.googleapis.com/v1/token?key=${API_KEY}`, {
+    if (!API_KEY) {
+        API_KEY = await getParameterFromAWSSystemsManager("auth.google_api_key.for_refresh_token");
+    }
+    const response = await fetch(`https://securetoken.googleapis.com/v1/token?key=${API_KEY}`, {
         method: "POST",
         body: JSON.stringify({
             grant_type: "refresh_token",
@@ -46,7 +49,7 @@ async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredRe
             body: "Invalid Request: Refresh token is invalid.",
         };
     }
-    let data = (await response.json()) as RefreshTokenResponse;
+    const data = (await response.json()) as RefreshTokenResponse;
     return {
         statusCode: 200,
         body: JSON.stringify({
