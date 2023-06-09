@@ -21,7 +21,7 @@ Parameters:
 Globals:
   Function:
     Timeout: 1
-    MemorySize: 128
+    MemorySize: 512
     Tracing: Active
     Environment:
       Variables:
@@ -39,6 +39,7 @@ Resources:
       CodeUri: ./app
       Handler: bootstrap
       Runtime: provided.al2
+      Role: !GetAtt LambdaFunctionRole.Arn
       Architectures:
         - arm64
 
@@ -51,6 +52,7 @@ Resources:
       CodeUri: ./app
       Handler: bootstrap
       Runtime: provided.al2
+      Role: !GetAtt LambdaFunctionRole.Arn
       Architectures:
         - arm64
       Environment:
@@ -66,6 +68,7 @@ Resources:
       CodeUri: ./app
       Handler: bootstrap
       Runtime: provided.al2
+      Role: !GetAtt LambdaFunctionRole.Arn
       Architectures:
         - arm64
       Environment:
@@ -149,12 +152,8 @@ Resources:
       Runtime: nodejs18.x
       Architectures:
         - arm64 # if you are using Apple M1
-      MemorySize: 1024
-      Timeout: 10
-      Policies:
-        - AWSLambdaRole
-        - AmazonDynamoDBFullAccess # Update user for connect account id
-        - AmazonSSMReadOnlyAccess # Need to get credentials for the Stripe API
+      MemorySize: 3008
+      Role: !GetAtt LambdaFunctionRole.Arn
       Events:
         POST:
           Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -171,3 +170,33 @@ Resources:
         UseNpmCi: True
         EntryPoints:
           - node/RefreshIdToken.ts
+
+  LambdaFunctionRole: # Lambda functions will run as this role.
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-LambdaFunctionRole
+      Description: "Role for Lambda functions"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+        - !Ref LambdaFunctionPolicy
+
+  LambdaFunctionPolicy: # Lambda functions will run as this role.
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${AWS::StackName}-LambdaFunctionPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Resource: "*"
+            Action:
+              - ssm:GetParameter

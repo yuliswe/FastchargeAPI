@@ -181,8 +181,6 @@ Resources:
   #     Architectures:
   #       - arm64 # if you are using Apple M1
   #     Role: !GetAtt LambdaFunctionRole.Arn
-  #     MemorySize: 512
-  #     Timeout: 10
   #     Events:
   #       SNSEvent:
   #         Type: SNS # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api

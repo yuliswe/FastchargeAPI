@@ -23,6 +23,8 @@ Parameters:
 Globals:
   Function:
     Tracing: Active
+    Timeout: 1
+    MemorySize: 3008
     Environment:
       Variables:
         DEV_DOMAIN: !Ref EnvDevDomain
@@ -155,8 +157,7 @@ Resources:
         - arm64
       Role: !GetAtt LambdaFunctionRole.Arn
       ReservedConcurrentExecutions: 1
-      Timeout: 60
-      MemorySize: 3008
+      Timeout: 300
       Events:
         ScheduledTrigger12AM:
           ScheduleEvent:
@@ -190,8 +191,6 @@ Resources:
       Architectures:
         - arm64 # if you are using Apple M1
       Role: !GetAtt LambdaFunctionRole.Arn
-      MemorySize: 512
-      Timeout: 10
       Events:
         POST:
           Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -217,8 +216,6 @@ Resources:
       Architectures:
         - arm64 # if you are using Apple M1
       Role: !GetAtt LambdaFunctionRole.Arn
-      MemorySize: 512
-      Timeout: 10
       Events:
         POST:
           Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -244,8 +241,6 @@ Resources:
       Architectures:
         - arm64 # if you are using Apple M1
       Role: !GetAtt LambdaFunctionRole.Arn
-      MemorySize: 3008
-      Timeout: 10
       Events:
         POST:
           Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -275,8 +270,6 @@ Resources:
       Architectures:
         - arm64 # if you are using Apple M1
       Role: !GetAtt LambdaFunctionRole.Arn
-      MemorySize: 512
-      Timeout: 10
       Events:
         POST:
           Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -302,8 +295,6 @@ Resources:
       Architectures:
         - arm64 # if you are using Apple M1
       Role: !GetAtt LambdaFunctionRole.Arn
-      MemorySize: 512
-      Timeout: 10
       Events:
         POST:
           Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
@@ -329,8 +320,6 @@ Resources:
       Architectures:
         - arm64 # if you are using Apple M1
       Role: !GetAtt LambdaFunctionRole.Arn
-      MemorySize: 512
-      Timeout: 10
       Events:
         POST:
           Type: HttpApi # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
