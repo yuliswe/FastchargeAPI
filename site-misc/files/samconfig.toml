@@ -1,0 +1,32 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "dev-site-files"
+s3_prefix = "dev-site-files"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "MainDomain=\"devfastchargeapi.com\" Route53ZoneId=\"Z07362872NENGXHWMNLU5\" EnvDevDomain=\"1\""
+resolve_s3 = true
+image_repositories = []
+no_fail_on_empty_changeset = true
+
+[default.logs.parameters]
+stack_name = "dev-site-files"
+
+[live]
+[live.deploy]
+[live.deploy.parameters]
+profile = "live_fastchargeapi"
+stack_name = "live-site-files"
+s3_prefix = "live-site-files"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "MainDomain=\"fastchargeapi.com\" Route53ZoneId=\"Z0358815GI2I8U5CTHXW\""
+resolve_s3 = true
+image_repositories = []
+no_fail_on_empty_changeset = true
+
+[live.logs.parameters]
+profile = "live_fastchargeapi"
+stack_name = "live-site-files"

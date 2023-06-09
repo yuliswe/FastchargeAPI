@@ -1,0 +1,7 @@
+#!/bin/bash
+
+aws s3 cp '/Users/yu/lab/FastchargeAPI/react/fastchargeapi/src/png/logo_256.png'  s3://dev-site-files-bucket/logo/logo_256.png
+aws s3 cp '/Users/yu/lab/FastchargeAPI/react/fastchargeapi/src/png/logo_512.png'  s3://dev-site-files-bucket/logo/logo_512.png
+aws s3 cp '/Users/yu/lab/FastchargeAPI/react/fastchargeapi/src/png/logo_1024.png'  s3://dev-site-files-bucket/logo/logo_1024.png
+aws s3 cp '/Users/yu/lab/FastchargeAPI/react/fastchargeapi/src/png/logo_2048.png'  s3://dev-site-files-bucket/logo/logo_2048.png
+aws s3 cp '/Users/yu/lab/FastchargeAPI/react/fastchargeapi/src/png/logo_4096.png'  s3://dev-site-files-bucket/logo/logo_4096.png
