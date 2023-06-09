@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/rsa"
 	"encoding/json"
 	"errors"
@@ -14,6 +15,9 @@ import (
 	"github.com/TwiN/go-color"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/golang-jwt/jwt/v5"
 	"k8s.io/client-go/tools/cache"
 )
@@ -22,7 +26,7 @@ func main() {
 	lambda.Start(lambdaHandler)
 }
 
-func lambdaHandler(request events.APIGatewayV2CustomAuthorizerV2Request) (*events.APIGatewayV2CustomAuthorizerIAMPolicyResponse, error) {
+func lambdaHandler(ctx context.Context, request events.APIGatewayV2CustomAuthorizerV2Request) (*events.APIGatewayV2CustomAuthorizerIAMPolicyResponse, error) {
 	if request.RequestContext.HTTP.Method == "OPTIONS" {
 		return allowPreflight(), nil
 	}
@@ -47,7 +51,7 @@ func lambdaHandler(request events.APIGatewayV2CustomAuthorizerV2Request) (*event
 			apiKey = request.Headers["x-fast-api-key"]
 		}
 		fmt.Println(color.Yellow + "Try parsing as an app token:" + color.Reset)
-		if user, err := verifyUserAppToken(apiKey); err == nil {
+		if user, err := verifyUserAppToken(ctx, apiKey); err == nil {
 			return allowed(user), nil
 		} else {
 			fmt.Println(color.Red, "This is not a valid user app token. Reason:", err, color.Reset)
@@ -55,14 +59,14 @@ func lambdaHandler(request events.APIGatewayV2CustomAuthorizerV2Request) (*event
 	}
 
 	fmt.Println(color.Yellow + "Try parsing as a Firebase token:" + color.Reset)
-	if user, err := verifyFirebaseIdToken(auth); err == nil {
+	if user, err := verifyFirebaseIdToken(ctx, auth); err == nil {
 		return allowed(user), nil
 	} else {
 		fmt.Println(color.Red, "This is not a valid firebase token. Reason:", err, color.Reset)
 	}
 
 	fmt.Println(color.Yellow + "Try parsing as a token signed by us:" + color.Reset)
-	if user, err := verifyFastchargeAPISignedIdToken(auth); err == nil {
+	if user, err := verifyFastchargeAPISignedIdToken(ctx, auth); err == nil {
 		return allowed(user), nil
 	} else {
 		fmt.Println(color.Red, "This is not a token signed by us. Reason:", err, color.Reset)
@@ -246,7 +250,7 @@ type UserClaims struct {
 	Sub    string `json:"sub,omitempty"`
 }
 
-func verifyFirebaseIdToken(idToken string) (*UserClaims, error) {
+func verifyFirebaseIdToken(ctx context.Context, idToken string) (*UserClaims, error) {
 	// To verify the signature, first find out which public key certificate was
 	// used to sign the JWT. The key is identified by the key ID (kid) in the
 	// idToken header.
@@ -301,15 +305,17 @@ func verifyFirebaseIdToken(idToken string) (*UserClaims, error) {
 // Used for testing function to log in a user without using Firebase. This
 // essentially allows us to log in as any user we want, using a token that's
 // signed by us.
-func verifyFastchargeAPISignedIdToken(idToken string) (*UserClaims, error) {
-	return verifyUserAppTokenWithPubKey(idToken, getFastchargeAPISignedIdTokenPublicKey())
+func verifyFastchargeAPISignedIdToken(ctx context.Context, idToken string) (*UserClaims, error) {
+	pubKey := getParameterFromSSM(ctx, "auth.fastchargeapi_signing.public_key")
+	return verifyUserAppTokenWithPubKey(ctx, idToken, pubKey)
 }
 
-func verifyUserAppToken(idToken string) (*UserClaims, error) {
-	return verifyUserAppTokenWithPubKey(idToken, getUserAppTokenPublicKey())
+func verifyUserAppToken(ctx context.Context, idToken string) (*UserClaims, error) {
+	pubKey := getParameterFromSSM(ctx, "auth.user_app_token.public_key")
+	return verifyUserAppTokenWithPubKey(ctx, idToken, pubKey)
 }
 
-func verifyUserAppTokenWithPubKey(idToken string, pubkey string) (*UserClaims, error) {
+func verifyUserAppTokenWithPubKey(ctx context.Context, idToken string, pubkey *string) (*UserClaims, error) {
 	// To verify the signature, first find out which public key certificate was
 	// used to sign the JWT. The key is identified by the key ID (kid) in the
 	// idToken header.
@@ -321,7 +327,7 @@ func verifyUserAppTokenWithPubKey(idToken string, pubkey string) (*UserClaims, e
 		// Find the public key certificate corresponding to the key ID (kid)
 		func(token *jwt.Token) (interface{}, error) {
 			pem := pubkey
-			if key, err := jwt.ParseECPublicKeyFromPEM([]byte(pem)); err != nil {
+			if key, err := jwt.ParseECPublicKeyFromPEM([]byte(*pem)); err != nil {
 				return nil, errors.New(fmt.Sprint("Error decoding google cert: ", err.Error()))
 			} else {
 				return key, nil
@@ -342,10 +348,29 @@ func verifyUserAppTokenWithPubKey(idToken string, pubkey string) (*UserClaims, e
 	return &userAppTokenClaims, nil
 }
 
-func getUserAppTokenPublicKey() string {
-	return "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE9CR7SW0cTqQBG1vxWnkjk5dO7zfv\nUeueXgubjSD6i6vcmHdetZ25/ItESQDBmX0LL2qYaPzqTJHbWKxqL+6CtA==\n-----END PUBLIC KEY-----\n"
-}
+var ssmCache cache.Store = cache.NewTTLStore(func(ssmOutput interface{}) (string, error) {
+	return *ssmOutput.(*ssm.GetParameterOutput).Parameter.Name, nil
+}, 24*time.Hour)
 
-func getFastchargeAPISignedIdTokenPublicKey() string {
-	return "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEeaXYnU+ciCdZ2MgYmT3soYlmJbQX\n1obNviKMHV1G6CTilMFht5XGfnsu32nMfWobAzxE5IZcbX/dV3okT56p4A==\n-----END PUBLIC KEY-----\n"
+func getParameterFromSSM(ctx context.Context, name string) (retval *string) {
+	if value, found, err := ssmCache.GetByKey(name); found {
+		return value.(*ssm.GetParameterOutput).Parameter.Value
+	} else if err != nil {
+		// Does this ever happen?
+		fmt.Println(color.Red, "Error getting public key from SSM:", err, color.Reset)
+		panic(err)
+	} else {
+		ssmClient := ssm.New(session.New())
+		result, err := ssmClient.GetParameter(&ssm.GetParameterInput{
+			Name:           aws.String(name),
+			WithDecryption: aws.Bool(true),
+		})
+		if err != nil {
+			fmt.Println(color.Red, "Error getting public key from SSM:", err, color.Reset)
+			panic(err)
+		} else {
+			ssmCache.Add(result)
+			return result.Parameter.Value // return
+		}
+	}
 }
