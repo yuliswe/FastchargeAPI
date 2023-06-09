@@ -8,6 +8,7 @@ export type AppContext = {
         sm: { down: boolean; only: boolean; up: boolean };
         md: { down: boolean; only: boolean; up: boolean };
         lg: { down: boolean; only: boolean; up: boolean };
+        xl: { down: boolean; only: boolean; up: boolean };
     };
     firebase: {
         user: FirebaseUser | null;

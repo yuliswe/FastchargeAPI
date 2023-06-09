@@ -54,7 +54,7 @@ declare module "@mui/material/Typography" {
 //     }
 // }
 
-const shadowScale = 0.5;
+const shadowScale = 0.4;
 const shadowKeyUmbraOpacity = 0.2 * shadowScale;
 const shadowKeyPenumbraOpacity = 0.14 * shadowScale;
 const shadowAmbientShadowOpacity = 0.12 * shadowScale;

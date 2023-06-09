@@ -6,8 +6,8 @@
     "scripts": {
         "test": "cd apollo && npm run test",
         "build": "sam build",
-        "start": "(npm run build --parallel --cached) && (sam local start-api -p 4000 --env-vars ./devenv.json)",
-        "watch": "npx nodemon -w ./apollo -e yml,ts,graphql,json -i ./apollo/__generated__ --signal SIGINT -x \"(npm run start) || exit 1\"",
+        "start": "cd apollo && npm run start",
+        "watch": "cd apollo && npm run watch",
         "logs": "sam logs --tail",
         "logs:live": "sam logs --config-env live --tail",
         "deploy": "npm run build && sam deploy",

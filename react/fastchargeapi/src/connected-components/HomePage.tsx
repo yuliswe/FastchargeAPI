@@ -152,7 +152,11 @@ class _Home extends React.Component<_Props, _State> {
     renderCallToAction() {
         return (
             <Paper
-                sx={{ bgcolor: "primary.light", p: 3, display: this._context.mediaQuery.md.up ? "initial" : "none" }}
+                sx={{
+                    bgcolor: "primary.light",
+                    p: { lg: 4, xl: 3 },
+                    display: this._context.mediaQuery.md.up ? "initial" : "none",
+                }}
             >
                 <Avatar sx={{ height: 50, width: 50, bgcolor: "primary.dark" }}>
                     <ArrowUpwardRounded sx={{ height: "70%", width: "70%" }} />

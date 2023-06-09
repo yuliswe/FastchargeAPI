@@ -159,20 +159,24 @@ function App() {
     const mediaQuerySmDown = useMediaQuery(theme.breakpoints.down("sm"));
     const mediaQueryMdDown = useMediaQuery(theme.breakpoints.down("md"));
     const mediaQueryLgDown = useMediaQuery(theme.breakpoints.down("lg"));
+    const mediaQueryXlDown = useMediaQuery(theme.breakpoints.down("xl"));
     const mediaQueryXsOnly = useMediaQuery(theme.breakpoints.only("xs"));
     const mediaQuerySmOnly = useMediaQuery(theme.breakpoints.only("sm"));
     const mediaQueryMdOnly = useMediaQuery(theme.breakpoints.only("md"));
     const mediaQueryLgOnly = useMediaQuery(theme.breakpoints.only("lg"));
+    const mediaQueryXlOnly = useMediaQuery(theme.breakpoints.only("xl"));
     const mediaQueryXsUp = useMediaQuery(theme.breakpoints.up("xs"));
     const mediaQuerySmUp = useMediaQuery(theme.breakpoints.up("sm"));
     const mediaQueryMdUp = useMediaQuery(theme.breakpoints.up("md"));
     const mediaQueryLgUp = useMediaQuery(theme.breakpoints.up("lg"));
+    const mediaQueryXlUp = useMediaQuery(theme.breakpoints.up("xl"));
 
     const mediaQuery = {
         xs: { down: mediaQueryXsDown, only: mediaQueryXsOnly, up: mediaQueryXsUp },
         sm: { down: mediaQuerySmDown, only: mediaQuerySmOnly, up: mediaQuerySmUp },
         md: { down: mediaQueryMdDown, only: mediaQueryMdOnly, up: mediaQueryMdUp },
         lg: { down: mediaQueryLgDown, only: mediaQueryLgOnly, up: mediaQueryLgUp },
+        xl: { down: mediaQueryXlDown, only: mediaQueryXlOnly, up: mediaQueryXlUp },
     };
 
     const LinkBehavior = React.forwardRef<
@@ -251,9 +255,19 @@ function App() {
         <AppContextProvider value={context}>
             <ThemeProvider
                 theme={getTheme({
-                    spacing: context.mediaQuery.xs.only ? 4 : 8,
+                    spacing: context.mediaQuery.xs.down
+                        ? 4
+                        : context.mediaQuery.sm.down
+                        ? 4.5
+                        : context.mediaQuery.md.down
+                        ? 5
+                        : context.mediaQuery.lg.down
+                        ? 6
+                        : context.mediaQuery.xl.down
+                        ? 6.5
+                        : 8,
                     typography: {
-                        fontSize: context.mediaQuery.xs.only ? 12 : 14,
+                        fontSize: context.mediaQuery.xs.down ? 12 : context.mediaQuery.lg.down ? 13 : 14,
                     },
                     components: {
                         MuiButtonBase: {
