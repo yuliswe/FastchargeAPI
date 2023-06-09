@@ -1,0 +1,23 @@
+{
+  "name": "misc",
+  "version": "1.0.0",
+  "description": "Misc template for AWS SAM",
+  "main": "index.js",
+  "scripts": {
+    "symlink:linux": "mkdir -p .symlinks && ln -sFfT \"$(realpath ${WS_DIR}/graphql-service/apollo)\" .symlinks/graphql-service",
+    "symlink:mac": "mkdir -p .symlinks && ln -sFh \"$(realpath ${WS_DIR}/graphql-service/apollo)\" .symlinks/graphql-service",
+    "symlink": "(npm run symlink:mac) || (npm run symlink:linux)",
+    "test": "jest",
+    "build": "(npm run symlink) && sam build",
+    "deploy": "(npm run build) && sam deploy",
+    "deploy:live": "(npm run build) && sam deploy --config-env live"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-sesv2": "^3.348.0",
+    "@types/aws-lambda": "^8.10.116",
+    "chalk": "^5.2.0",
+    "lambda-ses-forwarder": "^1.0.1"
+  }
+}

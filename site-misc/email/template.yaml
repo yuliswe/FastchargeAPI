@@ -1,0 +1,201 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: <
+  The CloudFormation template helps set up email handling, forwarding, and
+  notifications for the specified MainDomain, allowing you to process incoming
+  emails efficiently using Amazon SES, Amazon SNS, and Route 53.
+
+Parameters:
+  MainDomain:
+    Type: String
+  Route53ZoneId:
+    Type: String
+  ForwardEmailTo:
+    Type: String
+  MaingunTxtRecordName:
+    Type: String
+  MailgunTxtRecordValue:
+    Type: String
+
+Resources:
+  ReceiptRuleSet:
+    Type: "AWS::SES::ReceiptRuleSet"
+    Properties:
+      RuleSetName: !Sub "handle-emails-to-${MainDomain}"
+
+  ReceiptRuleForwardAll:
+    Type: "AWS::SES::ReceiptRule"
+    Properties:
+      RuleSetName: !Ref ReceiptRuleSet
+      Rule:
+        Name: ForwardAll
+        Enabled: true
+        ScanEnabled: true
+        TlsPolicy: Optional
+        Recipients:
+          - !Sub "${MainDomain}"
+        Actions:
+          - SNSAction:
+              TopicArn: !Ref OnReceiveEmailAtMainDomainSNSTopic
+
+  OnReceiveEmailAtMainDomainSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub "${AWS::StackName}-OnReceiveEmailAtMainDomainSNSTopic"
+
+  OnReceiveEmailAtMainDomainSNSTopicPolicy:
+    Type: "AWS::SNS::TopicPolicy"
+    Properties:
+      Topics:
+        - !Ref OnReceiveEmailAtMainDomainSNSTopic
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowSESPublish
+            Effect: Allow
+            Resource: !Ref OnReceiveEmailAtMainDomainSNSTopic
+            Principal:
+              Service: ses.amazonaws.com
+            Action: "sns:Publish"
+
+  OnReceiveEmailAtMainDomainSNSTopicSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref OnReceiveEmailAtMainDomainSNSTopic
+      Endpoint: !Ref ForwardEmailTo
+      Protocol: email
+
+  MainDomainIdentity:
+    Type: AWS::SES::EmailIdentity
+    Properties:
+      EmailIdentity: !Sub "${MainDomain}"
+
+  TopUpEmailSenderIdentity:
+    Type: AWS::SES::EmailIdentity
+    Properties:
+      EmailIdentity: !Sub "topup@${MainDomain}"
+
+  SystemEmailSenderIdentity:
+    Type: AWS::SES::EmailIdentity
+    Properties:
+      EmailIdentity: !Sub "system@${MainDomain}"
+
+  ForwardEmailToIdentity:
+    Type: AWS::SES::EmailIdentity
+    Properties:
+      EmailIdentity: !Ref ForwardEmailTo
+
+  TestUser1Identity:
+    Type: AWS::SES::EmailIdentity
+    Properties:
+      EmailIdentity: testuser1.fastchargeapi@gmail.com
+
+  # MXRecordSet:
+  #   Type: "AWS::Route53::RecordSet"
+  #   Properties:
+  #     HostedZoneId: !Sub ${Route53ZoneId}
+  #     Name: !Sub ${MainDomain}
+  #     Type: MX
+  #     TTL: "300"
+  #     ResourceRecords:
+  #       - "10 inbound-smtp.us-east-1.amazonaws.com"
+
+  MXRecordSet:
+    Type: "AWS::Route53::RecordSet"
+    Properties:
+      HostedZoneId: !Sub ${Route53ZoneId}
+      Name: !Sub ${MainDomain}
+      Type: MX
+      TTL: "300"
+      ResourceRecords:
+        - "10 mxa.mailgun.org"
+        - "10 mxb.mailgun.org"
+
+  CNAMERecordSet:
+    Type: "AWS::Route53::RecordSet"
+    Properties:
+      HostedZoneId: !Sub ${Route53ZoneId}
+      Name: !Sub email.${MainDomain}
+      Type: CNAME
+      TTL: "300"
+      ResourceRecords:
+        - "mailgun.org"
+
+  TXTRecordSet:
+    Type: "AWS::Route53::RecordSet"
+    Properties:
+      HostedZoneId: !Sub ${Route53ZoneId}
+      Name: !Ref MaingunTxtRecordName
+      Type: TXT
+      TTL: "300"
+      ResourceRecords:
+        - !Ref MailgunTxtRecordValue
+
+  TXTRecordSet2:
+    Type: "AWS::Route53::RecordSet"
+    Properties:
+      HostedZoneId: !Sub ${Route53ZoneId}
+      Name: !Sub ${MainDomain}
+      Type: TXT
+      TTL: "300"
+      ResourceRecords:
+        - '"v=spf1 include:mailgun.org ~all"'
+
+  # LambdaFunctionRole:
+  #   Type: AWS::IAM::Role
+  #   Properties:
+  #     RoleName: !Sub ${AWS::StackName}-LambdaFunctionRole
+  #     AssumeRolePolicyDocument:
+  #       Version: "2012-10-17"
+  #       Statement:
+  #         - Effect: Allow
+  #           Principal:
+  #             Service:
+  #               - lambda.amazonaws.com
+  #           Action:
+  #             - "sts:AssumeRole"
+  #     ManagedPolicyArns:
+  #       - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+  #     Policies:
+  #       - PolicyName: !Sub ${AWS::StackName}-LambdaFunctionPolicy
+  #         PolicyDocument:
+  #           Version: "2012-10-17"
+  #           Statement:
+  #             - Effect: Allow
+  #               Resource: "*"
+  #               Action:
+  #                 - "ses:SendEmail"
+  #                 - "ses:SendRawEmail"
+  #                 # - "sqs:DeleteMessage"
+  #                 # - "sqs:ReceiveMessage"
+  #                 # - "sqs:SendMessage"
+  #                 # - "sqs:GetQueueAttributes"
+
+  # ForwardEmail:
+  #   Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+  #   Properties:
+  #     FunctionName: !Sub ${AWS::StackName}-ForwardEmail
+  #     CodeUri: ./
+  #     Handler: ForwardEmail.lambdaHandler
+  #     Runtime: nodejs18.x
+  #     Architectures:
+  #       - arm64 # if you are using Apple M1
+  #     Role: !GetAtt LambdaFunctionRole.Arn
+  #     MemorySize: 512
+  #     Timeout: 10
+  #     Events:
+  #       SNSEvent:
+  #         Type: SNS # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+  #         Properties:
+  #           Topic: !Ref OnReceiveEmailAtMainDomainSNSTopic
+  #           SqsSubscription: False
+  #     Environment:
+  #       Variables:
+  #         ForwardEmailTo: !Ref ForwardEmailTo
+  #   Metadata: # Manage esbuild properties
+  #     BuildMethod: esbuild
+  #     BuildProperties:
+  #       UseNpmCi: True
+  #       Target: "es2022"
+  #       EntryPoints:
+  #         - lambda/ForwardEmail.ts

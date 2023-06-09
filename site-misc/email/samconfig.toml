@@ -1,0 +1,44 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "dev-site-email"
+s3_prefix = "dev-site-email"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
+parameter_overrides = [
+    "MainDomain=devfastchargeapi.com" ,
+    "Route53ZoneId=Z07362872NENGXHWMNLU5" ,
+    "ForwardEmailTo=devfastchargeapi@gmail.com",
+    "MaingunTxtRecordName=mailo._domainkey.devfastchargeapi.com",
+    "MailgunTxtRecordValue='\"k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDQkzXAM6h9Tazrq8FyoSo/flFhGdzJfRqumAschvdn+c+Sr1ZY3Zrr3AijnnrFYL7jVqzziNnxqpUIkNJAzLQ8mW/+5o2+KgAKfULOPn3nr8ZyaBqbd5s+9uSSVwEvJ9m/hsBMnw573tJFV4vcH7q+a97iYvnswuXmtcDzkIZUxQIDAQAB\"'",
+]
+resolve_s3 = true
+image_repositories = []
+no_fail_on_empty_changeset = true
+
+[default.logs.parameters]
+stack_name = "dev-site-email"
+
+[live]
+[live.deploy]
+[live.deploy.parameters]
+profile = "live_fastchargeapi"
+stack_name = "live-site-email"
+s3_prefix = "live-site-email"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
+parameter_overrides = [
+    "MainDomain=fastchargeapi.com",
+    "Route53ZoneId=Z0358815GI2I8U5CTHXW",
+    "ForwardEmailTo=fastchargeapi@gmail.com",
+    "MaingunTxtRecordName=mx._domainkey.fastchargeapi.com",
+    "MailgunTxtRecordValue='\"k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC4HV+TgSulZxJhniGEcct5St1a8RjlQTxa2q+D5IVjwQNu8JWXVArjkSXUI1KEYB0wmz+IwIn01DSbY5nNSp2XzYLxTkYg4tVGpFWRfvp57gqm2wMa20Js5Rp02rOW1p9q4HWhTty3TAtpBqpmhiwaYA1IMfMfdEvTRat4WWuqcwIDAQAB\"'",
+]
+resolve_s3 = true
+image_repositories = []
+no_fail_on_empty_changeset = true
+
+[live.logs.parameters]
+profile = "live_fastchargeapi"
+stack_name = "live-site-email"
