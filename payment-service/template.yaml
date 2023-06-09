@@ -256,6 +256,8 @@ Resources:
       BuildProperties:
         UseNpmCi: True
         Target: "es2022"
+        Loader:
+          - .hbs=file
         EntryPoints:
           - handlers/AcceptStripePayment.ts
 

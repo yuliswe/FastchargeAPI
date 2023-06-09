@@ -372,7 +372,7 @@ const StripePaymentAcceptTableSchema = new dynamoose.Schema(
         },
         stripeSessionObject: { type: Object, required: true },
         accountActivity: { type: String, required: false },
-        status: { type: String, enum: ["pending", "settled"], required: false, default: "pending" },
+        status: { type: String, enum: ["pending", "settled", "expired"], required: false, default: "pending" },
     },
     {
         timestamps: {
@@ -664,16 +664,15 @@ export class AccountHistory extends Item {
  * the Stripe checkout session. StripePaymentAccept corresponds to an
  * AccountActivity which is created when the StripePaymentAccept object settles.
  * The The object is created by the payment-servce when it receives the webhook
- * event from Stripe. The only important fields are user and amount. The rest
- * are for debugging purpose.
+ * event from Stripe.
  */
 export class StripePaymentAccept extends Item {
     user: string;
     amount: string;
     createdAt: number;
     currency: string;
-    status: "settled" | "pending";
-    stripePaymentStatus: "unpaid" | "paid" | "no_payment_required"; // This is copied from stripe checkout session's payment_status, for debugging purpose
+    status: "settled" | "pending" | "expired";
+    stripePaymentStatus: "unpaid" | "paid" | "no_payment_required" | "expired"; // This is copied from stripe checkout session's payment_status, for debugging purpose
     stripeSessionObject: object; // The entire stripe checkout session object, for debugging purpose
     stripePaymentIntent: string; // The stripe payment intent ID, copied from stripe checkout session's payment_intent
     stripeSessionId: string; // The stripe checkout session ID, copied from stripe checkout session object for debugging purpose

@@ -30,7 +30,9 @@ export async function parseStripeWebhookEvent(lambdaEvent: LambdaEventV2): Promi
         throw new Error("Missing body");
     }
 
-    let stripeEndpointSecret = await getParameterFromAWSSystemsManager("payment.stripe.endpoint_secret");
+    let stripeEndpointSecret = await getParameterFromAWSSystemsManager(
+        "payment.stripe.endpoint_secret.accept-stripe-payment"
+    );
     if (!stripeEndpointSecret) {
         throw new Error("Missing Stripe endpoint secret");
     }

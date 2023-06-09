@@ -1,11 +1,14 @@
 import { gql } from "@apollo/client";
+import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { Chalk } from "chalk";
 import crypto from "crypto";
 import Decimal from "decimal.js-light";
+import { getPaymentAcceptedEmail } from "email-templates/payment-accepted";
 import { RequestContext, UserPK, createDefaultContextBatched, sqsGQLClient } from "graphql-service";
 import { SQSQueueUrl } from "graphql-service/cron-jobs/sqsClient";
 import { StripePaymentAccept, User } from "graphql-service/dynamoose/models";
+import { baseDomain } from "graphql-service/runtime-config";
 import { Stripe } from "stripe";
 import {
     GQLFulfillUserStripePaymentAcceptQuery,
@@ -45,7 +48,7 @@ export async function handle(
         parseStripeEvent: parseStripeWebhookEvent,
     }
 ): Promise<APIGatewayProxyStructuredResultV2> {
-    let stripeEvent = await parseStripeEvent(event);
+    const stripeEvent = await parseStripeEvent(event);
 
     if (process.env.LOGGING == "1") {
         console.log(chalk.yellow("Stripe event: " + JSON.stringify(stripeEvent)));
@@ -53,13 +56,13 @@ export async function handle(
 
     switch (stripeEvent.type) {
         case "checkout.session.completed": {
-            let session = stripeEvent.data.object as StripeSessionObject;
-            let amount = new Decimal(session.amount_total).div(100).toString();
-            let email = session.customer_details.email;
+            const session = stripeEvent.data.object as StripeSessionObject;
+            const amount = new Decimal(session.amount_total).div(100).toString();
+            const email = session.customer_details.email;
             if (!email) {
                 throw new Error("Email not found in Stripe session.");
             }
-            let user = await context.batched.User.get({ email }, { using: GQLUserIndex.IndexByEmailOnlyPk });
+            const user = await context.batched.User.get({ email }, { using: GQLUserIndex.IndexByEmailOnlyPk });
             // Check if the order is already paid (for example, from a card
             // payment)
             //
@@ -86,13 +89,13 @@ export async function handle(
             }
         }
         case "checkout.session.async_payment_succeeded": {
-            let session = stripeEvent.data.object as StripeSessionObject;
-            let email = session.customer_details.email;
-            let user = await context.batched.User.get({ email }, { using: GQLUserIndex.IndexByEmailOnlyPk });
-            let paymentAccept = await context.batched.StripePaymentAccept.get({
+            const session = stripeEvent.data.object as StripeSessionObject;
+            const email = session.customer_details.email;
+            const user = await context.batched.User.get({ email }, { using: GQLUserIndex.IndexByEmailOnlyPk });
+            const paymentAccept = await context.batched.StripePaymentAccept.get({
                 user: UserPK.stringify(user),
             });
-            await fulfillOrder(paymentAccept, session);
+            await fulfillOrder(session, paymentAccept);
             return {
                 statusCode: 200,
                 body: JSON.stringify({
@@ -101,12 +104,30 @@ export async function handle(
             };
         }
         case "checkout.session.async_payment_failed": {
-            let session = stripeEvent.data.object as StripeSessionObject;
+            const session = stripeEvent.data.object as StripeSessionObject;
             await emailCustomerAboutFailedPayment(session);
             return {
                 statusCode: 200,
                 body: JSON.stringify({
                     message: "Customer notified of failed payment.",
+                }),
+            };
+        }
+        case "checkout.session.expired": {
+            const session = stripeEvent.data.object as StripeSessionObject;
+            const email = session.customer_details.email;
+            const user = await context.batched.User.get({ email }, { using: GQLUserIndex.IndexByEmailOnlyPk });
+            const paymentAccept = await context.batched.StripePaymentAccept.get({
+                user: UserPK.stringify(user),
+            });
+            await context.batched.StripePaymentAccept.update(paymentAccept, {
+                status: "expired",
+                stripePaymentStatus: "expired",
+            });
+            return {
+                statusCode: 200,
+                body: JSON.stringify({
+                    message: "Payment marked as expired.",
                 }),
             };
         }
@@ -152,7 +173,7 @@ async function createAndFufillOrder({
     user: User;
     amount: string;
 }): Promise<void> {
-    let billingQueueClient = sqsGQLClient({
+    const billingQueueClient = sqsGQLClient({
         queueUrl: SQSQueueUrl.BillingFifoQueue,
         dedupId: `createAndFufillOrder-${UserPK.stringify(user)}-${md5(session.id)}`,
     });
@@ -175,6 +196,7 @@ async function createAndFufillOrder({
             stripePaymentStatus: session.payment_status,
         },
     });
+    await notifyUserOfSuccessfulPayment(session, user, amount);
 }
 
 /**
@@ -190,7 +212,7 @@ async function createOrder({
     amount: string;
 }): Promise<void> {
     // console.log(chalk.yellow("Creating order"), email, amount, session);
-    let billingQueueClient = sqsGQLClient({
+    const billingQueueClient = sqsGQLClient({
         queueUrl: SQSQueueUrl.BillingFifoQueue,
         dedupId: md5(`${UserPK.stringify(user)}-createOrder-${session.id}`),
     });
@@ -216,10 +238,10 @@ async function createOrder({
 /**
  * Must be done on the billing queue so that the update of StripePaymentAccept is idempotent.
  */
-async function fulfillOrder(paymentAccept: StripePaymentAccept, session: StripeSessionObject): Promise<void> {
+async function fulfillOrder(session: StripeSessionObject, paymentAccept: StripePaymentAccept): Promise<void> {
     // console.log(chalk.yellow("Fulfilling order"), paymentAccept, session);
     // Settling the payment must be done on the billing queue
-    let billingQueueClient = sqsGQLClient({
+    const billingQueueClient = sqsGQLClient({
         queueUrl: SQSQueueUrl.BillingFifoQueue,
         dedupId: md5(`${paymentAccept.user}-fulfillOrder-${session.id}`),
     });
@@ -247,13 +269,46 @@ async function fulfillOrder(paymentAccept: StripePaymentAccept, session: StripeS
             stripePaymentIntent: session.payment_intent,
         },
     });
+    const user = await context.batched.User.get(UserPK.parse(paymentAccept.user));
+    await notifyUserOfSuccessfulPayment(session, user, paymentAccept.amount);
 }
 
 async function emailCustomerAboutFailedPayment(session: StripeSessionObject): Promise<void> {
     //
 }
 
+async function notifyUserOfSuccessfulPayment(session: StripeSessionObject, user: User, amount: string): Promise<void> {
+    const sesClient = new SESClient({});
+    await sesClient.send(
+        new SendEmailCommand({
+            Destination: {
+                ToAddresses: [
+                    process.env.NODE_ENV == "test"
+                        ? "testuser1.fastchargeapi@gmail.com"
+                        : session.customer_details.email,
+                ],
+            },
+            Message: {
+                Subject: {
+                    Charset: "UTF-8",
+                    Data: `A topup of $${amount} has been added to your account`,
+                },
+                Body: {
+                    Html: {
+                        Charset: "UTF-8",
+                        Data: getPaymentAcceptedEmail({
+                            paymentAmount: amount,
+                            userName: user.author ?? user.email,
+                        }),
+                    },
+                },
+            },
+            Source: `FastchargeAPI <topup@${baseDomain}>`,
+        })
+    );
+}
+
 function md5(content: string) {
-    let hash = crypto.createHash("md5").update(content).digest("hex");
+    const hash = crypto.createHash("md5").update(content).digest("hex");
     return hash;
 }

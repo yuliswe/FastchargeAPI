@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "experimentalDecorators": true, /* Enable experimental support for TC39 stage 2 draft decorators. */
+    "experimentalDecorators": true,
     "skipLibCheck": true,
     "rootDirs": [
       "./"
@@ -14,7 +14,7 @@
     "moduleResolution": "node",
     "esModuleInterop": true,
     "types": [
-      "node",
+      "node"
     ],
     "noImplicitAny": true,
     "noImplicitThis": true,
@@ -23,10 +23,11 @@
     "strictNullChecks": true,
     "useUnknownInCatchVariables": true,
     "strictFunctionTypes": false,
-    "strictPropertyInitialization": false, // doesn't work with our Item type declarations in models.ts
+    "strictPropertyInitialization": false,
     "allowJs": true,
     "strict": true,
     "noEmit": true,
+    "resolveJsonModule": true,
     "baseUrl": "./",
     "paths": {
       "graphql-service": [
@@ -34,11 +35,11 @@
       ],
       "graphql-service/*": [
         ".symlinks/graphql-service/*"
-      ],
+      ]
     }
   },
   "exclude": [
     "node_modules",
-    "dist",
+    "dist"
   ]
 }
