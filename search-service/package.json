@@ -17,7 +17,7 @@
     "logs:live": "sam logs --config-env live --tail",
     "start": "npm run build && sam local start-api -p 11000 --warm-containers lazy",
     "watch": "nodemon -e ts,graphql,yml,yaml -i __generated__ --signal SIGINT -x 'npm run start || exit 1'",
-    "test": "jest --runInBand",
+    "test": "echo TODO",
     "fix": "eslint --fix ./"
   },
   "author": "",

@@ -1,3 +1,5 @@
+import Decimal from "decimal.js-light";
+import { RequestContext } from "../RequestContext";
 import {
     GQLMutationCreateStripeTransferArgs,
     GQLQueryStripeTransferArgs,
@@ -6,12 +8,12 @@ import {
     GQLStripeTransferStatus,
 } from "../__generated__/resolvers-types";
 import { StripeTransfer, StripeTransferModel } from "../dynamoose/models";
-import { RequestContext } from "../RequestContext";
-import { UserPK } from "../pks/UserPK";
-import { createAccountActivitiesForTransfer } from "../functions/transfer";
 import { BadInput, Denied } from "../errors";
+import { enforceCalledFromQueue, getUserBalance, settleAccountActivities } from "../functions/account";
+import { createAccountActivitiesForTransfer } from "../functions/transfer";
 import { Can } from "../permissions";
 import { StripeTransferPK } from "../pks/StripeTransferPK";
+import { UserPK } from "../pks/UserPK";
 
 /**
  * Make is so that only the owner can read the private attributes.
@@ -56,13 +58,17 @@ export const stripeTransferResolvers: GQLResolvers & {
          * This method is tipically called from the payment-service.
          */
         async settleStripeTransfer(parent: StripeTransfer, args: {}, context: RequestContext): Promise<StripeTransfer> {
+            enforceCalledFromQueue(context, parent.receiver);
             if (!(await Can.settleUserAccountActivities(context))) {
                 throw new Denied();
             }
-            let user = await context.batched.User.get(UserPK.parse(parent.receiver));
+            const user = await context.batched.User.get(UserPK.parse(parent.receiver));
             await createAccountActivitiesForTransfer(context, {
                 transfer: parent,
                 userPK: UserPK.stringify(user),
+            });
+            await settleAccountActivities(context, parent.receiver, {
+                consistentReadAccountActivities: true,
             });
             return parent;
         },
@@ -99,7 +105,21 @@ export const stripeTransferResolvers: GQLResolvers & {
             if (!(await Can.createStripeTransfer(context))) {
                 throw new Denied();
             }
-            let transfer = await context.batched.StripeTransfer.create({
+            if (!context.isSQSMessage) {
+                throw new Error("createStripeTransfer can only be called from the SQS");
+            }
+            if (context.sqsMessageGroupId !== receiver) {
+                throw new Error(
+                    `sqsMessageGroupId must match receiver: ${receiver}. Current: ${
+                        context.sqsMessageGroupId ?? "undefined"
+                    }`
+                );
+            }
+            const balance = await getUserBalance(context, receiver);
+            if (new Decimal(balance).lessThan(withdrawAmount)) {
+                throw new BadInput(`User does not have enough balance to withdraw ${withdrawAmount}`);
+            }
+            return await context.batched.StripeTransfer.create({
                 receiver,
                 withdrawAmount,
                 receiveAmount,
@@ -109,7 +129,6 @@ export const stripeTransferResolvers: GQLResolvers & {
                 transferAt: Date.now() + 1000 * 60 * 60 * 24, // Transfer after 24 hours
                 status: "pending",
             });
-            return transfer;
         },
     },
 };

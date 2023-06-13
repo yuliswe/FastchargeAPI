@@ -1,13 +1,68 @@
+import { gql } from "@apollo/client/core";
+import { Chalk } from "chalk";
+import Decimal from "decimal.js-light";
 import { Item } from "dynamoose/dist/Item";
 import { RequestContext } from "../RequestContext";
+import {
+    GQLTriggerSettleAccountActivitiesForUsersQuery,
+    GQLTriggerSettleAccountActivitiesForUsersQueryVariables,
+} from "../__generated__/operation-types";
 import { AccountActivity, AccountHistory } from "../dynamoose/models";
-import { AccountHistoryPK } from "../pks/AccountHistoryPK";
-import Decimal from "decimal.js-light";
-import { AccountActivityPK } from "../pks/AccountActivityPK";
-import { Chalk } from "chalk";
 import { AlreadyExists } from "../errors";
+import { AccountActivityPK } from "../pks/AccountActivityPK";
+import { AccountHistoryPK } from "../pks/AccountHistoryPK";
+import { SQSQueueUrl, sqsGQLClient } from "../sqsClient";
 
 const chalk = new Chalk({ level: 3 });
+
+export function enforceCalledFromQueue(context: RequestContext, accountUser: string) {
+    if (!context.isSQSMessage) {
+        if (!process.env.UNSAFE_BILLING) {
+            console.error(
+                chalk.red(
+                    `This function must be called from an SQS message. If you are not running in production, you can set the UNSAFE_BILLING=1 environment variable to bypass this check.`
+                )
+            );
+            throw new Error("This function must be called from SQS");
+        }
+    }
+    if (!context.isSQSMessage && context.sqsQueueName !== accountUser) {
+        if (!process.env.UNSAFE_BILLING) {
+            console.error(
+                chalk.red(
+                    `SQS group ID must be the receiver. Expected: ${accountUser}, current: ${
+                        context.sqsQueueName ?? "undefined"
+                    }. If you are not running in production, you can set the UNSAFE_BILLING=1 environment variable to bypass this check.`
+                )
+            );
+            throw new Error("SQS group ID must be the receiver.");
+        }
+    }
+}
+
+export async function settleAccountActivitiesOnSQS(context: RequestContext, accountUser: string) {
+    if (context.isSQSMessage) {
+        throw new Error("settleAccountActivitiesOnSQS must not be called from SQS. It may cause an infinite loop.");
+    }
+    const client = sqsGQLClient({ queueUrl: SQSQueueUrl.BillingFifoQueue, dedupId: accountUser, groupId: accountUser });
+    await client.query<
+        GQLTriggerSettleAccountActivitiesForUsersQuery,
+        GQLTriggerSettleAccountActivitiesForUsersQueryVariables
+    >({
+        query: gql`
+            query TriggerSettleAccountActivitiesForUsers($email: Email!) {
+                user(email: $email) {
+                    settleAccountActivities {
+                        pk
+                    }
+                }
+            }
+        `,
+        variables: {
+            email: accountUser,
+        },
+    });
+}
 
 /**
  * Collect any account activities that are in the pending status, and have the
@@ -36,19 +91,9 @@ export async function settleAccountActivities(
     previousAccountHistory: AccountHistory | null;
     affectedAccountActivities: AccountActivity[];
 } | null> {
-    if (!context.isSQSMessage) {
-        if (!process.env.UNSAFE_BILLING) {
-            console.error(
-                chalk.red(
-                    `settleAccountActivities() must be called from an SQS message. If you are not running in production, you can set the UNSAFE_BILLING=1 environment variable to bypass this check.`
-                )
-            );
-            throw new Error("settleAccountActivities() must be called from SQS");
-        }
-    }
-
-    let closingTime = Date.now();
-    let activities = await context.batched.AccountActivity.many(
+    enforceCalledFromQueue(context, accountUser);
+    const closingTime = Date.now();
+    const activities = await context.batched.AccountActivity.many(
         {
             user: accountUser,
             status: "pending",
@@ -61,8 +106,7 @@ export async function settleAccountActivities(
     if (activities.length === 0) {
         return null;
     }
-
-    let previous = await context.batched.AccountHistory.getOrNull(
+    const previous = await context.batched.AccountHistory.getOrNull(
         {
             user: accountUser,
         },
@@ -102,8 +146,8 @@ export async function settleAccountActivities(
 
     let balance = new Decimal(accountHistory.startingBalance);
 
-    let promises: Promise<Item>[] = [];
-    for (let activity of activities) {
+    const promises: Promise<Item>[] = [];
+    for (const activity of activities) {
         activity.status = "settled";
         activity.accountHistory = AccountHistoryPK.stringify(accountHistory);
         if (activity.type === "credit") {
@@ -117,9 +161,9 @@ export async function settleAccountActivities(
     accountHistory.closingBalance = balance.toString();
     promises.push(accountHistory.save());
 
-    let results: Item[] = [];
-    let errors: string[] = [];
-    for (let result of await Promise.allSettled(promises)) {
+    const results: Item[] = [];
+    const errors: string[] = [];
+    for (const result of await Promise.allSettled(promises)) {
         if (result.status === "rejected") {
             console.error("Error when creating AccountHistory:", result.reason);
             errors.push(result.reason);

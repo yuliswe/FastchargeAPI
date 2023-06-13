@@ -418,7 +418,7 @@ func billUsage(graphqlClient *graphql.Client, user string, app string, path stri
 
 	// Creating usage log can be done synchronously. This ensures that when
 	// calling TriggerBilling, the usage log is already created.
-	if _, err := GQL.CreateUsageLog(
+	if _, err := GQL.CreateUsageLogAndTriggerBilling(
 		context.Background(),
 		*graphqlClient,
 		user,
@@ -426,27 +426,7 @@ func billUsage(graphqlClient *graphql.Client, user string, app string, path stri
 		path,
 		pricing,
 	); err != nil {
-		fmt.Println(color.Red, "Error creating UsageLog: ", err, color.Reset)
-	}
-	// Trigger billing must be done on the billing queue.
-	var billingGQLClient *graphql.Client
-	if os.Getenv("LOCAL_GRAPHQL") == "1" {
-		fmt.Println(color.Red, "Using local GraphQL in place of SQS", color.Reset)
-		billingGQLClient = graphqlClient // Use normal GraphQL client (local in this case)
-	} else {
-		billingGQLClient = getSQSGraphQLClient(SQSGraphQLClientConfig{
-			MessageDeduplicationId: fmt.Sprintf("trigger-billing-%s-%d", user, time.Now().Unix()),
-			MessageGroupId:         "main",
-			QueueName:              BillingFifoQueue,
-		})
-	}
-	if _, err := GQL.TriggerBilling(
-		context.Background(),
-		*billingGQLClient,
-		user,
-		app,
-	); err != nil {
-		fmt.Println(color.Red, "Error triggering billing: ", err, color.Reset)
+		fmt.Println(color.Red, "Error CreateUsageLogAndTriggerBilling: ", err, color.Reset)
 	}
 }
 

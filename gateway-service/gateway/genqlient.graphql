@@ -10,13 +10,10 @@ query GetAppRoutes($app: String) {
     }
 }
 
-mutation CreateUsageLog($user: ID!, $app: ID!, $path: String!, $pricing: ID!) {
+mutation CreateUsageLogAndTriggerBilling($user: ID!, $app: ID!, $path: String!, $pricing: ID!) {
     createUsageLog(subscriber: $user, app: $app, path: $path, pricing: $pricing) {
         createdAt
     }
-}
-
-mutation TriggerBilling($user: ID!, $app: ID!) {
     triggerBilling(user: $user, app: $app) {
         createdAt
     }

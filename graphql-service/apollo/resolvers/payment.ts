@@ -10,7 +10,7 @@ import {
 import { AlreadyExists, Denied } from "../errors";
 import { Can } from "../permissions";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
-import { settleAccountActivities } from "../functions/account";
+import { enforceCalledFromQueue, settleAccountActivities } from "../functions/account";
 import { GQLStripePaymentAcceptStatus } from "../__generated__/operation-types";
 import { StripePaymentAcceptPK } from "../pks/StripePaymentAccept";
 import { UserPK } from "../pks/UserPK";
@@ -57,10 +57,11 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
             { stripePaymentStatus, stripeSessionObject, stripePaymentIntent }: GQLStripePaymentAcceptSettlePaymentArgs,
             context
         ) {
+            enforceCalledFromQueue(context, parent.user);
             if (!(await Can.settleUserAccountActivities(context))) {
                 throw new Denied();
             }
-            let activity = await context.batched.AccountActivity.create({
+            const activity = await context.batched.AccountActivity.create({
                 user: parent.user,
                 amount: parent.amount,
                 type: "debit",

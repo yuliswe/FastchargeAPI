@@ -1,10 +1,10 @@
-import { InMemoryCache } from "@apollo/client/cache/inmemory/inMemoryCache";
-import { ApolloClient } from "@apollo/client/core/ApolloClient";
-import { HttpLink } from "@apollo/client/link/http/HttpLink";
+import { InMemoryCache } from "@apollo/client/cache";
+import { ApolloClient } from "@apollo/client/core";
+import { HttpLink } from "@apollo/client/link/http";
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 import { RequestInit, Response } from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
-import { awsAccountId } from "../runtime-config";
+import { awsAccountId } from "./runtime-config";
 
 const cache = new InMemoryCache();
 
@@ -33,9 +33,6 @@ export function sqsGQLClient({ queueUrl, dedupId, groupId }: { queueUrl: string;
         link: new HttpLink({
             fetch: async (uri: string, options: RequestInit) => {
                 let body = options.body;
-                if (queueUrl == SQSQueueUrl.BillingFifoQueue) {
-                    groupId = "main";
-                }
                 await sqsClient.send(
                     new SendMessageCommand({
                         MessageBody: body?.toString(),

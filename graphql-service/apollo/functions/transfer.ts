@@ -3,8 +3,8 @@ import { RequestContext } from "../RequestContext";
 import { AccountActivity, StripeTransfer } from "../dynamoose/models";
 import { BadInput } from "../errors";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
-import { getUserBalance, settleAccountActivities } from "./account";
 import { StripeTransferPK } from "../pks/StripeTransferPK";
+import { enforceCalledFromQueue } from "./account";
 
 /**
  * Takes a StripeTransfer, and create AccountActivities for the transfer,
@@ -27,16 +27,13 @@ export async function createAccountActivitiesForTransfer(
     accountActivity: AccountActivity;
     feeActivity: AccountActivity;
 }> {
-    let userBalance = new Decimal(await getUserBalance(context, transfer.receiver));
-    if (userBalance.lessThan(transfer.withdrawAmount)) {
-        throw new BadInput("User's account has insufficient funds to complete the transfer.");
-    }
-    let transferFee = new Decimal(transfer.withdrawAmount).sub(transfer.receiveAmount);
+    enforceCalledFromQueue(context, userPK);
+    const transferFee = new Decimal(transfer.withdrawAmount).sub(transfer.receiveAmount);
     if (transferFee.lessThan(0)) {
         throw new BadInput("The receive amount cannot be greater than the withdraw amount.");
     }
-    let settleAt = Date.now();
-    let activity = await context.batched.AccountActivity.create({
+    const settleAt = Date.now();
+    const payoutActivity = await context.batched.AccountActivity.create({
         user: userPK,
         amount: transfer.receiveAmount,
         type: "credit",
@@ -45,7 +42,7 @@ export async function createAccountActivitiesForTransfer(
         description: `Payment to your Stripe account`,
         stripeTransfer: StripeTransferPK.stringify(transfer),
     });
-    let feeActivity = await context.batched.AccountActivity.create({
+    const feeActivity = await context.batched.AccountActivity.create({
         user: userPK,
         amount: transferFee.toString(),
         type: "credit",
@@ -55,23 +52,11 @@ export async function createAccountActivitiesForTransfer(
         description: `Stripe service fee`,
         stripeTransfer: StripeTransferPK.stringify(transfer),
     });
-    await settleAccountActivities(context, userPK, {
-        consistentReadAccountActivities: true,
-    });
-    transfer.accountActivity = AccountActivityPK.stringify(activity);
+    transfer.accountActivity = AccountActivityPK.stringify(payoutActivity);
     transfer.feeActivity = AccountActivityPK.stringify(feeActivity);
     await transfer.save();
-
-    // refresh the account activities
-    context.batched.AccountActivity.clearCache();
-    activity = await context.batched.AccountActivity.get(AccountActivityPK.extract(activity), {
-        consistent: true,
-    });
-    feeActivity = await context.batched.AccountActivity.get(AccountActivityPK.extract(activity), {
-        consistent: true,
-    });
     return {
-        accountActivity: activity,
+        accountActivity: payoutActivity,
         feeActivity: feeActivity,
     };
 }

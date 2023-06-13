@@ -2,20 +2,14 @@
   "compilerOptions": {
     "experimentalDecorators": true,
     "skipLibCheck": true,
-    "rootDirs": [
-      "./"
-    ],
+    "rootDirs": ["./"],
     "outDir": "dist",
-    "lib": [
-      "es2022"
-    ],
+    "lib": ["es2022"],
     "target": "es2022",
-    "module": "ES2022",
+    "module": "ESNext",
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "noImplicitAny": true,
     "noImplicitThis": true,
     "alwaysStrict": true,
@@ -30,16 +24,9 @@
     "resolveJsonModule": true,
     "baseUrl": "./",
     "paths": {
-      "graphql-service": [
-        ".symlinks/graphql-service"
-      ],
-      "graphql-service/*": [
-        ".symlinks/graphql-service/*"
-      ]
+      "graphql-service": [".symlinks/graphql-service"],
+      "graphql-service/*": [".symlinks/graphql-service/*"]
     }
   },
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "exclude": ["node_modules", "dist"]
 }

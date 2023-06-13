@@ -2,11 +2,9 @@ import { JestConfigWithTsJest, pathsToModuleNameMapper } from "ts-jest";
 import { compilerOptions } from "./tsconfig.json";
 
 const jestConfig: JestConfigWithTsJest = {
-    preset: "ts-jest/presets/js-with-ts", // or other ESM presets
+    preset: "ts-jest/presets/js-with-ts-esm", // or other ESM presets
     testEnvironment: "node",
     transform: {
-        // '^.+\\.[tj]sx?$' to process js/ts with `ts-jest`
-        // '^.+\\.m?[tj]sx?$' to process js/ts/mjs/mts with `ts-jest`
         "^.+\\.tsx?$": [
             "ts-jest",
             {
@@ -18,8 +16,9 @@ const jestConfig: JestConfigWithTsJest = {
     roots: ["<rootDir>"],
     modulePaths: [compilerOptions.baseUrl],
     moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths),
-    transformIgnorePatterns: ["/node_modules/(?!(chalk|graphql-service|@apollo|ts-invariant)/)"],
+    transformIgnorePatterns: ["/node_modules/(?!(chalk)/)"],
     modulePathIgnorePatterns: ["dist"],
+    setupFilesAfterEnv: ["<rootDir>/tests/test.env.ts"],
 };
 
 export default jestConfig;

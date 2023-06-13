@@ -1,4 +1,5 @@
 import { startStandaloneServer } from "@apollo/server/standalone";
+import chalk from "chalk";
 import { IncomingMessage } from "http";
 import { RequestContext, createDefaultContextBatched } from "./RequestContext";
 import {
@@ -10,7 +11,7 @@ import {
 } from "./lambdaHandlerUtils";
 import { server } from "./server";
 
-let { url } = await startStandaloneServer<RequestContext>(server, {
+const { url } = await startStandaloneServer<RequestContext>(server, {
     listen: {
         port: process.env.PORT ? Number.parseInt(process.env.PORT) : 4000,
     },
@@ -33,4 +34,4 @@ let { url } = await startStandaloneServer<RequestContext>(server, {
     },
 });
 
-console.log("Server ready at: " + url);
+console.log(chalk.green(`Server ready at: ${url}`));

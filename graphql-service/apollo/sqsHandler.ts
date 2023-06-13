@@ -2,11 +2,11 @@ import { HTTPGraphQLResponse, HeaderMap } from "@apollo/server";
 import { startServerAndCreateLambdaHandler } from "@as-integrations/aws-lambda";
 import { RequestHandler } from "@as-integrations/aws-lambda/dist/request-handlers/_create";
 import { SQSBatchItemFailure, SQSBatchResponse, SQSEvent, SQSRecord } from "aws-lambda";
-import { Chalk } from "chalk";
+import chalk from "chalk";
 import { RequestContext, RequestService, createDefaultContextBatched } from "./RequestContext";
 import { server } from "./server";
 
-const chalk = new Chalk({ level: 3 });
+chalk.level = 3;
 
 let handle = startServerAndCreateLambdaHandler<RequestHandler<SQSRecord, void>, RequestContext>(
     server,

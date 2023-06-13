@@ -46,14 +46,17 @@ generates:
       scalars:
         Email: string
         Timestamp: number
+        NonNegativeDecimal: string
   ./__generated__/operation-types.ts:
     plugins:
       - "typescript"
       - "typescript-operations"
     documents:
       - "./cron-jobs/*.ts"
+      - "./functions/*.ts"
     config:
       scalars:
         Email: string
         Timestamp: number
+        NonNegativeDecimal: string
       typesPrefix: GQL

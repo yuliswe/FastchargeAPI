@@ -2,7 +2,7 @@ import { EventBridgeEvent, EventBridgeHandler } from "aws-lambda";
 import { Chalk } from "chalk";
 import { createDefaultContextBatched } from "../RequestContext";
 import { GQLAccountActivityIndex } from "../__generated__/resolvers-types";
-import { SQSQueueUrl, sqsGQLClient } from "./sqsClient";
+import { SQSQueueUrl, sqsGQLClient } from "../sqsClient";
 import { gql } from "@apollo/client";
 import {
     GQLTriggerSettleAccountActivitiesForUsersQuery,

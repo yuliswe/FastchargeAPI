@@ -4,7 +4,7 @@ import { Chalk } from "chalk";
 import Decimal from "decimal.js-light";
 import { UserPK, createDefaultContextBatched, getUserBalance, sqsGQLClient } from "graphql-service";
 import { RequestContext } from "graphql-service/RequestContext";
-import { SQSQueueUrl } from "graphql-service/cron-jobs/sqsClient";
+import { SQSQueueUrl } from "graphql-service/sqsClient";
 import {
     LambdaCallbackV2,
     LambdaEventV2,
@@ -84,6 +84,7 @@ export async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStruc
 
     const billingQueueClient = sqsGQLClient({
         queueUrl: SQSQueueUrl.BillingFifoQueue,
+        groupId: UserPK.stringify(user),
         dedupId: `createStripeTransfer-${UserPK.stringify(user)}-${event.requestContext.requestId}`,
     });
     await billingQueueClient.mutate({

@@ -6,9 +6,9 @@ import crypto from "crypto";
 import Decimal from "decimal.js-light";
 import { getPaymentAcceptedEmail } from "email-templates/payment-accepted";
 import { RequestContext, UserPK, createDefaultContextBatched, sqsGQLClient } from "graphql-service";
-import { SQSQueueUrl } from "graphql-service/cron-jobs/sqsClient";
 import { StripePaymentAccept, User } from "graphql-service/dynamoose/models";
 import { baseDomain } from "graphql-service/runtime-config";
+import { SQSQueueUrl } from "graphql-service/sqsClient";
 import { Stripe } from "stripe";
 import {
     GQLFulfillUserStripePaymentAcceptQuery,
@@ -175,6 +175,7 @@ async function createAndFufillOrder({
 }): Promise<void> {
     const billingQueueClient = sqsGQLClient({
         queueUrl: SQSQueueUrl.BillingFifoQueue,
+        groupId: UserPK.stringify(user),
         dedupId: `createAndFufillOrder-${UserPK.stringify(user)}-${md5(session.id)}`,
     });
     await billingQueueClient.mutate<void, GQLMutationCreateStripePaymentAcceptArgs>({
@@ -214,6 +215,7 @@ async function createOrder({
     // console.log(chalk.yellow("Creating order"), email, amount, session);
     const billingQueueClient = sqsGQLClient({
         queueUrl: SQSQueueUrl.BillingFifoQueue,
+        groupId: UserPK.stringify(user),
         dedupId: md5(`${UserPK.stringify(user)}-createOrder-${session.id}`),
     });
     await billingQueueClient.mutate<void, GQLMutationCreateStripePaymentAcceptArgs>({
@@ -243,6 +245,7 @@ async function fulfillOrder(session: StripeSessionObject, paymentAccept: StripeP
     // Settling the payment must be done on the billing queue
     const billingQueueClient = sqsGQLClient({
         queueUrl: SQSQueueUrl.BillingFifoQueue,
+        groupId: paymentAccept.user,
         dedupId: md5(`${paymentAccept.user}-fulfillOrder-${session.id}`),
     });
     await billingQueueClient.query<

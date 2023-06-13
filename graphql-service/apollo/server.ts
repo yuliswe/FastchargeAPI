@@ -6,7 +6,6 @@ import process from "node:process";
 import { RequestContext } from "./RequestContext";
 import { GQLResolvers } from "./__generated__/resolvers-types";
 import { wakeUpAurora } from "./aurora";
-import { initializeDB } from "./dynamoose";
 import { handleError } from "./errors";
 import { accountActivityResolvers } from "./resolvers/account";
 import { accountHistoryResolvers } from "./resolvers/account-history";
@@ -31,8 +30,6 @@ process.on("uncaughtException", (err, origin) => {
     console.error(err);
     console.error(origin);
 });
-
-initializeDB();
 
 // Add more resolvers here when new resolvers are created
 const resolvers: GQLResolvers = {

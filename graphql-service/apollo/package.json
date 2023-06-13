@@ -1,16 +1,17 @@
 {
     "name": "graphql-service",
     "version": "1.0.0",
-    "type": "module",
     "description": "",
     "main": "index.ts",
+    "type": "module",
+    "module": "node",
     "scripts": {
         "gen": "graphql-codegen --config codegen.yml",
         "prebuild": "npm run gen",
         "build": "(npm run prebuild) && tsc",
         "start": "(npm run build) && (TRUST_X_USER_PK_HEADER=1 TRUST_X_USER_EMAIL_HEADER=1 TRUST_X_IS_SERVICE_REQUEST_HEADER=1 node --experimental-specifier-resolution=node ./dist/devserver.js) || exit 1",
         "watch": "npx nodemon -e yml,ts,graphql,json -i __generated__/ -d 1 --signal SIGINT -x \"npm run start\"",
-        "test": "jest",
+        "test": "NODE_OPTIONS=--experimental-specifier-resolution=node jest",
         "sam": "cd ../ && make watch",
         "fix": "eslint --fix ./",
         "typecheck": "npm run gen && tsc --noEmit"
@@ -18,7 +19,7 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "@apollo/client": "^3.7.9",
+        "@apollo/client": "^3.7.15",
         "@apollo/server": "^4.3.1",
         "@as-integrations/aws-lambda": "^2.0.0",
         "@aws-sdk/client-dynamodb": "^3.258.0",

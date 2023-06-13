@@ -416,7 +416,7 @@ const StripeTransferTableSchema = new dynamoose.Schema(
                 type: "global",
                 project: ["transferAt", "status"],
             },
-            enum: ["pending", "transferred"],
+            enum: ["pending", "transferred", "failed"],
             required: true,
         },
     },
