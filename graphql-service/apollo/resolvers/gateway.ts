@@ -1,3 +1,5 @@
+import { Chalk } from "chalk";
+import Decimal from "decimal.js-light";
 import { RequestContext } from "../RequestContext";
 import {
     GQLGatewayDecisionResponseReason,
@@ -5,15 +7,13 @@ import {
     GQLQueryCheckUserIsAllowedForGatewayRequestArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
-import { getUserBalance } from "../functions/account";
-import { findUserSubscriptionPricing } from "../functions/subscription";
-import { ShouldCollectMonthlyChargePromiseResult, shouldCollectMonthlyCharge } from "../functions/billing";
-import Decimal from "decimal.js-light";
 import { GatewayRequestCounter, GatewayRequestDecisionCache, Pricing, User } from "../dynamoose/models";
-import { Chalk } from "chalk";
 import { AlreadyExists, Denied, NotFound } from "../errors";
-import { PricingPK } from "../pks/PricingPK";
+import { getUserBalance } from "../functions/account";
+import { ShouldCollectMonthlyChargePromiseResult, shouldCollectMonthlyCharge } from "../functions/billing";
+import { findUserSubscriptionPricing } from "../functions/subscription";
 import { AppPK } from "../pks/AppPK";
+import { PricingPK } from "../pks/PricingPK";
 import { UserPK } from "../pks/UserPK";
 const chalk = new Chalk({ level: 3 });
 
@@ -55,7 +55,7 @@ export const gatewayResolvers: GQLResolvers & {
             // let startTimer = Date.now();
 
             // Increment the request counter, or create it if it doesn't exist
-            let globalRequestCounterPromise = incrementOrCreateRequestCounter(context, { user }).catch((e) => {
+            const globalRequestCounterPromise = incrementOrCreateRequestCounter(context, { user }).catch((e) => {
                 console.error(chalk.red("Error incrementing request counter:"));
                 console.error(e);
                 return null;
@@ -64,7 +64,7 @@ export const gatewayResolvers: GQLResolvers & {
             // Get the decision cache, or create it if it doesn't exist. The
             // decision cash helps us decide whether we should check the user's
             // balance or not.
-            let gatewayDecisionCachePromise = getGatewayDecisionCache(context, {
+            const gatewayDecisionCachePromise = getGatewayDecisionCache(context, {
                 user,
                 app,
                 globalRequestCounterPromise,
@@ -82,7 +82,7 @@ export const gatewayResolvers: GQLResolvers & {
                 };
             });
 
-            let globalRequestCounter = await globalRequestCounterPromise;
+            const globalRequestCounter = await globalRequestCounterPromise;
 
             // Handle the above race condition
             if (globalRequestCounter === null) {
@@ -105,7 +105,7 @@ export const gatewayResolvers: GQLResolvers & {
                 };
             }
 
-            let { result: gatewayDecisionCache, error } = await gatewayDecisionCachePromise;
+            const { result: gatewayDecisionCache, error } = await gatewayDecisionCachePromise;
 
             if (error) {
                 return error;
@@ -121,8 +121,8 @@ export const gatewayResolvers: GQLResolvers & {
                 };
             }
 
-            let userPromise = context.batched.User.get(UserPK.parse(user));
-            let pricingPromise = userPromise.then(async (user) => {
+            const userPromise = context.batched.User.get(UserPK.parse(user));
+            const pricingPromise = userPromise.then(async (user) => {
                 try {
                     return await findUserSubscriptionPricing(context, { app, user: UserPK.stringify(user) });
                 } catch (e) {
@@ -140,7 +140,7 @@ export const gatewayResolvers: GQLResolvers & {
                 gatewayDecisionCache.nextForcedBalanceCheckTime - Date.now() < 10 * 60 * 1000 // 10 minutes
             ) {
                 // eslint-disable-next-line @typescript-eslint/no-floating-promises
-                let promise = createOrUpdateGatewayDecisionCache(context, {
+                const promise = createOrUpdateGatewayDecisionCache(context, {
                     user,
                     app,
                     globalRequestCounterPromise,
@@ -178,7 +178,7 @@ export const gatewayResolvers: GQLResolvers & {
 
             // Run all these promises concurrently
 
-            let shouldCollectMonthlyChargePromise = checkShouldChargeMonthlyFee(context, {
+            const shouldCollectMonthlyChargePromise = checkShouldChargeMonthlyFee(context, {
                 app,
                 userPromise,
                 pricingPromise,
@@ -187,24 +187,24 @@ export const gatewayResolvers: GQLResolvers & {
                 console.error(e);
                 return null;
             });
-            let hasSufficientFreeQuotaPromise = checkHasSufficientFreeQuota(context, { app, user, pricingPromise });
-            let hasSufficientBalancePromise = checkHasSufficientBalance(context, {
+            const hasSufficientFreeQuotaPromise = checkHasSufficientFreeQuota(context, { app, user, pricingPromise });
+            const hasSufficientBalancePromise = checkHasSufficientBalance(context, {
                 userPromise,
                 shouldCollectMonthlyChargePromise,
                 pricingPromise,
             });
-            let ownerHasSufficientBalancePromise = checkOwnerHasSufficientBalance(context, {
+            const ownerHasSufficientBalancePromise = checkOwnerHasSufficientBalance(context, {
                 app,
                 shouldCollectMonthlyChargePromise,
             });
-            let userIsSubscribedPromise = checkUserIsSubscribed(context, { pricingPromise });
+            const userIsSubscribedPromise = checkUserIsSubscribed(context, { pricingPromise });
 
-            let userIsSubscribed = await userIsSubscribedPromise;
-            let hasSufficientFreeQuota = await hasSufficientFreeQuotaPromise;
-            let hasSufficientBalance = await hasSufficientBalancePromise;
-            let ownerHasSufficientBalance = await ownerHasSufficientBalancePromise;
-            let pricing = await pricingPromise;
-            let userPK = UserPK.stringify(await userPromise);
+            const userIsSubscribed = await userIsSubscribedPromise;
+            const hasSufficientFreeQuota = await hasSufficientFreeQuotaPromise;
+            const hasSufficientBalance = await hasSufficientBalancePromise;
+            const ownerHasSufficientBalance = await ownerHasSufficientBalancePromise;
+            const pricing = await pricingPromise;
+            const userPK = UserPK.stringify(await userPromise);
 
             if (!userIsSubscribed) {
                 return {
@@ -272,11 +272,11 @@ async function checkHasSufficientFreeQuota(
     context: RequestContext,
     { app, user, pricingPromise }: { app: string; user: string; pricingPromise: Promise<Pricing | null> }
 ): Promise<boolean | null> {
-    let pricing = await pricingPromise;
+    const pricing = await pricingPromise;
     if (pricing == null) {
         return null;
     }
-    let quota = await context.batched.FreeQuotaUsage.getOrCreate({
+    const quota = await context.batched.FreeQuotaUsage.getOrCreate({
         subscriber: user,
         app,
     });
@@ -303,16 +303,16 @@ async function checkHasSufficientBalance(
         pricingPromise: Promise<Pricing | null>;
     }
 ): Promise<boolean | null> {
-    let user = await userPromise;
+    const user = await userPromise;
     if (user == null) {
         return null;
     }
-    let balancePromise = getUserBalance(context, UserPK.stringify(user));
-    let needMonthlyFeePromise = shouldCollectMonthlyChargePromise.then((r) => r && r.shouldBill);
+    const balancePromise = getUserBalance(context, UserPK.stringify(user));
+    const needMonthlyFeePromise = shouldCollectMonthlyChargePromise.then((r) => r && r.shouldBill);
 
-    let pricing = await pricingPromise;
-    let balance = await balancePromise;
-    let needMonthlyFee = await needMonthlyFeePromise;
+    const pricing = await pricingPromise;
+    const balance = await balancePromise;
+    const needMonthlyFee = await needMonthlyFeePromise;
 
     if (pricing == null) {
         return null;
@@ -345,7 +345,7 @@ async function checkOwnerHasSufficientBalance(
         shouldCollectMonthlyChargePromise: Promise<ShouldCollectMonthlyChargePromiseResult | null>;
     }
 ): Promise<boolean | null> {
-    let balancePromise = context.batched.App.get({ name: app })
+    const balancePromise = context.batched.App.get({ name: app })
         .then(async (app) => {
             try {
                 return await getUserBalance(context, app.owner);
@@ -360,12 +360,12 @@ async function checkOwnerHasSufficientBalance(
             console.error(e);
             return null;
         });
-    let amountPromise = shouldCollectMonthlyChargePromise.then((x) => x && x.amount);
-    let amount = await amountPromise;
+    const amountPromise = shouldCollectMonthlyChargePromise.then((x) => x && x.amount);
+    const amount = await amountPromise;
     if (amount == null) {
         return null;
     }
-    let balance = await balancePromise;
+    const balance = await balancePromise;
     if (balance == null) {
         return null;
     }
@@ -379,7 +379,7 @@ async function checkUserIsSubscribed(
     context: RequestContext,
     { pricingPromise }: { pricingPromise: Promise<Pricing | null> }
 ) {
-    let pricing = await pricingPromise;
+    const pricing = await pricingPromise;
     return pricing != null;
 }
 
@@ -396,8 +396,8 @@ async function checkShouldChargeMonthlyFee(
         pricingPromise,
     }: { app: string; userPromise: Promise<User>; pricingPromise: Promise<Pricing | null> }
 ): Promise<ShouldCollectMonthlyChargePromiseResult | null> {
-    let pricing = await pricingPromise;
-    let user = await userPromise;
+    const pricing = await pricingPromise;
+    const user = await userPromise;
     if (pricing == null) {
         return null;
     }
@@ -428,7 +428,7 @@ async function getGatewayDecisionCache(
         globalRequestCounterPromise: Promise<GatewayRequestCounter | null>;
     }
 ): Promise<{ result?: GatewayRequestDecisionCache | null; error?: GatewayDecisionResponse }> {
-    let decisionCache = await context.batched.GatewayRequestDecisionCache.getOrNull({
+    const decisionCache = await context.batched.GatewayRequestDecisionCache.getOrNull({
         requester: user,
         app: "<global>",
     });
@@ -438,7 +438,7 @@ async function getGatewayDecisionCache(
     // Create the decision cache if it doesn't exist
     if (decisionCache === null) {
         try {
-            let pricingPromise = findUserSubscriptionPricing(context, { user, app });
+            const pricingPromise = findUserSubscriptionPricing(context, { user, app });
             return await createOrUpdateGatewayDecisionCache(context, {
                 user,
                 app,
@@ -495,8 +495,8 @@ async function createOrUpdateGatewayDecisionCache(
     }
 ): Promise<{ result?: GatewayRequestDecisionCache; error?: GatewayDecisionResponse }> {
     // let startTimer = Date.now();
-    let currentRequestCounter = await globalRequestCounterPromise;
-    let pricing = await pricingPromise;
+    const currentRequestCounter = await globalRequestCounterPromise;
+    const pricing = await pricingPromise;
     if (currentRequestCounter == null) {
         return {
             error: {
@@ -517,7 +517,7 @@ async function createOrUpdateGatewayDecisionCache(
             },
         };
     }
-    let { numChecksToSkip, timeUntilNextCheckSeconds } = await estimateAllowanceToSkipBalanceCheck(context, {
+    const { numChecksToSkip, timeUntilNextCheckSeconds } = await estimateAllowanceToSkipBalanceCheck(context, {
         app,
         user,
         pricing,
@@ -588,9 +588,9 @@ async function estimateAllowanceToSkipBalanceCheck(
     maxRequests = Math.max(0, maxRequests);
     // Another heuristic: get app owner's balance, divide by the per-request fee
     // we charge, and divide by 10000.
-    let ourFee = "0.0001";
-    let appItem = await context.batched.App.get(AppPK.parse(app));
-    let maxRequestsForAppOwner = new Decimal(await getUserBalance(context, appItem.owner))
+    const ourFee = "0.0001";
+    const appItem = await context.batched.App.get(AppPK.parse(app));
+    const maxRequestsForAppOwner = new Decimal(await getUserBalance(context, appItem.owner))
         .div(ourFee)
         .div(10000)
         .toInteger()
@@ -612,7 +612,7 @@ async function incrementOrCreateRequestCounter(
     context: RequestContext,
     { user }: { user: string }
 ): Promise<GatewayRequestCounter | null> {
-    let counterPromise = context.batched.GatewayRequestCounter.update(
+    const counterPromise = context.batched.GatewayRequestCounter.update(
         {
             requester: user,
             app: "<global>",

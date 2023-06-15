@@ -5,7 +5,7 @@ export type StripePaymentAcceptPKContent = {
 
 export class StripePaymentAcceptPK {
     static parse(pk: string): StripePaymentAcceptPKContent {
-        let [user, createdAt] = JSON.parse(Buffer.from(pk.replace(/^spaya_/, ""), "base64url").toString("utf8"));
+        const [user, createdAt] = JSON.parse(Buffer.from(pk.replace(/^spaya_/, ""), "base64url").toString("utf8"));
         return {
             user,
             createdAt,

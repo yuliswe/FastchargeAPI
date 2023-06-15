@@ -8,11 +8,11 @@ import { server } from "./server";
 
 chalk.level = 3;
 
-let handle = startServerAndCreateLambdaHandler<RequestHandler<SQSRecord, void>, RequestContext>(
+const handle = startServerAndCreateLambdaHandler<RequestHandler<SQSRecord, void>, RequestContext>(
     server,
     {
         fromEvent(record) {
-            let headers = new HeaderMap();
+            const headers = new HeaderMap();
             headers.set("Content-Type", "application/json");
             console.log(chalk.blue("Recieved SQSRecord: " + record.body));
             return {
@@ -26,7 +26,7 @@ let handle = startServerAndCreateLambdaHandler<RequestHandler<SQSRecord, void>, 
             if (response.status === 200 || response.status == undefined) {
                 // I'm not sure why when the graphl query success, the status is undefined
                 if (response.body && response.body.kind === "complete") {
-                    let body = response.body.string;
+                    const body = response.body.string;
                     if (JSON.parse(body).errors) {
                         console.error(chalk.red("Error response: " + body));
                         throw new Error("Error response: " + body);
@@ -48,9 +48,9 @@ let handle = startServerAndCreateLambdaHandler<RequestHandler<SQSRecord, void>, 
     },
     {
         context({ event }: { event: SQSRecord }) {
-            let userEmail: string | undefined = undefined;
-            let serviceName: RequestService = "internal";
-            let isServiceRequest = true;
+            const userEmail: string | undefined = undefined;
+            const serviceName: RequestService = "internal";
+            const isServiceRequest = true;
             return Promise.resolve({
                 currentUser: userEmail,
                 service: serviceName,
@@ -66,8 +66,8 @@ let handle = startServerAndCreateLambdaHandler<RequestHandler<SQSRecord, void>, 
 );
 
 export const handler = async (event: SQSEvent, context: never, callback: never): Promise<SQSBatchResponse> => {
-    let batchItemFailures: SQSBatchItemFailure[] = [];
-    for (let record of event.Records) {
+    const batchItemFailures: SQSBatchItemFailure[] = [];
+    for (const record of event.Records) {
         try {
             await handle(record, context, callback);
         } catch (error) {

@@ -35,21 +35,21 @@ export const usageLogResolvers: GQLResolvers & {
             if (!(await Can.viewUsageLogPrivateAttributes(parent, context))) {
                 throw new Denied();
             }
-            let app = await context.batched.App.get(AppPK.parse(parent.app));
+            const app = await context.batched.App.get(AppPK.parse(parent.app));
             return app;
         },
         async subscriber(parent: UsageLog, args, context, info) {
             if (!(await Can.viewUsageLogPrivateAttributes(parent, context))) {
                 throw new Denied();
             }
-            let subscriber = await context.batched.User.get(UserPK.parse(parent.subscriber));
+            const subscriber = await context.batched.User.get(UserPK.parse(parent.subscriber));
             return subscriber;
         },
         async endpoint(parent: UsageLog, args, context, info) {
             if (!(await Can.viewUsageLogPrivateAttributes(parent, context))) {
                 throw new Denied();
             }
-            let endpoint = await context.batched.Endpoint.get({
+            const endpoint = await context.batched.Endpoint.get({
                 app: parent.app,
                 path: parent.path,
             });

@@ -14,7 +14,7 @@ import Decimal from "decimal.js-light";
 import { v4 as uuidv4 } from "uuid";
 import { getOrCreateTestUser } from "./test-utils";
 
-let context: RequestContext = {
+const context: RequestContext = {
     batched: createDefaultContextBatched(),
     isSQSMessage: true,
     isServiceRequest: true,
@@ -31,7 +31,7 @@ describe("Test when making a request the monthly subscription fee is charged.", 
 
     test("Preparation: create an App", async () => {
         try {
-            let app = await context.batched.App.create({
+            const app = await context.batched.App.create({
                 name: "myapp",
                 owner: UserPK.stringify(testUser),
             });
@@ -46,7 +46,7 @@ describe("Test when making a request the monthly subscription fee is charged.", 
 
     let pricingPK: string;
     test("Preparation: create a Pricing or use existing", async () => {
-        let pricingRequirement = {
+        const pricingRequirement = {
             app: "myapp",
             name: "Premium",
             minMonthlyCharge: "1",
@@ -61,7 +61,7 @@ describe("Test when making a request the monthly subscription fee is charged.", 
 
     let subscription: Subscription;
     test("Preparation: subscribe user to this Pricing", async () => {
-        let sub = await context.batched.Subscription.getOrNull({
+        const sub = await context.batched.Subscription.getOrNull({
             subscriber: UserPK.stringify(testUser),
         });
         if (sub === null) {
@@ -78,7 +78,7 @@ describe("Test when making a request the monthly subscription fee is charged.", 
     let usageLogPK: string;
     test("Preparation: create 3 UsageLogs", async () => {
         for (let i = 0; i < 3; i++) {
-            let usageLog = (await usageLogResolvers.Mutation!.createUsageLog!(
+            const usageLog = (await usageLogResolvers.Mutation!.createUsageLog!(
                 {},
                 {
                     subscriber: UserPK.stringify(testUser),
@@ -97,12 +97,12 @@ describe("Test when making a request the monthly subscription fee is charged.", 
 
     let usageSummaryPK: string;
     test("Create a UsageSummary", async () => {
-        let { affectedUsageSummaries } = await collectUsageSummary(context, {
+        const { affectedUsageSummaries } = await collectUsageSummary(context, {
             user: UserPK.stringify(testUser),
             app: "myapp",
         });
-        let usageSummary = affectedUsageSummaries[0];
-        let usageLog = await UsageLogModel.get(UsageLogPK.parse(usageLogPK));
+        const usageSummary = affectedUsageSummaries[0];
+        const usageLog = await UsageLogModel.get(UsageLogPK.parse(usageLogPK));
         expect(usageSummary).not.toBeNull();
         expect(usageSummary.numberOfLogs).toEqual(3);
         expect(usageLog.status).toEqual("collected");
@@ -118,8 +118,8 @@ describe("Test when making a request the monthly subscription fee is charged.", 
      * 4. Request fee for the subscriber
      */
     test("Create AccountActivity", async () => {
-        let usageSummary = await UsageSummaryModel.get(UsageSummaryPK.parse(usageSummaryPK));
-        let result = await generateAccountActivities(context, {
+        const usageSummary = await UsageSummaryModel.get(UsageSummaryPK.parse(usageSummaryPK));
+        const result = await generateAccountActivities(context, {
             usageSummary,
             subscriber: UserPK.stringify(testUser),
             appAuthor: UserPK.stringify(testUser),
@@ -137,7 +137,7 @@ describe("Test when making a request the monthly subscription fee is charged.", 
         expect(result.createdAccountActivities.subscriberMonthlyFee?.type).toEqual("credit");
         expect(result.createdAccountActivities.appAuthorServiceFee?.type).toEqual("credit");
 
-        let now = Date.now();
+        const now = Date.now();
         expect(result.createdAccountActivities.subscriberMonthlyFee?.settleAt).toBeLessThan(now);
         expect(result.createdAccountActivities.subscriberRequestFee?.settleAt).toBeLessThan(now);
         expect(result.createdAccountActivities.appAuthorRequestFee?.settleAt).toBeLessThan(now);
@@ -158,9 +158,9 @@ describe("Test when making a request the monthly subscription fee is charged.", 
      * AccountActivity is in the future in the previous step.
      */
     test("Create AccountHistory", async () => {
-        let result = await settleAccountActivities(context, UserPK.stringify(testUser));
+        const result = await settleAccountActivities(context, UserPK.stringify(testUser));
         expect(result).not.toBeNull();
-        let { newAccountHistory, affectedAccountActivities, previousAccountHistory } = result!;
+        const { newAccountHistory, affectedAccountActivities, previousAccountHistory } = result!;
         expect(affectedAccountActivities.length).toEqual(4);
         if (previousAccountHistory) {
             expect(newAccountHistory.startingTime).toEqual(previousAccountHistory.closingTime);

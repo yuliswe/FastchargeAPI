@@ -191,7 +191,7 @@ export async function getUserBalance(
     userPK: string,
     { consistent }: { consistent?: boolean } = {}
 ): Promise<string> {
-    let accountHistory = await getUserAccountHistoryRepresentingBalance(context, userPK, { consistent });
+    const accountHistory = await getUserAccountHistoryRepresentingBalance(context, userPK, { consistent });
     if (accountHistory) {
         return accountHistory.closingBalance;
     } else {

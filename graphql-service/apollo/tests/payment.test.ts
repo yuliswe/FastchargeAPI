@@ -9,7 +9,7 @@ import { UserPK } from "../pks/UserPK";
 import { v4 as uuidv4 } from "uuid";
 import { getOrCreateTestUser } from "./test-utils";
 
-let context: RequestContext = {
+const context: RequestContext = {
     batched: createDefaultContextBatched(),
     isServiceRequest: true,
     isSQSMessage: true,
@@ -39,7 +39,7 @@ describe("Payment API", () => {
     });
 
     test("Settle the payment", async () => {
-        let oldBalance = new Decimal(await getUserBalance(context, UserPK.stringify(testUser)));
+        const oldBalance = new Decimal(await getUserBalance(context, UserPK.stringify(testUser)));
         stripePaymentAccept = (await stripePaymentAcceptResolvers.StripePaymentAccept.settlePayment(
             stripePaymentAccept,
             { stripeSessionObject: "{}" },
@@ -51,11 +51,11 @@ describe("Payment API", () => {
         expect(stripePaymentAccept.accountActivity.length).not.toBe(0);
 
         context.batched.AccountHistory.clearCache();
-        let newBalance = new Decimal(await getUserBalance(context, UserPK.stringify(testUser)));
+        const newBalance = new Decimal(await getUserBalance(context, UserPK.stringify(testUser)));
         expect(newBalance).toEqual(oldBalance.plus(1));
 
         // Examine the account activity
-        let accountActivity = await context.batched.AccountActivity.get(
+        const accountActivity = await context.batched.AccountActivity.get(
             AccountActivityPK.parse(stripePaymentAccept.accountActivity)
         );
         expect(accountActivity.reason).toBe("topup");

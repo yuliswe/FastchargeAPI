@@ -5,7 +5,7 @@ export type EndpointPKContent = {
 
 export class EndpointPK {
     static parse(pk: string): EndpointPKContent {
-        let [app, createdAt] = JSON.parse(Buffer.from(pk.replace(/^endp_/, ""), "base64url").toString("utf8"));
+        const [app, createdAt] = JSON.parse(Buffer.from(pk.replace(/^endp_/, ""), "base64url").toString("utf8"));
         return {
             app,
             createdAt,

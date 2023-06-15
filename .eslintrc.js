@@ -38,6 +38,6 @@ module.exports = {
         "@typescript-eslint/no-explicit-any": "off",
         "unused-imports/no-unused-imports-ts": "warn",
         "require-yield": "off",
-        "prefer-const": "off",
+        "prefer-const": "error",
     },
 };

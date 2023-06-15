@@ -96,7 +96,7 @@ export const subscriptionResolvers: GQLResolvers = {
             if (!(await Can.createSubscription({ pricing: pricingPK, subscriber }, context))) {
                 throw new Denied();
             }
-            let pricing = await context.batched.Pricing.get(PricingPK.parse(pricingPK)); // Checks if the pricing plan exists
+            const pricing = await context.batched.Pricing.get(PricingPK.parse(pricingPK)); // Checks if the pricing plan exists
             if (!pricing.visible) {
                 throw new Denied("This pricing plan is not available for purchase.");
             }

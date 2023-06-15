@@ -37,7 +37,7 @@ export const appResolvers: GQLResolvers & {
         readme: (parent) => parent.readme,
         gatewayMode: (parent) => parent.gatewayMode,
         async owner(parent, args, context, info) {
-            let user = await context.batched.User.get(UserPK.parse(parent.owner));
+            const user = await context.batched.User.get(UserPK.parse(parent.owner));
             return user;
         },
         async pricingPlans(parent: App, args: {}, context: RequestContext) {
@@ -53,7 +53,7 @@ export const appResolvers: GQLResolvers & {
             }
         },
         async endpoints(parent, args, context) {
-            let endpoints = await context.batched.Endpoint.many({
+            const endpoints = await context.batched.Endpoint.many({
                 app: parent.name,
             });
             return endpoints;
@@ -185,7 +185,7 @@ export const appResolvers: GQLResolvers & {
                 );
             }
             // Each user can have at most 10 apps
-            let count = await context.batched.App.count({ owner });
+            const count = await context.batched.App.count({ owner });
             if (count >= 10) {
                 throw new TooManyResources("You can only have 10 apps");
             }

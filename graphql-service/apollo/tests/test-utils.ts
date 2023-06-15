@@ -9,7 +9,7 @@ export async function addMoneyForUser(
     context: RequestContext,
     { user, amount }: { user: string; amount: string }
 ): Promise<void> {
-    let stripePaymentAccept = await context.batched.StripePaymentAccept.create({
+    const stripePaymentAccept = await context.batched.StripePaymentAccept.create({
         user: user,
         amount: amount,
         currency: "usd",

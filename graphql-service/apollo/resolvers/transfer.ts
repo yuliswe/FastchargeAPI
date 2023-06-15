@@ -82,7 +82,7 @@ export const stripeTransferResolvers: GQLResolvers & {
             if (!pk) {
                 throw new BadInput("pk is required");
             }
-            let transfer = await context.batched.StripeTransfer.get(StripeTransferPK.parse(pk));
+            const transfer = await context.batched.StripeTransfer.get(StripeTransferPK.parse(pk));
             if (!(await Can.viewStripeTransfer(transfer, context))) {
                 throw new Denied();
             }

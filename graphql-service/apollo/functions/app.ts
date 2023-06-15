@@ -12,7 +12,7 @@ export async function getAppByPK(context: RequestContext, pk: string): Promise<A
 }
 
 export function isValidAppName(name: string): boolean {
-    let reserved = ["api", "login", "auth"];
+    const reserved = ["api", "login", "auth"];
     return /^[a-z\d][a-z\d\\-]*[a-z\d]$/.test(name) && name.length <= 63 && !reserved.includes(name);
 }
 

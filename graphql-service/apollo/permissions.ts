@@ -125,7 +125,7 @@ export const Can = {
         if (!context.currentUser) {
             return false;
         }
-        let app = await context.batched.App.get(AppPK.parse(pricing.app));
+        const app = await context.batched.App.get(AppPK.parse(pricing.app));
         return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
     },
     async createPricing({ app: appPK }: { app: string }, context: RequestContext): Promise<boolean> {
@@ -135,7 +135,7 @@ export const Can = {
         if (!context.currentUser) {
             return false;
         }
-        let app = await context.batched.App.get(AppPK.parse(appPK));
+        const app = await context.batched.App.get(AppPK.parse(appPK));
         return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
     },
     async deletePricing(parent: Pricing, args: never, context: RequestContext): Promise<boolean> {
@@ -145,7 +145,7 @@ export const Can = {
         if (!context.currentUser) {
             return false;
         }
-        let app = await context.batched.App.get(AppPK.parse(parent.app));
+        const app = await context.batched.App.get(AppPK.parse(parent.app));
         return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
     },
     async updatePricing(parent: Pricing, context: RequestContext): Promise<boolean> {
@@ -155,7 +155,7 @@ export const Can = {
         if (!context.currentUser) {
             return false;
         }
-        let app = await context.batched.App.get(AppPK.parse(parent.app));
+        const app = await context.batched.App.get(AppPK.parse(parent.app));
         return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
     },
     async viewSubscriptionPrivateAttributes(parent: Subscription, context: RequestContext): Promise<boolean> {
@@ -168,7 +168,7 @@ export const Can = {
         if (parent.subscriber === UserPK.stringify(context.currentUser)) {
             return true;
         }
-        let app = await context.batched.App.get(AppPK.parse(parent.app));
+        const app = await context.batched.App.get(AppPK.parse(parent.app));
         if (app.owner === UserPK.stringify(context.currentUser)) {
             return true;
         }
@@ -231,7 +231,7 @@ export const Can = {
         if (subscription.subscriber === UserPK.stringify(context.currentUser)) {
             return true;
         }
-        let app = await context.batched.App.get(AppPK.parse(subscription.app));
+        const app = await context.batched.App.get(AppPK.parse(subscription.app));
         if (app.owner === UserPK.stringify(context.currentUser)) {
             return true;
         }
@@ -247,7 +247,7 @@ export const Can = {
         if (!context.currentUser) {
             return false;
         }
-        let app = await context.batched.App.get(AppPK.parse(appPK));
+        const app = await context.batched.App.get(AppPK.parse(appPK));
         return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
     },
     async updateEndpoint(
@@ -261,7 +261,7 @@ export const Can = {
         if (!context.currentUser) {
             return false;
         }
-        let app = await context.batched.App.get(AppPK.parse(parent.app));
+        const app = await context.batched.App.get(AppPK.parse(parent.app));
         return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
     },
     async viewPrivateEndpointArributes(parent: Endpoint, context: RequestContext): Promise<boolean> {
@@ -271,7 +271,7 @@ export const Can = {
         if (!context.currentUser) {
             return false;
         }
-        let app = await context.batched.App.get(AppPK.parse(parent.app));
+        const app = await context.batched.App.get(AppPK.parse(parent.app));
         return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
     },
     async deleteEndpoint(parent: Endpoint, args: never, context: RequestContext): Promise<boolean> {
@@ -281,7 +281,7 @@ export const Can = {
         if (!context.currentUser) {
             return false;
         }
-        let app = await context.batched.App.get(AppPK.parse(parent.app));
+        const app = await context.batched.App.get(AppPK.parse(parent.app));
         return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
     },
     async createUsageLog(context: RequestContext) {
@@ -386,7 +386,7 @@ export const Can = {
             return false;
         }
         if (allowAppOwner) {
-            let app = await context.batched.App.get(AppPK.parse(parent.app));
+            const app = await context.batched.App.get(AppPK.parse(parent.app));
             if (app.owner === UserPK.stringify(context.currentUser)) {
                 return true;
             }

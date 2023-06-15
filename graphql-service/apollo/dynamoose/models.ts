@@ -15,12 +15,12 @@ if (process.env.TEST == "1") {
 }
 
 export async function enableDBLogging() {
-    let logger = await dynamoose.logger();
+    const logger = await dynamoose.logger();
     logger.providers.set(console);
 }
 
 export async function disableDBLogging() {
-    let logger = await dynamoose.logger();
+    const logger = await dynamoose.logger();
     logger.providers.set(null);
 }
 

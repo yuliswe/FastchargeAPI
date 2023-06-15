@@ -22,7 +22,7 @@ export async function findUserSubscriptionPricing(
     context: RequestContext,
     { user, app }: { user: string; app: string }
 ): Promise<Pricing | null> {
-    let subscription = await findUserSubscription(context, { user, app });
+    const subscription = await findUserSubscription(context, { user, app });
     if (subscription == null) {
         return null;
     }

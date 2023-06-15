@@ -25,7 +25,7 @@ export async function collectUsageLogs(
         app: string;
     }
 ): Promise<{ affectedUsageSummaries: UsageSummary[] }> {
-    let usageLogs = await context.batched.UsageLog.many({
+    const usageLogs = await context.batched.UsageLog.many({
         subscriber: user,
         app,
         status: "pending",
@@ -37,9 +37,9 @@ export async function collectUsageLogs(
     }
     // These usage logs could be subscribed to different pricings. We need to
     // group them by pricing.
-    let usageLogsByPricing = new Map<string, UsageLog[]>();
-    for (let usage of usageLogs) {
-        let pricing = usage.pricing;
+    const usageLogsByPricing = new Map<string, UsageLog[]>();
+    for (const usage of usageLogs) {
+        const pricing = usage.pricing;
         let logs = usageLogsByPricing.get(pricing);
         if (logs == undefined) {
             logs = [];
@@ -48,20 +48,20 @@ export async function collectUsageLogs(
         logs.push(usage);
     }
 
-    let summaryPromises = [...usageLogsByPricing.entries()].map(async ([pricingPK, usageLogs]) => {
-        let summary = {
+    const summaryPromises = [...usageLogsByPricing.entries()].map(async ([pricingPK, usageLogs]) => {
+        const summary = {
             subscriber: user,
             app: app,
             numberOfLogs: usageLogs.length,
             volume: 0,
             pricing: pricingPK,
         };
-        for (let usage of usageLogs) {
+        for (const usage of usageLogs) {
             summary.volume += usage.volume;
         }
-        let usageSummary = await context.batched.UsageSummary.create(summary);
-        let promises: Promise<Item>[] = [];
-        for (let usage of usageLogs) {
+        const usageSummary = await context.batched.UsageSummary.create(summary);
+        const promises: Promise<Item>[] = [];
+        for (const usage of usageLogs) {
             usage.usageSummary = UsageSummaryPK.stringify(usageSummary);
             usage.status = "collected";
             usage.collectedAt = usageSummary.createdAt;
@@ -70,6 +70,6 @@ export async function collectUsageLogs(
         await Promise.all(promises);
         return usageSummary;
     });
-    let affectedUsageSummaries = await Promise.all(summaryPromises);
+    const affectedUsageSummaries = await Promise.all(summaryPromises);
     return { affectedUsageSummaries };
 }

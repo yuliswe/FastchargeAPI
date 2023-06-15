@@ -236,7 +236,7 @@ export async function shouldCollectMonthlyCharge(
             isUpgrade: false,
         };
     }
-    let allBillsThisMonth = await context.batched.AccountActivity.many({
+    const allBillsThisMonth = await context.batched.AccountActivity.many({
         user: subscriber,
         billedApp: app,
         type: "credit",
@@ -244,11 +244,11 @@ export async function shouldCollectMonthlyCharge(
         settleAt: { ge: Date.now() - 1000 * collectionPeriodInSeconds }, // get the last bill in 30 days
     });
     let totalPaidThisMonth = new Decimal(0);
-    for (let bill of allBillsThisMonth) {
+    for (const bill of allBillsThisMonth) {
         totalPaidThisMonth = totalPaidThisMonth.add(bill.amount);
     }
-    let currMonthlyCharge = new Decimal(pricing.minMonthlyCharge);
-    let diff = currMonthlyCharge.sub(totalPaidThisMonth);
+    const currMonthlyCharge = new Decimal(pricing.minMonthlyCharge);
+    const diff = currMonthlyCharge.sub(totalPaidThisMonth);
     if (diff.gt(0)) {
         return {
             shouldBill: true,
@@ -283,7 +283,7 @@ export async function computeBillableVolume(
         pricingFreeQuota,
     }: { app: string; subscriber: string; volume: number; pricingFreeQuota: number }
 ): Promise<ComputeBillableVolumeResult> {
-    let freeQuotaUsage = await context.batched.FreeQuotaUsage.getOrNull({
+    const freeQuotaUsage = await context.batched.FreeQuotaUsage.getOrNull({
         subscriber,
         app,
     }).then((item) => {
@@ -296,8 +296,8 @@ export async function computeBillableVolume(
         }
         return item;
     });
-    let volumeFree = Math.min(volume, Math.max(0, pricingFreeQuota - freeQuotaUsage.usage));
-    let volumeBillable = volume - volumeFree;
+    const volumeFree = Math.min(volume, Math.max(0, pricingFreeQuota - freeQuotaUsage.usage));
+    const volumeBillable = volume - volumeFree;
     return {
         volumeFree,
         volumeBillable,
@@ -323,16 +323,16 @@ export async function triggerBilling(
     { user, app }: { user: string; app: string }
 ): Promise<{ affectedUsageSummaries: UsageSummary[] }> {
     await collectUsageLogs(context, { user, app });
-    let uncollectedUsageSummaries = await context.batched.UsageSummary.many({
+    const uncollectedUsageSummaries = await context.batched.UsageSummary.many({
         subscriber: user,
         app,
         status: "pending",
     });
 
-    let appItem = await context.batched.App.get(AppPK.parse(app));
+    const appItem = await context.batched.App.get(AppPK.parse(app));
 
-    let promises = [];
-    for (let usageSummary of uncollectedUsageSummaries) {
+    const promises = [];
+    for (const usageSummary of uncollectedUsageSummaries) {
         promises.push(
             generateAccountActivities(context, {
                 usageSummary,

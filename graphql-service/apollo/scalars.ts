@@ -2,7 +2,7 @@ import { GraphQLError, GraphQLScalarType, Kind } from "graphql";
 import { GraphQLSafeInt } from "graphql-scalars";
 
 function checkNonNegativeDecimal(value: string) {
-    let n = Number.parseFloat(value);
+    const n = Number.parseFloat(value);
     if (Number.isNaN(n)) {
         throw new GraphQLError("Provided string is a malformed number.", {
             extensions: { code: "BAD_USER_INPUT" },
@@ -43,7 +43,7 @@ const NonNegativeDecimal = new GraphQLScalarType({
 
 function checkURL(value: string, { forceHTTPS = true } = {}) {
     try {
-        let url = new URL(value);
+        const url = new URL(value);
         if (!url.protocol.startsWith("http")) {
             throw new GraphQLError("Provided URL must use the HTTPS protocol.", {
                 extensions: { code: "BAD_USER_INPUT" },

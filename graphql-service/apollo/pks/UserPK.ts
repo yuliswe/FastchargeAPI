@@ -4,7 +4,7 @@ export type UserPKContent = {
 
 export class UserPK {
     static parse(pk: string): UserPKContent {
-        let uid = pk.replace(/^user_/, "");
+        const uid = pk.replace(/^user_/, "");
         return {
             uid,
         };

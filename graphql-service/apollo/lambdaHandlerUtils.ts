@@ -52,10 +52,10 @@ export async function getCurrentUser(
         }
     }
     if (authorizer?.["userEmail"]) {
-        let userEmail = authorizer?.["userEmail"];
+        const userEmail = authorizer?.["userEmail"];
         currentUser = await getOrCreateUserFromEmail(batched, userEmail);
     } else if (authorizer?.["userPK"]) {
-        let userPK = authorizer?.["userPK"];
+        const userPK = authorizer?.["userPK"];
         currentUser = await batched.User.get(UserPK.parse(userPK));
     }
     return currentUser;
@@ -73,13 +73,13 @@ export function getIsAdminUser(currentUser: User | undefined, authorizerContext:
 
 export function getIsServiceRequest(domain: string, headers: { [header: string]: string }) {
     let isServiceRequest = false;
-    let serviceName = headers["x-service-name"] as RequestService;
+    const serviceName = headers["x-service-name"] as RequestService;
     // This domain is authenticated with AWS IAM. Only internal services
     // can access it. Therefore we can trust the X-Service-Name header. For
     // example, when the gateway service sends a graphql request, it
     // must include the X-Service-Name header.
     if (domain.startsWith("api.iam.")) {
-        let valid: RequestService[] = ["payment", "gateway", "internal"];
+        const valid: RequestService[] = ["payment", "gateway", "internal"];
         if (!valid.includes(serviceName)) {
             console.error(chalk.red("X-Service-Name header is missing."));
             throw new BadInput(`Invalid X-Service-Name header: ${serviceName}. Accepted values: ${valid.join(", ")}`);

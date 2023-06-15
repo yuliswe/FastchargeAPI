@@ -44,7 +44,7 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
             if (!(await Can.viewStripePaymentAcceptPrivateAttributes(parent, context))) {
                 throw new Denied();
             }
-            let user = await context.batched.User.get(UserPK.parse(parent.user));
+            const user = await context.batched.User.get(UserPK.parse(parent.user));
             return user;
         },
 
@@ -85,7 +85,7 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
     },
     Query: {
         async stripePaymentAccept(parent: User, args: GQLQueryStripePaymentAcceptArgs, context, info) {
-            let item = await context.batched.StripePaymentAccept.get({
+            const item = await context.batched.StripePaymentAccept.get({
                 stripeSessionId: args.stripeSessionId,
             });
             if (!(await Can.viewStripePaymentAccept(item, context))) {
@@ -110,7 +110,7 @@ export const stripePaymentAcceptResolvers: GQLResolvers & {
             if (!(await Can.createStripePaymentAccept(context))) {
                 throw new Denied();
             }
-            let existing = await context.batched.StripePaymentAccept.getOrNull({
+            const existing = await context.batched.StripePaymentAccept.getOrNull({
                 user: user,
                 stripeSessionId: stripeSessionId,
             });

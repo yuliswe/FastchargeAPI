@@ -24,13 +24,13 @@ export const secretResolvers: GQLResolvers & {
     },
     Query: {
         async secret(parent: {}, { key }: GQLQuerySecretArgs, context: RequestContext) {
-            let secret = await context.batched.Secret.get({ key });
+            const secret = await context.batched.Secret.get({ key });
             return secret;
         },
     },
     Mutation: {
         async createSecret(parent: {}, { key, value, expireAt }: GQLMutationCreateSecretArgs, context: RequestContext) {
-            let secret = await context.batched.Secret.create({
+            const secret = await context.batched.Secret.create({
                 key,
                 value,
                 expireAt,

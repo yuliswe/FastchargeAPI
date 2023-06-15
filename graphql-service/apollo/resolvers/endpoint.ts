@@ -96,7 +96,7 @@ export const endpointResolvers: GQLResolvers & {
             if (!(await Can.createEndpoint({ app, path, method, description, destination }, context))) {
                 throw new Denied();
             }
-            let endpoint = await context.batched.Endpoint.create({
+            const endpoint = await context.batched.Endpoint.create({
                 app,
                 path,
                 method,

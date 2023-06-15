@@ -8,7 +8,7 @@ import { AppPK } from "../pks/AppPK";
 import { UserPK } from "../pks/UserPK";
 import { getOrCreateTestUser } from "./test-utils";
 
-let context: RequestContext = {
+const context: RequestContext = {
     batched: createDefaultContextBatched(),
     isServiceRequest: true,
     isSQSMessage: true,
@@ -121,7 +121,7 @@ describe("Test a request from the gateway", () => {
     });
 
     test("Replay a request to https://myapp.fastchargeapi.com/google", async () => {
-        let response = await lambdaHandler(
+        const response = await lambdaHandler(
             {
                 ...lambdaEvent,
                 body: JSON.stringify({

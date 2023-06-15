@@ -32,7 +32,7 @@ export function sqsGQLClient({ queueUrl, dedupId, groupId }: { queueUrl: string;
         },
         link: new HttpLink({
             fetch: async (uri: string, options: RequestInit) => {
-                let body = options.body;
+                const body = options.body;
                 await sqsClient.send(
                     new SendMessageCommand({
                         MessageBody: body?.toString(),

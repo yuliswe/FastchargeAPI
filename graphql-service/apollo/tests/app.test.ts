@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import { getOrCreateTestUser } from "./test-utils";
 import { GQLAppVisibility } from "../__generated__/resolvers-types";
 
-let context: RequestContext = {
+const context: RequestContext = {
     batched: createDefaultContextBatched(),
     isServiceRequest: false,
     isSQSMessage: false,
@@ -24,7 +24,7 @@ describe("APP API", () => {
     });
 
     test("create an App", async () => {
-        let app = await appResolvers.Mutation?.createApp?.(
+        const app = await appResolvers.Mutation?.createApp?.(
             {},
             {
                 name: testAppName,

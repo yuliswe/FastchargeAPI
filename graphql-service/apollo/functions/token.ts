@@ -17,11 +17,11 @@ export async function createUserAppToken(
     userAppToken: UserAppToken;
     token: string;
 }> {
-    let { token, signature } = await makeAppTokenForUser(context, {
+    const { token, signature } = await makeAppTokenForUser(context, {
         user,
         app,
     });
-    let userAppToken = await context.batched.UserAppToken.create({
+    const userAppToken = await context.batched.UserAppToken.create({
         subscriber: user,
         app,
         signature,

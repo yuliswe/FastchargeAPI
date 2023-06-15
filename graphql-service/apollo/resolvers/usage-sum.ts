@@ -70,7 +70,7 @@ export const usageSummaryResolvers: GQLResolvers & {
             if (!(await Can.settleUserAccountActivities(context))) {
                 throw new Denied();
             }
-            let result = await triggerBilling(context, { user, app });
+            const result = await triggerBilling(context, { user, app });
             return result.affectedUsageSummaries;
         },
     },

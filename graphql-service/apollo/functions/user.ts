@@ -15,7 +15,7 @@ function createUserIDFromEmail(email: string): string {
 }
 
 export async function createUserWithEmail(batched: RequestContext["batched"], email: string): Promise<User> {
-    let user = await batched.User.create({
+    const user = await batched.User.create({
         uid: createUserIDFromEmail(email),
         email: email,
     });

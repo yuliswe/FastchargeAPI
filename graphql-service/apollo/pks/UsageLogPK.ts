@@ -2,7 +2,7 @@ import { UsageLog } from "../dynamoose/models";
 
 export class UsageLogPK {
     static parse(pk: string): { subscriber: string; createdAt: number } {
-        let [subscriber, createdAt] = JSON.parse(Buffer.from(pk.replace(/^ulog_/, ""), "base64url").toString("utf8"));
+        const [subscriber, createdAt] = JSON.parse(Buffer.from(pk.replace(/^ulog_/, ""), "base64url").toString("utf8"));
         return {
             subscriber,
             createdAt,

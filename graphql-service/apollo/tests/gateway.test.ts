@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from "uuid";
 import { AppPK } from "../pks/AppPK";
 import { GQLGatewayDecisionResponseReason } from "../__generated__/resolvers-types";
 
-let context: RequestContext = {
+const context: RequestContext = {
     batched: createDefaultContextBatched(),
     isServiceRequest: true,
     isSQSMessage: true,
@@ -29,7 +29,7 @@ describe("Gateway API success access", () => {
 
     let pricingPK: string;
     test("Preparation: create a Pricing or use existing", async () => {
-        let pricingRequirement = {
+        const pricingRequirement = {
             app: AppPK.stringify(testApp),
             name: "Premium",
             minMonthlyCharge: "1",
@@ -44,7 +44,7 @@ describe("Gateway API success access", () => {
 
     let subscription: Subscription;
     test("Preparation: subscribe user to this Pricing", async () => {
-        let sub = await context.batched.Subscription.getOrNull({
+        const sub = await context.batched.Subscription.getOrNull({
             subscriber: UserPK.stringify(testUser),
         });
         if (sub === null) {
@@ -63,7 +63,7 @@ describe("Gateway API success access", () => {
     });
 
     test("Call checkUserIsAllowedForGatewayRequest", async () => {
-        let result = await gatewayResolvers.Query.checkUserIsAllowedForGatewayRequest!(
+        const result = await gatewayResolvers.Query.checkUserIsAllowedForGatewayRequest!(
             {},
             {
                 user: UserPK.stringify(testUser),
@@ -92,7 +92,7 @@ describe("Test making an API request when not subscribed", () => {
 
     let pricingPK: string;
     test("Preparation: create a Pricing or use existing", async () => {
-        let pricingRequirement = {
+        const pricingRequirement = {
             app: AppPK.stringify(testApp),
             name: "Premium",
             minMonthlyCharge: "1",
@@ -106,7 +106,7 @@ describe("Test making an API request when not subscribed", () => {
     });
 
     test("Call checkUserIsAllowedForGatewayRequest", async () => {
-        let result = await gatewayResolvers.Query.checkUserIsAllowedForGatewayRequest!(
+        const result = await gatewayResolvers.Query.checkUserIsAllowedForGatewayRequest!(
             {},
             {
                 user: UserPK.stringify(testUser),
@@ -134,7 +134,7 @@ describe("Calling checkUserIsAllowedForGatewayRequest with an invalid app name s
     });
 
     test("Call checkUserIsAllowedForGatewayRequest with invalid app", async () => {
-        let result = await gatewayResolvers.Query.checkUserIsAllowedForGatewayRequest!(
+        const result = await gatewayResolvers.Query.checkUserIsAllowedForGatewayRequest!(
             {},
             {
                 user: UserPK.stringify(testUser),

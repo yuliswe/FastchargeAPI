@@ -81,9 +81,9 @@ function applyBatchOptionsToScan<T>(query: DynamogooseScan<T>, options: BatchQue
  * @returns An object { [hashKeyName]: hashKey, [rangeKeyName]?: rangeKey }
  */
 function extractKeysFromItems<I extends Item>(model: ModelType<I>, item: GQLPartial<I>): Partial<I> {
-    let hashKeyName = model.table().hashKey;
-    let rangeKeyName: keyof I | undefined = model.table().rangeKey as keyof I;
-    let query = {
+    const hashKeyName = model.table().hashKey;
+    const rangeKeyName: keyof I | undefined = model.table().rangeKey as keyof I;
+    const query = {
         [hashKeyName]: item[hashKeyName as keyof I],
     } as Partial<I>;
     if (rangeKeyName != undefined && item[rangeKeyName] != null) {
@@ -96,8 +96,8 @@ async function assignDefaults<I extends Item>(item: I): Promise<I> {
     // TODO: There is a bug with item.withDefaults(), in that in converts a Date
     // type to a string. This may cause issues when the item is saved back to
     // the DB, failing the validation because the DB expects a Date type.
-    let defaults = (await item.withDefaults()) as I;
-    for (let key of Object.keys(defaults) as (keyof I)[]) {
+    const defaults = (await item.withDefaults()) as I;
+    for (const key of Object.keys(defaults) as (keyof I)[]) {
         // This is a temporary fix, but if the item's date field is undefined
         // (maybe an old object before a schema added a new date field), then
         // the problem still exists. The workaround is to not ever use the Date
@@ -154,17 +154,17 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
         }
         // Type 1 is when the query contains only a hashKey, and the table only
         // has a hashKey as well (no rangeKey)
-        let batch1: PrimaryKey[] = [];
+        const batch1: PrimaryKey[] = [];
         // Type 2 is when the query contains a hashKey and a rangeKey, and the
         // table has both a hashKey and a rangeKey.
-        let batch2: Query<I>[] = [];
+        const batch2: Query<I>[] = [];
         // Other types are unbatchable
-        let unbatchable: number[] = [];
-        let bkType: number[] = [];
-        let resultArr: I[][] = Array(bkArray.length).fill([]);
-        let hashKeyName = model.table().hashKey as keyof I & string;
-        let rangeKeyName = model.table().rangeKey as (keyof I & string) | undefined;
-        for (let [index, bk] of bkArray.entries()) {
+        const unbatchable: number[] = [];
+        const bkType: number[] = [];
+        const resultArr: I[][] = Array(bkArray.length).fill([]);
+        const hashKeyName = model.table().hashKey as keyof I & string;
+        const rangeKeyName = model.table().rangeKey as (keyof I & string) | undefined;
+        for (const [index, bk] of bkArray.entries()) {
             // Case 1: query is a hashkey string
             if (
                 hashKeyName &&
@@ -210,7 +210,7 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
         }
 
         function queryUnbatchable(index: number): Promise<I[]> {
-            let bk = bkArray[index];
+            const bk = bkArray[index];
             let query: DynamogooseQuery<I>;
             if (typeof bk.query === "string") {
                 query = model.query(hashKeyName).eq(bk.query);
@@ -227,26 +227,26 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
         }
 
         // Type 1 and 2 can be batched at once.
-        let [result1, result2, ...result3] = await Promise.all([
+        const [result1, result2, ...result3] = await Promise.all([
             batch1.length > 0 ? model.batchGet(batch1) : [], // an array of I
             batch2.length > 0 ? model.batchGet(batch2 as InputKey[]) : [], // an array of I
             ...unbatchable.map(queryUnbatchable), // multiple arrays of I[]
         ]);
 
-        let promises = [];
-        for (let [index, items] of result3.entries()) {
-            let promise = Promise.all(items.map(assignDefaults)).then((result) => {
+        const promises = [];
+        for (const [index, items] of result3.entries()) {
+            const promise = Promise.all(items.map(assignDefaults)).then((result) => {
                 resultArr[unbatchable[index]] = result;
                 return result;
             });
             promises.push(promise);
         }
 
-        let keyMap1 = new Map<PrimaryKey, I[]>();
-        for (let item of result1) {
+        const keyMap1 = new Map<PrimaryKey, I[]>();
+        for (const item of result1) {
             // batch1 only contains hashKey
-            let promise = assignDefaults(item).then((item) => {
-                let key = item[hashKeyName] as PrimaryKey;
+            const promise = assignDefaults(item).then((item) => {
+                const key = item[hashKeyName] as PrimaryKey;
                 if (keyMap1.has(key)) {
                     keyMap1.get(key)?.push(item);
                 } else {
@@ -256,11 +256,11 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
             promises.push(promise);
         }
 
-        let keyMap2 = new Map<string, I[]>();
-        for (let item of result2) {
+        const keyMap2 = new Map<string, I[]>();
+        for (const item of result2) {
             // batch2 only contains hashKey and rangeKey
-            let promise = assignDefaults(item).then((item) => {
-                let key = [item[hashKeyName], item[rangeKeyName!]].toString();
+            const promise = assignDefaults(item).then((item) => {
+                const key = [item[hashKeyName], item[rangeKeyName!]].toString();
                 if (keyMap2.has(key)) {
                     keyMap2.get(key)?.push(item);
                 } else {
@@ -272,11 +272,11 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
 
         await Promise.all(promises);
 
-        for (let [index, type] of bkType.entries()) {
+        for (const [index, type] of bkType.entries()) {
             if (type === 1) {
                 resultArr[index] = keyMap1.get(batch1[index]) || [];
             } else if (type === 2) {
-                let key = [batch2[index][hashKeyName], batch2[index][rangeKeyName!]].toString();
+                const key = [batch2[index][hashKeyName], batch2[index][rangeKeyName!]].toString();
                 resultArr[index] = keyMap2.get(key) || [];
             }
         }
@@ -286,13 +286,13 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
 
     // Split the batch into chunks of 100, and call batchGet100Max on each chunk
     return async (bkArray: BatchKey<I>[]): Promise<I[][]> => {
-        let promises: Promise<I[][]>[] = [];
+        const promises: Promise<I[][]>[] = [];
         for (let i = 0; i < bkArray.length; i += 100) {
-            let batch = bkArray.slice(i, Math.min(i + 100, bkArray.length));
-            let result = batchGet100Max(batch);
+            const batch = bkArray.slice(i, Math.min(i + 100, bkArray.length));
+            const result = batchGet100Max(batch);
             promises.push(result);
         }
-        let results = await Promise.all(promises);
+        const results = await Promise.all(promises);
         return results.flat();
     };
 }
@@ -307,7 +307,8 @@ function stripNullKeys<T extends object>(
     if (Array.isArray(object)) {
         return object.map((item) => stripNullKeys(item, options)) as any;
     }
-    let data: Partial<T> = {};
+    const data: Partial<T> = {};
+    // eslint-disable-next-line prefer-const
     for (let [key, val] of Object.entries(object)) {
         if (options?.deep) {
             val = stripNullKeys(val, options);
@@ -382,7 +383,7 @@ export class Batched<I extends Item> {
      * @returns An object of the model type.
      */
     async get(key: Query<I>, options?: BatchQueryOptions): Promise<I> {
-        let result = await this.many(key, options);
+        const result = await this.many(key, options);
         if (result.length === 0) {
             throw new NotFound(this.model.name, key);
         } else if (result.length > 1) {
@@ -393,7 +394,7 @@ export class Batched<I extends Item> {
     }
 
     async getOrNull(key: Query<I>, options?: BatchQueryOptions): Promise<I | null> {
-        let result = await this.many(key, options);
+        const result = await this.many(key, options);
         if (result.length === 0) {
             return null;
         } else if (result.length > 1) {
@@ -455,18 +456,18 @@ export class Batched<I extends Item> {
         // If index is used, first use the index to get the primary keys, then
         // do a second lookup with the primary keys.
         if (options?.using) {
-            let result = await this.loader.load({
+            const result = await this.loader.load({
                 query: strippedKey,
                 options,
             });
             // The result only contains primary keys
-            let primaryKeys = result.map((item) => extractKeysFromItems(this.model, item));
+            const primaryKeys = result.map((item) => extractKeysFromItems(this.model, item));
             // Options shouldn't be needed this time.
-            let promises = primaryKeys.map((pk) => this.loader.load({ query: pk }));
-            let results = await Promise.all(promises);
+            const promises = primaryKeys.map((pk) => this.loader.load({ query: pk }));
+            const results = await Promise.all(promises);
             return results.flat();
         } else {
-            let result = await this.loader.load({
+            const result = await this.loader.load({
                 query: strippedKey,
                 options,
             });
@@ -488,12 +489,12 @@ export class Batched<I extends Item> {
         if (options != undefined) {
             query = applyBatchOptionsToQuery(query, options);
         }
-        let result = await query.count().exec();
+        const result = await query.count().exec();
         return result.count;
     }
 
     async exists(key: Partial<I>, options?: BatchQueryOptions): Promise<boolean> {
-        let result = await this.many(key, options);
+        const result = await this.many(key, options);
         return result.length > 0;
     }
 
@@ -525,8 +526,8 @@ export class Batched<I extends Item> {
      * app.
      */
     async create(item: GQLPartial<I>): Promise<I> {
-        let stripped = stripNullKeys(item) as Partial<I>;
-        let maxAttempts = 2;
+        const stripped = stripNullKeys(item) as Partial<I>;
+        const maxAttempts = 2;
         for (let retries = 0; retries < maxAttempts; retries++) {
             try {
                 this.clearCache();
@@ -537,7 +538,7 @@ export class Batched<I extends Item> {
                 // also throws this exception in other cases. So a check using the
                 // .many() call is needed to confirm that the item already exists.
                 if (e instanceof ConditionalCheckFailedException) {
-                    let query = extractKeysFromItems(this.model, stripped);
+                    const query = extractKeysFromItems(this.model, stripped);
                     if ((await this.many(query)).length > 0) {
                         throw new AlreadyExists(this.model.name, JSON.stringify(item));
                     } else if (retries < maxAttempts - 1) {
@@ -565,24 +566,24 @@ export class Batched<I extends Item> {
         } else {
             query = extractKeysFromItems(this.model, keys);
         }
-        let item = await this.get(query);
+        const item = await this.get(query);
         this.clearCache();
         await item.delete();
         return item;
     }
 
     async deleteMany(query: Partial<I>, options?: BatchQueryOptions): Promise<I[]> {
-        let items = await this.many(query, options);
+        const items = await this.many(query, options);
         const deleteChunk = async (batch: I[]) => {
-            let pks = batch.map((x) => extractKeysFromItems(this.model, x));
+            const pks = batch.map((x) => extractKeysFromItems(this.model, x));
             await this.model.batchDelete(pks as KeyObject[]);
         };
 
         // Split the batch into chunks, and call batchGet100Max on each chunk
-        let promises: Promise<void>[] = [];
+        const promises: Promise<void>[] = [];
         const batchSize = 25;
         for (let i = 0; i < items.length; i += batchSize) {
-            let batch = items.slice(i, Math.min(i + batchSize, items.length));
+            const batch = items.slice(i, Math.min(i + batchSize, items.length));
             promises.push(deleteChunk(batch));
         }
         await Promise.all(promises);
@@ -624,14 +625,14 @@ export class Batched<I extends Item> {
         // Extract keys to ingore extra properties
         const query = extractKeysFromItems(this.model, keys);
 
-        let hashKeyName = this.model.table().hashKey;
+        const hashKeyName = this.model.table().hashKey;
         if (newVals && hashKeyName in newVals) {
             throw new UpdateContainsPrimaryKey(this.model.name, hashKeyName, newVals);
         }
         if (!(hashKeyName in query)) {
             throw new Error(`Query must contain hash key ${hashKeyName}`);
         }
-        let rangeKeyName = this.model.table().rangeKey;
+        const rangeKeyName = this.model.table().rangeKey;
         if (rangeKeyName && rangeKeyName in newVals) {
             throw new UpdateContainsPrimaryKey(this.model.name, rangeKeyName, newVals);
         }

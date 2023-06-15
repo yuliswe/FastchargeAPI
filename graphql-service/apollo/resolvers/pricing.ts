@@ -37,7 +37,7 @@ export const pricingResolvers: GQLResolvers = {
                     throw new Denied();
                 }
             }
-            let app = await context.batched.App.get(AppPK.parse(parent.app));
+            const app = await context.batched.App.get(AppPK.parse(parent.app));
             return app;
         },
         name: makeOwnerReadableWhenInvisible((parent) => parent.name),
@@ -100,7 +100,7 @@ export const pricingResolvers: GQLResolvers = {
             if (!pk) {
                 throw new BadInput("pk is required");
             }
-            let pricing = await context.batched.Pricing.get(PricingPK.parse(pk));
+            const pricing = await context.batched.Pricing.get(PricingPK.parse(pk));
             if (!pricing.visible) {
                 if (!(await Can.viewPricingInvisiableAttributes(pricing, context))) {
                     throw new Denied();
@@ -126,16 +126,16 @@ export const pricingResolvers: GQLResolvers = {
             if (!(await Can.createPricing({ app }, context))) {
                 throw new Denied();
             }
-            let existingCount = await context.batched.Pricing.count({
+            const existingCount = await context.batched.Pricing.count({
                 app,
             });
             if (existingCount > 100) {
                 throw new TooManyResources("Too many pricings for this app");
             }
             // Update these because the client does not provide them.
-            let minMonthlyChargeApprox = Number.parseFloat(minMonthlyCharge);
-            let chargePerRequestApprox = Number.parseFloat(chargePerRequest);
-            let pricing = await context.batched.Pricing.create({
+            const minMonthlyChargeApprox = Number.parseFloat(minMonthlyCharge);
+            const chargePerRequestApprox = Number.parseFloat(chargePerRequest);
+            const pricing = await context.batched.Pricing.create({
                 app,
                 callToAction,
                 chargePerRequest,

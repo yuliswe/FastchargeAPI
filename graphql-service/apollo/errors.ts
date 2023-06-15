@@ -77,7 +77,7 @@ export class UpdateContainsPrimaryKey extends GraphQLError {
 const chalk = new Chalk({ level: 3 });
 
 export function handleError(formattedError: GraphQLFormattedError, error: unknown): GraphQLFormattedError {
-    let originalError = unwrapResolverError(error);
+    const originalError = unwrapResolverError(error);
     try {
         console.error(chalk.red(JSON.stringify(originalError)));
         console.error(originalError);
@@ -90,7 +90,7 @@ export function handleError(formattedError: GraphQLFormattedError, error: unknow
     } catch {
         console.error(error);
     }
-    for (let errtype of [DynamooseError.TypeMismatch, DynamooseError.ValidationError]) {
+    for (const errtype of [DynamooseError.TypeMismatch, DynamooseError.ValidationError]) {
         if (originalError instanceof errtype) {
             return {
                 ...formattedError,

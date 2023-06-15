@@ -14,7 +14,7 @@ export async function generateAccountActivityForStripePayment(
         stripeSessionObject,
     }: { stripePaymentAccept: StripePaymentAccept; stripeSessionObject: object }
 ): Promise<GenerateAccountActivityForStripePaymentResult> {
-    let activity = await context.batched.AccountActivity.create({
+    const activity = await context.batched.AccountActivity.create({
         user: stripePaymentAccept.user,
         amount: stripePaymentAccept.amount,
         type: "debit",

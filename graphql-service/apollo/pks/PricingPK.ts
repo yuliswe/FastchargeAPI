@@ -5,7 +5,7 @@ export type PricingPKContent = {
 
 export class PricingPK {
     static parse(pk: string): PricingPKContent {
-        let [app, createdAt] = JSON.parse(Buffer.from(pk.replace(/^pri_/, ""), "base64url").toString("utf8"));
+        const [app, createdAt] = JSON.parse(Buffer.from(pk.replace(/^pri_/, ""), "base64url").toString("utf8"));
         return {
             app,
             createdAt,

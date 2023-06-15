@@ -18,21 +18,21 @@ const chalk = new Chalk({ level: 3 });
  * will settle them as they reach the settleAt time.
  */
 async function handle(event: EventBridgeEvent<string, {}>, context: never, callback: never) {
-    let batched = createDefaultContextBatched();
-    let activities = await batched.AccountActivity.many(
+    const batched = createDefaultContextBatched();
+    const activities = await batched.AccountActivity.many(
         { status: "pending", settleAt: { le: Date.now() } },
         { using: GQLAccountActivityIndex.IndexByStatusSettleAtOnlyPk }
     );
 
-    let users = new Set(activities.map((a) => a.user));
+    const users = new Set(activities.map((a) => a.user));
     console.log(chalk.yellow(`Processing ${activities.length} activities from ${users.size} users.`));
 
     // Important Note: You must process the account activities in the Billing
     // queue, even though it is attempting to write to the AccountActivity
     // directly using the DB APi here.
-    let sqsClient = sqsGQLClient({ queueUrl: SQSQueueUrl.BillingFifoQueue });
+    const sqsClient = sqsGQLClient({ queueUrl: SQSQueueUrl.BillingFifoQueue });
 
-    for (let user of users) {
+    for (const user of users) {
         try {
             await sqsClient.query<
                 GQLTriggerSettleAccountActivitiesForUsersQuery,

@@ -59,7 +59,7 @@ export const userResolvers: GQLResolvers & {
          * @returns apps owned by this user. All apps are public information.
          */
         async apps(parent: User, args: {}, context: RequestContext): Promise<App[]> {
-            let apps = await context.batched.App.many(
+            const apps = await context.batched.App.many(
                 { owner: UserPK.stringify(parent) },
                 {
                     using: GQLAppIndex.IndexByOwnerOnlyPk,
@@ -117,7 +117,7 @@ export const userResolvers: GQLResolvers & {
             if (!(await Can.viewUserPrivateAttributes(parent, context))) {
                 throw new Denied();
             }
-            let result = await context.batched.AccountActivity.many(
+            const result = await context.batched.AccountActivity.many(
                 {
                     user: UserPK.stringify(parent),
                     createdAt: dateRange
@@ -139,7 +139,7 @@ export const userResolvers: GQLResolvers & {
             if (!(await Can.viewUserPrivateAttributes(parent, context))) {
                 throw new Denied();
             }
-            let result = await context.batched.AccountHistory.many(
+            const result = await context.batched.AccountHistory.many(
                 {
                     user: UserPK.stringify(parent),
                     closingTime: dateRange
@@ -161,8 +161,8 @@ export const userResolvers: GQLResolvers & {
             if (!(await Can.viewUserPrivateAttributes(parent, context))) {
                 throw new Denied();
             }
-            let { app, path, limit, dateRange } = args;
-            let usage = await context.batched.UsageLog.many(
+            const { app, path, limit, dateRange } = args;
+            const usage = await context.batched.UsageLog.many(
                 {
                     subscriber: UserPK.stringify(parent),
                     app: app,
@@ -185,7 +185,7 @@ export const userResolvers: GQLResolvers & {
             if (!(await Can.viewUserPrivateAttributes(parent, context))) {
                 throw new Denied();
             }
-            let usageSummaries = await context.batched.UsageSummary.many(
+            const usageSummaries = await context.batched.UsageSummary.many(
                 {
                     subscriber: UserPK.stringify(parent),
                     app,
@@ -213,7 +213,7 @@ export const userResolvers: GQLResolvers & {
             if (!(await Can.updateUser(parent, { author, stripeCustomerId, stripeConnectAccountId }, context))) {
                 throw new Denied();
             }
-            let user = await context.batched.User.update(parent, {
+            const user = await context.batched.User.update(parent, {
                 author,
                 stripeCustomerId,
                 stripeConnectAccountId,
@@ -228,7 +228,7 @@ export const userResolvers: GQLResolvers & {
             if (!(await Can.settleUserAccountActivities(context))) {
                 throw new Denied();
             }
-            let result = await settleAccountActivities(context, UserPK.stringify(parent));
+            const result = await settleAccountActivities(context, UserPK.stringify(parent));
             if (result === null) {
                 return [];
             }
@@ -243,14 +243,14 @@ export const userResolvers: GQLResolvers & {
             if (!(await Can.createUserPrivateResources(parent, context))) {
                 throw new Denied();
             }
-            let existing = await context.batched.UserAppToken.getOrNull({
+            const existing = await context.batched.UserAppToken.getOrNull({
                 subscriber: UserPK.stringify(parent),
                 app,
             });
             if (existing) {
                 throw new TooManyResources("A token already exists for this user and app.");
             }
-            let { userAppToken, token } = await createUserAppToken(context, { user: UserPK.stringify(parent), app });
+            const { userAppToken, token } = await createUserAppToken(context, { user: UserPK.stringify(parent), app });
             userAppToken.token = token; // Do not store the token string in the database.
             return userAppToken;
         },
@@ -337,7 +337,7 @@ export const userResolvers: GQLResolvers & {
             if (!(await Can.createUser(context))) {
                 throw new Denied();
             }
-            let user = await createUserWithEmail(context.batched, email);
+            const user = await createUserWithEmail(context.batched, email);
             return user;
         },
     },

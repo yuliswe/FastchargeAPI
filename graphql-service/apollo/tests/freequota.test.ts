@@ -140,9 +140,9 @@ function FreeQuotaUsageTestCase(testParams: TestCaseParams) {
 
         let usageSummary: UsageSummary;
         test(`Prepare: Create ${testParams.makeNumberOfRequests} usage logs and a usage summary`, async () => {
-            let promises = [];
+            const promises = [];
             for (let i = 0; i < testParams.makeNumberOfRequests; i++) {
-                let p = context.batched.UsageLog.create({
+                const p = context.batched.UsageLog.create({
                     subscriber: UserPK.stringify(testUser),
                     app: AppPK.stringify(testApp),
                     path: "/example",
@@ -154,7 +154,7 @@ function FreeQuotaUsageTestCase(testParams: TestCaseParams) {
                 promises.push(p);
             }
             await Promise.all(promises);
-            let { affectedUsageSummaries } = await collectUsageLogs(context, {
+            const { affectedUsageSummaries } = await collectUsageLogs(context, {
                 user: UserPK.stringify(testUser),
                 app: AppPK.stringify(testApp),
             });
@@ -163,7 +163,7 @@ function FreeQuotaUsageTestCase(testParams: TestCaseParams) {
         });
 
         test(`Test: Reset the FreeQuotaUsage to ${testParams.resetFreeQuotaUsageTo}, then call generateAccountActivities()`, async () => {
-            let oldFreeQuotaUsage = await getOrCreateFreeQuotaUsage(context, {
+            const oldFreeQuotaUsage = await getOrCreateFreeQuotaUsage(context, {
                 subscriber: UserPK.stringify(testUser),
                 app: AppPK.stringify(testApp),
             });
@@ -172,7 +172,7 @@ function FreeQuotaUsageTestCase(testParams: TestCaseParams) {
                 usage: testParams.resetFreeQuotaUsageTo,
             });
 
-            let result = await generateAccountActivities(context, {
+            const result = await generateAccountActivities(context, {
                 usageSummary,
                 subscriber: UserPK.stringify(testUser),
                 appAuthor: testApp.owner,

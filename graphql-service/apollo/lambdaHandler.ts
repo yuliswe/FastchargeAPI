@@ -18,7 +18,7 @@ import { server } from "./server";
 const chalk = new Chalk({ level: 3 });
 
 function addCors(event: APIGatewayProxyEvent, result: APIGatewayProxyResult): void {
-    let origin = event.headers["Origin"] || event.headers["origin"];
+    const origin = event.headers["Origin"] || event.headers["origin"];
     if (
         origin &&
         [
@@ -26,7 +26,7 @@ function addCors(event: APIGatewayProxyEvent, result: APIGatewayProxyResult): vo
             /^http:\/\/localhost(:\\d+)?/,
             /^https:\/\/fastchargeapi.com/,
             /^https:\/\/devfastchargeapi.com/,
-        ].some((x) => x.test(origin!))
+        ].some((x) => x.test(origin))
     ) {
         result.headers = {
             ...(result.headers ?? {}),
@@ -38,7 +38,7 @@ function addCors(event: APIGatewayProxyEvent, result: APIGatewayProxyResult): vo
     }
 }
 
-let handle = startServerAndCreateLambdaHandler<RequestHandler<LambdaEvent, LambdaResult>, RequestContext>(
+const handle = startServerAndCreateLambdaHandler<RequestHandler<LambdaEvent, LambdaResult>, RequestContext>(
     server,
     createRequestHandler<APIGatewayProxyEvent, APIGatewayProxyResult>(
         {
