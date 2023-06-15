@@ -5,7 +5,14 @@ stack_name = "dev-graphql-service-dynamodb"
 s3_prefix = "dev-graphql-service-dynamodb"
 region = "us-east-1"
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
-parameter_overrides = "Stage=\"DEV\" MainDomain=\"devfastchargeapi.com\" Route53ZoneId=\"Z07362872NENGXHWMNLU5\" EnvDevDomain=\"1\" TablePrefix=\"dev\" PointInTimeRecovery=0 DeletionProtection=0"
+parameter_overrides = [
+    "MainDomain=\"devfastchargeapi.com\"",
+    "Route53ZoneId=\"Z07362872NENGXHWMNLU5\"",
+    "EnvDevDomain=\"1\"",
+    "TablePrefix=\"dev\"",
+    "PointInTimeRecovery=0",
+    "DeletionProtection=0"
+]
 resolve_s3 = true
 image_repositories = []
 no_fail_on_empty_changeset = true
@@ -20,7 +27,13 @@ stack_name = "live-graphql-service-dynamodb"
 s3_prefix = "live-graphql-service-dynamodb"
 region = "us-east-1"
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
-parameter_overrides = "Stage=\"DEV\" MainDomain=\"fastchargeapi.com\" Route53ZoneId=\"Z0358815GI2I8U5CTHXW\" TablePrefix=\"live\" PointInTimeRecovery=1 DeletionProtection=1"
+parameter_overrides = [
+    "MainDomain=\"fastchargeapi.com\"",
+    "Route53ZoneId=\"Z0358815GI2I8U5CTHXW\"",
+    "TablePrefix=\"live\"",
+    "PointInTimeRecovery=1",
+    "DeletionProtection=1"
+]
 resolve_s3 = true
 image_repositories = []
 no_fail_on_empty_changeset = true

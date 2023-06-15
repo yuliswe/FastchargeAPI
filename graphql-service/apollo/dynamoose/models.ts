@@ -1,10 +1,9 @@
+import { GQLSiteMetaDataKey } from "__generated__/resolvers-types";
 import dynamoose from "dynamoose";
 import { ModelType } from "dynamoose/dist/General";
 import { Item } from "dynamoose/dist/Item";
 import { TableClass } from "dynamoose/dist/Table/types";
 import { isValidAppName } from "../functions/app";
-
-let MAKE_TABLE = false;
 
 if (process.env.TEST == "1") {
     dynamoose.aws.ddb.local("http://localhost:9001/");
@@ -26,11 +25,11 @@ export async function disableDBLogging() {
 }
 
 const tableConfigs = {
-    create: MAKE_TABLE,
+    create: false,
     update: false, // do not set this to true. It will whipe the GSI.
     initialize: true,
     throughput: "ON_DEMAND" as const,
-    prefix: process.env.DEV_DOMAIN === "1" ? "dev_restored_1685941200000_live_" : "live_",
+    prefix: process.env.DEV_DOMAIN === "1" ? "dev_restored_1686776400000_live_" : "live_",
     suffix: "",
     waitForActive: {
         enabled: false,
@@ -497,6 +496,16 @@ const FreeQuotaUsageTableSchema = new dynamoose.Schema(
     { timestamps: true }
 );
 
+const SiteMetaDataTableSchema = new dynamoose.Schema(
+    {
+        key: { hashKey: true, type: String, required: true },
+        value: { type: [String, Boolean, Number], required: true },
+    },
+    {
+        timestamps: true,
+    }
+);
+
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
 export type AppVisibility = "public" | "private";
@@ -749,6 +758,11 @@ export class FreeQuotaUsage extends Item {
     usage: number;
 }
 
+export class SiteMetaData extends Item {
+    key: GQLSiteMetaDataKey;
+    value: string;
+}
+
 export type Model<T extends Item> = ModelType<T>;
 export { Item } from "dynamoose/dist/Item";
 
@@ -799,5 +813,8 @@ export const UserAppTokenModel = dynamoose.model<UserAppToken>("UserAppToken", U
     ...tableConfigs,
 });
 export const FreeQuotaUsageModel = dynamoose.model<FreeQuotaUsage>("FreeQuotaUsage", FreeQuotaUsageTableSchema, {
+    ...tableConfigs,
+});
+export const SiteMetaDataModel = dynamoose.model<SiteMetaData>("SiteMetaData", SiteMetaDataTableSchema, {
     ...tableConfigs,
 });

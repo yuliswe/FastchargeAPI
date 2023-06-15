@@ -48,7 +48,13 @@ async function findRestorePointForEachTable(
     for (const table of tables ?? []) {
         const p = points.find((p) => p.ResourceArn?.endsWith(table));
         if (!p) {
-            throw new Error(`No restore point found for table ${table}`);
+            console.error(`No restore point found for table ${table}`);
+            const continu = await input("Continue? (y/n)");
+            if (continu === "y") {
+                continue;
+            } else {
+                throw new Error(`No restore point found for table ${table}`);
+            }
         }
         mapping[table] = p;
     }
@@ -87,8 +93,7 @@ async function startRestore(restoreName: string, restoreMap: RestoreMap[]) {
             new StartRestoreJobCommand({
                 RecoveryPointArn: source.arn,
                 IdempotencyToken: `${restoreName}_${source.tableName}`,
-                IamRoleArn:
-                    "arn:aws:iam::209991057786:role/dev-graphql-service-dynam-RestoreFromBackupVaultRo-YUM10F2FLQ81",
+                IamRoleArn: "arn:aws:iam::209991057786:role/dev-graphql-service-dynamodb-RestoreFromBackupVaultRole",
                 ResourceType: "DynamoDB",
                 Metadata: {
                     TargetTableName: dest.tableName,
@@ -99,6 +104,19 @@ async function startRestore(restoreName: string, restoreMap: RestoreMap[]) {
     }
     console.log(chalk.blue("Restore jobs started. Check AWS Backup console for progress."));
     console.log(chalk.blue("https://us-east-1.console.aws.amazon.com/backup/home?region=us-east-1#/jobs/restore"));
+}
+
+async function input(question: string) {
+    return await new Promise<string>((resolve) => {
+        const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout,
+        });
+        rl.question(question, (val: string) => {
+            resolve(val);
+            rl.close();
+        });
+    });
 }
 
 program
@@ -129,14 +147,7 @@ program
         console.log(`${recoveryPoints.length} recovery points found.`);
         console.log(`IdempotencyId: ${idempotencyId}`);
         console.warn(chalk.yellow("The above backups will be restored. "));
-        const rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout,
-        });
-        const continueAns = await new Promise<string>((resolve) => {
-            rl.question("Continue? (y/[N])", resolve);
-        });
-        rl.close();
+        const continueAns = await input("Continue? (y/[N])");
         if (continueAns.trim().toLowerCase() !== "y") {
             console.log("Aborted.");
         } else {

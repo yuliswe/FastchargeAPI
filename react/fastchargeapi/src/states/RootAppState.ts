@@ -1,13 +1,14 @@
 import { AppState, PartialProps } from "react-appevent-redux";
-import { HomeAppState } from "./HomeAppState";
-import { AppSearchResultState } from "./AppSearchResultState";
-import { AppDetailAppState } from "./AppDetailAppState";
 import { AccountAppState } from "./AccountAppState";
-import { SubscriptionsAppState } from "./SubscriptionsAppState";
+import { AppDetailAppState } from "./AppDetailAppState";
+import { AppSearchResultState } from "./AppSearchResultState";
 import { DashboardAppState } from "./DashboardAppState";
+import { HomeAppState } from "./HomeAppState";
+import { MyAppDetailAppState } from "./MyAppDetailAppState";
 import { MyAppsAppState } from "./MyAppsAppState";
 import { SubscriptionDetailAppState } from "./SubscriptionDetailAppState";
-import { MyAppDetailAppState } from "./MyAppDetailAppState";
+import { SubscriptionsAppState } from "./SubscriptionsAppState";
+import { TermsAppState } from "./TermsAppState";
 
 export class RootAppState extends AppState {
     home = new HomeAppState({});
@@ -19,7 +20,7 @@ export class RootAppState extends AppState {
     myApps = new MyAppsAppState({});
     myAppDetail = new MyAppDetailAppState({});
     subscriptionDetail = new SubscriptionDetailAppState({});
-    terms = new HomeAppState({});
+    terms = new TermsAppState({});
 
     constructor(props: PartialProps<RootAppState>) {
         super();

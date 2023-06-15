@@ -1,9 +1,12 @@
-import React from "react";
-import { RootAppState } from "../states/RootAppState";
-import { connect } from "react-redux";
-import { TermsAppState } from "../states/TermsAppState";
-import { SiteLayout } from "../SiteLayout";
 import { Box, Container, Grid, Stack, Typography } from "@mui/material";
+import React from "react";
+import { connect } from "react-redux";
+import { AppContext, ReactAppContextType } from "../AppContext";
+import { SiteLayout } from "../SiteLayout";
+import { TermsEvent } from "../events/TermsEvent";
+import { RootAppState } from "../states/RootAppState";
+import { TermsAppState } from "../states/TermsAppState";
+import { appStore, reduxStore } from "../store-config";
 
 type _State = {};
 
@@ -12,10 +15,37 @@ type _Props = {
 };
 
 class _TermsPage extends React.Component<_Props, _State> {
+    static contextType = ReactAppContextType;
+    get _context() {
+        return this.context as AppContext;
+    }
+
     constructor(props: _Props) {
         super(props);
         this.state = {};
     }
+
+    static isLoading(): boolean {
+        return appStore.getState().home.loadingFeaturedProducts || appStore.getState().home.loadingLatestProducts;
+    }
+
+    static async fetchData(context: AppContext, params: {}, query: {}): Promise<void> {
+        return new Promise<void>((resolve) => {
+            appStore.dispatch(new TermsEvent.LoadPricingData(context));
+            const unsub = reduxStore.subscribe(() => {
+                if (!_TermsPage.isLoading()) {
+                    resolve();
+                    unsub();
+                    context.loading.setIsLoading(false);
+                }
+            });
+        });
+    }
+
+    async componentDidMount(): Promise<void> {
+        await _TermsPage.fetchData(this._context, {}, {});
+    }
+
     render(): React.ReactNode {
         let titleWidth = 4;
         let contentWidth = 12 - titleWidth;
@@ -162,7 +192,8 @@ class _TermsPage extends React.Component<_Props, _State> {
                                         FastchargeAPI Service Fee
                                     </Typography>
                                     <Typography variant="body1" gutterBottom>
-                                        FastchargeAPI charges 0% of your monthly fee. We charge a service fee of $0.0001
+                                        FastchargeAPI charges 0% of your monthly fee. We charge a service fee of
+                                        {` $${this.props.appState.pricingPerRequest} `}
                                         per request that's successfully made by your customer. This fee is deducted from
                                         your account immediately after the customer's request is made, and usually after
                                         the customer's per-request fee is deposited to your account.{" "}
@@ -187,12 +218,13 @@ class _TermsPage extends React.Component<_Props, _State> {
                                         any time. The money transferred will appear in your Stripe account in 24 hours.
                                         We do not charge any fee for the transfers. However, 3rd-party payment
                                         processors, such as Stripe, do charge a fee for the transfer. At this time, the
-                                        transfer fee associated with Stripe is $2.55 + 3.65% per transfer. This includes
-                                        the fee occurred when the customer pays via Stripe to use your app, fee
-                                        associated to collect tax via Stripe, and the fee when you withdraw money into
-                                        your bank account. This also means that the minimum amount you can withdraw is
-                                        $2.65. For example, if you withdraw $100.00, you will be charged $2.55 + 3.65%
-                                        of $100.00 = $6.20, and you will receive $93.80.
+                                        transfer fee associated with Stripe is{" "}
+                                        {`${this.props.appState.pricingStripeFlatFee} + ${
+                                            Number.parseFloat(this.props.appState.pricingStripePercentageFee) * 100
+                                        }%`}{" "}
+                                        per transfer. This includes the fee occurred when the customer pays via Stripe
+                                        to use your app, fee associated to collect tax via Stripe, and the fee when you
+                                        withdraw money into your bank account.
                                     </Typography>
                                     <Typography variant="body1" gutterBottom>
                                         FastchargeAPI is committed to making the percentage fee from your app's income

@@ -11,6 +11,7 @@ import {
     GatewayRequestDecisionCacheModel,
     PricingModel,
     SecretModel,
+    SiteMetaDataModel,
     StripePaymentAcceptModel,
     StripeTransferModel,
     SubscriptionModel,
@@ -54,6 +55,7 @@ export function createDefaultContextBatched() {
         GatewayRequestDecisionCache: new Batched(GatewayRequestDecisionCacheModel),
         UserAppToken: new Batched(UserAppTokenModel),
         FreeQuotaUsage: new Batched(FreeQuotaUsageModel),
+        SiteMetaData: new Batched(SiteMetaDataModel),
     };
 }
 

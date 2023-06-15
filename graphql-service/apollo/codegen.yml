@@ -41,12 +41,14 @@ generates:
         GatewayRequestCounter: ../dynamoose/models#GatewayRequestCounter
         GatewayRequestDecisionCache: ../dynamoose/models#GatewayRequestDecisionCache
         UserAppToken: ../dynamoose/models#UserAppToken
+        SiteMetaData: ../dynamoose/models#SiteMetaData
       enumValues:
         GatewayMode: ../dynamoose/models#GatewayMode
       scalars:
         Email: string
         Timestamp: number
         NonNegativeDecimal: string
+        Any: any
   ./__generated__/operation-types.ts:
     plugins:
       - "typescript"
@@ -59,4 +61,5 @@ generates:
         Email: string
         Timestamp: number
         NonNegativeDecimal: string
+        Any: any
       typesPrefix: GQL

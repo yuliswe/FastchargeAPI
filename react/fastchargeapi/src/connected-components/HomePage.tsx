@@ -15,6 +15,7 @@ import {
     CardContent,
     CardMedia,
     Chip,
+    CircularProgress,
     Container,
     Grid,
     Link,
@@ -77,6 +78,7 @@ class _Home extends React.Component<_Props, _State> {
             appStore.dispatch(new HomePageEvent.LoadLatestProducts(context));
             appStore.dispatch(new HomePageEvent.LoadFeaturedProducts(context));
             appStore.dispatch(new HomePageEvent.LoadCategories(context));
+            appStore.dispatch(new HomePageEvent.LoadPricingData(context));
             const unsub = reduxStore.subscribe(() => {
                 if (!_Home.isLoading()) {
                     resolve();
@@ -405,7 +407,15 @@ class _Home extends React.Component<_Props, _State> {
                                                 <Chip color="primary" label="Per request" />
                                             </TableCell>
                                             <TableCell>
-                                                <Chip color="success" label="$0.0001" size="small" />
+                                                {this.props.homeAppState.loadingPricingData ? (
+                                                    <CircularProgress size="1.5em" color="success" />
+                                                ) : (
+                                                    <Chip
+                                                        color="success"
+                                                        label={`${this.props.homeAppState.pricingPerRequest}`}
+                                                        size="small"
+                                                    />
+                                                )}
                                             </TableCell>
                                         </TableRow>
                                         <TableRow>
@@ -450,15 +460,31 @@ class _Home extends React.Component<_Props, _State> {
                                             </TableCell>
                                             <TableCell sx={{ borderBottom: "none" }}>
                                                 <Typography variant="body1">
-                                                    <Chip component="span" label="$2.55" size="small" color="warning" />
-                                                    {" + "}
-                                                    <Chip
-                                                        component="span"
-                                                        label="3.65%"
-                                                        size="small"
-                                                        color="success"
-                                                    />{" "}
-                                                    of each payment to your bank account
+                                                    {this.props.homeAppState.loadingPricingData ? (
+                                                        <CircularProgress size="1.5em" color="warning" />
+                                                    ) : (
+                                                        <React.Fragment>
+                                                            <Chip
+                                                                component="span"
+                                                                label={`${this.props.homeAppState.pricingStripeFlatFee}`}
+                                                                size="small"
+                                                                color="warning"
+                                                            />
+                                                            {" + "}
+                                                            <Chip
+                                                                component="span"
+                                                                label={`${
+                                                                    Number.parseFloat(
+                                                                        this.props.homeAppState
+                                                                            .pricingStripePercentageFee
+                                                                    ) * 100
+                                                                }%`}
+                                                                size="small"
+                                                                color="success"
+                                                            />
+                                                            {" of each payment to your bank account"}
+                                                        </React.Fragment>
+                                                    )}
                                                 </Typography>
                                             </TableCell>
                                         </TableRow>

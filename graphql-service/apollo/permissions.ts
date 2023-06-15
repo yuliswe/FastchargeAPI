@@ -6,6 +6,7 @@ import {
     GQLMutationCreateEndpointArgs,
     GQLMutationCreateSubscriptionArgs,
     GQLQuerySubscriptionArgs,
+    GQLSiteMetaDataKey,
     GQLSubscribeUpdateSubscriptionArgs,
     GQLUserUpdateUserArgs,
 } from "./__generated__/resolvers-types";
@@ -410,6 +411,18 @@ export const Can = {
         }
         const app = await context.batched.App.get(AppPK.parse(parent.app));
         return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
+    },
+    async viewSiteMetaData(context: RequestContext, key: GQLSiteMetaDataKey): Promise<boolean> {
+        return Promise.resolve(true);
+    },
+    async updateSiteMetaData(context: RequestContext, key: GQLSiteMetaDataKey): Promise<boolean> {
+        return Promise.resolve(context.isAdminUser || false);
+    },
+    async deleteSiteMetaData(context: RequestContext, key: GQLSiteMetaDataKey): Promise<boolean> {
+        return Promise.resolve(context.isAdminUser || false);
+    },
+    async createSiteMetaData(context: RequestContext): Promise<boolean> {
+        return Promise.resolve(context.isAdminUser || false);
     },
 
     // async *viewAppIter<App extends { owner: string }>(

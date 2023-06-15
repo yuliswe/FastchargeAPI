@@ -13,6 +13,7 @@ import { appResolvers } from "./resolvers/app";
 import { appTagResolvers } from "./resolvers/app-tag";
 import { endpointResolvers } from "./resolvers/endpoint";
 import { gatewayResolvers } from "./resolvers/gateway";
+import { siteMetaDataResolvers } from "./resolvers/meta";
 import { stripePaymentAcceptResolvers } from "./resolvers/payment";
 import { pricingResolvers } from "./resolvers/pricing";
 import { secretResolvers } from "./resolvers/secret";
@@ -49,6 +50,7 @@ const resolvers: GQLResolvers = {
     AccountHistory: accountHistoryResolvers.AccountHistory,
     AccountActivity: accountActivityResolvers.AccountActivity,
     UserAppToken: userAppTokenResolvers.UserAppToken,
+    SiteMetaData: siteMetaDataResolvers.SiteMetaData,
     Query: {
         ...gatewayResolvers.Query,
         ...appResolvers.Query,
@@ -66,6 +68,7 @@ const resolvers: GQLResolvers = {
         ...accountHistoryResolvers.Query,
         ...accountActivityResolvers.Query,
         ...userAppTokenResolvers.Query,
+        ...siteMetaDataResolvers.Query,
     },
     Mutation: {
         ...gatewayResolvers.Mutation,
@@ -84,6 +87,7 @@ const resolvers: GQLResolvers = {
         ...accountHistoryResolvers.Mutation,
         ...accountActivityResolvers.Mutation,
         ...userAppTokenResolvers.Mutation,
+        ...siteMetaDataResolvers.Mutation,
 
         async ping(): Promise<boolean> {
             await wakeUpAurora();

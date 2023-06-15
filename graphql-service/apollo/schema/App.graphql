@@ -2,6 +2,7 @@ scalar Email
 scalar NonNegativeDecimal
 scalar Timestamp
 scalar URL
+scalar Any
 
 type Query {
     ### App API
@@ -37,6 +38,7 @@ type Query {
 
     stripeTransfer(pk: ID): StripeTransfer!
     appTags(tag: String): [AppTag!]!
+    siteMetaData(keys: [SiteMetaDataKey!]!): [SiteMetaData!]!
 }
 
 enum AppFullTextSearchOrderBy {
@@ -126,6 +128,8 @@ type Mutation {
     flushAppSearchIndex: Int!
 
     createAppTag(app: String!, tag: String!): AppTag!
+
+    createSiteMetaData(key: SiteMetaDataKey!, value: Any!): SiteMetaData!
 
     ping: Boolean!
 }
@@ -431,4 +435,18 @@ type AppTag {
     updatedAt: Timestamp!
 
     updateAppTag(tag: String): AppTag!
+}
+
+type SiteMetaData {
+    key: SiteMetaDataKey!
+    value: Any!
+
+    deleteSiteMetaData: SiteMetaData!
+    updateSiteMetaData(value: Any!): SiteMetaData!
+}
+
+enum SiteMetaDataKey {
+    pricingPerRequestCharge
+    pricingStripePercentageFee
+    pricingStripeFlatFee
 }

@@ -6,6 +6,9 @@ import {
     GQLGetFeaturedProductsQueryVariables,
     GQLHomePageGetLatestProductsQuery,
     GQLHomePageGetLatestProductsQueryVariables,
+    GQLHomePageGetPricingDataQuery,
+    GQLHomePageGetPricingDataQueryVariables,
+    GQLSiteMetaDataKey,
 } from "../__generated__/gql-operations";
 import { getGQLClient } from "../graphql-client";
 import { RouteURL } from "../routes";
@@ -47,8 +50,8 @@ class LoadFeaturedProducts extends AppEvent<RootAppState> {
 
     featuredProducts: HomePageFeaturedProduct[] | null = null;
     async *run(state: RootAppState): AppEventStream<RootAppState> {
-        let { client, currentUser } = await getGQLClient(this.context);
-        let result = await client.query<GQLGetFeaturedProductsQuery, GQLGetFeaturedProductsQueryVariables>({
+        const { client, currentUser } = await getGQLClient(this.context);
+        const result = await client.query<GQLGetFeaturedProductsQuery, GQLGetFeaturedProductsQueryVariables>({
             query: gql`
                 query GetFeaturedProducts {
                     apps(tag: "Featured") {
@@ -91,8 +94,11 @@ class LoadLatestProducts extends AppEvent<RootAppState> {
     }
     latestProducts: HomePageFeaturedProduct[] | null = null;
     async *run(state: RootAppState): AppEventStream<RootAppState> {
-        let { client, currentUser } = await getGQLClient(this.context);
-        let result = await client.query<GQLHomePageGetLatestProductsQuery, GQLHomePageGetLatestProductsQueryVariables>({
+        const { client, currentUser } = await getGQLClient(this.context);
+        const result = await client.query<
+            GQLHomePageGetLatestProductsQuery,
+            GQLHomePageGetLatestProductsQueryVariables
+        >({
             query: gql`
                 query HomePageGetLatestProducts {
                     apps(tag: "Latest") {
@@ -125,8 +131,48 @@ class LoadLatestProducts extends AppEvent<RootAppState> {
     }
 }
 
+type HomePagePricingData = Map<GQLSiteMetaDataKey, string>;
+class LoadPricingData extends AppEvent<RootAppState> {
+    constructor(private context: AppContext) {
+        super();
+    }
+    reducer(state: RootAppState): RootAppState {
+        return state;
+    }
+
+    pricingData: HomePagePricingData | null = null;
+    async *run(state: RootAppState): AppEventStream<RootAppState> {
+        const { client, currentUser } = await getGQLClient(this.context);
+        const result = await client.query<GQLHomePageGetPricingDataQuery, GQLHomePageGetPricingDataQueryVariables>({
+            query: gql`
+                query HomePageGetPricingData {
+                    siteMetaData(keys: [pricingPerRequestCharge, pricingStripeFlatFee, pricingStripePercentageFee]) {
+                        key
+                        value
+                    }
+                }
+            `,
+        });
+        this.pricingData = new Map(result.data.siteMetaData.map((x) => [x.key, x.value]));
+    }
+
+    reduceAfter(state: RootAppState): RootAppState {
+        return state.mapState({
+            home: mapState({
+                loadingPricingData: to(false),
+                pricingPerRequest: to(this.pricingData!.get(GQLSiteMetaDataKey.PricingPerRequestCharge) as string),
+                pricingStripeFlatFee: to(this.pricingData!.get(GQLSiteMetaDataKey.PricingStripeFlatFee) as string),
+                pricingStripePercentageFee: to(
+                    this.pricingData!.get(GQLSiteMetaDataKey.PricingStripePercentageFee) as string
+                ),
+            }),
+        });
+    }
+}
+
 export const HomePageEvent = {
     LoadFeaturedProducts,
     LoadLatestProducts,
     LoadCategories,
+    LoadPricingData,
 };
