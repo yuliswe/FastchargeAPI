@@ -8,11 +8,11 @@ from click_aliases import ClickAliasedGroup
 from . import config
 from .__generated__ import gql_operations as GQL
 from .account import do_account_info, do_account_topup, do_account_update
+from .config import base_domain
 from .context_obj import ContextObject
 from .graphql_client import get_client_info
 from .groups import fastcharge
 from .http import HttpClient
-from .config import base_domain
 
 terminal = Terminal()
 
@@ -91,17 +91,22 @@ def fastcharge_account_withdraw(ctx_obj: ContextObject, amount: str, yes: bool):
     echo(
         "Note that it may take up to 1 busines day for the funds to arrive to your Stripe account."
     )
-    stripe_charges_percent = 2.9 + 0.25 + 0.5
-    stripe_charges_flat = 2 + 0.5 + 0.25
+    stripe_pricing = {x.key: x.value for x in GQL.get_stripe_pricing_data(client)}
+    stripe_charges_percent = float(
+        stripe_pricing[GQL.SiteMetaDataKey.pricingStripePercentageFee]
+    )
+    stripe_charges_flat = float(
+        stripe_pricing[GQL.SiteMetaDataKey.pricingStripeFlatFee]
+    )
     echo(
         "\n".join(
             textwrap.wrap(
-                f"Stripe Express account charges a fee for the transfer, which is {terminal.blue}${stripe_charges_flat:.2f} + {stripe_charges_percent:.2f}%{terminal.normal} of the transferred amout. "
+                f"Stripe Express account charges a fee for the transfer, which is {terminal.blue}${stripe_charges_flat:.2f} + {(stripe_charges_percent * 100):.2f}%{terminal.normal} of the transferred amout. "
                 "As a result, you may recieve less than the transferred amount.",
             )
         )
     )
-    stripe_fee = stripe_charges_flat + stripe_charges_percent / 100 * withdraw
+    stripe_fee = stripe_charges_flat + stripe_charges_percent * withdraw
     receive_amount = max(0, withdraw - stripe_fee)
     echo()
     echo(
@@ -111,7 +116,7 @@ def fastcharge_account_withdraw(ctx_obj: ContextObject, amount: str, yes: bool):
         + terminal.normal
     )
     echo(
-        "Your FastchargeAPI account estimated new balance: "
+        "Your FastchargeAPI account new estimated balance: "
         + terminal.green
         + f"${balance - withdraw:.2f}"
         + terminal.normal

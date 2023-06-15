@@ -303,3 +303,10 @@ query GetUserAccountInfo($user: ID!) {
         email
     }
 }
+
+query GetStripePricingData {
+    siteMetaData(keys: [pricingStripeFlatFee, pricingStripePercentageFee]) {
+        key
+        value
+    }
+}

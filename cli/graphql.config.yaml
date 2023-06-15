@@ -35,6 +35,7 @@ projects:
           Email: str
           URL: str
           NonNegativeDecimal: str
+          Any: typing.Any
 
   tests:
     schema: "../graphql-service/apollo/schema/App.graphql"
