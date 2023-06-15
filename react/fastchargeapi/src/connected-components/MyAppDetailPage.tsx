@@ -27,7 +27,7 @@ import Terminal, { ColorMode, TerminalInput } from "react-terminal-ui";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { GQLAppVisibility } from "../__generated__/gql-operations";
 import { MyAppDetailEvent } from "../events/MyAppDetailEvent";
-import { RouteURL } from "../routes";
+import { MyAppDetailPageParams, RouteURL } from "../routes";
 import {
     DocumentationDialog,
     SupportDocumentation,
@@ -36,7 +36,7 @@ import {
 } from "../stateless-components/DocumentationDialog";
 import { MyAppDetailAppState } from "../states/MyAppDetailAppState";
 import { RootAppState } from "../states/RootAppState";
-import { appStore } from "../store-config";
+import { appStore, reduxStore } from "../store-config";
 type _Props = {
     appState: MyAppDetailAppState;
 };
@@ -61,6 +61,30 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
         };
     }
 
+    static isLoading(): boolean {
+        return appStore.getState().myAppDetail.loadingAppDetail;
+    }
+
+    static async fetchData(context: AppContext, params: MyAppDetailPageParams, query: {}): Promise<void> {
+        return new Promise<void>((resolve) => {
+            appStore.dispatch(
+                new MyAppDetailEvent.LoadAppInfo(context, {
+                    appName: params.app,
+                })
+            );
+            const unsub = reduxStore.subscribe(() => {
+                if (!_MyAppDetailPage.isLoading()) {
+                    resolve();
+                    unsub();
+                }
+            });
+        });
+    }
+
+    async componentDidMount(): Promise<void> {
+        await _MyAppDetailPage.fetchData(this._context, this._context.route.params as MyAppDetailPageParams, {});
+    }
+
     getAPIList() {
         return this.appState.appDetail?.endpoints || [];
     }
@@ -75,14 +99,6 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
 
     getPricingList() {
         return this.appState.appDetail?.pricingPlans || [];
-    }
-
-    componentDidMount(): void {
-        appStore.dispatch(
-            new MyAppDetailEvent.LoadAppInfo(this._context, {
-                appName: this.getAppName(),
-            })
-        );
     }
 
     renderAddAPIDocumentation({ app }: { app: string }) {

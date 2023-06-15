@@ -1,8 +1,8 @@
-import { GQLSiteMetaDataKey } from "__generated__/resolvers-types";
 import dynamoose from "dynamoose";
 import { ModelType } from "dynamoose/dist/General";
 import { Item } from "dynamoose/dist/Item";
 import { TableClass } from "dynamoose/dist/Table/types";
+import { GQLSiteMetaDataKey } from "../__generated__/resolvers-types";
 import { isValidAppName } from "../functions/app";
 
 if (process.env.TEST == "1") {

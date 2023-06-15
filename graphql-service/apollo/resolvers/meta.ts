@@ -1,11 +1,11 @@
-import { RequestContext } from "RequestContext";
+import { RequestContext } from "../RequestContext";
 import {
     GQLMutationCreateSiteMetaDataArgs,
     GQLQuerySiteMetaDataArgs,
     GQLResolvers,
     GQLSiteMetaDataResolvers,
     GQLSiteMetaDataUpdateSiteMetaDataArgs,
-} from "__generated__/resolvers-types";
+} from "../__generated__/resolvers-types";
 import { SiteMetaData, SiteMetaDataModel } from "../dynamoose/models";
 import { Denied } from "../errors";
 import { Can } from "../permissions";

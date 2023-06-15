@@ -438,7 +438,7 @@ class _DashboardPage extends React.Component<Props, State> {
                                             return activity.usageSummary?.volume || "";
                                         case "Description":
                                             return activity.description;
-                                        case "Income":
+                                        case "Receiving":
                                             return this.earned(activity);
                                         case "Spending":
                                             return this.spent(activity);
@@ -479,7 +479,7 @@ class _DashboardPage extends React.Component<Props, State> {
                                         title: "Consumed Free Quota",
                                     },
                                     {
-                                        title: "Income",
+                                        title: "Receiving",
                                     },
                                     {
                                         title: "Spending",

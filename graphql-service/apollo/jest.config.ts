@@ -13,7 +13,7 @@ const jestConfig: JestConfigWithTsJest = {
             },
         ],
     },
-    modulePaths: [compilerOptions.baseUrl],
+    // modulePaths: [compilerOptions.baseUrl],
     moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths),
     transformIgnorePatterns: ["/node_modules/(?!(chalk)/)"],
     modulePathIgnorePatterns: ["dist"],

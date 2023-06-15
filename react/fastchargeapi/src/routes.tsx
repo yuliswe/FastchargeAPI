@@ -25,6 +25,7 @@ export type TermsPageTag = "pricing" | "privacy" | "tos";
 export type DashboardPageQuery = { sdate?: string; spage?: string };
 export type SubscriptionDetailPageParams = { app: string };
 export type SubscriptionDetailPageQuery = { sdate?: string; spage?: string };
+export type MyAppDetailPageParams = { app: string };
 
 export function buildSearchParams(query: any): string {
     const search = new URLSearchParams();
@@ -62,6 +63,9 @@ export const RouteURL = {
     myAppsPage(): string {
         return `/account/my-apps/#`;
     },
+    myAppDetailPage({ params }: { params: MyAppDetailPageParams }): string {
+        return `/account/my-apps/${params.app}/#`;
+    },
     authPage({ query }: { query?: AuthPageQuery } = {}): string {
         return `/auth/?${buildSearchParams(query)}#`;
     },
@@ -91,7 +95,9 @@ enum RoutePattern {
     SubscriptionDetailPage = "/account/subscriptions/:app",
     HomePage = "/",
     MyAppsPage = "/account/my-apps",
+    MyAppDetailPage = "/account/my-apps/:app",
     DashboardPage = "/account",
+    TermsPage = "/terms-of-service",
 }
 
 /**
@@ -126,6 +132,14 @@ export const routeDataFetchers: {
         path: RoutePattern.SubscriptionDetailPage,
         fetchData: (context, params, query) =>
             SubscriptionDetailPage.WrappedComponent.fetchData(context, params, query),
+    },
+    {
+        path: RoutePattern.MyAppDetailPage,
+        fetchData: (context, params, query) => MyAppDetailPage.WrappedComponent.fetchData(context, params, query),
+    },
+    {
+        path: RoutePattern.TermsPage,
+        fetchData: (context, params, query) => TermsPage.WrappedComponent.fetchData(context, params, query),
     },
 ];
 
@@ -164,11 +178,11 @@ export function createRouter(WithContext: (props: WithRouteContextProps) => Reac
                     element: <DashboardPage />,
                 },
                 {
-                    path: "my-apps",
+                    path: RoutePattern.MyAppsPage,
                     element: <MyAppsPage />,
                 },
                 {
-                    path: "my-apps/:app",
+                    path: RoutePattern.MyAppDetailPage,
                     element: <MyAppDetailPage />,
                 },
                 {
@@ -182,7 +196,7 @@ export function createRouter(WithContext: (props: WithRouteContextProps) => Reac
             ],
         },
         {
-            path: "/terms-of-service",
+            path: RoutePattern.TermsPage,
             element: <WithContext children={<TermsPage />} />,
         },
     ]);

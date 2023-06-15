@@ -20,7 +20,6 @@
     "strictPropertyInitialization": false,
     "allowJs": true,
     "resolveJsonModule": true,
-    "baseUrl": "./",
     "paths": {},
     "allowSyntheticDefaultImports": true
   },

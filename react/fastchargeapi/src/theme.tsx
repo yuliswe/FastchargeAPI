@@ -107,6 +107,7 @@ const green = "#00CC66";
 
 const primary = blue;
 const primaryLight = lighten(blue, 0.9);
+const primaryDark = darken(blue, 0.2);
 const secondary = black;
 const secondaryLight = lighten(black, 0.2);
 const warning = yellow;
@@ -338,7 +339,7 @@ export function getTheme(extraThemeOpts?: ThemeOptions) {
                             root: {
                                 // textDecoration: "none",
                                 "&:hover": {
-                                    color: blue,
+                                    color: primaryDark,
                                 },
                             },
                         },

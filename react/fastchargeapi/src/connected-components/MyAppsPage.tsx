@@ -19,6 +19,7 @@ import { connect } from "react-redux";
 import Terminal, { ColorMode, TerminalInput } from "react-terminal-ui";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { MyAppsEvent, UserApp } from "../events/MyAppsEvent";
+import { RouteURL } from "../routes";
 import {
     DocumentationDialog,
     SupportDocumentation,
@@ -164,7 +165,7 @@ class _MyAppsPage extends React.Component<_Props, _State> {
                                             variant="outlined"
                                             color="secondary"
                                             component={Link}
-                                            href={`${app.name}`}
+                                            href={RouteURL.myAppDetailPage({ params: { app: app.name } })}
                                         >
                                             Manage
                                         </Button>

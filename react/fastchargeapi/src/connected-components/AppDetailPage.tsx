@@ -1,4 +1,5 @@
-import { Avatar, Box, Button, Container, Divider, Grid, Link, Skeleton, Stack, Typography } from "@mui/material";
+import { OpenInNew } from "@mui/icons-material";
+import { Avatar, Box, Button, Container, Divider, Grid, Link, Paper, Skeleton, Stack, Typography } from "@mui/material";
 import "highlight.js/styles/github.css";
 import React from "react";
 import ReactMarkdown from "react-markdown";
@@ -8,6 +9,7 @@ import Terminal, { ColorMode, TerminalInput } from "react-terminal-ui";
 import rehypeHighlight from "rehype-highlight";
 import rehypeRemoveComments from "rehype-remove-comments";
 import remarkGfm from "remark-gfm";
+import remarkGithub from "remark-github";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { SiteLayout } from "../SiteLayout";
 import { AppDetailEndpoint, AppDetailEvent, AppDetailPricing } from "../events/AppDetailEvent";
@@ -168,7 +170,8 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                     <Skeleton variant="text" sx={{ width: "50%", height: "1.5em", borderRadius: 5 }} />
                 ) : this.appState.appInfo?.repository ? (
                     <Link href={this.appState.appInfo?.repository} target="_blank" variant="body2">
-                        this.appState.appInfo?.repository
+                        {this.appState.appInfo?.repository}
+                        <OpenInNew sx={{ height: "0.5em", width: "0.5em", ml: 0.3 }} />
                     </Link>
                 ) : (
                     <Typography variant="body2">Not provided</Typography>
@@ -190,6 +193,7 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                 ) : this.appState.appInfo?.homepage ? (
                     <Link href={this.appState.appInfo?.homepage} target="_blank" variant="body2">
                         {this.appState.appInfo?.homepage}
+                        <OpenInNew sx={{ height: "0.5em", width: "0.5em", ml: 0.3 }} />
                     </Link>
                 ) : (
                     <Typography variant="body2">Not provided</Typography>
@@ -210,6 +214,7 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                 ) : this.appState.appInfo?.readme ? (
                     <Link href={this.appState.appInfo?.readme} target="_blank" variant="body2">
                         {this.appState.appInfo?.readme}
+                        <OpenInNew sx={{ height: "0.5em", width: "0.5em", ml: 0.3 }} />
                     </Link>
                 ) : (
                     <Typography variant="body2">Not provided</Typography>
@@ -256,11 +261,13 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                     <Link href="#pricing" variant="body2">
                         Pricing
                     </Link>
-                    <Link href="#readme" variant="body2">
-                        README.md
-                    </Link>
+                    {this.appState.appReadmeContent && (
+                        <Link href="#readme" variant="body2">
+                            README.md
+                        </Link>
+                    )}
                     <Link href="#endpoints" variant="body2">
-                        Endpoints
+                        APIs
                     </Link>
                 </Stack>
             </Box>
@@ -398,15 +405,32 @@ class _AppDetailPage extends React.Component<_Props, _State> {
 
                                         <ReactMarkdown
                                             children={this.appState.appReadmeContent}
+                                            components={{
+                                                a: (props) => <Link {...props} color="primary" />,
+                                                code: (props) => (
+                                                    <Paper
+                                                        {...props}
+                                                        component="code"
+                                                        elevation={0}
+                                                        sx={{
+                                                            bgcolor: "grey.100",
+                                                            fontSize: "0.8em",
+                                                            px: 0.5,
+                                                            py: 0.25,
+                                                            mx: 0.5,
+                                                        }}
+                                                    />
+                                                ),
+                                            }}
                                             skipHtml={true}
                                             remarkPlugins={(() => {
-                                                let plugins: PluggableList = [remarkGfm];
-                                                // if (this.appState.appInfo!.repository) {
-                                                //     plugins.push([
-                                                //         remarkGithub,
-                                                //         { repository: this.appState.appInfo!.repository },
-                                                //     ] as any);
-                                                // }
+                                                const plugins: PluggableList = [remarkGfm];
+                                                if (this.appState.appInfo!.repository) {
+                                                    plugins.push([
+                                                        remarkGithub,
+                                                        { repository: this.appState.appInfo!.repository },
+                                                    ] as any);
+                                                }
                                                 return plugins;
                                             })()}
                                             rehypePlugins={[rehypeHighlight, rehypeRemoveComments]}

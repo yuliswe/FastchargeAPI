@@ -1,3 +1,4 @@
+import { ArrowForward, Check } from "@mui/icons-material";
 import { Box, Breadcrumbs, Button, Divider, Grid, Link, Paper, Stack, Typography } from "@mui/material";
 import React from "react";
 import { connect } from "react-redux";
@@ -171,46 +172,67 @@ class _SubscriptionDetailPage extends React.Component<_Props, _State> {
             <React.Fragment>
                 <Stack spacing={5}>
                     <Paper sx={{ padding: 5 }}>
-                        <Stack>
-                            <Breadcrumbs sx={{ display: "flex", alignItems: "center" }}>
-                                <Link underline="hover" color="inherit" href={RouteURL.subscriptionsPage()}>
-                                    Subscriptions
-                                </Link>
-                                {/* <Typography color="text.primary">
+                        <Box>
+                            <Stack alignItems="center" display="flex" direction="row" spacing={2}>
+                                <Breadcrumbs sx={{ display: "flex", alignItems: "center" }}>
+                                    <Link underline="hover" color="inherit" href={RouteURL.subscriptionsPage()}>
+                                        Subscriptions
+                                    </Link>
+                                    {/* <Typography color="text.primary">
                         {this.getAppNameFromUrl()}
                     </Typography> */}
-                                <Stack direction="row" spacing={1} alignItems="center">
-                                    <Typography variant="h4" display="flex" alignItems="center" color="text.primary">
-                                        {this.appState.appInfo?.title || this.appState.appInfo?.name}
-                                    </Typography>
-                                    <Typography variant="body1" display="flex" alignItems="center" color="text.primary">
-                                        @{this.appState.appInfo?.name}
-                                    </Typography>
-                                    {/* <Typography variant="body1">1.3.7</Typography>
+                                    <Stack direction="row" spacing={1} alignItems="center" display="flex">
+                                        <Typography
+                                            variant="h4"
+                                            display="flex"
+                                            alignItems="center"
+                                            color="text.primary"
+                                        >
+                                            {this.appState.appInfo?.title || this.appState.appInfo?.name}
+                                        </Typography>
+                                        <Typography
+                                            variant="body1"
+                                            display="flex"
+                                            alignItems="center"
+                                            color="text.primary"
+                                        >
+                                            @{this.appState.appInfo?.name}
+                                        </Typography>
+                                        {/* <Typography variant="body1">1.3.7</Typography>
                                 <Typography variant="body1">Published 10 months ago</Typography> */}
-                                    <Box width={4}></Box>
-                                    <Button
-                                        variant="outlined"
-                                        color="secondary"
-                                        size="small"
-                                        onClick={() =>
-                                            openDocumentationDialog(this, () =>
-                                                this.renderUnsubscribeDocumentation({
-                                                    app: this.getAppNameFromUrl(),
-                                                })
-                                            )
-                                        }
-                                    >
-                                        Unsubscribe
-                                    </Button>
-                                </Stack>
-                            </Breadcrumbs>
+                                    </Stack>
+                                </Breadcrumbs>
+                                <Box flexGrow={1}></Box>
+                                <Button
+                                    endIcon={<ArrowForward />}
+                                    variant="outlined"
+                                    color="primary"
+                                    size="small"
+                                    href={RouteURL.appDetailPage({ params: { app: this.getAppNameFromUrl() } })}
+                                >
+                                    Visit
+                                </Button>
+                                <Button
+                                    variant="outlined"
+                                    color="secondary"
+                                    size="small"
+                                    onClick={() =>
+                                        openDocumentationDialog(this, () =>
+                                            this.renderUnsubscribeDocumentation({
+                                                app: this.getAppNameFromUrl(),
+                                            })
+                                        )
+                                    }
+                                >
+                                    Unsubscribe
+                                </Button>
+                            </Stack>
                             <Divider sx={{ mb: 3, mt: 1 }} />
                             <Typography variant="body1">
                                 {this.appState.appInfo?.description ||
                                     "The author did not provide a description for this app."}
                             </Typography>
-                        </Stack>
+                        </Box>
                     </Paper>
                     <Paper sx={{ padding: 5 }}>
                         <Stack>
@@ -225,18 +247,21 @@ class _SubscriptionDetailPage extends React.Component<_Props, _State> {
                                             {...pricing}
                                             actionButton={
                                                 <Button
+                                                    startIcon={this.isActivePlan(pricing) && <Check />}
                                                     variant={this.isActivePlan(pricing) ? "contained" : "outlined"}
                                                     color="secondary"
-                                                    onClick={() =>
-                                                        openDocumentationDialog(this, () =>
-                                                            this.renderChangeSubscriptionDocumentation({
-                                                                app: this.getAppNameFromUrl(),
-                                                                plan: pricing.name,
-                                                            })
-                                                        )
-                                                    }
+                                                    onClick={() => {
+                                                        if (!this.isActivePlan(pricing)) {
+                                                            openDocumentationDialog(this, () =>
+                                                                this.renderChangeSubscriptionDocumentation({
+                                                                    app: this.getAppNameFromUrl(),
+                                                                    plan: pricing.name,
+                                                                })
+                                                            );
+                                                        }
+                                                    }}
                                                 >
-                                                    {this.isActivePlan(pricing) ? "Subscribed" : "Change"}
+                                                    {this.isActivePlan(pricing) ? "Subscribed" : "Change plan"}
                                                 </Button>
                                             }
                                         ></PricingCard>

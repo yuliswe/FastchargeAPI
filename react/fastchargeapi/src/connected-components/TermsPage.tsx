@@ -26,7 +26,7 @@ class _TermsPage extends React.Component<_Props, _State> {
     }
 
     static isLoading(): boolean {
-        return appStore.getState().home.loadingFeaturedProducts || appStore.getState().home.loadingLatestProducts;
+        return appStore.getState().terms.loading;
     }
 
     static async fetchData(context: AppContext, params: {}, query: {}): Promise<void> {

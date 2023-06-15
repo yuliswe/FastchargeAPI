@@ -51,7 +51,7 @@ def subscribe_list(ctx_obj: ContextObject):
         echo()
 
 
-@fastapi_subscribe.command("add", aliases=[])
+@fastapi_subscribe.command("add", aliases=["sub"])
 @click.argument("app_name", required=True)
 @click.option("-p", "--plan", help="Name of the plan to subscribe to.")
 @click.pass_obj
