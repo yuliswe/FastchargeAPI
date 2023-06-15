@@ -79,7 +79,7 @@ class LoadActivities extends AppEvent<RootAppState> {
             query: gql`
                 query GetAccountActivities($user: ID!, $dateRange: DateRangeInput!) {
                     user(pk: $user) {
-                        accountActivities(dateRange: $dateRange, limit: 1000) {
+                        accountActivities(dateRange: $dateRange, limit: 200) {
                             createdAt
                             type
                             amount
@@ -144,7 +144,7 @@ class LoadAccountHistory extends AppEvent<RootAppState> {
             query: gql`
                 query GetAccountHistories($user: ID!, $dateRange: DateRangeInput!) {
                     user(pk: $user) {
-                        accountHistories(dateRange: $dateRange, limit: 1000) {
+                        accountHistories(dateRange: $dateRange, limit: 200) {
                             closingBalance
                             closingTime
                         }
