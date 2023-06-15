@@ -4,6 +4,7 @@ import { Chalk } from "chalk";
 import Decimal from "decimal.js-light";
 import { UserPK, createDefaultContextBatched, getUserBalance, sqsGQLClient } from "graphql-service";
 import { RequestContext } from "graphql-service/RequestContext";
+import { GQLSiteMetaDataKey } from "graphql-service/__generated__/resolvers-types";
 import { SQSQueueUrl } from "graphql-service/sqsClient";
 import {
     LambdaCallbackV2,
@@ -59,8 +60,12 @@ export async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStruc
         return errorResponse;
     }
     const withdraw = bodyData!.withdraw;
-    const stripeFeePercentage = 3.65 / 100;
-    const stripeFlatFee = new Decimal("2.55");
+    const stripeFeePercentage = new Decimal(
+        (await context.batched.SiteMetaData.get({ key: GQLSiteMetaDataKey.PricingStripePercentageFee })).value
+    );
+    const stripeFlatFee = new Decimal(
+        (await context.batched.SiteMetaData.get({ key: GQLSiteMetaDataKey.PricingStripeFlatFee })).value
+    );
     const totalStripe = stripeFlatFee.add(withdraw.mul(stripeFeePercentage));
     const receivable = withdraw.minus(totalStripe);
     if (receivable.lessThanOrEqualTo(0)) {
