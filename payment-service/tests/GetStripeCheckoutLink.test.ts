@@ -76,7 +76,7 @@ describe("Create a Stripe checkout session", () => {
     });
 
     test("A successful topup", async () => {
-        let response = await Checkout(
+        const response = await Checkout(
             makeLambdaEvent({
                 userPK: UserPK.stringify(testUser),
                 body: JSON.stringify({
@@ -88,13 +88,13 @@ describe("Create a Stripe checkout session", () => {
             { skipBalanceCheck: true }
         );
         expect(response.statusCode).toBe(200);
-        let body = JSON.parse(response.body!);
+        const body = JSON.parse(response.body!);
         expect(body).toHaveProperty("location");
         expect(body.location).toMatch(/^https:\/\/checkout.stripe.com/);
     });
 
     test("A topup with less than $1", async () => {
-        let response = await Checkout(
+        const response = await Checkout(
             makeLambdaEvent({
                 userPK: UserPK.stringify(testUser),
                 body: JSON.stringify({
@@ -105,12 +105,12 @@ describe("Create a Stripe checkout session", () => {
             })
         );
         expect(response.statusCode).toBe(400);
-        let body = JSON.parse(response.body!);
+        const body = JSON.parse(response.body!);
         expect(body.error).toMatch(/.*at least \$1.*/);
     });
 
     test("A topup with more than $100", async () => {
-        let response = await Checkout(
+        const response = await Checkout(
             makeLambdaEvent({
                 userPK: UserPK.stringify(testUser),
                 body: JSON.stringify({
@@ -121,7 +121,7 @@ describe("Create a Stripe checkout session", () => {
             })
         );
         expect(response.statusCode).toBe(400);
-        let body = JSON.parse(response.body!);
+        const body = JSON.parse(response.body!);
         expect(body.error).toMatch(/.*exceed.+limit.*/);
     });
 });

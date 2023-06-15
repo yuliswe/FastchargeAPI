@@ -119,7 +119,7 @@ export const lambdaHandler: LambdaHandlerV2 = async (
 };
 
 function parseParams(event: LambdaEventV2): { params?: BodyInput; error?: APIGatewayProxyStructuredResultV2 } {
-    let bodyStr = event.body;
+    const bodyStr = event.body;
     if (!bodyStr) {
         return {
             error: {
@@ -144,7 +144,7 @@ function parseParams(event: LambdaEventV2): { params?: BodyInput; error?: APIGat
         };
     }
 
-    let amount = body.amount;
+    const amount = body.amount;
     if (!amount) {
         return {
             error: {
@@ -156,7 +156,7 @@ function parseParams(event: LambdaEventV2): { params?: BodyInput; error?: APIGat
         };
     }
 
-    let successUrl = body.successUrl;
+    const successUrl = body.successUrl;
     if (!successUrl) {
         return {
             error: {
@@ -168,7 +168,7 @@ function parseParams(event: LambdaEventV2): { params?: BodyInput; error?: APIGat
         };
     }
 
-    let cancelUrl = body.cancelUrl;
+    const cancelUrl = body.cancelUrl;
     if (!cancelUrl) {
         return {
             error: {
@@ -190,8 +190,8 @@ function parseParams(event: LambdaEventV2): { params?: BodyInput; error?: APIGat
 }
 
 async function identifyExistingCustomerId(userEmail: string): Promise<string | undefined> {
-    let stripeClient = await getStripeClient();
-    let customers = await stripeClient.customers.list({
+    const stripeClient = await getStripeClient();
+    const customers = await stripeClient.customers.list({
         email: userEmail,
     });
     if (customers.data.length > 0) {

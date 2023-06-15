@@ -172,9 +172,9 @@ describe("Test create order and fulfill immediately", () => {
                 }),
                 {
                     parseStripeEvent: (result) => {
-                        let stripeEvent: stripe.Event = JSON.parse(result.body!);
+                        const stripeEvent: stripe.Event = JSON.parse(result.body!);
                         stripeEvent.type = "checkout.session.completed";
-                        let sessionObject: StripeSessionObject = {
+                        const sessionObject: StripeSessionObject = {
                             ...(stripeEvent.data.object as StripeSessionObject),
                             payment_status: "paid",
                             id: uuidv4(),
@@ -198,7 +198,7 @@ describe("Test create order and fulfill immediately", () => {
         }
     );
     test("The StripePaymentAccept object should be settled", async () => {
-        let newPaymentAccept = await context.batched.StripePaymentAccept.get({
+        const newPaymentAccept = await context.batched.StripePaymentAccept.get({
             user: UserPK.stringify(testUser),
         });
         expect(newPaymentAccept).not.toBeNull();
@@ -217,18 +217,18 @@ describe("Test AcceptPayment is idempotent by invoking the handler with the same
         const batchSize = 10;
         const sessionId = uuidv4();
         async function doBatch(size: number) {
-            let promises = [];
+            const promises = [];
             for (let i = 0; i < size; i++) {
-                let p = AcceptPayment(
+                const p = AcceptPayment(
                     makeLambdaEvent({
                         userPK: UserPK.stringify(testUser),
                         userEmail: testUserEmail,
                     }),
                     {
                         parseStripeEvent: (result) => {
-                            let stripeEvent: stripe.Event = JSON.parse(result.body!);
+                            const stripeEvent: stripe.Event = JSON.parse(result.body!);
                             stripeEvent.type = "checkout.session.completed";
-                            let sessionObject: StripeSessionObject = {
+                            const sessionObject: StripeSessionObject = {
                                 ...(stripeEvent.data.object as StripeSessionObject),
                                 id: sessionId,
                                 payment_status: "paid",
@@ -240,7 +240,7 @@ describe("Test AcceptPayment is idempotent by invoking the handler with the same
                 );
                 promises.push(p);
             }
-            for await (let response of promises) {
+            for await (const response of promises) {
                 if (response.statusCode !== 200) {
                     console.error("response", response.body);
                 }
@@ -280,18 +280,18 @@ describe(`Test AcceptPayment is queued properly by invoking the handler ${testSi
     test(`Send checkout.session.completed event ${testSize} times with different session ids`, async () => {
         const batchSize = 10;
         async function doBatch(size: number) {
-            let promises = [];
+            const promises = [];
             for (let i = 0; i < size; i++) {
-                let p = AcceptPayment(
+                const p = AcceptPayment(
                     makeLambdaEvent({
                         userPK: UserPK.stringify(testUser),
                         userEmail: testUserEmail,
                     }),
                     {
                         parseStripeEvent: (result) => {
-                            let stripeEvent: stripe.Event = JSON.parse(result.body!);
+                            const stripeEvent: stripe.Event = JSON.parse(result.body!);
                             stripeEvent.type = "checkout.session.completed";
-                            let sessionObject: StripeSessionObject = {
+                            const sessionObject: StripeSessionObject = {
                                 ...(stripeEvent.data.object as StripeSessionObject),
                                 id: uuidv4(),
                                 payment_status: "paid",
@@ -303,7 +303,7 @@ describe(`Test AcceptPayment is queued properly by invoking the handler ${testSi
                 );
                 promises.push(p);
             }
-            for await (let response of promises) {
+            for await (const response of promises) {
                 if (response.statusCode !== 200) {
                     console.error("response", response.body);
                 }

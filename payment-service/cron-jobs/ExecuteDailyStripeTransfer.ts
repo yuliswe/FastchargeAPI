@@ -20,16 +20,16 @@ type EventDetail = {
  * @returns
  */
 async function handle(event: EventBridgeEvent<string, EventDetail>, context: never, callback: never) {
-    let batched = createDefaultContextBatched();
+    const batched = createDefaultContextBatched();
     let isDryRun = true;
     let detail = event.detail;
     if (typeof detail === "string") {
         detail = JSON.parse(detail);
     }
     isDryRun = detail?.dryRun ?? true;
-    let due = new Date();
+    const due = new Date();
     due.setHours(0, 0, 0, 0);
-    let pendingTransfers = await batched.StripeTransfer.many(
+    const pendingTransfers = await batched.StripeTransfer.many(
         {
             status: "pending",
             transferAt: { lt: due.getTime() },
@@ -41,12 +41,12 @@ async function handle(event: EventBridgeEvent<string, EventDetail>, context: nev
     console.log(chalk.yellow(`Found ${pendingTransfers.length} pending transfers`));
     let total = new Decimal(0);
     let failureCount = 0;
-    let chunkSize = 10;
+    const chunkSize = 10;
     for (let i = 0; i < pendingTransfers.length; i += chunkSize) {
-        let chunk = pendingTransfers.slice(i, Math.min(pendingTransfers.length, i + chunkSize));
+        const chunk = pendingTransfers.slice(i, Math.min(pendingTransfers.length, i + chunkSize));
 
-        let promises = chunk.map(async (transfer) => {
-            let receiver = await batched.User.get(UserPK.parse(transfer.receiver));
+        const promises = chunk.map(async (transfer) => {
+            const receiver = await batched.User.get(UserPK.parse(transfer.receiver));
             if (!receiver.stripeConnectAccountId) {
                 // User did not connect their Stripe account yet
                 return;
@@ -62,7 +62,7 @@ async function handle(event: EventBridgeEvent<string, EventDetail>, context: nev
                     status: "transferred",
                 });
                 try {
-                    let stripeClient = await getStripeClient();
+                    const stripeClient = await getStripeClient();
                     await stripeClient.transfers.create({
                         amount: new Decimal(transfer.receiveAmount).mul(100).toInteger().toNumber(),
                         currency: "usd",

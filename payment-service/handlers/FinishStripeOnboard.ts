@@ -14,18 +14,18 @@ const chalk = new Chalk({ level: 3 });
 const batched = createDefaultContextBatched();
 
 async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredResultV2> {
-    let stripeEvent = await parseStripeWebhookEvent(event);
+    const stripeEvent = await parseStripeWebhookEvent(event);
     console.log("stripeEvent", chalk.blue(JSON.stringify(stripeEvent)));
 
     switch (stripeEvent.type) {
         case "account.updated": {
-            let accountUpdatedObject = stripeEvent.data.object as Stripe.Account;
-            let userEmail = accountUpdatedObject.email;
+            const accountUpdatedObject = stripeEvent.data.object as Stripe.Account;
+            const userEmail = accountUpdatedObject.email;
             if (!userEmail) {
                 throw new Error("No email on stripeEvent.data.object.email");
             }
 
-            let user = await batched.User.get({ email: userEmail }, { using: GQLUserIndex.IndexByEmailOnlyPk });
+            const user = await batched.User.get({ email: userEmail }, { using: GQLUserIndex.IndexByEmailOnlyPk });
             await batched.User.update(user, {
                 stripeConnectAccountId: accountUpdatedObject.id,
             });

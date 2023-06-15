@@ -86,7 +86,7 @@ describe("Test a succesful withdraw to Stripe", () => {
     });
 
     test("Create a StripeTransfer via SQS", async () => {
-        let response = await CreateStripeTransfer(
+        const response = await CreateStripeTransfer(
             makeLambdaEvent({
                 userPK: UserPK.stringify(testUser),
                 body: JSON.stringify({
@@ -126,7 +126,7 @@ describe("Test a succesful withdraw to Stripe", () => {
             await new Promise((resolve) => setTimeout(resolve, 10_000));
         }
         expect(stripeTransfer).toBeDefined();
-        let accountActivity = await context.batched.AccountActivity.get(
+        const accountActivity = await context.batched.AccountActivity.get(
             AccountActivityPK.parse(stripeTransfer!.accountActivity)
         );
         expect(accountActivity.status).toEqual("settled");
@@ -168,9 +168,9 @@ describe(`Test that the creation of StripeTransfer is properly queued, by making
     test(`Withdraw ${testSize} times asynchronously`, async () => {
         const batchSize = 10;
         async function doBatch(size: number) {
-            let promises = [];
+            const promises = [];
             for (let j = 0; j < size; j++) {
-                let p = CreateStripeTransfer(
+                const p = CreateStripeTransfer(
                     makeLambdaEvent({
                         userPK: UserPK.stringify(testUser),
                         body: JSON.stringify({
@@ -180,7 +180,7 @@ describe(`Test that the creation of StripeTransfer is properly queued, by making
                 );
                 promises.push(p);
             }
-            for await (let response of promises) {
+            for await (const response of promises) {
                 if (response.statusCode !== 200) {
                     console.error("response", response.body);
                 }

@@ -20,8 +20,8 @@ export async function getStripeClient() {
  * Stripe.
  */
 export async function parseStripeWebhookEvent(lambdaEvent: LambdaEventV2): Promise<Stripe.Event> {
-    let stripeClient = await getStripeClient();
-    let signature: string | undefined =
+    const stripeClient = await getStripeClient();
+    const signature: string | undefined =
         lambdaEvent.headers["Stripe-Signature"] || lambdaEvent.headers["stripe-signature"];
     if (!signature) {
         throw new Error("Missing Stripe-Signature header");
@@ -30,13 +30,13 @@ export async function parseStripeWebhookEvent(lambdaEvent: LambdaEventV2): Promi
         throw new Error("Missing body");
     }
 
-    let stripeEndpointSecret = await getParameterFromAWSSystemsManager(
+    const stripeEndpointSecret = await getParameterFromAWSSystemsManager(
         "payment.stripe.endpoint_secret.accept-stripe-payment"
     );
     if (!stripeEndpointSecret) {
         throw new Error("Missing Stripe endpoint secret");
     }
 
-    let stripeEvent = stripeClient.webhooks.constructEvent(lambdaEvent.body, signature, stripeEndpointSecret);
+    const stripeEvent = stripeClient.webhooks.constructEvent(lambdaEvent.body, signature, stripeEndpointSecret);
     return stripeEvent;
 }

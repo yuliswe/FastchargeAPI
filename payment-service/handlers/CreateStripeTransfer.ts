@@ -154,7 +154,7 @@ function parseBody(event: LambdaEventV2): {
     errorResponse?: LambdaResultV2;
 } {
     try {
-        let { withdraw: withdrawStr } = JSON.parse(event.body ?? "{}");
+        const { withdraw: withdrawStr } = JSON.parse(event.body ?? "{}");
         if (!withdrawStr) {
             return {
                 errorResponse: {
@@ -165,7 +165,7 @@ function parseBody(event: LambdaEventV2): {
                 },
             };
         }
-        let withdraw = new Decimal(withdrawStr);
+        const withdraw = new Decimal(withdrawStr);
         return { bodyData: { withdraw } };
     } catch (e) {
         return {
