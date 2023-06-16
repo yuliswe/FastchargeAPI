@@ -18,8 +18,8 @@ class LoadSubscriptions extends AppEvent<RootAppState> {
 
     subscriptions: UserSubscription[] = [];
     async *run(state: RootAppState): AppEventStream<RootAppState> {
-        let { client, currentUser } = await getGQLClient(this.context);
-        let result = await client.query<GQLGetUserSubscriptionsQuery, GQLGetUserSubscriptionsQueryVariables>({
+        const { client, currentUser } = await getGQLClient(this.context);
+        const result = await client.query<GQLGetUserSubscriptionsQuery, GQLGetUserSubscriptionsQueryVariables>({
             query: gql`
                 query GetUserSubscriptions($user: ID!) {
                     user(pk: $user) {

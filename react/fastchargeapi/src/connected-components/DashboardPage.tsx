@@ -152,7 +152,7 @@ class _DashboardPage extends React.Component<Props, State> {
     }
 
     date(activity: AccountActivity): string {
-        let date = new Date(activity.createdAt);
+        const date = new Date(activity.createdAt);
         return date.toLocaleDateString() + " " + date.toLocaleTimeString();
     }
 
@@ -167,11 +167,11 @@ class _DashboardPage extends React.Component<Props, State> {
     eta(activity: AccountActivity): string {
         if (activity.reason === GQLAccountActivityReason.Payout) {
             if (activity.stripeTransfer?.transferAt) {
-                let date = new Date(activity.stripeTransfer?.transferAt);
+                const date = new Date(activity.stripeTransfer?.transferAt);
                 return date.toDateString();
             }
         } else if (activity.status === GQLAccountActivityStatus.Pending && activity.settleAt) {
-            let date = new Date(activity.settleAt);
+            const date = new Date(activity.settleAt);
             return date.toDateString();
         }
         return "";
@@ -204,7 +204,7 @@ class _DashboardPage extends React.Component<Props, State> {
         }
         const values: number[] = [];
         const labels: string[] = [];
-        for (let [index, v] of this.accountHistory().entries()) {
+        for (const [index, v] of this.accountHistory().entries()) {
             values.push(Number.parseFloat(v.closingBalance));
             labels.push(new Date(v.closingTime).toLocaleDateString());
         }

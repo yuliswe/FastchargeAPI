@@ -29,7 +29,7 @@ export type MyAppDetailPageParams = { app: string };
 
 export function buildSearchParams(query: any): string {
     const search = new URLSearchParams();
-    for (let key of Object.keys(query)) {
+    for (const key of Object.keys(query)) {
         search.set(key, query[key]);
     }
     return search.toString();

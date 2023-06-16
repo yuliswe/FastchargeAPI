@@ -86,7 +86,7 @@ export class StepsCarousel<T> extends React.Component<StepsCarouselProps<T>, _St
 
     renderChildren() {
         const children = [];
-        for (let [i, p] of this.props.pages.entries()) {
+        for (const [i, p] of this.props.pages.entries()) {
             children.push(
                 <Box
                     key={2 * i}

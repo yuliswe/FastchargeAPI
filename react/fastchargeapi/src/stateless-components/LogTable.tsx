@@ -60,19 +60,19 @@ export class LogTable<Activity> extends React.Component<LogTableProps<Activity>,
     }
 
     activityPageNum(): number {
-        let p = this._context.route.query.get(`${this.props.urlNamespace}page`);
+        const p = this._context.route.query.get(`${this.props.urlNamespace}page`);
         return p ? Number.parseInt(p) : 1;
     }
 
     activityRange(): number {
-        let d = this._context.route.query.get(`${this.props.urlNamespace}date`);
+        const d = this._context.route.query.get(`${this.props.urlNamespace}date`);
         return d ? Number.parseInt(d) : Date.now();
     }
 
     handleActivityDateChange = (date: Date | null) => {
         // date is in local time, we want to set it to UTC
         date = date || new Date();
-        let utc = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+        const utc = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
         utc.setHours(23, 59, 59, 999);
         this._context.route.updateQuery({
             [`${this.props.urlNamespace}date`]: date.getTime().toString(),
@@ -84,7 +84,7 @@ export class LogTable<Activity> extends React.Component<LogTableProps<Activity>,
     };
 
     currentPageActivities() {
-        let start = (this.activityPageNum() - 1) * this.props.activitiesPerPage;
+        const start = (this.activityPageNum() - 1) * this.props.activitiesPerPage;
         return this.props.activities.slice(start, start + this.props.activitiesPerPage);
     }
 

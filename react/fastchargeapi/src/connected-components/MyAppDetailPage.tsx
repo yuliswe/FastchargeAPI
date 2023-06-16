@@ -314,7 +314,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                             color="secondary"
                                             checked={this.state.pricingCheckboxes.has(pricing.pk)}
                                             onChange={(e, checked) => {
-                                                let newState = new Set(this.state.pricingCheckboxes);
+                                                const newState = new Set(this.state.pricingCheckboxes);
                                                 if (checked) {
                                                     newState.add(pricing.pk);
                                                     this.setState({
@@ -489,7 +489,7 @@ class _MyAppDetailPage extends React.Component<_Props, _State> {
                                             color="secondary"
                                             checked={this.state.endpointCheckboxes.has(api.pk)}
                                             onChange={(e, checked) => {
-                                                let newState = new Set(this.state.endpointCheckboxes);
+                                                const newState = new Set(this.state.endpointCheckboxes);
                                                 if (checked) {
                                                     newState.add(api.pk);
                                                     this.setState({

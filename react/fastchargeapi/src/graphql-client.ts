@@ -92,7 +92,7 @@ export async function encryptAndSign(
     // if (!jwtSecret) {
     //     jwtSecret = createSecret();
     // }
-    let encrypted = await new jose.EncryptJWT(body)
+    const encrypted = await new jose.EncryptJWT(body)
         .setIssuedAt()
         .setIssuer("fastchargeapi.com")
         .setAudience("fastchargeapi.com")
@@ -102,7 +102,7 @@ export async function encryptAndSign(
         })
         .encrypt(jweSecret);
 
-    let signed = await new jose.SignJWT({
+    const signed = await new jose.SignJWT({
         encrypted,
     })
         .setProtectedHeader({
@@ -133,7 +133,7 @@ export async function setRemoteSecret(
         jwtSecret: Uint8Array;
     }
 ) {
-    let signedValue = await encryptAndSign(value, { jweSecret, jwtSecret });
+    const signedValue = await encryptAndSign(value, { jweSecret, jwtSecret });
     const { client } = await getGQLClient(context);
     const response = await client.mutate({
         mutation: gql`

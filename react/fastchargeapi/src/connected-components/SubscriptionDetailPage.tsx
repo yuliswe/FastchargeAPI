@@ -55,7 +55,7 @@ class _SubscriptionDetailPage extends React.Component<_Props, _State> {
     }
 
     getAppNameFromUrl(): string {
-        let app = this._context.route.params["app"];
+        const app = this._context.route.params["app"];
         if (!app) {
             throw new Error("App name is missing from url");
         }

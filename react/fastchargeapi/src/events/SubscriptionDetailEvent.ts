@@ -26,8 +26,8 @@ class LoadAvailablePlans extends AppEvent<RootAppState> {
     }
     availablePlans: AvailablePlan[] = [];
     async *run(state: RootAppState): AppEventStream<RootAppState> {
-        let { client, currentUser } = await getGQLClient(this.context);
-        let result = await client.query<GQLGetAvailablePlansQuery, GQLGetAvailablePlansQueryVariables>({
+        const { client, currentUser } = await getGQLClient(this.context);
+        const result = await client.query<GQLGetAvailablePlansQuery, GQLGetAvailablePlansQueryVariables>({
             query: gql`
                 query GetAvailablePlans($appName: String!) {
                     app(name: $appName) {
@@ -69,8 +69,8 @@ class LoadUserSubscription extends AppEvent<RootAppState> {
     }
     subscriptionDetail: SubscriptionDetail | null = null;
     async *run(state: RootAppState): AppEventStream<RootAppState> {
-        let { client, currentUser } = await getGQLClient(this.context);
-        let result = await client.query<GQLGetUserSubscriptionDetailQuery, GQLGetUserSubscriptionDetailQueryVariables>({
+        const { client, currentUser } = await getGQLClient(this.context);
+        const result = await client.query<GQLGetUserSubscriptionDetailQuery, GQLGetUserSubscriptionDetailQueryVariables>({
             query: gql`
                 query GetUserSubscriptionDetail($user: ID!, $appName: String!) {
                     subscription(subscriber: $user, app: $appName) {
@@ -109,8 +109,8 @@ class LoadAppInfo extends AppEvent<RootAppState> {
 
     appInfo: AppInfo | null = null;
     async *run(state: RootAppState): AppEventStream<RootAppState> {
-        let { client, currentUser } = await getGQLClient(this.context);
-        let result = await client.query<
+        const { client, currentUser } = await getGQLClient(this.context);
+        const result = await client.query<
             GQLGetSubscriptionDetailAppInfoQuery,
             GQLGetSubscriptionDetailAppInfoQueryVariables
         >({
@@ -151,8 +151,8 @@ class LoadUsageSummary extends AppEvent<RootAppState> {
 
     usageSummary: UsageSummary[] = [];
     async *run(state: RootAppState): AppEventStream<RootAppState> {
-        let { client, currentUser } = await getGQLClient(this.context);
-        let result = await client.query<GQLGetUsageSummaryQuery, GQLGetUsageSummaryQueryVariables>({
+        const { client, currentUser } = await getGQLClient(this.context);
+        const result = await client.query<GQLGetUsageSummaryQuery, GQLGetUsageSummaryQueryVariables>({
             query: gql`
                 query GetUsageSummary($user: ID!, $appName: ID!, $dateRange: DateRangeInput) {
                     user(pk: $user) {

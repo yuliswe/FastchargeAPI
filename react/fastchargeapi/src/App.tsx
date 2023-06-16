@@ -67,7 +67,7 @@ function WithRouteContext(props: WithRouteContextProps) {
         });
 
         async function sendPing() {
-            let { client, currentUser } = await getGQLClient(context);
+            const { client, currentUser } = await getGQLClient(context);
             await client.mutate({
                 mutation: gql`
                     mutation SendPing {
@@ -101,7 +101,7 @@ function WithRouteContext(props: WithRouteContextProps) {
                     setQuery: setSearchParam,
                     updateQuery: (newQuery: { [key: string]: string | null | undefined }) => {
                         const search = new URLSearchParams(searchParam);
-                        for (let key of Object.keys(newQuery)) {
+                        for (const key of Object.keys(newQuery)) {
                             if (newQuery[key] == null) {
                                 search.delete(key);
                             } else {

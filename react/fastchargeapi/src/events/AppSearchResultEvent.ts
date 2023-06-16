@@ -25,8 +25,8 @@ class SearchResultEvent extends AppEvent<RootAppState> {
 
     public response: SearchResult[] = [];
     async *run(state: RootAppState): AppEventStream<RootAppState> {
-        let { client, currentUser } = await getGQLClient(this.context);
-        let result = await client.query<GQLAppFullTextSearchQuery, GQLAppFullTextSearchQueryVariables>({
+        const { client, currentUser } = await getGQLClient(this.context);
+        const result = await client.query<GQLAppFullTextSearchQuery, GQLAppFullTextSearchQueryVariables>({
             query: gql`
                 query appFullTextSearch($query: String, $tag: String, $orderBy: AppFullTextSearchOrderBy) {
                     appFullTextSearch(query: $query, tag: $tag, orderBy: $orderBy) {

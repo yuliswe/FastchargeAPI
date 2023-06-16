@@ -17,8 +17,8 @@ class LoadAppInfo extends AppEvent<RootAppState> {
 
     appDetail: MyAppDetail | null = null;
     async *run(state: RootAppState): AppEventStream<RootAppState> {
-        let { client, currentUser } = await getGQLClient(this.context);
-        let result = await client.query<GQLMyAppGetDetailQuery, GQLMyAppGetDetailQueryVariables>({
+        const { client, currentUser } = await getGQLClient(this.context);
+        const result = await client.query<GQLMyAppGetDetailQuery, GQLMyAppGetDetailQueryVariables>({
             query: gql(`
                     query MyAppGetDetail($appName: String!) {
                         app(name: $appName) {

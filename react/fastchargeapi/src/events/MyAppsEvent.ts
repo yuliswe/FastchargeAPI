@@ -22,8 +22,8 @@ class LoadMyApps extends AppEvent<RootAppState> {
     apps: UserApp[] = [];
     authorName = "";
     async *run(state: RootAppState): AppEventStream<RootAppState> {
-        let { client, currentUser } = await getGQLClient(this.context);
-        let result = await client.query<GQLGetUserAppsQuery, GQLGetUserAppsQueryVariables>({
+        const { client, currentUser } = await getGQLClient(this.context);
+        const result = await client.query<GQLGetUserAppsQuery, GQLGetUserAppsQueryVariables>({
             query: gql`
                 query GetUserApps($user: ID!) {
                     user(pk: $user) {

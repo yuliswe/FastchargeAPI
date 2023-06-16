@@ -24,16 +24,16 @@ class LoadAppInfo extends AppEvent<RootAppState> {
     }
 
     async getReadmeFileContent(url: string): Promise<string> {
-        let contentUrl = url.replace(/blob\//, "").replace(/github.com/, "raw.githubusercontent.com");
-        let content = await fetch(contentUrl, { method: "GET" });
+        const contentUrl = url.replace(/blob\//, "").replace(/github.com/, "raw.githubusercontent.com");
+        const content = await fetch(contentUrl, { method: "GET" });
         return content.text();
     }
 
     appInfo: AppDetailInfo | null = null;
     appReadmeContent: string | null = null;
     async *run(state: RootAppState): AppEventStream<RootAppState> {
-        let { client, currentUser } = await getGQLClient(this.context);
-        let result = await client.query({
+        const { client, currentUser } = await getGQLClient(this.context);
+        const result = await client.query({
             query: gql`
                 query AppDetailLoadAppInfo($app: ID!) {
                     app(pk: $app) {
@@ -90,8 +90,8 @@ class LoadPricings extends AppEvent<RootAppState> {
 
     pricingPlans: AppDetailPricing[] = [];
     async *run(state: RootAppState): AppEventStream<RootAppState> {
-        let { client, currentUser } = await getGQLClient(this.context);
-        let result = await client.query({
+        const { client, currentUser } = await getGQLClient(this.context);
+        const result = await client.query({
             query: gql`
                 query AppDetailLoadPricings($app: ID!) {
                     app(pk: $app) {
@@ -137,8 +137,8 @@ class LoadEndpoints extends AppEvent<RootAppState> {
 
     endpoints: AppDetailEndpoint[] = [];
     async *run(state: RootAppState): AppEventStream<RootAppState> {
-        let { client, currentUser } = await getGQLClient(this.context);
-        let result = await client.query<GQLAppDetailLoadEndpointsQuery, GQLAppDetailLoadEndpointsQueryVariables>({
+        const { client, currentUser } = await getGQLClient(this.context);
+        const result = await client.query<GQLAppDetailLoadEndpointsQuery, GQLAppDetailLoadEndpointsQueryVariables>({
             query: gql`
                 query AppDetailLoadEndpoints($app: ID!) {
                     app(pk: $app) {

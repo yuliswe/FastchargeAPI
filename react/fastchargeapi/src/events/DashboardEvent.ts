@@ -29,8 +29,8 @@ class LoadUserInfo extends AppEvent<RootAppState> {
 
     accountInfo: UserAccountInfo | null = null;
     async *run(state: RootAppState): AppEventStream<RootAppState> {
-        let { client, currentUser } = await getGQLClient(this.context);
-        let result = await client.query<GQLGetAccountInfoQuery, GQLGetAccountInfoQueryVariables>({
+        const { client, currentUser } = await getGQLClient(this.context);
+        const result = await client.query<GQLGetAccountInfoQuery, GQLGetAccountInfoQueryVariables>({
             query: gql`
                 query GetAccountInfo($user: ID!) {
                     user(pk: $user) {
@@ -74,8 +74,8 @@ class LoadActivities extends AppEvent<RootAppState> {
     activities: AccountActivity[] = [];
 
     async *run(state: RootAppState): AppEventStream<RootAppState> {
-        let { client, currentUser } = await getGQLClient(this.context);
-        let result = await client.query<GQLGetAccountActivitiesQuery, GQLGetAccountActivitiesQueryVariables>({
+        const { client, currentUser } = await getGQLClient(this.context);
+        const result = await client.query<GQLGetAccountActivitiesQuery, GQLGetAccountActivitiesQueryVariables>({
             query: gql`
                 query GetAccountActivities($user: ID!, $dateRange: DateRangeInput!) {
                     user(pk: $user) {
@@ -139,8 +139,8 @@ class LoadAccountHistory extends AppEvent<RootAppState> {
 
     accountHistories: AccountHistory[] = [];
     async *run(state: RootAppState): AppEventStream<RootAppState> {
-        let { client, currentUser } = await getGQLClient(this.context);
-        let result = await client.query<GQLGetAccountHistoriesQuery, GQLGetAccountHistoriesQueryVariables>({
+        const { client, currentUser } = await getGQLClient(this.context);
+        const result = await client.query<GQLGetAccountHistoriesQuery, GQLGetAccountHistoriesQueryVariables>({
             query: gql`
                 query GetAccountHistories($user: ID!, $dateRange: DateRangeInput!) {
                     user(pk: $user) {
@@ -178,7 +178,7 @@ class SendStripeLoginLink extends AppEvent<RootAppState> {
 
     reducer(state: RootAppState): RootAppState {
         let res!: (value: string) => void;
-        let linkPromise = new Promise<string>((resolve, reject) => {
+        const linkPromise = new Promise<string>((resolve, reject) => {
             res = resolve;
         });
         return state.mapState({

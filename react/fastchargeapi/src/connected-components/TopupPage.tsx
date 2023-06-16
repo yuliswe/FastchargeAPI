@@ -55,7 +55,7 @@ class _TopUp extends React.Component<_Props, _State> {
     }
 
     urlIsAllowed(url: string): boolean {
-        let parsedUrl = new URL(url);
+        const parsedUrl = new URL(url);
         return parsedUrl.host === document.location.host || parsedUrl.host === "localhost";
     }
 
@@ -98,7 +98,7 @@ class _TopUp extends React.Component<_Props, _State> {
      * }
      */
     async postResultToCli() {
-        let key = this._context.route.query.get("key") || "";
+        const key = this._context.route.query.get("key") || "";
         if (!key) {
             throw new Error("key is missing from the url");
         }
@@ -137,7 +137,7 @@ class _TopUp extends React.Component<_Props, _State> {
     }
 
     getBackendUrl(): string {
-        let url = new URL(`${paymentServiceBaseURL}/get-stripe-checkout-link`);
+        const url = new URL(`${paymentServiceBaseURL}/get-stripe-checkout-link`);
         return url.href;
     }
 
@@ -177,7 +177,7 @@ class _TopUp extends React.Component<_Props, _State> {
                         cancelUrl: this.getCancelUrl(),
                     }),
                 });
-                let { location } = await response.json();
+                const { location } = await response.json();
                 document.location.href = location;
                 if (!location) {
                     throw new Error("location is missing from the response");

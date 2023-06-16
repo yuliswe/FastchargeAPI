@@ -33,7 +33,7 @@ class _Onboard extends React.Component<_Props, _State> {
     }
 
     urlIsAllowed(url: string): boolean {
-        let parsedUrl = new URL(url);
+        const parsedUrl = new URL(url);
         return parsedUrl.host === document.location.host || parsedUrl.host === "localhost";
     }
 
@@ -97,7 +97,7 @@ class _Onboard extends React.Component<_Props, _State> {
             if (this.getPostResultUrl()) {
                 await this.postResultToCli();
             }
-            let redirect = this.getRedirectUrl();
+            const redirect = this.getRedirectUrl();
             if (redirect) {
                 document.location.href = redirect;
             }

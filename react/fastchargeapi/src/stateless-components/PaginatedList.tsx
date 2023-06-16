@@ -20,12 +20,12 @@ export class PaginatedList<T> extends React.Component<PaginatedListProps<T>> {
     }
 
     currentPageNum(): number {
-        let p = this._context.route.query.get(`${this.props.urlNamespace}page`);
+        const p = this._context.route.query.get(`${this.props.urlNamespace}page`);
         return Math.min(p ? Number.parseInt(p) : 1, this.totalNumOfPages());
     }
 
     currentPageSourceItems() {
-        let start = (this.currentPageNum() - 1) * this.props.itemsPerPage;
+        const start = (this.currentPageNum() - 1) * this.props.itemsPerPage;
         return this.props.sourceItems.slice(start, start + this.props.itemsPerPage);
     }
 

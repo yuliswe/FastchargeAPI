@@ -37,7 +37,7 @@ class _AccountPage extends React.Component<Props> {
     }
 
     links(): DashboardLink[] {
-        let currentPath = this._context.route?.location.pathname;
+        const currentPath = this._context.route?.location.pathname;
         return [
             {
                 text: "Dashboard",

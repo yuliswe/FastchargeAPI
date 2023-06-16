@@ -1,7 +1,7 @@
 import { AppContext } from "./AppContext";
 
 export async function fetchWithAuth(context: AppContext, url: RequestInfo, options?: RequestInit) {
-    let u = await context.firebase.userPromise;
+    const u = await context.firebase.userPromise;
     if (!u) {
         throw new Error("fetchWithAuth: Not logged in");
     }

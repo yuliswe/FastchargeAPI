@@ -47,8 +47,8 @@ class _TermsPage extends React.Component<_Props, _State> {
     }
 
     render(): React.ReactNode {
-        let titleWidth = 4;
-        let contentWidth = 12 - titleWidth;
+        const titleWidth = 4;
+        const contentWidth = 12 - titleWidth;
         return (
             <SiteLayout>
                 <Container maxWidth="lg" sx={{ my: 10 }}>

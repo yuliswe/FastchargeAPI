@@ -39,7 +39,7 @@ class _AuthPage extends React.Component<_Props, _State> {
     }
 
     getRedirectUrl(): string | null {
-        let redirectUrl = this._context.route?.query.get("redirect");
+        const redirectUrl = this._context.route?.query.get("redirect");
         return redirectUrl;
     }
 
@@ -80,7 +80,7 @@ class _AuthPage extends React.Component<_Props, _State> {
     }
 
     getSignInSuccessUrl(): string {
-        let signInSuccessUrl = new URL(window.location.href);
+        const signInSuccessUrl = new URL(window.location.href);
         signInSuccessUrl.searchParams.set("success", "true");
         return signInSuccessUrl.href;
     }
@@ -97,22 +97,22 @@ class _AuthPage extends React.Component<_Props, _State> {
         switch (this.behavior) {
             // Redirect to the redirect url after authentication
             case "redirect": {
-                let redirect = this.getRedirectUrl();
+                const redirect = this.getRedirectUrl();
                 if (!redirect) {
                     throw new Error("No redirect url provided");
                 }
                 setTimeout(() => {
                     // IDK why there has to be a delay or else the navigate function throws an exception
-                    this._context.route.navigate(redirect!, { replace: true });
+                    this._context.route.navigate(redirect, { replace: true });
                 }, 0);
                 break;
             }
             case "putsecret": {
-                let key = this.getBucketKey();
+                const key = this.getBucketKey();
                 if (!key) {
                     throw new Error("No bucket key provided");
                 }
-                let idToken = await user.getIdToken(/* forceRefresh */ true);
+                const idToken = await user.getIdToken(/* forceRefresh */ true);
                 await setRemoteSecret(
                     this._context,
                     {
@@ -144,7 +144,7 @@ class _AuthPage extends React.Component<_Props, _State> {
             });
         }
 
-        let user = await this._context.firebase.userPromise;
+        const user = await this._context.firebase.userPromise;
         if (!user.isAnonymous) {
             await this.onLoginSucceed(user);
         }
@@ -186,11 +186,11 @@ class _AuthPage extends React.Component<_Props, _State> {
         } catch (e) {
             if (e instanceof FirebaseError) {
                 if (e.code === "auth/account-exists-with-different-credential") {
-                    let email = e.customData?.email as string | undefined;
+                    const email = e.customData?.email as string | undefined;
                     if (!email) {
                         throw new Error("auth/account-exists-with-different-credential error does not have an email");
                     }
-                    let credential = this.credentialFromError(provider, e);
+                    const credential = this.credentialFromError(provider, e);
                     if (!credential) {
                         throw new Error(
                             "auth/account-exists-with-different-credential error does not have a credential"
@@ -223,12 +223,12 @@ class _AuthPage extends React.Component<_Props, _State> {
     }
 
     handleGoogleSignIn() {
-        let provider = new GoogleAuthProvider();
+        const provider = new GoogleAuthProvider();
         void this.handleSignIn(provider);
     }
 
     handleGithubSignIn() {
-        let provider = new GithubAuthProvider();
+        const provider = new GithubAuthProvider();
         provider.addScope("user:email");
         void this.handleSignIn(provider);
     }
