@@ -89,8 +89,10 @@ const resolvers: GQLResolvers = {
         ...userAppTokenResolvers.Mutation,
         ...siteMetaDataResolvers.Mutation,
 
-        async ping(): Promise<boolean> {
-            await wakeUpAurora();
+        ping(): boolean {
+            void wakeUpAurora().catch((err) => {
+                console.error(err);
+            });
             return true;
         },
     },
