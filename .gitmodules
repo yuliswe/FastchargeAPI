@@ -1,0 +1,3 @@
+[submodule "fastchargeapi-cli"]
+	path = fastchargeapi-cli
+	url = https://github.com/FastchargeAPI/fastchargeapi-cli.git
