@@ -14,6 +14,9 @@ mutation CreateUsageLogAndTriggerBilling($user: ID!, $app: ID!, $path: String!, 
     createUsageLog(subscriber: $user, app: $app, path: $path, pricing: $pricing) {
         createdAt
     }
+}
+
+mutation TriggerBilling($user: ID!, $app: ID!) {
     triggerBilling(user: $user, app: $app) {
         createdAt
     }

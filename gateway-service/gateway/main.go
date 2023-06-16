@@ -428,6 +428,20 @@ func billUsage(graphqlClient *graphql.Client, user string, app string, path stri
 	); err != nil {
 		fmt.Println(color.Red, "Error CreateUsageLogAndTriggerBilling: ", err, color.Reset)
 	}
+	sqsClient := getSQSGraphQLClient(SQSGraphQLClientConfig{
+		QueueName:              UsageLogQueue,
+		MessageGroupId:         user,
+		MessageDeduplicationId: fmt.Sprintf("triggerBilling-%s-%s", user, app),
+	})
+	if _, err := GQL.TriggerBilling(
+		context.Background(),
+		*sqsClient,
+		user,
+		app,
+	); err != nil {
+		fmt.Println(color.Red, "Error TriggerBilling: ", err, color.Reset)
+	}
+
 }
 
 func apiGatewayErrorResponse(code int, reason string, message string) *events.APIGatewayProxyResponse {
@@ -480,11 +494,4 @@ func getGatewayRequestDecision(graphqlClient *graphql.Client, userEmail string, 
 
 	errorResponse = apiGatewayErrorResponse(401, "UNKNOWN_REASON", "You are not allowed to access this endpoint.")
 	return decision, errorResponse
-}
-
-func getPublicKey() []byte {
-	return []byte(`-----BEGIN PUBLIC KEY-----
-    MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE9CR7SW0cTqQBG1vxWnkjk5dO7zfv
-    UeueXgubjSD6i6vcmHdetZ25/ItESQDBmX0LL2qYaPzqTJHbWKxqL+6CtA==
-    -----END PUBLIC KEY-----`)
 }

@@ -304,7 +304,6 @@ Resources:
           Properties:
             Queue: !GetAtt UsageLogQueue.Arn
             BatchSize: 10
-            MaximumBatchingWindowInSeconds: 10
             FunctionResponseTypes:
               - ReportBatchItemFailures
         BillingQueueEvent:
@@ -325,10 +324,14 @@ Resources:
   UsageLogQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: graphql-service-usage-log-queue
+      QueueName: graphql-service-usage-log-queue.fifo
+      FifoQueue: true
+      DelaySeconds: 5
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt UsageLogDeadLetterQueue.Arn
         maxReceiveCount: 3
+      DeduplicationScope: messageGroup
+      FifoThroughputLimit: perMessageGroupId
       Tags:
         - Key: service-name
           Value: graphql-service
@@ -336,7 +339,8 @@ Resources:
   UsageLogDeadLetterQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: graphql-service-usage-log-dead-letter-queue
+      QueueName: graphql-service-usage-log-dead-letter-queue.fifo
+      FifoQueue: true
       VisibilityTimeout: 0
       Tags:
         - Key: service-name
@@ -347,10 +351,11 @@ Resources:
     Properties:
       QueueName: graphql-service-billing-queue.fifo
       FifoQueue: true
-      DelaySeconds: 0 # Delay so that the billing is triggered after the UsageLogs are created
       RedrivePolicy:
         deadLetterTargetArn: !GetAtt BillingDeadLetterQueue.Arn
         maxReceiveCount: 1
+      DeduplicationScope: messageGroup
+      FifoThroughputLimit: perMessageGroupId
       Tags:
         - Key: service-name
           Value: graphql-service

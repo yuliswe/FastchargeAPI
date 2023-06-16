@@ -1,13 +1,13 @@
+import { gql } from "@apollo/client";
 import { EventBridgeEvent, EventBridgeHandler } from "aws-lambda";
 import { Chalk } from "chalk";
 import { createDefaultContextBatched } from "../RequestContext";
-import { GQLAccountActivityIndex } from "../__generated__/resolvers-types";
-import { SQSQueueUrl, sqsGQLClient } from "../sqsClient";
-import { gql } from "@apollo/client";
 import {
     GQLTriggerSettleAccountActivitiesForUsersQuery,
     GQLTriggerSettleAccountActivitiesForUsersQueryVariables,
 } from "../__generated__/operation-types";
+import { GQLAccountActivityIndex } from "../__generated__/resolvers-types";
+import { SQSQueueUrl, sqsGQLClient } from "../sqsClient";
 
 const chalk = new Chalk({ level: 3 });
 
@@ -30,7 +30,7 @@ async function handle(event: EventBridgeEvent<string, {}>, context: never, callb
     // Important Note: You must process the account activities in the Billing
     // queue, even though it is attempting to write to the AccountActivity
     // directly using the DB APi here.
-    const sqsClient = sqsGQLClient({ queueUrl: SQSQueueUrl.BillingFifoQueue });
+    const sqsClient = sqsGQLClient({ queueUrl: SQSQueueUrl.BillingQueue });
 
     for (const user of users) {
         try {

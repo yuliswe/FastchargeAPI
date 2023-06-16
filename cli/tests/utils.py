@@ -73,7 +73,7 @@ def add_money_for_user(user_pk: str, amount: str, wait: bool = True):
     try:
         GQL.add_money_to_user_account(
             get_sqs_graphql_client(
-                queue=PredefinedSQSQueue.billing_fifo_queue,
+                queue=PredefinedSQSQueue.billing_queue,
                 group_id=user_pk,
                 dedup_id=f"addMoneyForUser-{user_pk}-{uuid4().hex}",
             ),

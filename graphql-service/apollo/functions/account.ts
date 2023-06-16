@@ -44,7 +44,7 @@ export async function settleAccountActivitiesOnSQS(context: RequestContext, acco
     if (context.isSQSMessage) {
         throw new Error("settleAccountActivitiesOnSQS must not be called from SQS. It may cause an infinite loop.");
     }
-    const client = sqsGQLClient({ queueUrl: SQSQueueUrl.BillingFifoQueue, dedupId: accountUser, groupId: accountUser });
+    const client = sqsGQLClient({ queueUrl: SQSQueueUrl.BillingQueue, dedupId: accountUser, groupId: accountUser });
     await client.query<
         GQLTriggerSettleAccountActivitiesForUsersQuery,
         GQLTriggerSettleAccountActivitiesForUsersQueryVariables

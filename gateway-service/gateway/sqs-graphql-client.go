@@ -23,8 +23,8 @@ type SQSTransport struct {
 }
 
 const (
-	BillingFifoQueue = "graphql-service-billing-queue.fifo"
-	UsageLogQueue    = "graphql-service-usage-log-queue"
+	BillingQueue  = "graphql-service-billing-queue.fifo"
+	UsageLogQueue = "graphql-service-usage-log-queue.fifo"
 )
 
 func (self *SQSTransport) RoundTrip(req *http.Request) (*http.Response, error) {
@@ -85,9 +85,6 @@ func getSQSGraphQLClient(config SQSGraphQLClientConfig) *graphql.Client {
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region: aws.String("us-east-1"),
 	}))
-	if config.QueueName == BillingFifoQueue {
-		config.MessageGroupId = "main"
-	}
 	runtimeConfig := getRuntimeConfig()
 	baseClient := http.Client{
 		Transport: &SQSTransport{

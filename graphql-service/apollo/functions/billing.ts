@@ -6,7 +6,7 @@ import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { AppPK } from "../pks/AppPK";
 import { PricingPK } from "../pks/PricingPK";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
-import { settleAccountActivitiesOnSQS } from "./account";
+import { enforceCalledFromQueue, settleAccountActivitiesOnSQS } from "./account";
 import { collectUsageLogs } from "./usage";
 const chalk = new Chalk({ level: 3 });
 
@@ -322,6 +322,7 @@ export async function triggerBilling(
     context: RequestContext,
     { user, app }: { user: string; app: string }
 ): Promise<{ affectedUsageSummaries: UsageSummary[] }> {
+    enforceCalledFromQueue(context, user);
     await collectUsageLogs(context, { user, app });
     const uncollectedUsageSummaries = await context.batched.UsageSummary.many({
         subscriber: user,

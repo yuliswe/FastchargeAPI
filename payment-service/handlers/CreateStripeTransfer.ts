@@ -88,7 +88,7 @@ export async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStruc
     }
 
     const billingQueueClient = sqsGQLClient({
-        queueUrl: SQSQueueUrl.BillingFifoQueue,
+        queueUrl: SQSQueueUrl.BillingQueue,
         groupId: UserPK.stringify(user),
         dedupId: `createStripeTransfer-${UserPK.stringify(user)}-${event.requestContext.requestId}`,
     });

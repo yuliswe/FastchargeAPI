@@ -10,8 +10,8 @@ from requests import Response
 
 
 class PredefinedSQSQueue(Enum):
-    billing_fifo_queue = f"https://sqs.us-east-1.amazonaws.com/{aws_account_id}/graphql-service-billing-queue.fifo"
-    usage_log_queue = f"https://sqs.us-east-1.amazonaws.com/{aws_account_id}/graphql-service-usage-log-queue"
+    billing_queue = f"https://sqs.us-east-1.amazonaws.com/{aws_account_id}/graphql-service-billing-queue.fifo"
+    usage_log_queue = f"https://sqs.us-east-1.amazonaws.com/{aws_account_id}/graphql-service-usage-log-queue.fifo"
 
 
 class SQSHttpTransport(RequestsHTTPTransport):
@@ -85,13 +85,13 @@ def get_sqs_graphql_client(
     message.
 
     group_id: Only for fifo queues. Sets the MessageGroupId for the SQS message.
-    If the billing is PredefinedSQSQueue.billing_fifo_queue, you need to use
+    If the billing is PredefinedSQSQueue.billing_queue, you need to use
     "main" as the group_id.
 
     Effectively, MessageDeduplicationId deduplicates messages with the same ID.
     Messages with the same MessageGroupId are processed in FIFO order.
     """
-    if queue == PredefinedSQSQueue.billing_fifo_queue:
+    if queue == PredefinedSQSQueue.billing_queue:
         assert group_id and group_id.startswith(
             "user_"
         ), "When using the billing queue, use the user's pk as the group_id."

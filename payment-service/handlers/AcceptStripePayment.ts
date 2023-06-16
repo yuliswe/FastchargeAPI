@@ -174,7 +174,7 @@ async function createAndFufillOrder({
     amount: string;
 }): Promise<void> {
     const billingQueueClient = sqsGQLClient({
-        queueUrl: SQSQueueUrl.BillingFifoQueue,
+        queueUrl: SQSQueueUrl.BillingQueue,
         groupId: UserPK.stringify(user),
         dedupId: `createAndFufillOrder-${UserPK.stringify(user)}-${md5(session.id)}`,
     });
@@ -214,7 +214,7 @@ async function createOrder({
 }): Promise<void> {
     // console.log(chalk.yellow("Creating order"), email, amount, session);
     const billingQueueClient = sqsGQLClient({
-        queueUrl: SQSQueueUrl.BillingFifoQueue,
+        queueUrl: SQSQueueUrl.BillingQueue,
         groupId: UserPK.stringify(user),
         dedupId: md5(`${UserPK.stringify(user)}-createOrder-${session.id}`),
     });
@@ -244,7 +244,7 @@ async function fulfillOrder(session: StripeSessionObject, paymentAccept: StripeP
     // console.log(chalk.yellow("Fulfilling order"), paymentAccept, session);
     // Settling the payment must be done on the billing queue
     const billingQueueClient = sqsGQLClient({
-        queueUrl: SQSQueueUrl.BillingFifoQueue,
+        queueUrl: SQSQueueUrl.BillingQueue,
         groupId: paymentAccept.user,
         dedupId: md5(`${paymentAccept.user}-fulfillOrder-${session.id}`),
     });

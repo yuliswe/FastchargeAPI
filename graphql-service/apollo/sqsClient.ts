@@ -9,8 +9,8 @@ import { awsAccountId } from "./runtime-config";
 const cache = new InMemoryCache();
 
 export const SQSQueueUrl = {
-    BillingFifoQueue: `https://sqs.us-east-1.amazonaws.com/${awsAccountId}/graphql-service-billing-queue.fifo`,
-    UsageLogQueue: `https://sqs.us-east-1.amazonaws.com/${awsAccountId}/graphql-service-usage-log-queue`,
+    BillingQueue: `https://sqs.us-east-1.amazonaws.com/${awsAccountId}/graphql-service-billing-queue.fifo`,
+    UsageLogQueue: `https://sqs.us-east-1.amazonaws.com/${awsAccountId}/graphql-service-usage-log-queue.fifo`,
 };
 
 const sqsClient = new SQSClient({ region: "us-east-1" });
