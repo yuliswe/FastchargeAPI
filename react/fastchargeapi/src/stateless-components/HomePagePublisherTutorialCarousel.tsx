@@ -1,7 +1,7 @@
 import { HelpOutlineRounded } from "@mui/icons-material";
 import { Box, ButtonBase, IconButton, Paper, Popover, Typography } from "@mui/material";
 import React from "react";
-import Terminal, { ColorMode, TerminalInput } from "react-terminal-ui";
+import Terminal, { ColorMode, TerminalInput, TerminalOutput } from "react-terminal-ui";
 import { StepsCarousel } from "./StepsCarousel";
 
 type Step = {
@@ -13,6 +13,13 @@ type Step = {
 };
 const digits = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
 const steps: Step[] = [
+    {
+        title: "Install the fastchargeapi cli.",
+        input: [`pip3 install fastchargeapi-cli`],
+        output: ["Successfully installed fastchargeapi-cli-1.0.7."],
+        help: `This command installs the official CLI tools.`,
+        params: [],
+    },
     {
         title: "Create an app that will host your APIs.",
         input: [`fastcharge app create "my-first-app"`, `    --title "Hello world"`],
@@ -145,10 +152,14 @@ export class HomePagePublisherTutorialCarousel extends React.Component<HomePageP
                                         colorMode={index === currentPage ? ColorMode.Dark : ColorMode.Light}
                                         height="100%"
                                     >
-                                        <TerminalInput>{step.input.join(" \\\n")}</TerminalInput>
-                                        {/* <Box color="#3EC930" fontWeight={800} mt={1}>
-                        <TerminalOutput>{step.output.join("\n")}</TerminalOutput>
-                    </Box> */}
+                                        <TerminalInput>
+                                            <Box display="inline" sx={{ userSelect: "text", cursor: "text" }}>
+                                                {step.input.join(" \\\n")}
+                                            </Box>
+                                        </TerminalInput>
+                                        <Box mt={2} ml={2} sx={{ opacity: 0.6, fontSize: "0.9em", fontWeight: 500 }}>
+                                            <TerminalOutput>{step.output.join("\n")}</TerminalOutput>
+                                        </Box>
                                     </Terminal>
                                 </ButtonBase>
                             </Paper>
