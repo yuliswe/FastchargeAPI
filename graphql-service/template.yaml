@@ -332,6 +332,7 @@ Resources:
         maxReceiveCount: 3
       DeduplicationScope: messageGroup
       FifoThroughputLimit: perMessageGroupId
+      ReceiveMessageWaitTimeSeconds: 20 # enable long polling
       Tags:
         - Key: service-name
           Value: graphql-service
@@ -342,6 +343,7 @@ Resources:
       QueueName: graphql-service-usage-log-dead-letter-queue.fifo
       FifoQueue: true
       VisibilityTimeout: 0
+      ReceiveMessageWaitTimeSeconds: 20 # enable long polling
       Tags:
         - Key: service-name
           Value: graphql-service
@@ -356,6 +358,7 @@ Resources:
         maxReceiveCount: 1
       DeduplicationScope: messageGroup
       FifoThroughputLimit: perMessageGroupId
+      ReceiveMessageWaitTimeSeconds: 20 # enable long polling
       Tags:
         - Key: service-name
           Value: graphql-service
@@ -366,6 +369,7 @@ Resources:
       FifoQueue: true
       QueueName: graphql-service-billing-dead-letter-queue.fifo
       VisibilityTimeout: 0
+      ReceiveMessageWaitTimeSeconds: 20 # enable long polling
       Tags:
         - Key: service-name
           Value: graphql-service
