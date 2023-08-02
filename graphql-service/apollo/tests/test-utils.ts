@@ -27,6 +27,10 @@ export async function addMoneyForUser(
     );
 }
 
+/**
+ * Create a user with the given email for testing purposes.
+ * @returns Created user object.
+ */
 export async function getOrCreateTestUser(context: RequestContext, { email }: { email: string }) {
     let user = await context.batched.User.getOrNull({ email }, { using: GQLUserIndex.IndexByEmailOnlyPk });
     if (user === null) {

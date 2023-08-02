@@ -1,6 +1,7 @@
 import { Chalk } from "chalk";
 import Decimal from "decimal.js-light";
 import { RequestContext } from "../RequestContext";
+import { GQLUsageSummaryStatus } from "../__generated__/resolvers-types";
 import { AccountActivity, FreeQuotaUsage, Pricing, UsageSummary } from "../dynamoose/models";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { AppPK } from "../pks/AppPK";
@@ -62,7 +63,14 @@ export async function generateAccountActivities(
         } as GenerateAccountActivitiesResult["createdAccountActivities"],
         affectedFreeQuotaUsage: null,
     };
-    const pricing = await context.batched.Pricing.get(PricingPK.parse(usageSummary.pricing));
+    const pricing = await context.batched.Pricing.getOrNull(PricingPK.parse(usageSummary.pricing));
+    if (pricing == null) {
+        // Pricing was deleted
+        await context.batched.UsageSummary.update(usageSummary, {
+            status: GQLUsageSummaryStatus.Error,
+        });
+        throw new Error("Could not generate account activity for usage summary. Pricing was deleted.");
+    }
     const { volumeFree, volumeBillable, freeQuotaUsage } = await computeBillableVolume(context, {
         app: usageSummary.app,
         subscriber,
@@ -84,7 +92,7 @@ export async function generateAccountActivities(
     {
         // Process per-request charge
         const price = new Decimal(pricing.chargePerRequest);
-        usageSummary.status = "billed";
+        usageSummary.status = GQLUsageSummaryStatus.Billed;
         usageSummary.billedAt = Date.now();
         results.updatedUsageSummary = usageSummary;
 
@@ -327,7 +335,7 @@ export async function triggerBilling(
     const uncollectedUsageSummaries = await context.batched.UsageSummary.many({
         subscriber: user,
         app,
-        status: "pending",
+        status: GQLUsageSummaryStatus.Pending,
     });
 
     const appItem = await context.batched.App.get(AppPK.parse(app));

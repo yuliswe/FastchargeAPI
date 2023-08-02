@@ -49,6 +49,7 @@ enum AppFullTextSearchOrderBy {
 enum GatewayDecisionResponseReason {
     insufficient_balance
     owner_insufficient_balance
+    pricing_not_available
     not_subscribed
     too_many_requests
     unknown
@@ -85,7 +86,7 @@ type Mutation {
         minMonthlyCharge: NonNegativeDecimal!
         chargePerRequest: NonNegativeDecimal!
         freeQuota: Int!
-        visible: Boolean = false
+        availability: PricingAvailability!
         callToAction: String
     ): Pricing!
 
@@ -277,8 +278,7 @@ type Pricing {
     minMonthlyCharge: String!
     chargePerRequest: String!
     freeQuota: Int!
-    visible: Boolean!
-    mutable: Boolean!
+    availability: PricingAvailability!
 
     deletePricing: Pricing!
     updatePricing(
@@ -287,7 +287,7 @@ type Pricing {
         minMonthlyCharge: String
         chargePerRequest: String
         freeQuota: Int
-        visible: Boolean
+        availability: PricingAvailability
     ): Pricing!
 }
 
@@ -449,4 +449,9 @@ enum SiteMetaDataKey {
     pricingPerRequestCharge
     pricingStripePercentageFee
     pricingStripeFlatFee
+}
+
+enum PricingAvailability {
+    public
+    existing_subscribers
 }

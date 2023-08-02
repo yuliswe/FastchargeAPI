@@ -621,7 +621,10 @@ export class Batched<I extends Item> {
             deep: true,
             returnUndefined: true,
         })!;
+        return this.updateWithNull(keys, newVals);
+    }
 
+    async updateWithNull(keys: GQLPartial<I>, newVals: UpdateQuery<I>): Promise<I> {
         // Extract keys to ingore extra properties
         const query = extractKeysFromItems(this.model, keys);
 

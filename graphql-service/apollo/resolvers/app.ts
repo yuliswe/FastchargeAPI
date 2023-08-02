@@ -5,6 +5,7 @@ import {
     GQLAppResolvers,
     GQLAppUpdateAppArgs,
     GQLMutationCreateAppArgs,
+    GQLPricingAvailability,
     GQLQueryAppArgs,
     GQLQueryAppFullTextSearchArgs,
     GQLQueryAppsArgs,
@@ -15,6 +16,7 @@ import { BadInput, Denied, TooManyResources } from "../errors";
 import { appFullTextSearch, flushAppSearchIndex, isValidAppName, updateAppSearchIndex } from "../functions/app";
 import { Can } from "../permissions";
 import { AppPK } from "../pks/AppPK";
+import { PricingPK } from "../pks/PricingPK";
 import { UserPK } from "../pks/UserPK";
 
 const chalk = new Chalk({ level: 3 });
@@ -46,10 +48,25 @@ export const appResolvers: GQLResolvers & {
                     app: parent.name,
                 });
             } else {
-                return await context.batched.Pricing.many({
+                const plans = await context.batched.Pricing.many({
                     app: parent.name,
-                    visible: true,
+                    availability: GQLPricingAvailability.Public,
                 });
+                // Regular users can only see public pricing plans, and the plan
+                // thay are already subscribed to.
+                if (context.currentUser) {
+                    const userSub = await context.batched.Subscription.getOrNull({
+                        app: parent.name,
+                        subscriber: UserPK.stringify(context.currentUser),
+                    });
+                    if (userSub) {
+                        const currentPlan = await context.batched.Pricing.getOrNull(PricingPK.parse(userSub.pricing));
+                        if (currentPlan) {
+                            plans.push(currentPlan);
+                        }
+                    }
+                }
+                return plans;
             }
         },
         async endpoints(parent, args, context) {

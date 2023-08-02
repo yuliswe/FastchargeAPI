@@ -8,10 +8,11 @@
     "scripts": {
         "gen": "graphql-codegen --config codegen.yml",
         "prebuild": "npm run gen",
-        "build": "(npm run prebuild) && tsc",
+        "build": "tsc",
         "start": "(npm run build) && (TRUST_X_USER_PK_HEADER=1 TRUST_X_USER_EMAIL_HEADER=1 TRUST_X_IS_SERVICE_REQUEST_HEADER=1 node --experimental-specifier-resolution=node ./dist/devserver.js) || exit 1",
         "watch": "npx nodemon -e yml,ts,graphql,json -i __generated__/ -i dist/ --signal SIGINT -x \"npm run start\"",
         "test": "NODE_OPTIONS=--experimental-specifier-resolution=node jest",
+        "coverage": "npm run test -- --coverage",
         "sam": "cd ../ && make watch",
         "fix": "eslint --fix ./",
         "typecheck": "npm run gen && tsc --noEmit"

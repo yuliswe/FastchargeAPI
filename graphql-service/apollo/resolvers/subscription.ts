@@ -1,6 +1,7 @@
 import { RequestContext } from "../RequestContext";
 import {
     GQLMutationCreateSubscriptionArgs,
+    GQLPricingAvailability,
     GQLQuerySubscriptionArgs,
     GQLResolvers,
     GQLSubscribeUpdateSubscriptionArgs,
@@ -93,12 +94,13 @@ export const subscriptionResolvers: GQLResolvers = {
             { pricing: pricingPK, subscriber }: GQLMutationCreateSubscriptionArgs,
             context
         ) {
+            const pricing = await context.batched.Pricing.getOrNull(PricingPK.parse(pricingPK)); // Checks if the pricing plan exists
+            if (!pricing || pricing.availability !== GQLPricingAvailability.Public) {
+                // Pricing was deleted
+                throw new Denied("This pricing plan is not available for purchase.");
+            }
             if (!(await Can.createSubscription({ pricing: pricingPK, subscriber }, context))) {
                 throw new Denied();
-            }
-            const pricing = await context.batched.Pricing.get(PricingPK.parse(pricingPK)); // Checks if the pricing plan exists
-            if (!pricing.visible) {
-                throw new Denied("This pricing plan is not available for purchase.");
             }
             return await context.batched.Subscription.create({
                 app: pricing.app,

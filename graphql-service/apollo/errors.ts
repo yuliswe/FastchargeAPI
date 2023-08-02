@@ -46,9 +46,9 @@ export class Denied extends GraphQLError {
 }
 
 export class ImmutableResource extends GraphQLError {
-    constructor(msg?: string) {
+    constructor(public resource: string, public msg?: string) {
         super(msg ?? `This resource can no longer be modified.`, {
-            extensions: { code: "IMMUTABLE_RESOURCE" },
+            extensions: { code: "IMMUTABLE_RESOURCE", resource },
         });
     }
 }

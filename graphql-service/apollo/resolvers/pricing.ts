@@ -1,16 +1,17 @@
-import { Pricing } from "../dynamoose/models";
-import { BadInput, Denied, ImmutableResource, TooManyResources } from "../errors";
-import { Can } from "../permissions";
+import { RequestContext } from "../RequestContext";
 import {
     GQLMutationCreatePricingArgs,
+    GQLPricingAvailability,
     GQLPricingUpdatePricingArgs,
     GQLQueryPricingArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
+import { Pricing } from "../dynamoose/models";
+import { BadInput, Denied, ImmutableResource, TooManyResources } from "../errors";
+import { Can } from "../permissions";
+import { AppPK } from "../pks/AppPK";
 import "../pks/PricingPK";
 import { PricingPK } from "../pks/PricingPK";
-import { AppPK } from "../pks/AppPK";
-import { RequestContext } from "../RequestContext";
 
 /**
  * If the pricing is invisible, only the owner can read attributes. Otherwise,
@@ -20,10 +21,8 @@ function makeOwnerReadableWhenInvisible<T>(
     getter: (parent: Pricing, args: {}, context: RequestContext) => T
 ): (parent: Pricing, args: {}, context: RequestContext) => Promise<T> {
     return async (parent: Pricing, args: {}, context: RequestContext): Promise<T> => {
-        if (!parent.visible) {
-            if (!(await Can.viewPricingInvisiableAttributes(parent, context))) {
-                throw new Denied();
-            }
+        if (!(await Can.viewPricingInvisiableAttributes(parent, context))) {
+            throw new Denied();
         }
         return getter(parent, args, context);
     };
@@ -32,7 +31,7 @@ export const pricingResolvers: GQLResolvers = {
     Pricing: {
         pk: makeOwnerReadableWhenInvisible((parent) => PricingPK.stringify(parent)),
         async app(parent, args, context, info) {
-            if (!parent.visible) {
+            if (parent.availability != GQLPricingAvailability.Public) {
                 if (!(await Can.viewPricingInvisiableAttributes(parent, context))) {
                     throw new Denied();
                 }
@@ -45,15 +44,10 @@ export const pricingResolvers: GQLResolvers = {
         chargePerRequest: makeOwnerReadableWhenInvisible((parent) => parent.chargePerRequest),
         callToAction: makeOwnerReadableWhenInvisible((parent) => parent.callToAction),
         freeQuota: makeOwnerReadableWhenInvisible((parent) => parent.freeQuota),
-        visible: makeOwnerReadableWhenInvisible((parent) => parent.visible),
-        mutable: makeOwnerReadableWhenInvisible((parent) => parent.mutable),
-        // activeSubscriberCount: (parent) => parent.activeSubscriberCount,
+        availability: makeOwnerReadableWhenInvisible((parent) => parent.availability),
         async deletePricing(parent: Pricing, args: never, context, info) {
             if (!(await Can.deletePricing(parent, args, context))) {
                 throw new Denied();
-            }
-            if (!parent.mutable) {
-                throw new ImmutableResource();
             }
             await context.batched.Pricing.delete(args);
             return parent;
@@ -61,38 +55,41 @@ export const pricingResolvers: GQLResolvers = {
 
         async updatePricing(
             parent: Pricing,
-            { name, minMonthlyCharge, chargePerRequest, callToAction, visible, freeQuota }: GQLPricingUpdatePricingArgs,
+            {
+                name,
+                minMonthlyCharge,
+                chargePerRequest,
+                callToAction,
+                freeQuota,
+                availability,
+            }: GQLPricingUpdatePricingArgs,
             context: RequestContext
         ): Promise<Pricing> {
-            if (!(await Can.updatePricing(parent, context))) {
-                throw new Denied();
+            if (minMonthlyCharge != null || chargePerRequest != null || freeQuota != null) {
+                throw new ImmutableResource(
+                    "Pricing",
+                    "Cannot update minMonthlyCharge, chargePerRequest, or freeQuota."
+                );
             }
-            if (parent.mutable) {
-                return await context.batched.Pricing.update(parent, {
-                    name,
+            if (
+                !(await Can.updatePricing(parent, context, {
                     minMonthlyCharge,
                     chargePerRequest,
-                    callToAction,
-                    visible,
                     freeQuota,
-                    mutable: !visible, // Once the pricing becomes visible, it becomes immutable forever.
-                    minMonthlyChargeApprox: minMonthlyCharge ? Number.parseFloat(minMonthlyCharge) : undefined,
-                    chargePerRequestApprox: chargePerRequest ? Number.parseFloat(chargePerRequest) : undefined,
-                });
-            } else {
-                // Only allow updating selected fields.
-                if (minMonthlyCharge != null || chargePerRequest != null || freeQuota != null) {
-                    throw new ImmutableResource(
-                        "Cannot update minMonthlyCharge, chargePerRequest, or freeQuota once the pricing became visible."
-                    );
-                } else {
-                    return await context.batched.Pricing.update(parent, {
-                        name,
-                        visible,
-                        callToAction,
-                    });
-                }
+                }))
+            ) {
+                throw new Denied();
             }
+            return await context.batched.Pricing.update(parent, {
+                name,
+                minMonthlyCharge,
+                chargePerRequest,
+                callToAction,
+                freeQuota,
+                minMonthlyChargeFloat: minMonthlyCharge ? Number.parseFloat(minMonthlyCharge) : undefined,
+                chargePerRequestFloat: chargePerRequest ? Number.parseFloat(chargePerRequest) : undefined,
+                availability,
+            });
         },
     },
     Query: {
@@ -101,10 +98,8 @@ export const pricingResolvers: GQLResolvers = {
                 throw new BadInput("pk is required");
             }
             const pricing = await context.batched.Pricing.get(PricingPK.parse(pk));
-            if (!pricing.visible) {
-                if (!(await Can.viewPricingInvisiableAttributes(pricing, context))) {
-                    throw new Denied();
-                }
+            if (!(await Can.viewPricingInvisiableAttributes(pricing, context))) {
+                throw new Denied();
             }
             return pricing;
         },
@@ -118,7 +113,7 @@ export const pricingResolvers: GQLResolvers = {
                 chargePerRequest,
                 minMonthlyCharge,
                 name,
-                visible,
+                availability,
                 freeQuota,
             }: GQLMutationCreatePricingArgs,
             context
@@ -133,18 +128,18 @@ export const pricingResolvers: GQLResolvers = {
                 throw new TooManyResources("Too many pricings for this app");
             }
             // Update these because the client does not provide them.
-            const minMonthlyChargeApprox = Number.parseFloat(minMonthlyCharge);
-            const chargePerRequestApprox = Number.parseFloat(chargePerRequest);
+            const minMonthlyChargeFloat = Number.parseFloat(minMonthlyCharge);
+            const chargePerRequestFloat = Number.parseFloat(chargePerRequest);
             const pricing = await context.batched.Pricing.create({
                 app,
                 callToAction,
                 chargePerRequest,
                 minMonthlyCharge,
                 name,
-                visible,
+                availability,
                 freeQuota,
-                minMonthlyChargeApprox,
-                chargePerRequestApprox,
+                minMonthlyChargeFloat,
+                chargePerRequestFloat,
             });
             return pricing;
         },

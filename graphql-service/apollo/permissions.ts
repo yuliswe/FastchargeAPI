@@ -5,6 +5,8 @@ import {
     GQLEndpointUpdateEndpointArgs,
     GQLMutationCreateEndpointArgs,
     GQLMutationCreateSubscriptionArgs,
+    GQLPricingAvailability,
+    GQLPricingUpdatePricingArgs,
     GQLQuerySubscriptionArgs,
     GQLSiteMetaDataKey,
     GQLSubscribeUpdateSubscriptionArgs,
@@ -26,6 +28,7 @@ import {
     UserAppToken,
 } from "./dynamoose/models";
 import { AppPK } from "./pks/AppPK";
+import { PricingPK } from "./pks/PricingPK";
 import { UserPK } from "./pks/UserPK";
 
 export const Can = {
@@ -126,7 +129,21 @@ export const Can = {
             return false;
         }
         const app = await context.batched.App.get(AppPK.parse(pricing.app));
-        return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
+        const isOwner = await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
+        if (isOwner) {
+            return true;
+        }
+        if (pricing.availability === GQLPricingAvailability.Public) {
+            return true;
+        }
+        if (pricing.availability === GQLPricingAvailability.ExistingSubscribers) {
+            return await context.batched.Subscription.exists({
+                app: pricing.app,
+                subscriber: UserPK.stringify(context.currentUser),
+                pricing: PricingPK.stringify(pricing),
+            });
+        }
+        return false;
     },
     async createPricing({ app: appPK }: { app: string }, context: RequestContext): Promise<boolean> {
         if (context.isServiceRequest || context.isAdminUser) {
@@ -148,9 +165,17 @@ export const Can = {
         const app = await context.batched.App.get(AppPK.parse(parent.app));
         return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
     },
-    async updatePricing(parent: Pricing, context: RequestContext): Promise<boolean> {
+    async updatePricing(
+        parent: Pricing,
+        context: RequestContext,
+        { minMonthlyCharge, chargePerRequest, freeQuota }: GQLPricingUpdatePricingArgs
+    ): Promise<boolean> {
         if (context.isServiceRequest || context.isAdminUser) {
             return true;
+        }
+        // These properties are not allowed to be updated unless by admin
+        if (minMonthlyCharge != null || chargePerRequest != null || freeQuota != null) {
+            return context.isAdminUser ?? false;
         }
         if (!context.currentUser) {
             return false;

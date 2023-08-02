@@ -2,7 +2,7 @@ import dynamoose from "dynamoose";
 import { ModelType } from "dynamoose/dist/General";
 import { Item } from "dynamoose/dist/Item";
 import { TableClass } from "dynamoose/dist/Table/types";
-import { GQLSiteMetaDataKey } from "../__generated__/resolvers-types";
+import { GQLPricingAvailability, GQLSiteMetaDataKey, GQLUsageSummaryStatus } from "../__generated__/resolvers-types";
 import { isValidAppName } from "../functions/app";
 
 if (process.env.TEST == "1") {
@@ -183,10 +183,13 @@ const PricingTableSchema = new dynamoose.Schema(
         minMonthlyCharge: { type: String, default: "0" },
         chargePerRequest: { type: String, default: "0" },
         freeQuota: { type: Number, default: 0 },
-        minMonthlyChargeApprox: Number,
-        chargePerRequestApprox: Number,
-        visible: { type: Boolean, default: false },
-        mutable: { type: Boolean, default: true },
+        minMonthlyChargeFloat: Number,
+        chargePerRequestFloat: Number,
+        availability: {
+            type: String,
+            default: GQLPricingAvailability.Public,
+            enum: Object.values(GQLPricingAvailability),
+        },
     },
     {
         timestamps: {
@@ -202,7 +205,14 @@ const SubscriptionTableSchema = new dynamoose.Schema(
             ...String_Required_NotEmpty("subscriber"),
         },
         app: { rangeKey: true, ...String_Required_NotEmpty("app") },
-        pricing: { ...String_Required_NotEmpty("pricing") },
+        pricing: {
+            ...String_Required_NotEmpty("pricing"),
+            index: {
+                type: "global",
+                name: "indexByPricing_subscriber__onlyPK",
+                project: ["pricing", "subscriber"],
+            },
+        },
     },
     { timestamps: true }
 );
@@ -254,8 +264,8 @@ const UsageSummaryTableSchema = new dynamoose.Schema(
         volume: { type: Number, default: 1 },
         status: {
             type: String,
-            enum: ["pending", "billed"],
-            default: "pending",
+            enum: Object.values(GQLUsageSummaryStatus),
+            default: GQLUsageSummaryStatus.Pending,
         },
         billedAt: { type: Number, default: undefined },
         numberOfLogs: { type: Number, required: true },
@@ -567,10 +577,9 @@ export class Pricing extends Item {
     minMonthlyCharge: string;
     chargePerRequest: string;
     freeQuota: number;
-    minMonthlyChargeApprox: number;
-    chargePerRequestApprox: number;
-    visible: boolean;
-    mutable: boolean;
+    minMonthlyChargeFloat: number;
+    chargePerRequestFloat: number;
+    availability: GQLPricingAvailability;
 }
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
