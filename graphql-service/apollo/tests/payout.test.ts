@@ -19,6 +19,7 @@ describe("Payout API", () => {
         isServiceRequest: true,
         isSQSMessage: true,
         isAnonymousUser: false,
+        isAdminUser: false,
     };
 
     test("Preparation: get test user 1", async () => {

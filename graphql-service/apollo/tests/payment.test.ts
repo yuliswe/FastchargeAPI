@@ -14,6 +14,7 @@ const context: RequestContext = {
     isServiceRequest: true,
     isSQSMessage: true,
     isAnonymousUser: false,
+    isAdminUser: false,
 };
 // jest.retryTimes(2);
 describe("Payment API", () => {

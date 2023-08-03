@@ -19,6 +19,7 @@ const context: RequestContext = {
     isServiceRequest: true,
     isSQSMessage: true,
     isAnonymousUser: false,
+    isAdminUser: false,
 };
 
 FreeQuotaUsageTestCase({

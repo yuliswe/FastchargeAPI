@@ -8,6 +8,7 @@ const context: RequestContext = {
     isServiceRequest: false,
     isSQSMessage: false,
     isAnonymousUser: false,
+    isAdminUser: false,
 };
 
 const testUser = "testuser1.fastchargeapi@gmail.com";

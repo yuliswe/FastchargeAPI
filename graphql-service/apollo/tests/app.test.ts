@@ -12,6 +12,7 @@ const context: RequestContext = {
     isServiceRequest: false,
     isSQSMessage: false,
     isAnonymousUser: false,
+    isAdminUser: false,
 };
 // jest.retryTimes(2);
 describe("APP API", () => {

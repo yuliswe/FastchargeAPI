@@ -1,17 +1,17 @@
 import { describe, expect, test } from "@jest/globals";
-import { RequestContext, createDefaultContextBatched } from "../RequestContext";
-import { usageLogResolvers } from "../resolvers/usage";
-import { collectUsageLogs as collectUsageSummary } from "../functions/usage";
-import { AlreadyExists } from "../errors";
-import { generateAccountActivities } from "../functions/billing";
-import { Subscription, UsageLogModel, UsageSummaryModel, User } from "../dynamoose/models";
-import { UsageSummaryPK } from "../pks/UsageSummaryPK";
-import { UsageLogPK } from "../pks/UsageLogPK";
-import { PricingPK } from "../pks/PricingPK";
-import { settleAccountActivities } from "../functions/account";
-import { UserPK } from "../pks/UserPK";
 import Decimal from "decimal.js-light";
 import { v4 as uuidv4 } from "uuid";
+import { RequestContext, createDefaultContextBatched } from "../RequestContext";
+import { Subscription, UsageLogModel, UsageSummaryModel, User } from "../dynamoose/models";
+import { AlreadyExists } from "../errors";
+import { settleAccountActivities } from "../functions/account";
+import { generateAccountActivities } from "../functions/billing";
+import { collectUsageLogs as collectUsageSummary } from "../functions/usage";
+import { PricingPK } from "../pks/PricingPK";
+import { UsageLogPK } from "../pks/UsageLogPK";
+import { UsageSummaryPK } from "../pks/UsageSummaryPK";
+import { UserPK } from "../pks/UserPK";
+import { usageLogResolvers } from "../resolvers/usage";
 import { getOrCreateTestUser } from "./test-utils";
 
 const context: RequestContext = {
@@ -19,6 +19,7 @@ const context: RequestContext = {
     isSQSMessage: true,
     isServiceRequest: true,
     isAnonymousUser: false,
+    isAdminUser: false,
 };
 // jest.retryTimes(2);
 describe("Test when making a request the monthly subscription fee is charged.", () => {
