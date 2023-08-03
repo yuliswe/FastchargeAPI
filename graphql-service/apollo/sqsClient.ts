@@ -1,7 +1,7 @@
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient } from "@apollo/client/core";
 import { HttpLink } from "@apollo/client/link/http";
-import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
+import { SQSClient, SendMessageCommand, SendMessageCommandInput } from "@aws-sdk/client-sqs";
 import { RequestInit, Response } from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
 import { awsAccountId } from "./runtime-config";
@@ -33,14 +33,18 @@ export function sqsGQLClient({ queueUrl, dedupId, groupId }: { queueUrl: string;
         link: new HttpLink({
             fetch: async (uri: string, options: RequestInit) => {
                 const body = options.body;
-                await sqsClient.send(
-                    new SendMessageCommand({
-                        MessageBody: body?.toString(),
-                        MessageGroupId: groupId,
-                        QueueUrl: queueUrl,
-                        MessageDeduplicationId: dedupId || uuidv4(),
-                    })
-                );
+                const input: SendMessageCommandInput = {
+                    MessageBody: body?.toString(),
+                    MessageGroupId: groupId,
+                    QueueUrl: queueUrl,
+                    MessageDeduplicationId: dedupId || uuidv4(),
+                };
+                if (process.env.LOCAL_SQS === "1") {
+                    const { handSendMessageCommandData } = await import("./sqsHandler");
+                    await handSendMessageCommandData(input);
+                } else {
+                    await sqsClient.send(new SendMessageCommand(input));
+                }
                 return new Response(
                     JSON.stringify({
                         data: {},
