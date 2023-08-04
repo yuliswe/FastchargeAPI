@@ -39,5 +39,6 @@ module.exports = {
         "unused-imports/no-unused-imports-ts": "warn",
         "require-yield": "off",
         "prefer-const": "error",
+        "@typescript-eslint/restrict-template-expressions": "off",
     },
 };

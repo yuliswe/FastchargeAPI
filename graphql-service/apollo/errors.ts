@@ -77,47 +77,43 @@ export class UpdateContainsPrimaryKey extends GraphQLError {
 const chalk = new Chalk({ level: 3 });
 
 export function handleError(formattedError: GraphQLFormattedError, error: unknown): GraphQLFormattedError {
+    const silencedErrorCodes = process.env.SILENCE_ERRORS?.split(",").map((x) => x.trim()) ?? [];
     const originalError = unwrapResolverError(error);
-    try {
-        console.error(chalk.red(JSON.stringify(originalError)));
-        console.error(originalError);
-    } catch {
-        console.error(originalError);
-    }
-    try {
-        console.error(chalk.red(JSON.stringify(error)));
-        console.error(error);
-    } catch {
-        console.error(error);
-    }
-    for (const errtype of [DynamooseError.TypeMismatch, DynamooseError.ValidationError]) {
-        if (originalError instanceof errtype) {
-            return {
-                ...formattedError,
-                extensions: {
-                    ...formattedError.extensions,
-                    code: "BAD_USER_INPUT",
-                },
-                message: originalError.message,
-            };
-        }
-    }
-    if (originalError instanceof NotFound) {
-        return {
-            ...formattedError,
-            extensions: { ...formattedError.extensions, code: "NOT_FOUND" },
-            message: originalError.message,
-        };
-    }
-    if (originalError instanceof AlreadyExists) {
-        return {
+    if (
+        originalError instanceof DynamooseError.TypeMismatch ||
+        originalError instanceof DynamooseError.ValidationError
+    ) {
+        formattedError = {
             ...formattedError,
             extensions: {
                 ...formattedError.extensions,
-                code: "ALREADY_EXISTS",
+                code: "BAD_USER_INPUT",
             },
             message: originalError.message,
         };
+    } else if (originalError instanceof GraphQLError) {
+        formattedError = {
+            ...formattedError,
+            extensions: {
+                ...formattedError.extensions,
+                code: originalError.extensions?.code ?? "INTERNAL_SERVER_ERROR",
+            },
+            message: originalError.message,
+        };
+    }
+    if (!silencedErrorCodes.includes(formattedError.extensions?.code as string)) {
+        try {
+            console.error(chalk.red(JSON.stringify(originalError)));
+            console.error(originalError);
+        } catch {
+            console.error(originalError);
+        }
+        try {
+            console.error(chalk.red(JSON.stringify(error)));
+            console.error(error);
+        } catch {
+            console.error(error);
+        }
     }
     return formattedError;
 }

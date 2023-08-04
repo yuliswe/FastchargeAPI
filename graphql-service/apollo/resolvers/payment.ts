@@ -1,4 +1,3 @@
-import { StripePaymentAccept, StripePaymentAcceptModel, User } from "../dynamoose/models";
 import { RequestContext } from "../RequestContext";
 import {
     GQLMutationCreateStripePaymentAcceptArgs,
@@ -6,12 +5,13 @@ import {
     GQLResolvers,
     GQLStripePaymentAcceptResolvers,
     GQLStripePaymentAcceptSettlePaymentArgs,
+    GQLStripePaymentAcceptStatus,
 } from "../__generated__/resolvers-types";
+import { StripePaymentAccept, StripePaymentAcceptModel, User } from "../dynamoose/models";
 import { AlreadyExists, Denied } from "../errors";
+import { enforceCalledFromQueue, settleAccountActivities } from "../functions/account";
 import { Can } from "../permissions";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
-import { enforceCalledFromQueue, settleAccountActivities } from "../functions/account";
-import { GQLStripePaymentAcceptStatus } from "../__generated__/operation-types";
 import { StripePaymentAcceptPK } from "../pks/StripePaymentAccept";
 import { UserPK } from "../pks/UserPK";
 

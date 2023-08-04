@@ -1,8 +1,8 @@
 import {
     APIGatewayProxyEventV2WithLambdaAuthorizer,
     APIGatewayProxyHandlerV2WithLambdaAuthorizer,
-    Callback as LmabdaCallback,
     APIGatewayProxyStructuredResultV2,
+    Callback as LmabdaCallback,
 } from "aws-lambda";
 
 export type AuthorizerContext = {
@@ -26,7 +26,7 @@ export function getAuthorizerContext(event: LambdaEventV2): AuthorizerContext {
 }
 
 export function getUserEmailFromEvent(event: LambdaEventV2): string {
-    let email = event.requestContext.authorizer.lambda.userEmail;
+    const email = event.requestContext.authorizer.lambda.userEmail;
     if (!email) {
         throw new Error("User email not found in authorizer context.");
     }

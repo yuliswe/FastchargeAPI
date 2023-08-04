@@ -536,10 +536,10 @@ export class Batched<I extends Item> {
                 // We want to catch the case where the item already exists. DynamoDB
                 // in this case throws a ConditionalCheckFailedException. But it
                 // also throws this exception in other cases. So a check using the
-                // .many() call is needed to confirm that the item already exists.
+                // .exists() call is needed to confirm that the item already exists.
                 if (e instanceof ConditionalCheckFailedException) {
                     const query = extractKeysFromItems(this.model, stripped);
-                    if ((await this.many(query)).length > 0) {
+                    if (await this.exists(query)) {
                         throw new AlreadyExists(this.model.name, JSON.stringify(item));
                     } else if (retries < maxAttempts - 1) {
                         // The insert could fail when the item uses createdAt as

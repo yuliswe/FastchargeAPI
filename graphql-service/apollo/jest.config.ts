@@ -5,6 +5,8 @@ const jestConfig: JestConfigWithTsJest = {
     // [...]
     preset: "ts-jest/presets/js-with-ts-esm", // or other ESM presets
     testEnvironment: "node",
+    setupFiles: ["./tests/jest-setup.ts"],
+    setupFilesAfterEnv: ["./tests/jest-setup-after-env.ts"],
     transform: {
         "^.+\\.tsx?$": [
             "ts-jest",

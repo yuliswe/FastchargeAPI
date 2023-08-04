@@ -23,6 +23,7 @@ describe("Payment API", () => {
 
     test("Preparation: get test user 1", async () => {
         testUser = await getOrCreateTestUser(context, { email: testUserEmail });
+        context.sqsMessageGroupId = UserPK.stringify(testUser);
     });
 
     let stripePaymentAccept: StripePaymentAccept;

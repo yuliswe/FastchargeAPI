@@ -26,6 +26,7 @@ describe("Gateway API success access", () => {
     test("Prepare: Create test user and test app", async () => {
         testUser = await getOrCreateTestUser(context, { email: testUserEmail });
         testApp = await context.batched.App.getOrCreate({ name: testAppName, owner: UserPK.stringify(testUser) });
+        context.sqsMessageGroupId = UserPK.stringify(testUser);
     });
 
     let pricingPK: string;

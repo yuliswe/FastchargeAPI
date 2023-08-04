@@ -155,7 +155,7 @@ export const Can = {
         const app = await context.batched.App.get(AppPK.parse(appPK));
         return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
     },
-    async deletePricing(parent: Pricing, args: never, context: RequestContext): Promise<boolean> {
+    async deletePricing(parent: Pricing, context: RequestContext): Promise<boolean> {
         if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }
@@ -174,7 +174,11 @@ export const Can = {
             return true;
         }
         // These properties are not allowed to be updated unless by admin
-        if (minMonthlyCharge != null || chargePerRequest != null || freeQuota != null) {
+        if (
+            (minMonthlyCharge && minMonthlyCharge != parent.minMonthlyCharge) ||
+            (chargePerRequest && chargePerRequest != parent.chargePerRequest) ||
+            (freeQuota && freeQuota != parent.freeQuota)
+        ) {
             return context.isAdminUser ?? false;
         }
         if (!context.currentUser) {

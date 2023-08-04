@@ -3,10 +3,10 @@ import { EventBridgeEvent, EventBridgeHandler } from "aws-lambda";
 import { Chalk } from "chalk";
 import { createDefaultContextBatched } from "../RequestContext";
 import {
+    GQLAccountActivityIndex,
     GQLTriggerSettleAccountActivitiesForUsersQuery,
     GQLTriggerSettleAccountActivitiesForUsersQueryVariables,
-} from "../__generated__/operation-types";
-import { GQLAccountActivityIndex } from "../__generated__/resolvers-types";
+} from "../__generated__/resolvers-types";
 import { SQSQueueUrl, sqsGQLClient } from "../sqsClient";
 
 const chalk = new Chalk({ level: 3 });

@@ -279,13 +279,15 @@ type Pricing {
     chargePerRequest: String!
     freeQuota: Int!
     availability: PricingAvailability!
+    updatedAt: Timestamp!
+    createdAt: Timestamp!
 
     deletePricing: Pricing!
     updatePricing(
         name: String
         callToAction: String
-        minMonthlyCharge: String
-        chargePerRequest: String
+        minMonthlyCharge: NonNegativeDecimal
+        chargePerRequest: NonNegativeDecimal
         freeQuota: Int
         availability: PricingAvailability
     ): Pricing!

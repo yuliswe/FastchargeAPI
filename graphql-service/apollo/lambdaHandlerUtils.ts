@@ -11,7 +11,9 @@ const chalk = new Chalk({ level: 3 });
 
 export function printWarnings() {
     if (process.env.DEV_DOMAIN === "0") {
-        console.warn(chalk.red("DEV_DOMAIN is not set to 0. You are now connected to the production database!"));
+        if (process.env.DISABLE_WARNINGS != "1") {
+            console.warn(chalk.red("DEV_DOMAIN is not set to 0. You are now connected to the production database!"));
+        }
     }
 }
 
@@ -34,20 +36,28 @@ export async function getCurrentUser(
     if (process.env.TRUST_X_USER_PK_HEADER == "1" || process.env.TRUST_X_USER_EMAIL_HEADER == "1") {
         if (process.env.TRUST_X_USER_PK_HEADER === "1") {
             const userPK = headers["x-user-pk"] || "";
-            console.warn(chalk.yellow("TRUST_X_USER_PK_HEADER is enabled. Do not use this in production!"));
+            if (process.env.DISABLE_WARNINGS != "1") {
+                console.warn(chalk.yellow("TRUST_X_USER_PK_HEADER is enabled. Do not use this in production!"));
+            }
             if (userPK) {
                 currentUser = (await batched.User.getOrNull(UserPK.parse(userPK))) ?? undefined;
             } else {
-                console.warn(chalk.yellow("X-User-PK header is missing."));
+                if (process.env.DISABLE_WARNINGS != "1") {
+                    console.warn(chalk.yellow("X-User-PK header is missing."));
+                }
             }
         }
         if (process.env.TRUST_X_USER_EMAIL_HEADER === "1") {
             const userEmail = headers["x-user-email"] || "";
-            console.warn(chalk.yellow("TRUST_X_USER_EMAIL_HEADER is enabled. Do not use this in production!"));
+            if (process.env.DISABLE_WARNINGS != "1") {
+                console.warn(chalk.yellow("TRUST_X_USER_EMAIL_HEADER is enabled. Do not use this in production!"));
+            }
             if (userEmail) {
                 currentUser = await getOrCreateUserFromEmail(batched, userEmail);
             } else {
-                console.warn(chalk.yellow("X-User-Email header is missing."));
+                if (process.env.DISABLE_WARNINGS != "1") {
+                    console.warn(chalk.yellow("X-User-Email header is missing."));
+                }
             }
         }
     }
@@ -87,7 +97,9 @@ export function getIsServiceRequest(domain: string, headers: { [header: string]:
         isServiceRequest = true;
         // When the request is from a service to IAM, there's no user.
     } else if (process.env.TRUST_X_IS_SERVICE_REQUEST_HEADER === "1") {
-        console.warn(chalk.yellow("TRUST_X_IS_SERVICE_REQUEST_HEADER is enabled. Do not use this in production!"));
+        if (process.env.DISABLE_WARNINGS != "1") {
+            console.warn(chalk.yellow("TRUST_X_IS_SERVICE_REQUEST_HEADER is enabled. Do not use this in production!"));
+        }
         if (headers["x-is-service-request"] === "true") {
             isServiceRequest = true;
         }
@@ -114,5 +126,5 @@ export type AuthorizerContext = {
     userPK: string | undefined;
     isAdminUser: string | undefined;
 };
-export type LambdaEvent = APIGatewayProxyEventBase<AuthorizerContext>;
+export type LambdaEvent = APIGatewayProxyEventBase<AuthorizerContext> & { _disableLogRequest?: boolean };
 export type LambdaResult = APIGatewayProxyResult;

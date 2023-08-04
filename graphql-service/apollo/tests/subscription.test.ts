@@ -28,6 +28,7 @@ describe("Test when making a request the monthly subscription fee is charged.", 
 
     test("Preparation: get test user 1", async () => {
         testUser = await getOrCreateTestUser(context, { email: testUserEmail });
+        context.sqsMessageGroupId = UserPK.stringify(testUser);
     });
 
     test("Preparation: create an App", async () => {

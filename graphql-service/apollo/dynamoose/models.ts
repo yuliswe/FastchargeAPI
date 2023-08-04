@@ -5,11 +5,10 @@ import { TableClass } from "dynamoose/dist/Table/types";
 import { GQLPricingAvailability, GQLSiteMetaDataKey, GQLUsageSummaryStatus } from "../__generated__/resolvers-types";
 import { isValidAppName } from "../functions/app";
 
-if (process.env.TEST == "1") {
-    dynamoose.aws.ddb.local("http://localhost:9001/");
-    console.warn("Using local database http://localhost:9001/");
-} else if (process.env.DEV_DOMAIN === "1") {
-    console.warn("Using remote DEV database us-east-1");
+if (process.env.DEV_DOMAIN === "1") {
+    if (process.env.DISABLE_WARNINGS != "1") {
+        console.warn("Using remote DEV database us-east-1");
+    }
 } else {
     console.warn("Using remote LIVE database us-east-1");
 }
@@ -580,6 +579,7 @@ export class Pricing extends Item {
     minMonthlyChargeFloat: number;
     chargePerRequestFloat: number;
     availability: GQLPricingAvailability;
+    updatedAt: number;
 }
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.

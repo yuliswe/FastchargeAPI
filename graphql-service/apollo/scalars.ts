@@ -7,8 +7,8 @@ function checkNonNegativeDecimal(value: string) {
         throw new GraphQLError("Provided string is a malformed number.", {
             extensions: { code: "BAD_USER_INPUT" },
         });
-    } else if (n <= 0) {
-        throw new GraphQLError("Provided number is not positive or is too small.", {
+    } else if (n < 0) {
+        throw new GraphQLError("Provided number cannot be negative.", {
             extensions: { code: "BAD_USER_INPUT" },
         });
     }
