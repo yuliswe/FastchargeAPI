@@ -45,11 +45,14 @@ export const pricingResolvers: GQLResolvers = {
         callToAction: makeOwnerReadableWhenInvisible((parent) => parent.callToAction),
         freeQuota: makeOwnerReadableWhenInvisible((parent) => parent.freeQuota),
         availability: makeOwnerReadableWhenInvisible((parent) => parent.availability),
-        async deletePricing(parent: Pricing, args: never, context, info) {
-            if (!(await Can.deletePricing(parent, args, context))) {
+        createdAt: makeOwnerReadableWhenInvisible((parent) => parent.createdAt),
+        updatedAt: makeOwnerReadableWhenInvisible((parent) => parent.updatedAt),
+
+        async deletePricing(parent: Pricing, args: {}, context, info) {
+            if (!(await Can.deletePricing(parent, context))) {
                 throw new Denied();
             }
-            await context.batched.Pricing.delete(args);
+            await context.batched.Pricing.delete(parent);
             return parent;
         },
 
@@ -65,7 +68,11 @@ export const pricingResolvers: GQLResolvers = {
             }: GQLPricingUpdatePricingArgs,
             context: RequestContext
         ): Promise<Pricing> {
-            if (minMonthlyCharge != null || chargePerRequest != null || freeQuota != null) {
+            if (
+                (minMonthlyCharge && minMonthlyCharge !== parent.minMonthlyCharge) ||
+                (chargePerRequest && chargePerRequest !== parent.minMonthlyCharge) ||
+                (freeQuota && freeQuota !== parent.freeQuota)
+            ) {
                 throw new ImmutableResource(
                     "Pricing",
                     "Cannot update minMonthlyCharge, chargePerRequest, or freeQuota."
@@ -97,11 +104,7 @@ export const pricingResolvers: GQLResolvers = {
             if (!pk) {
                 throw new BadInput("pk is required");
             }
-            const pricing = await context.batched.Pricing.get(PricingPK.parse(pk));
-            if (!(await Can.viewPricingInvisiableAttributes(pricing, context))) {
-                throw new Denied();
-            }
-            return pricing;
+            return await context.batched.Pricing.get(PricingPK.parse(pk));
         },
     },
     Mutation: {
@@ -124,7 +127,7 @@ export const pricingResolvers: GQLResolvers = {
             const existingCount = await context.batched.Pricing.count({
                 app,
             });
-            if (existingCount > 100) {
+            if (existingCount >= 100) {
                 throw new TooManyResources("Too many pricings for this app");
             }
             // Update these because the client does not provide them.

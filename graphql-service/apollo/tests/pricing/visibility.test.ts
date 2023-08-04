@@ -1,14 +1,13 @@
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
 import { RequestContext, createDefaultContextBatched } from "../../RequestContext";
+import { graphql } from "../../__generated__/gql";
 import { GQLPricingAvailability } from "../../__generated__/resolvers-types";
 import { App, Pricing, User } from "../../dynamoose/models";
-import { Denied } from "../../errors";
 import { AppPK } from "../../pks/AppPK";
 import { PricingPK } from "../../pks/PricingPK";
 import { UserPK } from "../../pks/UserPK";
-import { appResolvers } from "../../resolvers/app";
-import { pricingResolvers } from "../../resolvers/pricing";
+import { testGQLClient } from "../test-sql-client";
 import { getOrCreateTestUser } from "../test-utils";
 
 const context: RequestContext = {
@@ -24,8 +23,52 @@ let testAppOwner: User;
 let testAppUser: User;
 let testApp: App;
 let testPricing: Pricing;
-let contextAsAppOwner: RequestContext;
-let contextAsAppUser: RequestContext; // An arbitrary user that is not the owner of the app.
+
+const getPricingByPKQuery = graphql(`
+    query VisibilityTestQueryPricing($pk: ID!) {
+        pricing(pk: $pk) {
+            pk
+            name
+            availability
+            minMonthlyCharge
+            chargePerRequest
+            freeQuota
+            callToAction
+            freeQuota
+            updatedAt
+            createdAt
+            app {
+                pk
+            }
+        }
+    }
+`);
+
+function getPricingByPKQueryExpectedValue(pricing: Pricing) {
+    return {
+        __typename: "Pricing",
+        pk: PricingPK.stringify(pricing),
+        name: pricing.name,
+        app: { __typename: "App", pk: pricing.app },
+        availability: pricing.availability,
+        minMonthlyCharge: pricing.minMonthlyCharge,
+        chargePerRequest: pricing.chargePerRequest,
+        freeQuota: pricing.freeQuota,
+        callToAction: pricing.callToAction,
+        createdAt: Number(pricing.createdAt),
+        updatedAt: Number(pricing.updatedAt),
+    };
+}
+
+const listAppPricingsQuery = graphql(`
+    query VisibilityTest_ListAppPlans($app: ID!) {
+        app(pk: $app) {
+            pricingPlans {
+                pk
+            }
+        }
+    }
+`);
 
 beforeEach(async () => {
     const testAppName = `testapp-${uuidv4()}`;
@@ -35,41 +78,43 @@ beforeEach(async () => {
     testAppUser = await getOrCreateTestUser(context, { email: testAppUserEmail });
     testApp = await context.batched.App.getOrCreate({ name: testAppName, owner: UserPK.stringify(testAppOwner) });
     testPricing = await context.batched.Pricing.create({
-        name: "Premium",
+        name: "test-pricing",
         app: AppPK.stringify(testApp),
         availability: GQLPricingAvailability.Public,
+        minMonthlyCharge: "0",
+        chargePerRequest: "0",
+        freeQuota: 0,
+        callToAction: "test-call-to-action",
     });
-    contextAsAppOwner = {
-        ...context,
-        currentUser: testAppOwner,
-    };
-    contextAsAppUser = {
-        ...context,
-        currentUser: testAppUser,
-    };
 });
 
 describe("Test pricing visibility", () => {
     test("App owner can see pricing", async () => {
-        const result = await pricingResolvers.Query?.pricing?.(
-            {},
-            { pk: PricingPK.stringify(testPricing) },
-            contextAsAppOwner,
-            {} as never
-        );
-        expect(result).not.toBe(null);
-        expect(PricingPK.stringify(result!)).toEqual(PricingPK.stringify(testPricing));
+        const result = await testGQLClient({ user: testAppOwner }).query({
+            query: getPricingByPKQuery,
+            variables: { pk: PricingPK.stringify(testPricing) },
+        });
+        expect(result?.data.pricing).toEqual({
+            __typename: "Pricing",
+            pk: PricingPK.stringify(testPricing),
+            name: "test-pricing",
+            app: { __typename: "App", pk: AppPK.stringify(testApp) },
+            availability: GQLPricingAvailability.Public,
+            minMonthlyCharge: "0",
+            chargePerRequest: "0",
+            freeQuota: 0,
+            callToAction: "test-call-to-action",
+            createdAt: testPricing.createdAt,
+            updatedAt: testPricing.updatedAt,
+        });
     });
 
     test("App user can see public pricing", async () => {
-        const result = await pricingResolvers.Query?.pricing?.(
-            {},
-            { pk: PricingPK.stringify(testPricing) },
-            contextAsAppUser,
-            {} as never
-        );
-        expect(result).not.toBe(null);
-        expect(PricingPK.stringify(result!)).toEqual(PricingPK.stringify(testPricing));
+        const result = await testGQLClient({ user: testAppUser }).query({
+            query: getPricingByPKQuery,
+            variables: { pk: PricingPK.stringify(testPricing) },
+        });
+        expect(result?.data.pricing).toEqual(getPricingByPKQueryExpectedValue(testPricing));
     });
 
     test("App user cannot see pricing if the user is not subscribed to it (ger pricing by PK)", async () => {
@@ -77,26 +122,29 @@ describe("Test pricing visibility", () => {
             availability: GQLPricingAvailability.ExistingSubscribers,
         });
         await expect(async () => {
-            const result = await pricingResolvers.Query?.pricing?.(
-                {},
-                { pk: PricingPK.stringify(testPricing) },
-                contextAsAppUser,
-                {} as never
-            );
-        }).rejects.toThrow(Denied);
+            const result = await testGQLClient({ user: testAppUser }).query({
+                query: getPricingByPKQuery,
+                variables: { pk: PricingPK.stringify(testPricing) },
+            });
+        }).rejects.toMatchGraphQLError({
+            code: "PERMISSION_DENIED",
+        });
     });
 
     test("App user cannot see pricing if the user is not subscribed to it (list app pricing)", async () => {
         testPricing = await context.batched.Pricing.update(testPricing, {
             availability: GQLPricingAvailability.ExistingSubscribers,
         });
-        const result = await appResolvers.App?.pricingPlans?.(testApp, {}, contextAsAppUser, {} as never);
-        expect(result).not.toBe(null);
-        expect(result instanceof Array).toBe(true);
-        expect(result?.length).toBe(0);
+        const result = await testGQLClient({ user: testAppUser }).query({
+            query: listAppPricingsQuery,
+            variables: {
+                app: AppPK.stringify(testApp),
+            },
+        });
+        expect(result?.data.app.pricingPlans.length).toBe(0);
     });
 
-    test("App user can see pricing if subscribed (ger pricing by PK)", async () => {
+    test("App user can see pricing if subscribed (get pricing by PK)", async () => {
         testPricing = await context.batched.Pricing.update(testPricing, {
             availability: GQLPricingAvailability.ExistingSubscribers,
         });
@@ -105,14 +153,11 @@ describe("Test pricing visibility", () => {
             pricing: PricingPK.stringify(testPricing),
             subscriber: UserPK.stringify(testAppUser),
         });
-        const result = await pricingResolvers.Query?.pricing?.(
-            {},
-            { pk: PricingPK.stringify(testPricing) },
-            contextAsAppUser,
-            {} as never
-        );
-        expect(result).not.toBe(null);
-        expect(PricingPK.stringify(result!)).toEqual(PricingPK.stringify(testPricing));
+        const result = await testGQLClient({ user: testAppUser }).query({
+            query: getPricingByPKQuery,
+            variables: { pk: PricingPK.stringify(testPricing) },
+        });
+        expect(result?.data.pricing).toEqual(getPricingByPKQueryExpectedValue(testPricing));
     });
 
     test("App user can see pricing if subscribed (list app pricing)", async () => {
@@ -124,10 +169,14 @@ describe("Test pricing visibility", () => {
             pricing: PricingPK.stringify(testPricing),
             subscriber: UserPK.stringify(testAppUser),
         });
-        const result = await appResolvers.App?.pricingPlans?.(testApp, {}, contextAsAppUser, {} as never);
-        expect(result).not.toBe(null);
-        expect(result instanceof Array).toBe(true);
-        expect(result?.length).toBe(1);
-        expect(PricingPK.stringify(await result![0])).toEqual(PricingPK.stringify(testPricing));
+
+        const result = await testGQLClient({ user: testAppUser }).query({
+            query: listAppPricingsQuery,
+            variables: {
+                app: AppPK.stringify(testApp),
+            },
+        });
+        expect(result?.data.app.pricingPlans.length).toBe(1);
+        expect(result?.data.app.pricingPlans[0].pk).toEqual(PricingPK.stringify(testPricing));
     });
 });
