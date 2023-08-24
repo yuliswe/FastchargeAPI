@@ -1,6 +1,6 @@
-import { describe, expect, jest, test } from "@jest/globals";
-import { Chalk } from "chalk";
+import { afterAll, beforeAll, describe, expect, jest, test } from "@jest/globals";
 import { spawn } from "child_process";
+import fs from "fs";
 import { RequestContext, createDefaultContextBatched } from "graphql-service/RequestContext";
 import { User } from "graphql-service/dynamoose/models";
 import { createUserAppToken } from "graphql-service/functions/token";
@@ -10,19 +10,18 @@ import { UserPK } from "graphql-service/pks/UserPK";
 import { getOrCreateTestUser } from "graphql-service/tests/test-utils";
 import fetchNative, { Response } from "node-fetch";
 import path from "path";
+import tmp from "tmp";
 import { v4 as uuidv4 } from "uuid";
 
-const chalk = new Chalk({ level: 3 });
-
-let context: RequestContext = {
+const context: RequestContext = {
     batched: createDefaultContextBatched(),
     isServiceRequest: true,
     isSQSMessage: true,
     isAnonymousUser: false,
+    isAdminUser: false,
 };
 
 jest.setTimeout(60_000);
-const gatewayHost = "localhost";
 
 // graphql-service lambda cold start can take a while, causing occasional HTTP
 // 502 failures. This function retries the request with exponential backoff.
@@ -39,18 +38,21 @@ async function fetch(url: URL | string, options: any): Promise<Response> {
     return result!;
 }
 
-// beforeAll(async () => {
-//     await buildSAM();
-// }, 180_000);
+let testUser: User;
+let sam: SAM;
+beforeAll(async () => {
+    sam = await startLocalSAM();
+    const result = await createUserAndSubscribeToExampleApp(context);
+    testUser = result.testUser;
+});
+
+afterAll(async () => {
+    await sam?.stop();
+});
 
 describe("Test CORS requests", () => {
-    let sam: SAM;
-    test("Start local SAM", async () => {
-        sam = await startLocalSAM();
-    });
-
     test("CORS to / (or any route) should succeed", async () => {
-        let resp = await fetch(sam!.url, {
+        const resp = await fetch(sam!.url, {
             method: "OPTIONS",
         });
         expect(resp.status).toEqual(200);
@@ -60,7 +62,7 @@ describe("Test CORS requests", () => {
     });
 
     test("CORS to /some/path (or any route) should succeed", async () => {
-        let resp = await fetch(sam!.url + "/some/path", {
+        const resp = await fetch(sam!.url + "/some/path", {
             method: "OPTIONS",
         });
         expect(resp.status).toEqual(200);
@@ -70,62 +72,40 @@ describe("Test CORS requests", () => {
     });
 
     test("Requests should pass headers with 401", async () => {
-        let resp = await fetch(sam!.url, {
+        const resp = await fetch(sam!.url, {
             method: "GET",
         });
         expect(resp.status).toEqual(401);
     });
-
-    test("Stop SAM", async () => {
-        await sam!.stop();
-    });
 });
 
 describe("Test request authentication", () => {
-    let testUser: User;
-    let authToken: string;
-
-    test("Prepare: Create test user", async () => {
-        let result = await createUserAndSubscribeToExampleApp(context);
-        testUser = result.testUser;
-        authToken = result.token;
-    });
-
-    let sam: SAM;
-    test("Start local SAM", async () => {
-        sam = await startLocalSAM();
-    });
-
     test("Unauthorized requests should fail with 401", async () => {
-        let requestUrl = new URL(sam!.url.href);
+        const requestUrl = new URL(sam!.url.href);
         requestUrl.pathname = "/echo";
         requestUrl.host = "127.0.0.1";
-        let resp = await fetch(requestUrl.href, {
+        const resp = await fetch(requestUrl.href, {
             method: "GET",
             headers: {
-                Host: `example.${gatewayHost}`,
+                Host: `example.localhost`,
             },
         });
         expect(resp.status).toEqual(401);
     });
 
     test("Authorized requests should succeed", async () => {
-        let requestUrl = new URL(sam!.url.href);
+        const requestUrl = new URL(sam!.url.href);
         requestUrl.pathname = "/echo";
         requestUrl.host = "127.0.0.1";
-        let resp = await fetch(requestUrl.href, {
+        const resp = await fetch(requestUrl.href, {
             method: "GET",
             headers: {
-                Host: `example.${gatewayHost}`,
+                Host: `example.localhost`,
                 "X-User-PK": UserPK.stringify(testUser), // requires trust user pk header test mode enabled
                 "X-User-Email": testUser.email, // requires trust user email header test mode enabled
             },
         });
         expect(resp.status).toEqual(200);
-    });
-
-    test("Stop SAM", async () => {
-        await sam.stop();
     });
 });
 
@@ -136,29 +116,15 @@ type EchoEndpointResponse = {
 };
 
 describe("Test request header passthrough", () => {
-    let testUser: User;
-    let authToken: string;
-
-    test("Prepare: Create test user", async () => {
-        let result = await createUserAndSubscribeToExampleApp(context);
-        testUser = result.testUser;
-        authToken = result.token;
-    });
-
-    let sam: SAM;
-    test("Start local SAM", async () => {
-        sam = await startLocalSAM();
-    });
-
-    // http://example.${gatewayHost}/echo is an endpoint that simply echos the lambda event in the response
-    test(`Send request to http://example.${gatewayHost}/echo and check the headers are passed through`, async () => {
-        let requestUrl = new URL(sam!.url.href);
+    // http://example.localhost/echo is an endpoint that simply echos the lambda event in the response
+    test(`Send request to http://example.localhost/echo and check the headers are passed through`, async () => {
+        const requestUrl = new URL(sam!.url.href);
         requestUrl.pathname = "/echo";
         requestUrl.host = "127.0.0.1";
-        let resp = await fetch(requestUrl.href, {
+        const resp = await fetch(requestUrl.href, {
             method: "POST",
             headers: {
-                Host: `example.${gatewayHost}`,
+                Host: `example.localhost`,
                 "X-User-PK": UserPK.stringify(testUser), // requires trust user pk header test mode enabled
                 "X-User-Email": testUser.email, // requires trust user email header test mode enabled
                 "X-FAST-API-KEY": "X-FAST-API-KEY",
@@ -185,14 +151,14 @@ describe("Test request header passthrough", () => {
         expect(headersLowerCased["custom-header-multi"]).toStrictEqual("Custom-Header-Multi0,Custom-Header-Multi1"); // Any custom header should be kept
     });
 
-    test(`Send request to http://example.${gatewayHost}/echo and check the body is passed`, async () => {
-        let requestUrl = new URL(sam!.url.href);
+    test(`Send request to http://example.localhost/echo and check the body is passed`, async () => {
+        const requestUrl = new URL(sam!.url.href);
         requestUrl.pathname = "/echo";
         requestUrl.host = "127.0.0.1";
-        let resp = await fetch(requestUrl.href, {
+        const resp = await fetch(requestUrl.href, {
             method: "POST",
             headers: {
-                Host: `example.${gatewayHost}`,
+                Host: `example.localhost`,
                 "X-User-PK": UserPK.stringify(testUser), // requires trust user pk header test mode enabled
                 "X-User-Email": testUser.email, // requires trust user email header test mode enabled
             },
@@ -206,15 +172,15 @@ describe("Test request header passthrough", () => {
         expect(JSON.parse(echo.body)).toStrictEqual({ a: 1, b: 2 });
     });
 
-    test(`Send request to http://example.${gatewayHost}/echo?a=1&a=2&b=3&c and check the URL query is passed`, async () => {
-        let requestUrl = new URL(sam!.url.href);
+    test(`Send request to http://example.localhost/echo?a=1&a=2&b=3&c and check the URL query is passed`, async () => {
+        const requestUrl = new URL(sam!.url.href);
         requestUrl.pathname = "/echo";
         requestUrl.search = "a=1&a=2&b=3&c";
         requestUrl.host = "127.0.0.1";
-        let resp = await fetch(requestUrl.href, {
+        const resp = await fetch(requestUrl.href, {
             method: "POST",
             headers: {
-                Host: `example.${gatewayHost}`,
+                Host: `example.localhost`,
                 "X-User-PK": UserPK.stringify(testUser), // requires trust user pk header test mode enabled
                 "X-User-Email": testUser.email, // requires trust user email header test mode enabled
             },
@@ -225,10 +191,6 @@ describe("Test request header passthrough", () => {
         expect(resp.status).toEqual(200);
         const echo = JSON.parse(respText) as EchoEndpointResponse;
         expect(echo.queryParams).toStrictEqual({ a: "1,2", b: "3", c: "" });
-    });
-
-    test("Stop SAM", async () => {
-        await sam.stop();
     });
 });
 
@@ -252,6 +214,17 @@ function makeParameterOverrides(overrides: { [key: string]: string }): string {
         .join(" ");
 }
 
+function writeEnvVarToTempFile() {
+    const tempfile = tmp.fileSync();
+    fs.writeFileSync(
+        tempfile.name,
+        JSON.stringify({
+            GatewayFunction: process.env,
+        })
+    );
+    return tempfile.name;
+}
+
 async function startLocalSAM(): Promise<SAM> {
     const port = 6001 + Math.floor(998 * Math.random());
     const url = `http://127.0.0.1:${port}`;
@@ -261,64 +234,80 @@ async function startLocalSAM(): Promise<SAM> {
             Architecture: getArch(),
         })
     );
-    const sam = spawn(
-        "sam",
-        [
-            "local",
-            "start-api",
-            "--port",
-            port.toString(),
-            "-n",
-            "./testenv.json",
-            "--parameter-overrides",
-            makeParameterOverrides({
-                Authorizer: "NONE",
-                Architecture: getArch(),
-            }),
-            ...platformRunOptions(),
-        ],
-        {
-            cwd: path.join(__dirname, ".."),
-        }
-    );
 
-    sam.stdout.on("data", (data) => {
-        console.log(`SAM: ${data}`);
-    });
+    const envfile = writeEnvVarToTempFile();
+    try {
+        const sam = spawn(
+            "sam",
+            [
+                "local",
+                "start-api",
+                "--port",
+                port.toString(),
+                "--host",
+                "0.0.0.0",
+                "-n",
+                envfile,
+                "--parameter-overrides",
+                makeParameterOverrides({
+                    Authorizer: "NONE",
+                    Architecture: getArch(),
+                }),
+                ...platformRunOptions(),
+            ],
+            {
+                cwd: path.join(__dirname, ".."),
+            }
+        );
 
-    sam.stderr.on("data", (data) => {
-        console.log(`SAM: ${data}`);
-    });
-
-    const maxRetries = 4;
-    let i = 0;
-    for (i = 0; i < maxRetries; i++) {
-        console.log("Waiting for SAM to start...");
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-        try {
-            await fetch(url, {
-                method: "OPTIONS",
-            });
-            break;
-        } catch (error) {
-            // ignore
-        }
-    }
-
-    if (i === maxRetries) {
-        throw new Error("SAM failed to start");
-    }
-
-    return {
-        url: new URL(url),
-        stop: async (): Promise<void> => {
+        const stop = async (): Promise<void> => {
             sam.stdout.destroy();
             sam.stderr.destroy();
-            let ret = new Promise<void>((resolve) => sam.on("close", resolve));
+            const ret = new Promise<void>((resolve) => sam.on("close", resolve));
             sam.kill("SIGINT");
             return ret;
-        },
-    };
+        };
+
+        try {
+            sam.stdout.on("data", (data) => {
+                console.log(`SAM: ${data}`);
+            });
+
+            sam.stderr.on("data", (data) => {
+                console.log(`SAM: ${data}`);
+            });
+
+            const maxRetries = 50;
+            let i = 0;
+            for (i = 0; i < maxRetries; i++) {
+                console.log("Waiting for SAM to start at", url);
+                await new Promise((resolve) => setTimeout(resolve, 5000));
+                try {
+                    await fetch(url, {
+                        method: "OPTIONS",
+                    });
+                    break;
+                } catch (error) {
+                    // ignore
+                    console.log(error);
+                }
+            }
+
+            if (i === maxRetries) {
+                throw new Error("SAM failed to start");
+            }
+
+            return {
+                url: new URL(url),
+                stop,
+            };
+        } catch (e) {
+            await stop();
+            throw e;
+        }
+    } finally {
+        fs.unlinkSync(envfile);
+    }
 }
 
 type CreateUserAndSubscribeToExampleAppResult = {
@@ -326,15 +315,17 @@ type CreateUserAndSubscribeToExampleAppResult = {
     token: string;
 };
 // TODO: Create example app here on the fly
-async function createUserAndSubscribeToExampleApp(context: RequestContext) {
+async function createUserAndSubscribeToExampleApp(
+    context: RequestContext
+): Promise<CreateUserAndSubscribeToExampleAppResult> {
     const testUserEmail = `testuser_${uuidv4()}@gmail_mock.com`;
-    let testUser = await getOrCreateTestUser(context, { email: testUserEmail });
+    const testUser = await getOrCreateTestUser(context, { email: testUserEmail });
 
-    let appPK = AppPK.stringify({
+    const appPK = AppPK.stringify({
         name: "example",
     });
-    let userPK = UserPK.stringify(testUser);
-    let pricing = await context.batched.Pricing.get({
+    const userPK = UserPK.stringify(testUser);
+    const pricing = await context.batched.Pricing.get({
         app: appPK,
         name: "Free",
     });
@@ -344,7 +335,7 @@ async function createUserAndSubscribeToExampleApp(context: RequestContext) {
         pricing: PricingPK.stringify(pricing),
     });
 
-    let { userAppToken, token } = await createUserAppToken(context, { user: userPK, app: appPK });
+    const { token } = await createUserAppToken(context, { user: userPK, app: appPK });
     return {
         testUser,
         token,

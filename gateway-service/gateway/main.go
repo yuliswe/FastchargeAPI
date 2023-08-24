@@ -438,6 +438,7 @@ func billUsage(graphqlClient *graphql.Client, user string, app string, path stri
 		*sqsClient,
 		user,
 		app,
+		path,
 	); err != nil {
 		fmt.Println(color.Red, "Error TriggerBilling: ", err, color.Reset)
 	}
