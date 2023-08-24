@@ -1,3 +1,4 @@
+import { GQLStripeTransferStatus } from "@/__generated__/resolvers-types";
 import { EventBridgeEvent, EventBridgeHandler } from "aws-lambda";
 import { Chalk } from "chalk";
 import { Decimal } from "decimal.js-light";
@@ -31,7 +32,7 @@ async function handle(event: EventBridgeEvent<string, EventDetail>, context: nev
     due.setHours(0, 0, 0, 0);
     const pendingTransfers = await batched.StripeTransfer.many(
         {
-            status: "pending",
+            status: GQLStripeTransferStatus.Pending,
             transferAt: { lt: due.getTime() },
         },
         {
@@ -59,7 +60,7 @@ async function handle(event: EventBridgeEvent<string, EventDetail>, context: nev
 
                 // Save status right away to make sure we don't double transfer
                 await batched.StripeTransfer.update(transfer, {
-                    status: "transferred",
+                    status: GQLStripeTransferStatus.Transferred,
                 });
                 try {
                     const stripeClient = await getStripeClient();
@@ -72,7 +73,7 @@ async function handle(event: EventBridgeEvent<string, EventDetail>, context: nev
                     total = total.plus(transfer.receiveAmount);
                 } catch (error) {
                     await batched.StripeTransfer.update(transfer, {
-                        status: "failed",
+                        status: GQLStripeTransferStatus.Failed,
                     });
                     failureCount++;
                     try {

@@ -11,14 +11,17 @@ const jestConfig: JestConfigWithTsJest = {
                 useESM: true,
             },
         ],
-        ".hbs": "@glen/jest-raw-loader",
+        "^.+\\.graphql$": ["@glen/jest-raw-loader", {}],
+        "^.+\\.hbs$": ["@glen/jest-raw-loader", {}],
     },
     roots: ["<rootDir>"],
     modulePaths: [compilerOptions.baseUrl],
     moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths),
     transformIgnorePatterns: ["/node_modules/(?!(chalk)/)"],
     modulePathIgnorePatterns: ["dist"],
-    setupFilesAfterEnv: ["<rootDir>/tests/test.env.ts"],
+    setupFilesAfterEnv: ["<rootDir>/tests/test.env.ts", "<rootDir>/tests/test.setupAfterEnv.ts"],
+    coverageDirectory: ".coverage",
+    coverageReporters: ["text", "html", "lcov"],
 };
 
 export default jestConfig;

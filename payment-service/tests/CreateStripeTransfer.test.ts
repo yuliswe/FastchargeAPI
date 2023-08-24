@@ -1,12 +1,14 @@
-import { describe, expect, jest, test } from "@jest/globals";
+import { mockSQS } from "@/MockSQS";
+import { beforeAll, describe, expect, jest, test } from "@jest/globals";
+import assert from "assert";
 import { Decimal } from "decimal.js-light";
 import { RequestContext, UserPK, createDefaultContextBatched, getUserBalance } from "graphql-service";
 import { StripeTransfer, User } from "graphql-service/dynamoose/models";
 import { AccountActivityPK } from "graphql-service/pks/AccountActivityPK";
 import { addMoneyForUser, getOrCreateTestUser } from "graphql-service/tests/test-utils";
-import { LambdaEventV2 } from "utils/LambdaContext";
 import { v4 as uuidv4 } from "uuid";
 import { handle as CreateStripeTransfer } from "../handlers/CreateStripeTransfer";
+import { makeCreateStripeTransferLambdaEvent } from "./sample-data/CreateStripeTransfer";
 
 const testScale = Number.parseInt(process.env.TEST_SCALE || "1");
 const testSize = 20 * testScale;
@@ -14,90 +16,42 @@ const testSize = 20 * testScale;
 jest.setTimeout(120_000);
 jest.retryTimes(3, { logErrorsBeforeRetry: true });
 
-export const context: RequestContext = {
+const context: RequestContext = {
     service: "payment",
     isServiceRequest: true,
     isSQSMessage: true,
     batched: createDefaultContextBatched(),
+    isAnonymousUser: false,
+    isAdminUser: false,
 };
 
-function makeLambdaEvent({ userPK, body }: { userPK: string; body: string }): LambdaEventV2 {
-    return {
-        version: "2.0",
-        routeKey: "POST /accept-payment",
-        rawPath: "/accept-payment",
-        rawQueryString: "",
-        headers: {
-            accept: "*/*; q=0.5, application/xml",
-            "accept-encoding": "gzip",
-            "cache-control": "no-cache",
-            "content-length": "3513",
-            "content-type": "application/json; charset=utf-8",
-            host: "api.v2.payment.fastchargeapi.com",
-            "stripe-signature":
-                "t=1678780438,v1=fb6de4205abb8029c7ab92f14b259189a98786a0a7587edb068e5b4791c927d0,v0=b51edf9067d16b92d1378db7cff793d06e5ceb576b0357caf9b9f6d8890c4609",
-            "user-agent": "Stripe/1.0 (+https://stripe.com/docs/webhooks)",
-            "x-amzn-trace-id": "Root=1-64102816-07688b1e117da0152f43d994",
-            "x-forwarded-for": "72.136.80.113",
-            "x-forwarded-port": "443",
-            "x-forwarded-proto": "https",
-        },
-        requestContext: {
-            accountId: "887279901853",
-            apiId: "pngsxpq63k",
-            domainName: "api.v2.payment.fastchargeapi.com",
-            domainPrefix: "api",
-            authorizer: {
-                lambda: {
-                    userPK,
-                },
-            },
-            http: {
-                method: "POST",
-                path: "/accept-payment",
-                protocol: "HTTP/1.1",
-                sourceIp: "72.136.80.113",
-                userAgent: "Stripe/1.0 (+https://stripe.com/docs/webhooks)",
-            },
-            requestId: uuidv4(),
-            routeKey: "POST /accept-payment",
-            stage: "$default",
-            time: "14/Mar/2023:07:53:58 +0000",
-            timeEpoch: 1678780438960,
-        },
-        body,
-        isBase64Encoded: false,
-    };
-}
+type PromiseType<T> = T extends PromiseLike<infer U> ? U : T;
 
 describe("Test a succesful withdraw to Stripe", () => {
     const testUserEmail = `testuser_${uuidv4()}@gmail_mock.com`;
     let testUser: User;
-
-    test("Preparation: get test user", async () => {
-        testUser = await getOrCreateTestUser(context, { email: testUserEmail });
-    });
-
     let userBalance: Decimal;
-    test("Before start, the test user should have a minimum of $3", async () => {
-        await addMoneyForUser(context, { user: UserPK.stringify(testUser), amount: "3" });
-        userBalance = new Decimal(await getUserBalance(context, UserPK.stringify(testUser)));
-        expect(userBalance.gte("3")).toBeTruthy();
-    });
+    let response: PromiseType<ReturnType<typeof CreateStripeTransfer>>;
 
-    test("Create a StripeTransfer via SQS", async () => {
-        const response = await CreateStripeTransfer(
-            makeLambdaEvent({
+    beforeAll(async () => {
+        testUser = await getOrCreateTestUser(context, { email: testUserEmail });
+
+        await addMoneyForUser(context, { user: UserPK.stringify(testUser), amount: "3" });
+        await mockSQS.waitForQueuesToEmpty();
+
+        userBalance = new Decimal(await getUserBalance(context, UserPK.stringify(testUser)));
+        assert.equal(userBalance.toNumber(), 3);
+
+        response = await CreateStripeTransfer(
+            makeCreateStripeTransferLambdaEvent({
                 userPK: UserPK.stringify(testUser),
                 body: JSON.stringify({
                     withdraw: "3",
                 }),
             })
         );
-        if (response.statusCode !== 200) {
-            console.error("response", response.body);
-        }
-        expect(response.statusCode).toBe(200);
+
+        assert.equal(response.statusCode, 200);
     });
 
     test("Check that the StripeTransfer was created", async () => {
@@ -151,27 +105,33 @@ describe("Test a succesful withdraw to Stripe", () => {
 describe(`Test that the creation of StripeTransfer is properly queued, by making ${testSize} wihdrawl requests simultaneously. All requests should be handled.`, () => {
     const testUserEmail = `testuser_${uuidv4()}@gmail_mock.com`;
     let testUser: User;
-
-    test("Preparation: get test user", async () => {
-        testUser = await getOrCreateTestUser(context, { email: testUserEmail });
-    });
-
     let userBalance: Decimal;
+
     const withdrawlAmount = "3";
     const requiredBalance = new Decimal(testSize).times(withdrawlAmount);
-    test(`Before start, the test user should have a minimum of ${requiredBalance.toString()}`, async () => {
+
+    beforeAll(async () => {
+        testUser = await getOrCreateTestUser(context, { email: testUserEmail });
+
+        console.log(`Before start, the test user should have a minimum of ${requiredBalance.toString()}`);
         await addMoneyForUser(context, { user: UserPK.stringify(testUser), amount: requiredBalance.toString() });
         userBalance = new Decimal(await getUserBalance(context, UserPK.stringify(testUser)));
-        expect(userBalance.gte(requiredBalance)).toBeTruthy();
-    });
 
-    test(`Withdraw ${testSize} times asynchronously`, async () => {
+        if (userBalance.lt(requiredBalance)) {
+            throw new Error(`Test user does not have enough money to run the test. ${userBalance.toString()}`);
+        }
+
+        if (process.env.LOCAL_SQS === "1") {
+            console.log(`Withdraw ${testSize} times synchronously (due to LOCAL_SQS=1)`);
+        } else {
+            console.log(`Withdraw ${testSize} times asynchronously`);
+        }
         const batchSize = 10;
         async function doBatch(size: number) {
             const promises = [];
             for (let j = 0; j < size; j++) {
                 const p = CreateStripeTransfer(
-                    makeLambdaEvent({
+                    makeCreateStripeTransferLambdaEvent({
                         userPK: UserPK.stringify(testUser),
                         body: JSON.stringify({
                             withdraw: "3",
@@ -180,11 +140,11 @@ describe(`Test that the creation of StripeTransfer is properly queued, by making
                 );
                 promises.push(p);
             }
+            if (process.env.LOCAL_SQS === "1") {
+                await mockSQS.waitForQueuesToEmpty();
+            }
             for await (const response of promises) {
-                if (response.statusCode !== 200) {
-                    console.error("response", response.body);
-                }
-                expect(response.statusCode).toBe(200);
+                assert(response.statusCode === 200);
             }
         }
         let i = batchSize;

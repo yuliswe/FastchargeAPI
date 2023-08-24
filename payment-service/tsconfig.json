@@ -9,7 +9,7 @@
     "module": "ESNext",
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "types": ["node"],
+    "typeRoots": ["./node_modules/@types", ".symlinks/graphql-service/@types"],
     "noImplicitAny": true,
     "noImplicitThis": true,
     "alwaysStrict": true,
@@ -24,6 +24,7 @@
     "resolveJsonModule": true,
     "baseUrl": "./",
     "paths": {
+      "@/*": [".symlinks/graphql-service/*"],
       "graphql-service": [".symlinks/graphql-service"],
       "graphql-service/*": [".symlinks/graphql-service/*"]
     }

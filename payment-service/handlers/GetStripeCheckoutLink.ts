@@ -14,6 +14,8 @@ function createRequestContext(): RequestContext {
         batched,
         service: "payment",
         isSQSMessage: false,
+        isAnonymousUser: false,
+        isAdminUser: false,
     };
 }
 

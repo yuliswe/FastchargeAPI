@@ -26,6 +26,8 @@ const context: RequestContext = {
     isServiceRequest: true,
     isSQSMessage: false,
     batched: createDefaultContextBatched(),
+    isAnonymousUser: false,
+    isAdminUser: false,
 };
 
 export type StripeSessionObject = {
@@ -216,7 +218,7 @@ async function createOrder({
     const billingQueueClient = sqsGQLClient({
         queueUrl: SQSQueueUrl.BillingQueue,
         groupId: UserPK.stringify(user),
-        dedupId: md5(`${UserPK.stringify(user)}-createOrder-${session.id}`),
+        dedupId: `createOrder-${UserPK.stringify(user)}-${session.id}`,
     });
     await billingQueueClient.mutate<void, GQLMutationCreateStripePaymentAcceptArgs>({
         mutation: gql(`
@@ -255,11 +257,9 @@ async function fulfillOrder(session: StripeSessionObject, paymentAccept: StripeP
         query: gql(`
             query FulfillUserStripePaymentAccept($user: ID!, $stripeSessionId: String!, $stripeSessionObject: String!, $stripePaymentStatus: String!, $stripePaymentIntent: String!,
                ) {
-                user(pk: $user) {
-                    stripePaymentAccept(stripeSessionId: $stripeSessionId) {
-                        settlePayment(stripeSessionObject: $stripeSessionObject, stripePaymentStatus:$stripePaymentStatus, stripePaymentIntent: $stripePaymentIntent) {
-                            stripePaymentStatus
-                        }
+                getStripePaymentAccept(user: $user, stripeSessionId: $stripeSessionId) {
+                    settlePayment(stripeSessionObject: $stripeSessionObject, stripePaymentStatus:$stripePaymentStatus, stripePaymentIntent: $stripePaymentIntent) {
+                        stripePaymentStatus
                     }
                 }
             }

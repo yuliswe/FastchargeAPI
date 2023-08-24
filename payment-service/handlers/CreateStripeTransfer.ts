@@ -21,6 +21,8 @@ export const context: RequestContext = {
     isServiceRequest: true,
     isSQSMessage: false,
     batched: createDefaultContextBatched(),
+    isAnonymousUser: false,
+    isAdminUser: false,
 };
 
 /**

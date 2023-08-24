@@ -23,10 +23,11 @@
     "logs": "sam logs --tail",
     "logs:live": "sam logs --config-env live --tail",
     "start": "npm run build && sam local start-api -p 3000 --warm-containers lazy",
-    "watch": "nodemon -e ts,graphql,yml,yaml -i __generated__ --signal SIGINT -x 'npm run typecheck'",
-    "test": "jest",
+    "watch": "nodemon -e ts,graphql,yml,yaml,json -i __generated__ --signal SIGINT -x 'npm run typecheck'",
+    "test": "jest --runInBand",
     "fix": "eslint --fix ./",
-    "typecheck": "npm run gen && tsc --noEmit"
+    "pretypecheck": "npm run gen",
+    "typecheck": "tsc --noEmit"
   },
   "author": "",
   "license": "ISC",
