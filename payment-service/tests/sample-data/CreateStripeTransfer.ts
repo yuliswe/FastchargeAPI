@@ -1,4 +1,4 @@
-import { LambdaEventV2 } from "utils/LambdaContext";
+import { LambdaEventV2 } from "../../utils/LambdaContext";
 import { v4 as uuidv4 } from "uuid";
 
 export function makeCreateStripeTransferLambdaEvent({ userPK, body }: { userPK: string; body: string }): LambdaEventV2 {

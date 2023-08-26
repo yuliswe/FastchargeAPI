@@ -103,7 +103,7 @@ Resources:
         DefaultAuthorizer: FirebaseTokenAuthorizer
         Authorizers:
           FirebaseTokenAuthorizer:
-            AuthorizerPayloadFormatVersion: 2.0
+            AuthorizerPayloadFormatVersion: "2.0"
             FunctionArn: !Sub arn:aws:lambda:us-east-1:${AWS::AccountId}:function:${ServicePrefix}-auth-service-FirebaseTokenAuthorizer
             FunctionInvokeRole: !GetAtt APIGatewayV2InvocationRole.Arn
             Identity:
@@ -150,7 +150,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub ${AWS::StackName}-ExecuteDailyStripeTransferCronJob
-      CodeUri: ./
+      CodeUri: ./dist
       Handler: ExecuteDailyStripeTransfer.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
@@ -174,18 +174,13 @@ Resources:
             ScheduleExpression: "cron(0 20 * * ? *)"
             Input: '{"dryRun": false}'
     Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        UseNpmCi: True
-        Target: "es2022"
-        EntryPoints:
-          - cron-jobs/ExecuteDailyStripeTransfer.ts
+      SkipBuild: True
 
   SendStripeDashboardLink:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       FunctionName: !Sub ${AWS::StackName}-SendStripeDashboardLink
-      CodeUri: ./
+      CodeUri: ./dist
       Handler: SendStripeDashboardLink.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
@@ -199,18 +194,13 @@ Resources:
             Path: /send-stripe-login-link
             Method: post
     Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        UseNpmCi: True
-        Target: "es2022"
-        EntryPoints:
-          - handlers/SendStripeDashboardLink.ts
+      SkipBuild: True
 
   GetStripeOnBoardLink:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       FunctionName: !Sub ${AWS::StackName}-GetStripeOnBoardLink
-      CodeUri: ./
+      CodeUri: ./dist
       Handler: GetStripeOnBoardLink.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
@@ -224,18 +214,13 @@ Resources:
             Path: /get-stripe-onboard-link
             Method: post
     Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        UseNpmCi: True
-        Target: "es2022"
-        EntryPoints:
-          - handlers/GetStripeOnBoardLink.ts
+      SkipBuild: True
 
   AcceptStripePayment:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       FunctionName: !Sub ${AWS::StackName}-AcceptStripePayment
-      CodeUri: ./
+      CodeUri: ./dist
       Handler: AcceptStripePayment.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
@@ -251,20 +236,13 @@ Resources:
             Path: /accept-stripe-payment
             Method: post
     Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        UseNpmCi: True
-        Target: "es2022"
-        Loader:
-          - .hbs=file
-        EntryPoints:
-          - handlers/AcceptStripePayment.ts
+      SkipBuild: True
 
   GetStripeCheckoutLink:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       FunctionName: !Sub ${AWS::StackName}-GetStripeCheckoutLink
-      CodeUri: ./
+      CodeUri: ./dist
       Handler: GetStripeCheckoutLink.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
@@ -278,18 +256,13 @@ Resources:
             Path: /get-stripe-checkout-link
             Method: post
     Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        UseNpmCi: True
-        Target: "es2022"
-        EntryPoints:
-          - handlers/GetStripeCheckoutLink.ts
+      SkipBuild: True
 
   CreateStripeTransfer:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       FunctionName: !Sub ${AWS::StackName}-CreateStripeTransfer
-      CodeUri: ./
+      CodeUri: ./dist
       Handler: CreateStripeTransfer.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
@@ -303,18 +276,13 @@ Resources:
             Path: /create-stripe-transfer
             Method: post
     Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        UseNpmCi: True
-        Target: "es2022"
-        EntryPoints:
-          - handlers/CreateStripeTransfer.ts
+      SkipBuild: True
 
   FinishStripeOnboard:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       FunctionName: !Sub ${AWS::StackName}-FinishStripeOnboard
-      CodeUri: ./
+      CodeUri: ./dist
       Handler: FinishStripeOnboard.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
@@ -330,9 +298,4 @@ Resources:
             Path: /finish-stripe-onboard
             Method: post
     Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        UseNpmCi: True
-        Target: "es2022"
-        EntryPoints:
-          - handlers/FinishStripeOnboard.ts
+      SkipBuild: True

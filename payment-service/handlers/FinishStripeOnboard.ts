@@ -2,13 +2,13 @@
  * You can use this file as a template for your Lambda function.
  */
 
-import { Context as LambdaContext, APIGatewayProxyStructuredResultV2 } from "aws-lambda";
+import { createDefaultContextBatched } from "@/RequestContext";
+import { APIGatewayProxyStructuredResultV2, Context as LambdaContext } from "aws-lambda";
 import { Chalk } from "chalk";
+import Stripe from "stripe";
+import { GQLUserIndex } from "../__generated__/gql-operations";
 import { LambdaCallbackV2, LambdaEventV2, LambdaHandlerV2 } from "../utils/LambdaContext";
 import { parseStripeWebhookEvent } from "../utils/stripe-client";
-import Stripe from "stripe";
-import { createDefaultContextBatched } from "graphql-service";
-import { GQLUserIndex } from "__generated__/gql-operations";
 
 const chalk = new Chalk({ level: 3 });
 const batched = createDefaultContextBatched();

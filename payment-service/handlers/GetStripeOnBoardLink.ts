@@ -1,6 +1,7 @@
+import { createDefaultContextBatched } from "@/RequestContext";
+import { UserPK } from "@/pks/UserPK";
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { Chalk } from "chalk";
-import { UserPK, createDefaultContextBatched } from "graphql-service";
 import { LambdaEventV2, LambdaHandlerV2, getCurrentUserFromEvent } from "../utils/LambdaContext";
 import { getStripeClient } from "../utils/stripe-client";
 

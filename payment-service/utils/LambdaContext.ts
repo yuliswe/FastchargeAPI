@@ -1,12 +1,13 @@
-import { GQLUserIndex } from "__generated__/gql-operations";
+import { createDefaultContextBatched } from "@/RequestContext";
+import { User } from "@/database/models";
+import { UserPK } from "@/pks/UserPK";
 import {
     APIGatewayProxyEventV2WithLambdaAuthorizer,
     APIGatewayProxyHandlerV2WithLambdaAuthorizer,
     APIGatewayProxyStructuredResultV2,
     Callback as LmabdaCallback,
 } from "aws-lambda";
-import { UserPK, createDefaultContextBatched } from "graphql-service";
-import { User } from "graphql-service/dynamoose/models";
+import { GQLUserIndex } from "../__generated__/gql-operations";
 
 export type AuthorizerContext = {
     userPK?: string;

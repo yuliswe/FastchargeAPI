@@ -1,4 +1,4 @@
-import { LambdaEventV2 } from "utils/LambdaContext";
+import { LambdaEventV2 } from "../../utils/LambdaContext";
 
 export function makeGetStripeCheckoutLinkLambdaEvent({
     userPK,

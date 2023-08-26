@@ -1,4 +1,4 @@
-import { baseDomain } from "graphql-service/runtime-config";
+import { baseDomain } from "@/runtime-config";
 import Handlebars from "handlebars";
 import paymentAcceptedEmailTemplate from "./payment-accepted.hbs";
 

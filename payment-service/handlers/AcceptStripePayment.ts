@@ -1,14 +1,14 @@
+import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
+import { StripePaymentAccept, User } from "@/database/models";
+import { UserPK } from "@/pks/UserPK";
+import { baseDomain } from "@/runtime-config";
+import { SQSQueueUrl, sqsGQLClient } from "@/sqsClient";
 import { gql } from "@apollo/client";
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { Chalk } from "chalk";
 import crypto from "crypto";
 import Decimal from "decimal.js-light";
-import { getPaymentAcceptedEmail } from "email-templates/payment-accepted";
-import { RequestContext, UserPK, createDefaultContextBatched, sqsGQLClient } from "graphql-service";
-import { StripePaymentAccept, User } from "graphql-service/dynamoose/models";
-import { baseDomain } from "graphql-service/runtime-config";
-import { SQSQueueUrl } from "graphql-service/sqsClient";
 import { Stripe } from "stripe";
 import {
     GQLFulfillUserStripePaymentAcceptQuery,
@@ -16,6 +16,7 @@ import {
     GQLMutationCreateStripePaymentAcceptArgs,
     GQLUserIndex,
 } from "../__generated__/gql-operations";
+import { getPaymentAcceptedEmail } from "../email-templates/payment-accepted";
 import { LambdaEventV2, LambdaHandlerV2 } from "../utils/LambdaContext";
 import { parseStripeWebhookEvent } from "../utils/stripe-client";
 

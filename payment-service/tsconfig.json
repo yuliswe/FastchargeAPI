@@ -9,7 +9,7 @@
     "module": "ESNext",
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "typeRoots": ["./node_modules/@types", ".symlinks/graphql-service/@types"],
+    "typeRoots": ["./node_modules/@types", "../graphql-service/apollo/@types"],
     "noImplicitAny": true,
     "noImplicitThis": true,
     "alwaysStrict": true,
@@ -22,11 +22,9 @@
     "strict": true,
     "noEmit": true,
     "resolveJsonModule": true,
-    "baseUrl": "./",
+    "baseUrl": "../",
     "paths": {
-      "@/*": [".symlinks/graphql-service/*"],
-      "graphql-service": [".symlinks/graphql-service"],
-      "graphql-service/*": [".symlinks/graphql-service/*"]
+      "@/*": ["graphql-service/apollo/*"]
     }
   },
   "exclude": ["node_modules", "dist"]

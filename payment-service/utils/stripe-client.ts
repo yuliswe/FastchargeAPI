@@ -1,4 +1,4 @@
-import { getParameterFromAWSSystemsManager } from "graphql-service";
+import { getParameterFromAWSSystemsManager } from "@/functions/aws";
 import { Stripe } from "stripe";
 import { LambdaEventV2 } from "./LambdaContext";
 

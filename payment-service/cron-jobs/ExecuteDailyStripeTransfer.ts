@@ -1,8 +1,10 @@
+import { createDefaultContextBatched } from "@/RequestContext";
 import { GQLStripeTransferStatus } from "@/__generated__/resolvers-types";
+import { StripeTransferPK } from "@/pks/StripeTransferPK";
+import { UserPK } from "@/pks/UserPK";
 import { EventBridgeEvent, EventBridgeHandler } from "aws-lambda";
 import { Chalk } from "chalk";
 import { Decimal } from "decimal.js-light";
-import { StripeTransferPK, UserPK, createDefaultContextBatched } from "graphql-service";
 import { GQLStripeTransferIndex } from "../__generated__/gql-operations";
 import { getStripeClient } from "../utils/stripe-client";
 const chalk = new Chalk({ level: 3 });

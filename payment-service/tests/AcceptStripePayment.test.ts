@@ -1,9 +1,10 @@
 import { mockSQS } from "@/MockSQS";
+import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
+import { User } from "@/database/models";
+import { UserPK } from "@/pks/UserPK";
+import { getOrCreateTestUser } from "@/tests/test-utils";
 import { describe, expect, jest, test } from "@jest/globals";
 import assert from "assert";
-import { RequestContext, UserPK, createDefaultContextBatched } from "graphql-service";
-import { User } from "graphql-service/dynamoose/models";
-import { getOrCreateTestUser } from "graphql-service/tests/test-utils";
 import stripe from "stripe";
 import { v4 as uuidv4 } from "uuid";
 import { handle as AcceptPayment, StripeSessionObject } from "../handlers/AcceptStripePayment";

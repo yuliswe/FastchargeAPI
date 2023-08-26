@@ -1,8 +1,8 @@
+import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
+import { User } from "@/database/models";
+import { UserPK } from "@/pks/UserPK";
+import { getOrCreateTestUser } from "@/tests/test-utils";
 import { describe, expect, jest, test } from "@jest/globals";
-import { UserPK, createDefaultContextBatched } from "graphql-service";
-import { RequestContext } from "graphql-service/RequestContext";
-import { User } from "graphql-service/dynamoose/models";
-import { getOrCreateTestUser } from "graphql-service/tests/test-utils";
 import { v4 as uuidv4 } from "uuid";
 import { handle as Checkout } from "../handlers/GetStripeCheckoutLink";
 import { makeGetStripeCheckoutLinkLambdaEvent } from "./sample-data/GetStripeCheckoutLink";
