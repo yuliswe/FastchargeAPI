@@ -1,5 +1,6 @@
 import { RequestContext } from "../RequestContext";
-import { AccountActivity, StripePaymentAccept } from "../dynamoose/models";
+import { GQLAccountActivityReason, GQLAccountActivityType } from "../__generated__/resolvers-types";
+import { AccountActivity, StripePaymentAccept } from "../database/models";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { StripePaymentAcceptPK } from "../pks/StripePaymentAccept";
 
@@ -17,8 +18,8 @@ export async function generateAccountActivityForStripePayment(
     const activity = await context.batched.AccountActivity.create({
         user: stripePaymentAccept.user,
         amount: stripePaymentAccept.amount,
-        type: "debit",
-        reason: "topup",
+        type: GQLAccountActivityType.Debit,
+        reason: GQLAccountActivityReason.Topup,
         settleAt: Date.now(),
         description: "Account top-up by you",
         stripePaymentAccept: StripePaymentAcceptPK.stringify(stripePaymentAccept),

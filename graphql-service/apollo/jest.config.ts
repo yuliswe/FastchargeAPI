@@ -5,8 +5,8 @@ const jestConfig: JestConfigWithTsJest = {
     // [...]
     preset: "ts-jest/presets/js-with-ts-esm", // or other ESM presets
     testEnvironment: "node",
-    setupFiles: ["./tests/jest-setup.ts"],
-    setupFilesAfterEnv: ["./tests/jest-setup-after-env.ts"],
+    setupFiles: ["./tests/test.env.ts"],
+    setupFilesAfterEnv: ["./tests/test.setupAfterEnv.ts"],
     transform: {
         "^.+\\.tsx?$": [
             "ts-jest",
@@ -14,9 +14,15 @@ const jestConfig: JestConfigWithTsJest = {
                 useESM: true,
             },
         ],
+        "^.+\\.graphql$": ["@glen/jest-raw-loader", {}],
+        "^.+\\.hbs$": ["@glen/jest-raw-loader", {}],
     },
-    // modulePaths: [compilerOptions.baseUrl],
-    moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths),
+    roots: ["<rootDir>"],
+    modulePaths: [...compilerOptions.baseUrl],
+    moduleNameMapper: pathsToModuleNameMapper({
+        ...compilerOptions.paths,
+        "@/*": ["*"],
+    }),
     transformIgnorePatterns: ["/node_modules/(?!(chalk)/)"],
     modulePathIgnorePatterns: ["dist"],
     testTimeout: 120_000,

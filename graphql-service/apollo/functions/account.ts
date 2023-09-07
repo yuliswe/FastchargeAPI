@@ -1,65 +1,32 @@
-import { gql } from "@apollo/client/core";
 import { Chalk } from "chalk";
 import Decimal from "decimal.js-light";
 import { Item } from "dynamoose/dist/Item";
 import { RequestContext } from "../RequestContext";
-import {
-    GQLTriggerSettleAccountActivitiesForUsersQuery,
-    GQLTriggerSettleAccountActivitiesForUsersQueryVariables,
-} from "../__generated__/operation-types";
-import { AccountActivity, AccountHistory } from "../dynamoose/models";
+
+import { graphql } from "../__generated__/gql";
+import { GQLAccountActivityStatus } from "../__generated__/resolvers-types";
+import { AccountActivity, AccountHistory } from "../database/models";
 import { AlreadyExists } from "../errors";
-import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { AccountHistoryPK } from "../pks/AccountHistoryPK";
 import { SQSQueueUrl, sqsGQLClient } from "../sqsClient";
+import { enforceCalledFromQueue } from "./aws";
 
 const chalk = new Chalk({ level: 3 });
 
-export function enforceCalledFromQueue(context: RequestContext, accountUser: string) {
-    if (!context.isSQSMessage) {
-        if (!process.env.UNSAFE_BILLING) {
-            console.error(
-                chalk.red(
-                    `This function must be called from an SQS message. If you are not running in production, you can set the UNSAFE_BILLING=1 environment variable to bypass this check.`
-                )
-            );
-            throw new Error("This function must be called from SQS");
-        }
-    }
-    if (!context.isSQSMessage && context.sqsQueueName !== accountUser) {
-        if (!process.env.UNSAFE_BILLING) {
-            console.error(
-                chalk.red(
-                    `SQS group ID must be the receiver. Expected: ${accountUser}, current: ${
-                        context.sqsQueueName ?? "undefined"
-                    }. If you are not running in production, you can set the UNSAFE_BILLING=1 environment variable to bypass this check.`
-                )
-            );
-            throw new Error("SQS group ID must be the receiver.");
-        }
-    }
-}
-
 export async function settleAccountActivitiesOnSQS(context: RequestContext, accountUser: string) {
-    if (context.isSQSMessage) {
-        throw new Error("settleAccountActivitiesOnSQS must not be called from SQS. It may cause an infinite loop.");
-    }
     const client = sqsGQLClient({ queueUrl: SQSQueueUrl.BillingQueue, dedupId: accountUser, groupId: accountUser });
-    await client.query<
-        GQLTriggerSettleAccountActivitiesForUsersQuery,
-        GQLTriggerSettleAccountActivitiesForUsersQueryVariables
-    >({
-        query: gql`
-            query TriggerSettleAccountActivitiesForUsers($email: Email!) {
-                user(email: $email) {
+    const result = await client.query({
+        query: graphql(`
+            query SettleAccountActivitiesOnSQS($user: ID!) {
+                getUser(pk: $user) {
                     settleAccountActivities {
                         pk
                     }
                 }
             }
-        `,
+        `),
         variables: {
-            email: accountUser,
+            user: accountUser,
         },
     });
 }
@@ -96,7 +63,7 @@ export async function settleAccountActivities(
     const activities = await context.batched.AccountActivity.many(
         {
             user: accountUser,
-            status: "pending",
+            status: GQLAccountActivityStatus.Pending,
             settleAt: { le: closingTime },
         },
         {
@@ -148,7 +115,7 @@ export async function settleAccountActivities(
 
     const promises: Promise<Item>[] = [];
     for (const activity of activities) {
-        activity.status = "settled";
+        activity.status = GQLAccountActivityStatus.Settled;
         activity.accountHistory = AccountHistoryPK.stringify(accountHistory);
         if (activity.type === "credit") {
             balance = balance.sub(activity.amount);
@@ -208,8 +175,4 @@ export async function getUserAccountHistoryRepresentingBalance(
     { consistent }: { consistent?: boolean } = {}
 ): Promise<AccountHistory | null> {
     return context.batched.AccountHistory.getOrNull({ user: userPK }, { sort: "descending", limit: 1, consistent });
-}
-
-export function getAccountActivityByPK(context: RequestContext, pk: string): Promise<AccountActivity> {
-    return context.batched.AccountActivity.get(AccountActivityPK.parse(pk));
 }

@@ -21,10 +21,12 @@
     "allowJs": true,
     "strict": true,
     "noEmit": true,
-    "baseUrl": "./",
+    "typeRoots": ["./node_modules/@types", "../graphql-service/apollo/@types"],
+    "baseUrl": "../",
     "paths": {
-      "graphql-service": [".symlinks/graphql-service"],
-      "graphql-service/*": [".symlinks/graphql-service/*"]
+      "@/*": ["graphql-service/apollo/*"],
+      "graphql-service": ["graphql-service/apollo"],
+      "graphql-service/*": ["graphql-service/apollo/*"]
     }
   },
   "exclude": ["node_modules", "dist"]

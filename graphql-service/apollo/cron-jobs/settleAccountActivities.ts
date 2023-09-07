@@ -1,12 +1,9 @@
-import { gql } from "@apollo/client";
 import { EventBridgeEvent, EventBridgeHandler } from "aws-lambda";
 import { Chalk } from "chalk";
 import { createDefaultContextBatched } from "../RequestContext";
-import {
-    GQLAccountActivityIndex,
-    GQLTriggerSettleAccountActivitiesForUsersQuery,
-    GQLTriggerSettleAccountActivitiesForUsersQueryVariables,
-} from "../__generated__/resolvers-types";
+
+import { graphql } from "@/typed-graphql";
+import { GQLAccountActivityIndex, GQLAccountActivityStatus } from "../__generated__/resolvers-types";
 import { SQSQueueUrl, sqsGQLClient } from "../sqsClient";
 
 const chalk = new Chalk({ level: 3 });
@@ -20,7 +17,7 @@ const chalk = new Chalk({ level: 3 });
 async function handle(event: EventBridgeEvent<string, {}>, context: never, callback: never) {
     const batched = createDefaultContextBatched();
     const activities = await batched.AccountActivity.many(
-        { status: "pending", settleAt: { le: Date.now() } },
+        { status: GQLAccountActivityStatus.Pending, settleAt: { le: Date.now() } },
         { using: GQLAccountActivityIndex.IndexByStatusSettleAtOnlyPk }
     );
 
@@ -34,11 +31,8 @@ async function handle(event: EventBridgeEvent<string, {}>, context: never, callb
 
     for (const user of users) {
         try {
-            await sqsClient.query<
-                GQLTriggerSettleAccountActivitiesForUsersQuery,
-                GQLTriggerSettleAccountActivitiesForUsersQueryVariables
-            >({
-                query: gql`
+            await sqsClient.query({
+                query: graphql(`
                     query TriggerSettleAccountActivitiesForUsers($email: Email!) {
                         user(email: $email) {
                             settleAccountActivities {
@@ -46,7 +40,7 @@ async function handle(event: EventBridgeEvent<string, {}>, context: never, callb
                             }
                         }
                     }
-                `,
+                `),
                 variables: {
                     email: user,
                 },

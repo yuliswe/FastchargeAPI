@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, jest, test } from "@jest/globals
 import { spawn } from "child_process";
 import fs from "fs";
 import { RequestContext, createDefaultContextBatched } from "graphql-service/RequestContext";
-import { User } from "graphql-service/dynamoose/models";
+import { User } from "graphql-service/database/models";
 import { createUserAppToken } from "graphql-service/functions/token";
 import { AppPK } from "graphql-service/pks/AppPK";
 import { PricingPK } from "graphql-service/pks/PricingPK";

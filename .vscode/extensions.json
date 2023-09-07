@@ -1,7 +1,6 @@
 {
   "recommendations": [
     "alefragnani.bookmarks",
-    "bungcip.better-toml",
     "dbaeumer.vscode-eslint",
     "dlech.chmod",
     "dsznajder.es7-react-js-snippets",
@@ -34,6 +33,7 @@
     "wayou.vscode-todo-highlight",
     "yzhang.markdown-all-in-one",
     "znck.grammarly",
-    "amazonwebservices.aws-toolkit-vscode"
+    "amazonwebservices.aws-toolkit-vscode",
+    "tamasfe.even-better-toml"
   ]
 }

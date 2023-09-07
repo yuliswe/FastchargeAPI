@@ -40,6 +40,8 @@ Resources:
 
   AccountActivityTable:
     Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       AttributeDefinitions:
         - AttributeName: "createdAt"
@@ -51,7 +53,7 @@ Resources:
         - AttributeName: "user"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["_", [!Ref TablePrefix, "AccountActivity"]]
+      TableName: !Join ["", [!Ref TablePrefix, "AccountActivity"]]
       DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
@@ -72,6 +74,8 @@ Resources:
 
   EndpointTable:
     Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       AttributeDefinitions:
         - AttributeName: "app"
@@ -79,7 +83,7 @@ Resources:
         - AttributeName: "createdAt"
           AttributeType: "N"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["_", [!Ref TablePrefix, "Endpoint"]]
+      TableName: !Join ["", [!Ref TablePrefix, "Endpoint"]]
       DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
@@ -91,6 +95,8 @@ Resources:
 
   AccountHistoryTable:
     Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       AttributeDefinitions:
         - AttributeName: "startingTime"
@@ -98,7 +104,7 @@ Resources:
         - AttributeName: "user"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["_", [!Ref TablePrefix, "AccountHistory"]]
+      TableName: !Join ["", [!Ref TablePrefix, "AccountHistory"]]
       DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
@@ -110,6 +116,8 @@ Resources:
 
   FreeQuotaUsageTable:
     Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       AttributeDefinitions:
         - AttributeName: "app"
@@ -117,7 +125,7 @@ Resources:
         - AttributeName: "subscriber"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["_", [!Ref TablePrefix, "FreeQuotaUsage"]]
+      TableName: !Join ["", [!Ref TablePrefix, "FreeQuotaUsage"]]
       DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
@@ -129,6 +137,8 @@ Resources:
 
   GatewayRequestCounterTable:
     Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       AttributeDefinitions:
         - AttributeName: "app"
@@ -136,7 +146,7 @@ Resources:
         - AttributeName: "requester"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["_", [!Ref TablePrefix, "GatewayRequestCounter"]]
+      TableName: !Join ["", [!Ref TablePrefix, "GatewayRequestCounter"]]
       DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
@@ -148,6 +158,8 @@ Resources:
 
   AppTable:
     Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       AttributeDefinitions:
         - AttributeName: "name"
@@ -155,7 +167,7 @@ Resources:
         - AttributeName: "owner"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["_", [!Ref TablePrefix, "App"]]
+      TableName: !Join ["", [!Ref TablePrefix, "App"]]
       DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
@@ -172,6 +184,8 @@ Resources:
 
   PricingTable:
     Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       AttributeDefinitions:
         - AttributeName: "app"
@@ -179,7 +193,7 @@ Resources:
         - AttributeName: "createdAt"
           AttributeType: "N"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["_", [!Ref TablePrefix, "Pricing"]]
+      TableName: !Join ["", [!Ref TablePrefix, "Pricing"]]
       DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
@@ -191,12 +205,14 @@ Resources:
 
   SecretTable:
     Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       AttributeDefinitions:
         - AttributeName: "key"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["_", [!Ref TablePrefix, "Secret"]]
+      TableName: !Join ["", [!Ref TablePrefix, "Secret"]]
       DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
@@ -206,6 +222,8 @@ Resources:
 
   StripePaymentAcceptTable:
     Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       AttributeDefinitions:
         - AttributeName: "createdAt"
@@ -213,7 +231,7 @@ Resources:
         - AttributeName: "user"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["_", [!Ref TablePrefix, "StripePaymentAccept"]]
+      TableName: !Join ["", [!Ref TablePrefix, "StripePaymentAccept"]]
       DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
@@ -225,6 +243,8 @@ Resources:
 
   SubscribeTable:
     Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       AttributeDefinitions:
         - AttributeName: "app"
@@ -232,7 +252,7 @@ Resources:
         - AttributeName: "subscriber"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["_", [!Ref TablePrefix, "Subscribe"]]
+      TableName: !Join ["", [!Ref TablePrefix, "Subscribe"]]
       DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
@@ -244,6 +264,8 @@ Resources:
 
   StripeTransferTable:
     Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       AttributeDefinitions:
         - AttributeName: "createdAt"
@@ -255,7 +277,7 @@ Resources:
         - AttributeName: "transferAt"
           AttributeType: "N"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["_", [!Ref TablePrefix, "StripeTransfer"]]
+      TableName: !Join ["", [!Ref TablePrefix, "StripeTransfer"]]
       DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
@@ -276,14 +298,18 @@ Resources:
 
   SubscriptionTable:
     Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       AttributeDefinitions:
         - AttributeName: "app"
           AttributeType: "S"
         - AttributeName: "subscriber"
           AttributeType: "S"
+        - AttributeName: "pricing"
+          AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["_", [!Ref TablePrefix, "Subscription"]]
+      TableName: !Join ["", [!Ref TablePrefix, "Subscription"]]
       DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
@@ -292,9 +318,20 @@ Resources:
           KeyType: "HASH"
         - AttributeName: "app"
           KeyType: "RANGE"
+      GlobalSecondaryIndexes:
+        - IndexName: "indexByPricing_subscriber__onlyPK"
+          KeySchema:
+            - AttributeName: "pricing"
+              KeyType: "HASH"
+            - AttributeName: "subscriber"
+              KeyType: "RANGE"
+          Projection:
+            ProjectionType: "KEYS_ONLY"
 
   UsageSummaryTable:
     Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       AttributeDefinitions:
         - AttributeName: "createdAt"
@@ -302,7 +339,7 @@ Resources:
         - AttributeName: "subscriber"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["_", [!Ref TablePrefix, "UsageSummary"]]
+      TableName: !Join ["", [!Ref TablePrefix, "UsageSummary"]]
       DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
@@ -314,6 +351,8 @@ Resources:
 
   UserTable:
     Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       AttributeDefinitions:
         - AttributeName: "email"
@@ -321,7 +360,7 @@ Resources:
         - AttributeName: "uid"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["_", [!Ref TablePrefix, "User"]]
+      TableName: !Join ["", [!Ref TablePrefix, "User"]]
       DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
@@ -338,6 +377,8 @@ Resources:
 
   UserAppTokenTable:
     Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       AttributeDefinitions:
         - AttributeName: "createdAt"
@@ -345,7 +386,7 @@ Resources:
         - AttributeName: "subscriber"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["_", [!Ref TablePrefix, "UserAppToken"]]
+      TableName: !Join ["", [!Ref TablePrefix, "UserAppToken"]]
       DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
@@ -357,6 +398,8 @@ Resources:
 
   UsageLogTable:
     Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       AttributeDefinitions:
         - AttributeName: "createdAt"
@@ -364,7 +407,7 @@ Resources:
         - AttributeName: "subscriber"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["_", [!Ref TablePrefix, "UsageLog"]]
+      TableName: !Join ["", [!Ref TablePrefix, "UsageLog"]]
       DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
@@ -376,6 +419,8 @@ Resources:
 
   GatewayRequestDecisionCacheTable:
     Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       AttributeDefinitions:
         - AttributeName: "app"
@@ -383,7 +428,7 @@ Resources:
         - AttributeName: "requester"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["_", [!Ref TablePrefix, "GatewayRequestDecisionCache"]]
+      TableName: !Join ["", [!Ref TablePrefix, "GatewayRequestDecisionCache"]]
       DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
@@ -395,6 +440,8 @@ Resources:
 
   AppTagTable:
     Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       AttributeDefinitions:
         - AttributeName: "app"
@@ -402,7 +449,7 @@ Resources:
         - AttributeName: "tag"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["_", [!Ref TablePrefix, "AppTag"]]
+      TableName: !Join ["", [!Ref TablePrefix, "AppTag"]]
       DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]
@@ -423,12 +470,14 @@ Resources:
 
   SiteMetaDataTagTable:
     Type: "AWS::DynamoDB::Table"
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       AttributeDefinitions:
         - AttributeName: "key"
           AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
-      TableName: !Join ["_", [!Ref TablePrefix, "SiteMetaData"]]
+      TableName: !Join ["", [!Ref TablePrefix, "SiteMetaData"]]
       DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: !If [PointInTimeRecoveryEnabled, true, false]

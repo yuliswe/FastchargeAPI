@@ -1,13 +1,19 @@
 import { Chalk } from "chalk";
 import Decimal from "decimal.js-light";
 import { RequestContext } from "../RequestContext";
-import { GQLUsageSummaryStatus } from "../__generated__/resolvers-types";
-import { AccountActivity, FreeQuotaUsage, Pricing, UsageSummary } from "../dynamoose/models";
+import {
+    GQLAccountActivityReason,
+    GQLAccountActivityStatus,
+    GQLAccountActivityType,
+    GQLUsageSummaryStatus,
+} from "../__generated__/resolvers-types";
+import { AccountActivity, FreeQuotaUsage, Pricing, UsageSummary } from "../database/models";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { AppPK } from "../pks/AppPK";
 import { PricingPK } from "../pks/PricingPK";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
-import { enforceCalledFromQueue, settleAccountActivitiesOnSQS } from "./account";
+import { settleAccountActivitiesOnSQS } from "./account";
+import { enforceCalledFromQueue } from "./aws";
 import { collectUsageLogs } from "./usage";
 const chalk = new Chalk({ level: 3 });
 
@@ -84,8 +90,8 @@ export async function generateAccountActivities(
         promises.push(
             context.batched.FreeQuotaUsage.update(freeQuotaUsage, {
                 $ADD: { usage: volumeFree },
-            }).then((item) => {
-                results.affectedFreeQuotaUsage = item;
+            }).then((freeQuotaUsage) => {
+                results.affectedFreeQuotaUsage = freeQuotaUsage;
             })
         );
     }
@@ -98,28 +104,27 @@ export async function generateAccountActivities(
 
         const subscriberPerRequestActivityPromise = context.batched.AccountActivity.create({
             user: subscriber,
-            type: "credit",
-            reason: "api_per_request_charge",
-            status: "pending",
+            type: GQLAccountActivityType.Credit,
+            reason: GQLAccountActivityReason.ApiPerRequestCharge,
+            status: GQLAccountActivityStatus.Pending,
             settleAt: Date.now(),
             amount: price.mul(volumeBillable).toString(),
             usageSummary: UsageSummaryPK.stringify(usageSummary),
             description: `API request charge`,
             billedApp: usageSummary.app,
             consumedFreeQuota: volumeFree,
-        }).then(async (activity) => {
+        }).then((activity) => {
             results.createdAccountActivities!.subscriberRequestFee = activity;
-            usageSummary.billingAccountActivity = AccountActivityPK.stringify(activity);
-            await usageSummary.save();
+            usageSummary.billingRequestChargeAccountActivity = AccountActivityPK.stringify(activity);
             results.updatedUsageSummary = usageSummary;
             return activity;
         });
 
         const appAuthorPerRequestActivityPromise = context.batched.AccountActivity.create({
             user: appAuthor,
-            type: "debit",
-            reason: "api_per_request_charge",
-            status: "pending",
+            type: GQLAccountActivityType.Debit,
+            reason: GQLAccountActivityReason.ApiPerRequestCharge,
+            status: GQLAccountActivityStatus.Pending,
             settleAt: Date.now(),
             amount: price.mul(volumeBillable).toString(),
             usageSummary: UsageSummaryPK.stringify(usageSummary),
@@ -128,14 +133,15 @@ export async function generateAccountActivities(
             consumedFreeQuota: volumeFree,
         }).then((activity) => {
             results.createdAccountActivities!.appAuthorRequestFee = activity;
+            usageSummary.appOwnerRequestChargeAccountActivity = AccountActivityPK.stringify(activity);
             return activity;
         });
 
         const appAuthorServiceFeePerRequestActivityPromise = context.batched.AccountActivity.create({
             user: appAuthor,
-            type: "credit",
-            reason: "fastchargeapi_per_request_service_fee",
-            status: "pending",
+            type: GQLAccountActivityType.Credit,
+            reason: GQLAccountActivityReason.FastchargeapiPerRequestServiceFee,
+            status: GQLAccountActivityStatus.Pending,
             settleAt: Date.now(),
             amount: new Decimal(serviceFeePerRequest).mul(usageSummary.volume).toString(), // We charge by the total volume regardless of free quota
             usageSummary: UsageSummaryPK.stringify(usageSummary),
@@ -143,6 +149,7 @@ export async function generateAccountActivities(
             billedApp: usageSummary.app,
         }).then((activity) => {
             results.createdAccountActivities!.appAuthorServiceFee = activity;
+            usageSummary.appOwnerServiceFeeAccountActivity = AccountActivityPK.stringify(activity);
             return activity;
         });
 
@@ -167,9 +174,11 @@ export async function generateAccountActivities(
         if (forceMonthlyCharge || (!disableMonthlyCharge && shouldBillMonthly)) {
             const subscriberMonthlyActivityPromise = context.batched.AccountActivity.create({
                 user: subscriber,
-                type: "credit",
-                reason: isUpgrade ? "api_min_monthly_charge_upgrade" : "api_min_monthly_charge",
-                status: "pending",
+                type: GQLAccountActivityType.Credit,
+                reason: isUpgrade
+                    ? GQLAccountActivityReason.ApiMinMonthlyChargeUpgrade
+                    : GQLAccountActivityReason.ApiMinMonthlyCharge,
+                status: GQLAccountActivityStatus.Pending,
                 settleAt: Date.now(), // We want to charge the subscriber immediately
                 amount: forceMonthlyCharge ? pricing.minMonthlyCharge : monthlyBill.toString(),
                 usageSummary: UsageSummaryPK.stringify(usageSummary),
@@ -177,14 +186,17 @@ export async function generateAccountActivities(
                 billedApp: usageSummary.app,
             }).then((activity) => {
                 results.createdAccountActivities!.subscriberMonthlyFee = activity;
+                usageSummary.billingMonthlyChargeAccountActivity = AccountActivityPK.stringify(activity);
                 return activity;
             });
 
             const appAuthorMonthlyActivityPromise = context.batched.AccountActivity.create({
                 user: appAuthor,
-                type: "debit",
-                reason: isUpgrade ? "api_min_monthly_charge_upgrade" : "api_min_monthly_charge",
-                status: "pending",
+                type: GQLAccountActivityType.Debit,
+                reason: isUpgrade
+                    ? GQLAccountActivityReason.ApiMinMonthlyChargeUpgrade
+                    : GQLAccountActivityReason.ApiMinMonthlyCharge,
+                status: GQLAccountActivityStatus.Pending,
                 settleAt: Date.now() + 1000 * monthlyChargeOnHoldPeriodInSeconds,
                 amount: forceMonthlyCharge ? pricing.minMonthlyCharge : monthlyBill.toString(),
                 usageSummary: UsageSummaryPK.stringify(usageSummary),
@@ -192,6 +204,7 @@ export async function generateAccountActivities(
                 billedApp: usageSummary.app,
             }).then((activity) => {
                 results.createdAccountActivities!.appAuthorMonthlyFee = activity;
+                usageSummary.appOwnerMonthlyChargeAccountActivity = AccountActivityPK.stringify(activity);
                 return activity;
             });
 
@@ -205,6 +218,7 @@ export async function generateAccountActivities(
             errors.push(result.reason);
         }
     }
+    await usageSummary.save();
     if (errors.length > 0) {
         throw new Error("Error creating AccountActivity.");
     }
@@ -247,8 +261,8 @@ export async function shouldCollectMonthlyCharge(
     const allBillsThisMonth = await context.batched.AccountActivity.many({
         user: subscriber,
         billedApp: app,
-        type: "credit",
-        reason: "api_min_monthly_charge",
+        type: GQLAccountActivityType.Credit,
+        reason: GQLAccountActivityReason.ApiMinMonthlyCharge,
         settleAt: { ge: Date.now() - 1000 * collectionPeriodInSeconds }, // get the last bill in 30 days
     });
     let totalPaidThisMonth = new Decimal(0);
@@ -328,10 +342,10 @@ export async function computeBillableVolume(
  */
 export async function triggerBilling(
     context: RequestContext,
-    { user, app }: { user: string; app: string }
+    { user, app, path }: { user: string; app: string; path: string }
 ): Promise<{ affectedUsageSummaries: UsageSummary[] }> {
     enforceCalledFromQueue(context, user);
-    await collectUsageLogs(context, { user, app });
+    await collectUsageLogs(context, { user, app, path });
     const uncollectedUsageSummaries = await context.batched.UsageSummary.many({
         subscriber: user,
         app,

@@ -1,5 +1,5 @@
-import { Batched } from "graphql-service/dynamoose/dataloader";
-import { Item } from "graphql-service/dynamoose/models";
+import { Batched } from "graphql-service/database/dataloader";
+import { Item } from "graphql-service/database/models";
 
 export async function copyColumn<I extends Item>(model: Batched<I>, oldColumn: keyof I, newColumn: keyof I) {
     let completed = 0;

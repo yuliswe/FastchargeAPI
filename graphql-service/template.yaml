@@ -83,17 +83,6 @@ Resources:
     Properties:
       LogGroupName: !Sub "${AWS::StackName}-APIGatewayAccessLogGroup"
 
-  # This is a custom build layer. See:
-  # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/building-layers.html
-  CopyDependencies:
-    Type: AWS::Serverless::LayerVersion
-    Properties:
-      ContentUri: ./apollo
-      CompatibleRuntimes:
-        - nodejs18.x
-    Metadata:
-      BuildMethod: makefile # Required to have AWS SAM build this layer
-
   IAMGenerateCertificate: # Creates a valid certificate for the HTTP API endpoint under the custom domain
     Type: AWS::CertificateManager::Certificate
     Properties:
@@ -243,7 +232,7 @@ Resources:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       FunctionName: !Sub ${AWS::StackName}-ApolloServer
-      CodeUri: ./apollo
+      CodeUri: ./apollo/dist/
       Handler: lambdaHandler.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
@@ -281,19 +270,14 @@ Resources:
           TRUST_X_IS_SERVICE_REQUEST_HEADER: "" # WARNING: Must not be trusted in production.
           # AWS_LAMBDA_EXEC_WRAPPER: ""
     Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        UseNpmCi: True
-        Target: "es2022"
-        EntryPoints:
-          - lambdaHandler.ts
+      SkipBuild: True
 
   SQSApolloServer:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub ${AWS::StackName}-SQSApolloServer
-      CodeUri: ./apollo
-      Handler: sqsHandler.handler
+      CodeUri: ./apollo/dist/
+      Handler: lambdaHandler.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
         - arm64
@@ -314,12 +298,7 @@ Resources:
             FunctionResponseTypes:
               - ReportBatchItemFailures
     Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        UseNpmCi: True
-        Target: "es2022"
-        EntryPoints:
-          - sqsHandler.ts
+      SkipBuild: True
 
   UsageLogQueue:
     Type: AWS::SQS::Queue
@@ -378,7 +357,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub ${AWS::StackName}-SettleAccountActivitiesCronJob
-      CodeUri: ./apollo/cron-jobs
+      CodeUri: ./dist/cron-jobs
       Handler: settleAccountActivities.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
@@ -392,9 +371,4 @@ Resources:
           Properties:
             ScheduleExpression: "rate(6 hours)"
     Metadata: # Manage esbuild properties
-      BuildMethod: esbuild
-      BuildProperties:
-        UseNpmCi: True
-        Target: "es2022"
-        EntryPoints:
-          - settleAccountActivities.ts
+      SkipBuild: True

@@ -5,9 +5,9 @@ import {
     GQLResolvers,
     GQLSecretResolvers,
 } from "../__generated__/resolvers-types";
-import { Secret, SecretModel } from "../dynamoose/models";
+import { Secret, SecretModel } from "../database/models";
 
-export const secretResolvers: GQLResolvers & {
+export const SecretResolvers: GQLResolvers & {
     Secret: Required<GQLSecretResolvers>;
 } = {
     Secret: {
@@ -23,7 +23,7 @@ export const secretResolvers: GQLResolvers & {
         },
     },
     Query: {
-        async secret(parent: {}, { key }: GQLQuerySecretArgs, context: RequestContext) {
+        async getSecret(parent: {}, { key }: GQLQuerySecretArgs, context: RequestContext) {
             const secret = await context.batched.Secret.get({ key });
             return secret;
         },
@@ -39,3 +39,6 @@ export const secretResolvers: GQLResolvers & {
         },
     },
 };
+
+/* Deprecated */
+SecretResolvers.Query!.secret = SecretResolvers.Query?.getSecret;

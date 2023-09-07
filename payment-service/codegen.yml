@@ -3,7 +3,7 @@
 documents:
   - "./handlers/**/*.ts"
   - "./utils/**/*.ts"
-schema: "../graphql-service/apollo/schema/App.graphql"
+schema: "../graphql-service/apollo/schema/Public.graphql"
 generates:
   # Specify where our generated types should live.
   ./__generated__/gql-operations.ts:

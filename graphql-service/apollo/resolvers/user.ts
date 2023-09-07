@@ -8,19 +8,16 @@ import {
     GQLQueryUserArgs,
     GQLResolvers,
     GQLUserAccountActivitiesArgs,
-    GQLUserCreateAppTokenArgs,
     GQLUserGetFastchargeApiIdTokenArgs,
     GQLUserIndex,
     GQLUserResolvers,
-    GQLUserStripePaymentAcceptArgs,
     GQLUserUpdateUserArgs,
     GQLUserUsageLogsArgs,
     GQLUserUsageSummariesArgs,
 } from "../__generated__/resolvers-types";
-import { AccountActivity, App, Subscription, User, UserAppToken, UserModel } from "../dynamoose/models";
-import { BadInput, Denied, TooManyResources } from "../errors";
+import { AccountActivity, App, Subscription, User, UserModel } from "../database/models";
+import { BadInput, Denied } from "../errors";
 import { getUserBalance, settleAccountActivities } from "../functions/account";
-import { createUserAppToken } from "../functions/token";
 import { createUserWithEmail, makeFastchargeAPIIdTokenForUser } from "../functions/user";
 import { Can } from "../permissions";
 import { UserPK } from "../pks/UserPK";
@@ -42,7 +39,7 @@ function makePrivate<T>(
     };
 }
 
-export const userResolvers: GQLResolvers & {
+export const UserResolvers: GQLResolvers & {
     User: Required<GQLUserResolvers>;
 } = {
     User: {
@@ -51,8 +48,8 @@ export const userResolvers: GQLResolvers & {
          **************************/
 
         __isTypeOf: (parent) => parent instanceof UserModel,
-        createdAt: (parent) => parent.createdAt,
-        updatedAt: (parent) => parent.updatedAt,
+        createdAt: makePrivate((parent) => parent.createdAt),
+        updatedAt: makePrivate((parent) => parent.updatedAt),
         author: (parent) => parent.author || "", // users name that is visible to everyone.
 
         /**
@@ -98,20 +95,15 @@ export const userResolvers: GQLResolvers & {
             }
             return await getUserBalance(context, UserPK.stringify(parent));
         },
-
-        async appToken(parent, { app }, context) {
-            if (!(await Can.viewUserPrivateAttributes(parent, context))) {
-                throw new Denied();
-            }
-            return await context.batched.UserAppToken.get({ subscriber: UserPK.stringify(parent), app });
-        },
-
-        async stripePaymentAccept(parent, { stripeSessionId }: GQLUserStripePaymentAcceptArgs, context) {
-            if (!(await Can.viewUserPrivateAttributes(parent, context))) {
-                throw new Denied();
-            }
-            return await context.batched.StripePaymentAccept.get({ user: UserPK.stringify(parent), stripeSessionId });
-        },
+        // async stripePaymentAccept(parent, { stripeSessionId }: GQLUserStripePaymentAcceptArgs, context) {
+        //     if (!(await Can.viewUserPrivateAttributes(parent, context))) {
+        //         throw new Denied();
+        //     }
+        //     if (!stripeSessionId) {
+        //         throw new BadInput("stripeSessionId required");
+        //     }
+        //     return await context.batched.StripePaymentAccept.get({ user: UserPK.stringify(parent), stripeSessionId });
+        // },
 
         async accountActivities(parent: User, { limit, dateRange }: GQLUserAccountActivitiesArgs, context) {
             if (!(await Can.viewUserPrivateAttributes(parent, context))) {
@@ -235,26 +227,6 @@ export const userResolvers: GQLResolvers & {
             return result.affectedAccountActivities;
         },
 
-        async createAppToken(
-            parent: User,
-            { app }: GQLUserCreateAppTokenArgs,
-            context: RequestContext
-        ): Promise<UserAppToken> {
-            if (!(await Can.createUserPrivateResources(parent, context))) {
-                throw new Denied();
-            }
-            const existing = await context.batched.UserAppToken.getOrNull({
-                subscriber: UserPK.stringify(parent),
-                app,
-            });
-            if (existing) {
-                throw new TooManyResources("A token already exists for this user and app.");
-            }
-            const { userAppToken, token } = await createUserAppToken(context, { user: UserPK.stringify(parent), app });
-            userAppToken.token = token; // Do not store the token string in the database.
-            return userAppToken;
-        },
-
         /**
          * Collect any account activities that are in the pending status, and have the
          * settleAt property in the past. Create a new account AccountHistory for the
@@ -304,7 +276,7 @@ export const userResolvers: GQLResolvers & {
         //     let users = await context.batched.User.scan();
         //     return users;
         // },
-        async user(parent: {}, { pk, email }: GQLQueryUserArgs, context: RequestContext) {
+        async getUser(parent: {}, { pk, email }: GQLQueryUserArgs, context: RequestContext) {
             let user;
             if (email) {
                 user = await context.batched.User.get(
@@ -321,13 +293,16 @@ export const userResolvers: GQLResolvers & {
             }
             // Does this need to be private? I don't think so, but I'll leave it
             // for now.
-            if (!(await Can.viewUserPrivateAttributes(user, context))) {
+            if (!(await Can.queryUser(user, context))) {
                 throw new Denied();
             }
             return user;
         },
     },
     Mutation: {
+        /**
+         * Used for testing CLI only
+         */
         async createUser(
             parent: {},
             { email }: GQLMutationCreateUserArgs,
@@ -342,3 +317,6 @@ export const userResolvers: GQLResolvers & {
         },
     },
 };
+
+/* Deprecated */
+UserResolvers.Query!.user = UserResolvers.Query!.getUser;

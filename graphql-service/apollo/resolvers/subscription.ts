@@ -6,7 +6,7 @@ import {
     GQLResolvers,
     GQLSubscribeUpdateSubscriptionArgs,
 } from "../__generated__/resolvers-types";
-import { Subscription } from "../dynamoose/models";
+import { Subscription } from "../database/models";
 import { Denied } from "../errors";
 import { Can } from "../permissions";
 import { AppPK } from "../pks/AppPK";
@@ -28,7 +28,7 @@ function makePrivate<T>(
         return getter(parent, args, context);
     };
 }
-export const subscriptionResolvers: GQLResolvers = {
+export const SubscriptionResolvers: GQLResolvers = {
     Subscribe: {
         pk: makePrivate((parent) => SubscriptionPK.stringify(parent)),
         updatedAt: makePrivate((parent) => parent.updatedAt),
@@ -72,7 +72,7 @@ export const subscriptionResolvers: GQLResolvers = {
         },
     },
     Query: {
-        async subscription(parent: {}, { pk, subscriber, app }: GQLQuerySubscriptionArgs, context: RequestContext) {
+        async getSubscription(parent: {}, { pk, subscriber, app }: GQLQuerySubscriptionArgs, context: RequestContext) {
             let subscription: Subscription;
             if (pk) {
                 subscription = await context.batched.Subscription.get(SubscriptionPK.parse(pk));
@@ -110,3 +110,6 @@ export const subscriptionResolvers: GQLResolvers = {
         },
     },
 };
+
+/* Deprecated */
+SubscriptionResolvers.Query!.subscription = SubscriptionResolvers.Query!.getSubscription!;

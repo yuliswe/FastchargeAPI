@@ -15,13 +15,18 @@ import { RequestContext, RequestService, createDefaultContextBatched } from "./R
 import { server } from "./server";
 chalk.level = 3;
 
-const handle = startServerAndCreateLambdaHandler<RequestHandler<SQSRecord, void>, RequestContext>(
+const handle = startServerAndCreateLambdaHandler<RequestHandler<SQSRecord, HTTPGraphQLResponse>, RequestContext>(
     server,
     {
         fromEvent(record) {
             const headers = new HeaderMap();
             headers.set("Content-Type", "application/json");
-            console.log(chalk.blue("Recieved SQSRecord: " + record.body));
+            try {
+                console.log(chalk.blue("Recieved SQSRecord: " + JSON.stringify(JSON.parse(record.body), null, 2)));
+            } catch (jsonError) {
+                console.error(jsonError);
+                console.log(record.body);
+            }
             return {
                 method: "POST",
                 headers,
@@ -29,26 +34,39 @@ const handle = startServerAndCreateLambdaHandler<RequestHandler<SQSRecord, void>
                 body: JSON.parse(record.body),
             };
         },
+        // If there's an error in the graphql query, the response will be 200
+        // with errors in the body. However, since the SQS GraphQL client can't
+        // receive the body, we always make it throw an error, so that the error
+        // is logged.
         toSuccessResult(response: HTTPGraphQLResponse) {
+            // I'm not sure why when the graphl query success, the status is undefined
             if (response.status === 200 || response.status == undefined) {
-                // I'm not sure why when the graphl query success, the status is undefined
                 if (response.body && response.body.kind === "complete") {
-                    const body = response.body.string;
-                    if (JSON.parse(body).errors) {
-                        console.error(chalk.red("Error response: " + body));
-                        throw new Error("Error response: " + body);
-                    } else {
-                        return response;
+                    const body = JSON.parse(response.body.string);
+                    if (body.errors) {
+                        console.error(
+                            chalk.red(
+                                "Found graphqlErrors in the response to SQSGraphQLClient:\n" +
+                                    JSON.stringify(body.errors, null, 2)
+                            )
+                        );
+                        throw new Error(
+                            "Found graphqlErrors in the response to SQSGraphQLClient:\n" +
+                                JSON.stringify(body.errors, null, 2),
+                            {
+                                cause: body,
+                            }
+                        );
                     }
-                } else {
-                    return response;
                 }
+                console.log(chalk.green("Response (not visible to client): " + JSON.stringify(response, null, 2)));
+                return response;
             } else {
-                console.error(chalk.red("Non-200 response: " + JSON.stringify(response)));
-                throw new Error("Non-200 response: " + JSON.stringify(response));
+                console.error(chalk.red("Non-200 response to SQSGraphQLClient: ", response));
+                throw new Error("Non-200 response to SQSGraphQLClient:\n" + JSON.stringify(response, null, 2));
             }
         },
-        toErrorResult(error: object) {
+        toErrorResult(error: any) {
             console.error(chalk.red(error.toString()));
             throw error;
         },
@@ -84,9 +102,10 @@ export const handler = async (
             await handle(record, context, callback);
         } catch (error) {
             try {
-                console.error(chalk.red(JSON.stringify(error)));
+                console.error(chalk.red(JSON.stringify(error, null, 2)));
             } catch (jsonError) {
-                // ignore
+                console.error(error);
+                console.error(jsonError);
             }
             batchItemFailures.push({ itemIdentifier: record.messageId });
         }
@@ -96,8 +115,8 @@ export const handler = async (
     };
 };
 
-export async function handSendMessageCommandData(command: SendMessageCommandInput) {
-    return await handle(
+export async function handSendMessageCommandData(command: SendMessageCommandInput): Promise<HTTPGraphQLResponse> {
+    return (await handle(
         {
             body: command.MessageBody ?? "",
             messageId: "0",
@@ -122,5 +141,5 @@ export async function handSendMessageCommandData(command: SendMessageCommandInpu
         (err, result) => {
             // nothing
         }
-    );
+    )) as HTTPGraphQLResponse;
 }

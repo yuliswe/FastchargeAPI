@@ -1,10 +1,11 @@
 import Decimal from "decimal.js-light";
 import { RequestContext } from "../RequestContext";
-import { AccountActivity, StripeTransfer } from "../dynamoose/models";
+import { GQLAccountActivityReason, GQLAccountActivityType } from "../__generated__/resolvers-types";
+import { AccountActivity, StripeTransfer } from "../database/models";
 import { BadInput } from "../errors";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { StripeTransferPK } from "../pks/StripeTransferPK";
-import { enforceCalledFromQueue } from "./account";
+import { enforceCalledFromQueue } from "./aws";
 
 /**
  * Takes a StripeTransfer, and create AccountActivities for the transfer,
@@ -36,8 +37,8 @@ export async function createAccountActivitiesForTransfer(
     const payoutActivity = await context.batched.AccountActivity.create({
         user: userPK,
         amount: transfer.receiveAmount,
-        type: "credit",
-        reason: "payout",
+        type: GQLAccountActivityType.Credit,
+        reason: GQLAccountActivityReason.Payout,
         settleAt: settleAt - 1, // set in the past so it's settled immediately
         description: `Payment to your Stripe account`,
         stripeTransfer: StripeTransferPK.stringify(transfer),
@@ -45,8 +46,8 @@ export async function createAccountActivitiesForTransfer(
     const feeActivity = await context.batched.AccountActivity.create({
         user: userPK,
         amount: transferFee.toString(),
-        type: "credit",
-        reason: "payout_fee",
+        type: GQLAccountActivityType.Credit,
+        reason: GQLAccountActivityReason.PayoutFee,
         settleAt: settleAt - 2, // Set in the past so it's settled immediately. Use a different time
         // because settleAt is a range key and must be unique.
         description: `Stripe service fee`,

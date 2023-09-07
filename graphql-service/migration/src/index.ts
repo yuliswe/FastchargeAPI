@@ -1,9 +1,9 @@
 import { program } from "commander";
+import { createDefaultContextBatched } from "graphql-service/RequestContext";
+import { Batched } from "graphql-service/database/dataloader";
 import { exit } from "process";
 import readline from "readline";
-import { createDefaultContextBatched } from "graphql-service/RequestContext";
 import { copyColumn } from "src/copy-column";
-import { Batched } from "graphql-service/dynamoose/dataloader";
 
 let Rl = readline.createInterface({
     input: process.stdin,

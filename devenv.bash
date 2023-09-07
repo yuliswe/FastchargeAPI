@@ -25,3 +25,5 @@ pathadd "$NPM_BIN"
 export AWS_PROFILE=dev_fastchargeapi
 export AMPLIFY_MONOREPO_APP_ROOT="$WS_DIR/react/fastchargeapi)"
 export DEV_DOMAIN=1
+
+alias ts-node="npx ts-node-esm --experimentalSpecifierResolution=node"

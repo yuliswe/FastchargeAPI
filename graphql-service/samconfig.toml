@@ -4,7 +4,12 @@ stack_name = "dev-graphql-service"
 s3_prefix = "dev-graphql-service"
 region = "us-east-1"
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
-parameter_overrides = "ServicePrefix=\"dev\" MainDomain=\"devfastchargeapi.com\" Route53ZoneId=\"Z07362872NENGXHWMNLU5\" EnvDevDomain=\"1\""
+parameter_overrides = [
+    "ServicePrefix=\"dev\"",
+    "MainDomain=\"devfastchargeapi.com\"",
+    "Route53ZoneId=\"Z07362872NENGXHWMNLU5\"",
+    "EnvDevDomain=\"1\"",
+]
 resolve_s3 = true
 image_repositories = []
 no_fail_on_empty_changeset = true
@@ -22,7 +27,11 @@ stack_name = "live-graphql-service"
 s3_prefix = "live-graphql-service"
 region = "us-east-1"
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
-parameter_overrides = "ServicePrefix=\"live\" MainDomain=\"fastchargeapi.com\" Route53ZoneId=\"Z0358815GI2I8U5CTHXW\""
+parameter_overrides = [
+    "ServicePrefix=\"live\"",
+    "MainDomain=\"fastchargeapi.com\"",
+    "Route53ZoneId=\"Z0358815GI2I8U5CTHXW\"",
+]
 resolve_s3 = true
 image_repositories = []
 no_fail_on_empty_changeset = true

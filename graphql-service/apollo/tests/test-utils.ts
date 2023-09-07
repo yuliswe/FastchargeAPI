@@ -1,30 +1,52 @@
+import { mockSQS } from "@/MockSQS";
+import { SQSQueueUrl, sqsGQLClient } from "@/sqsClient";
+import { graphql } from "@/typed-graphql";
+import { ApolloError } from "@apollo/client";
+import { v4 as uuid4 } from "uuid";
 import { RequestContext } from "../RequestContext";
 import { GQLUserIndex } from "../__generated__/resolvers-types";
-import { App, FreeQuotaUsage, Pricing } from "../dynamoose/models";
+import { App, FreeQuotaUsage, Pricing } from "../database/models";
 import { createUserWithEmail } from "../functions/user";
 import { AppPK } from "../pks/AppPK";
-import { stripePaymentAcceptResolvers } from "../resolvers/payment";
 
 export async function addMoneyForUser(
     context: RequestContext,
     { user, amount }: { user: string; amount: string }
 ): Promise<void> {
-    const stripePaymentAccept = await context.batched.StripePaymentAccept.create({
+    const stripeSessionId = uuid4();
+    await context.batched.StripePaymentAccept.create({
         user: user,
         amount: amount,
         currency: "usd",
         stripePaymentStatus: "paid",
-        stripeSessionId: "test",
+        stripeSessionId,
         stripePaymentIntent: "test",
         stripeSessionObject: {},
     });
 
-    await stripePaymentAcceptResolvers.StripePaymentAccept.settlePayment(
-        stripePaymentAccept,
-        { stripeSessionObject: "{}" },
-        context,
-        {} as never
-    );
+    await sqsGQLClient({
+        queueUrl: SQSQueueUrl.BillingQueue,
+        dedupId: `addMoneyForUser-${user}-${amount}-${uuid4()}`,
+        groupId: user,
+    }).query({
+        query: graphql(`
+            query GetAndSettleStripePaymentAccept($user: ID!, $stripeSessionId: String!) {
+                getStripePaymentAccept(user: $user, stripeSessionId: $stripeSessionId) {
+                    settlePayment {
+                        status
+                    }
+                }
+            }
+        `),
+        variables: {
+            stripeSessionId,
+            user: user,
+        },
+    });
+
+    if (process.env.LOCAL_SQS === "1") {
+        await mockSQS.waitForQueuesToEmpty();
+    }
 }
 
 /**
@@ -76,4 +98,45 @@ export async function getOrCreateFreeQuotaUsage(
         });
     }
     return freeQuotaUsage;
+}
+
+type SimplifiedGraphQLError = { message: string; code: string; path: string };
+
+export function sortGraphQLErrors<T extends Partial<SimplifiedGraphQLError>>(errors: T[]): T[] {
+    const sortedErrors = errors;
+    sortedErrors.sort((a, b) => {
+        const diffByPath = (a.path || "").localeCompare(b.path || "");
+        if (diffByPath !== 0) {
+            return diffByPath;
+        }
+        const diffByCode = (a.code || "").localeCompare(b.code || "");
+        if (diffByCode !== 0) {
+            return diffByCode;
+        }
+        return (a.message || "").localeCompare(b.message || "");
+    });
+    return sortedErrors;
+}
+
+export function simplifyGraphQLError(error: unknown) {
+    if (!(error instanceof ApolloError)) {
+        return error;
+    }
+    const simpleErrors: SimplifiedGraphQLError[] = [];
+    for (const e of error.graphQLErrors) {
+        simpleErrors.push({
+            message: e.message,
+            code: e.extensions.code as string,
+            path: e.path?.map((x) => x.toString()).join(".") ?? "",
+        });
+    }
+    return sortGraphQLErrors(simpleErrors);
+}
+
+export async function simplifyGraphQLPromiseRejection(errorPromise: Promise<unknown>): Promise<unknown> {
+    try {
+        return await errorPromise;
+    } catch (error) {
+        throw simplifyGraphQLError(error);
+    }
 }

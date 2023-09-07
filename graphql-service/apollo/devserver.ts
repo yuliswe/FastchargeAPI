@@ -2,6 +2,7 @@ import { startStandaloneServer } from "@apollo/server/standalone";
 import chalk from "chalk";
 import { IncomingMessage } from "http";
 import { RequestContext, createDefaultContextBatched } from "./RequestContext";
+import { setUpTraceConsole } from "./console";
 import {
     getCurrentUser,
     getIsAdminUser,
@@ -11,7 +12,11 @@ import {
 } from "./lambdaHandlerUtils";
 import { server } from "./server";
 
-const { url } = await startStandaloneServer<RequestContext>(server, {
+if (process.env.TRACE_CONSOLE === "1") {
+    setUpTraceConsole();
+}
+
+void startStandaloneServer<RequestContext>(server, {
     listen: {
         port: process.env.PORT ? Number.parseInt(process.env.PORT) : 4000,
     },
@@ -32,6 +37,6 @@ const { url } = await startStandaloneServer<RequestContext>(server, {
             isAdminUser,
         });
     },
+}).then(({ url }) => {
+    console.log(chalk.green(`Server ready at: ${url}`));
 });
-
-console.log(chalk.green(`Server ready at: ${url}`));

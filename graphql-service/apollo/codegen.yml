@@ -2,15 +2,16 @@
 # to generate types based on our schema.
 # documents:
 #   - "./cron-jobs/*.ts"
-schema: "./schema/App.graphql"
-documents:
-  - "./cron-jobs/*.ts"
-  - "./functions/*.ts"
-  - "./tests/**/*.ts"
+schema: "./schema/Public.graphql"
 generates:
   # Specify where our generated types should live.
   ./__generated__/gql/:
     preset: client
+    documents:
+      - "./cron-jobs/*.ts"
+      - "./functions/*.ts"
+      - "./pks/*.ts"
+      - "./tests/**/*.ts"
   ./__generated__/resolvers-types.ts:
     plugins:
       - "typescript"
@@ -31,25 +32,25 @@ generates:
       customResolveInfo: "@apollo/cache-control-types#GraphQLResolveInfoWithCacheControl"
       # defaultMapper: "{[k in keyof {T}]: {T}[k] | (() => {T})}"
       mappers:
-        App: ../dynamoose/models#App
-        AppTag: ../dynamoose/models#AppTag
-        User: ../dynamoose/models#User
-        Endpoint: ../dynamoose/models#Endpoint
-        Pricing: ../dynamoose/models#Pricing
-        Subscribe: ../dynamoose/models#Subscription
-        UsageLog: ../dynamoose/models#UsageLog
-        StripePaymentAccept: ../dynamoose/models#StripePaymentAccept
-        StripeTransfer: ../dynamoose/models#StripeTransfer
-        AccountActivity: ../dynamoose/models#AccountActivity
-        AccountHistory: ../dynamoose/models#AccountHistory
-        UsageSummary: ../dynamoose/models#UsageSummary
-        Secret: ../dynamoose/models#Secret
-        GatewayRequestCounter: ../dynamoose/models#GatewayRequestCounter
-        GatewayRequestDecisionCache: ../dynamoose/models#GatewayRequestDecisionCache
-        UserAppToken: ../dynamoose/models#UserAppToken
-        SiteMetaData: ../dynamoose/models#SiteMetaData
+        App: ../database/models#App
+        AppTag: ../database/models#AppTag
+        User: ../database/models#User
+        Endpoint: ../database/models#Endpoint
+        Pricing: ../database/models#Pricing
+        Subscribe: ../database/models#Subscription
+        UsageLog: ../database/models#UsageLog
+        StripePaymentAccept: ../database/models#StripePaymentAccept
+        StripeTransfer: ../database/models#StripeTransfer
+        AccountActivity: ../database/models#AccountActivity
+        AccountHistory: ../database/models#AccountHistory
+        UsageSummary: ../database/models#UsageSummary
+        Secret: ../database/models#Secret
+        GatewayRequestCounter: ../database/models#GatewayRequestCounter
+        GatewayRequestDecisionCache: ../database/models#GatewayRequestDecisionCache
+        UserAppToken: ../database/models#UserAppToken
+        SiteMetaData: ../database/models#SiteMetaData
       enumValues:
-        GatewayMode: ../dynamoose/models#GatewayMode
+        GatewayMode: ../database/models#GatewayMode
       scalars:
         Email: string
         Timestamp: number

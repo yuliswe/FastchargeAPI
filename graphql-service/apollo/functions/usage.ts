@@ -1,8 +1,9 @@
+import { Chalk } from "chalk";
 import { Item } from "dynamoose/dist/Item";
 import { RequestContext } from "../RequestContext";
-import { UsageLog, UsageSummary } from "../dynamoose/models";
+import { GQLUsageLogStatus } from "../__generated__/resolvers-types";
+import { UsageLog, UsageSummary } from "../database/models";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
-import { Chalk } from "chalk";
 
 const chalk = new Chalk({ level: 3 });
 
@@ -20,15 +21,17 @@ export async function collectUsageLogs(
     {
         user,
         app,
+        path,
     }: {
         user: string;
         app: string;
+        path: string;
     }
 ): Promise<{ affectedUsageSummaries: UsageSummary[] }> {
     const usageLogs = await context.batched.UsageLog.many({
         subscriber: user,
         app,
-        status: "pending",
+        status: GQLUsageLogStatus.Pending,
     });
     if (usageLogs.length === 0) {
         return {
@@ -55,6 +58,7 @@ export async function collectUsageLogs(
             numberOfLogs: usageLogs.length,
             volume: 0,
             pricing: pricingPK,
+            path,
         };
         for (const usage of usageLogs) {
             summary.volume += usage.volume;
@@ -63,7 +67,7 @@ export async function collectUsageLogs(
         const promises: Promise<Item>[] = [];
         for (const usage of usageLogs) {
             usage.usageSummary = UsageSummaryPK.stringify(usageSummary);
-            usage.status = "collected";
+            usage.status = GQLUsageLogStatus.Collected;
             usage.collectedAt = usageSummary.createdAt;
             promises.push(usage.save());
         }

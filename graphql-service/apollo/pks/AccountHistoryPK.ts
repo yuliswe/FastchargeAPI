@@ -1,4 +1,4 @@
-import { AccountHistory } from "../dynamoose/models";
+import { AccountHistory } from "../database/models";
 
 export class AccountHistoryPK {
     static parse(pk: string): { user: string; startingTime: number } {

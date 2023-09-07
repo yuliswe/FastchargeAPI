@@ -8,7 +8,7 @@ export const exampleLambdaEvent: LambdaEvent = {
         "accept-encoding": "gzip",
         "content-type": "application/json",
         Date: "2023-03-21T07:38:51Z",
-        Host: "api.iam.graphql.fastchargeapi.com",
+        Host: "api.graphql.fastchargeapi.com",
         "User-Agent": "Go-http-client/2.0",
         "x-amz-date": "20230321T073851Z",
         "x-amz-security-token":
@@ -24,7 +24,7 @@ export const exampleLambdaEvent: LambdaEvent = {
         "accept-encoding": ["gzip"],
         "content-type": ["application/json"],
         Date: ["2023-03-21T07:38:51Z"],
-        Host: ["api.iam.graphql.fastchargeapi.com"],
+        Host: ["api.graphql.fastchargeapi.com"],
         "User-Agent": ["Go-http-client/2.0"],
         "x-amz-date": ["20230321T073851Z"],
         "x-amz-security-token": [

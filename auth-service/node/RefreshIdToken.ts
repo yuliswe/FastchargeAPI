@@ -1,6 +1,6 @@
 import { APIGatewayProxyStructuredResultV2, Context as LambdaContext } from "aws-lambda";
 import { Chalk } from "chalk";
-import { getParameterFromAWSSystemsManager } from "graphql-service";
+import { getParameterFromAWSSystemsManager } from "graphql-service/functions/aws";
 import fetch from "node-fetch";
 import { LambdaCallbackV2, LambdaEventV2, LambdaHandlerV2 } from "../utils/LambdaContext";
 

@@ -1,5 +1,5 @@
 import { RequestContext } from "../RequestContext";
-import { Pricing, Subscription } from "../dynamoose/models";
+import { Pricing, Subscription } from "../database/models";
 import { PricingPK } from "../pks/PricingPK";
 
 export async function findUserSubscription(

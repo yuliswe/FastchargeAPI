@@ -11,9 +11,9 @@ import {
     GQLQueryAppsArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
-import { App, AppTagTableIndex } from "../dynamoose/models";
+import { App, AppTagTableIndex } from "../database/models";
 import { BadInput, Denied, TooManyResources } from "../errors";
-import { appFullTextSearch, flushAppSearchIndex, isValidAppName, updateAppSearchIndex } from "../functions/app";
+import { appFullTextSearch, flushAppSearchIndex, updateAppSearchIndex, validateAppName } from "../functions/app";
 import { Can } from "../permissions";
 import { AppPK } from "../pks/AppPK";
 import { PricingPK } from "../pks/PricingPK";
@@ -21,7 +21,7 @@ import { UserPK } from "../pks/UserPK";
 
 const chalk = new Chalk({ level: 3 });
 
-export const appResolvers: GQLResolvers & {
+export const AppResolvers: GQLResolvers & {
     App: GQLAppResolvers;
 } = {
     App: {
@@ -114,17 +114,7 @@ export const appResolvers: GQLResolvers & {
          **************************/
     },
     Query: {
-        // async apps(
-        //     parent: {},
-        //     args: GQLQueryAppArgs,
-        //     context: RequestContext,
-        //     info: GraphQLResolveInfo
-        // ): Promise<Array<App>> {
-        //     let apps = await context.batched.App.scan();
-        //     let visableApps = await Can.viewAppFilter(apps, context);
-        //     return visableApps;
-        // },
-        async app(parent: {}, { pk, name }: GQLQueryAppArgs, context: RequestContext): Promise<App> {
+        async getApp(parent: {}, { pk, name }: GQLQueryAppArgs, context: RequestContext): Promise<App> {
             if (!pk && !name) {
                 throw new BadInput("Must provide either pk or name");
             }
@@ -151,7 +141,7 @@ export const appResolvers: GQLResolvers & {
             });
         },
 
-        async apps(parent: {}, { tag, limit = 10 }: GQLQueryAppsArgs, context: RequestContext): Promise<App[]> {
+        async listApps(parent: {}, { tag, limit = 10 }: GQLQueryAppsArgs, context: RequestContext): Promise<App[]> {
             if (tag) {
                 const tags = await context.batched.AppTag.many(
                     {
@@ -192,15 +182,8 @@ export const appResolvers: GQLResolvers & {
             if (!(await Can.createApp({ owner }, context))) {
                 throw new Denied();
             }
-            if (!isValidAppName(name)) {
-                if (name.length > 63) {
-                    throw new BadInput(`Invalid app name: ${name}. At most 63 characters.`, "APP_NAME");
-                }
-                throw new BadInput(
-                    `Invalid app name: ${name}. Must match: /^[a-z\\d][a-z\\d\\-]*[a-z\\d]$/.`,
-                    "APP_NAME"
-                );
-            }
+
+            validateAppName(name);
             // Each user can have at most 10 apps
             const count = await context.batched.App.count({ owner });
             if (count >= 10) {
@@ -227,3 +210,7 @@ export const appResolvers: GQLResolvers & {
         },
     },
 };
+
+/* Deprecated */
+AppResolvers.Query!.app = AppResolvers.Query!.getApp;
+AppResolvers.Query!.apps = AppResolvers.Query!.listApps;

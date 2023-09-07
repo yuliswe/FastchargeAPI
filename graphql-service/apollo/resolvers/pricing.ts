@@ -6,7 +6,7 @@ import {
     GQLQueryPricingArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
-import { Pricing } from "../dynamoose/models";
+import { Pricing } from "../database/models";
 import { BadInput, Denied, ImmutableResource, TooManyResources } from "../errors";
 import { Can } from "../permissions";
 import { AppPK } from "../pks/AppPK";
@@ -27,7 +27,7 @@ function makeOwnerReadableWhenInvisible<T>(
         return getter(parent, args, context);
     };
 }
-export const pricingResolvers: GQLResolvers = {
+export const PricingResolvers: GQLResolvers = {
     Pricing: {
         pk: makeOwnerReadableWhenInvisible((parent) => PricingPK.stringify(parent)),
         async app(parent, args, context, info) {
@@ -100,7 +100,7 @@ export const pricingResolvers: GQLResolvers = {
         },
     },
     Query: {
-        async pricing(parent: {}, { pk }: GQLQueryPricingArgs, context: RequestContext) {
+        async getPricing(parent: {}, { pk }: GQLQueryPricingArgs, context: RequestContext) {
             if (!pk) {
                 throw new BadInput("pk is required");
             }
@@ -148,3 +148,6 @@ export const pricingResolvers: GQLResolvers = {
         },
     },
 };
+
+/* Deprecated */
+PricingResolvers.Query!.pricing = PricingResolvers.Query!.getPricing;

@@ -1,7 +1,10 @@
-import { UsageSummary } from "../dynamoose/models";
+export type UsageSummaryPKContent = {
+    subscriber: string;
+    createdAt: number;
+};
 
 export class UsageSummaryPK {
-    static parse(pk: string): { subscriber: string; createdAt: number } {
+    static parse(pk: string): UsageSummaryPKContent {
         const [subscriber, createdAt] = JSON.parse(Buffer.from(pk.replace(/^usum_/, ""), "base64url").toString("utf8"));
         return {
             subscriber,
@@ -9,7 +12,14 @@ export class UsageSummaryPK {
         };
     }
 
-    static stringify(item: UsageSummary): string {
+    static stringify(item: UsageSummaryPKContent): string {
         return "usum_" + Buffer.from(JSON.stringify([item.subscriber, item.createdAt])).toString("base64url");
+    }
+
+    static extract(item: UsageSummaryPKContent): UsageSummaryPKContent {
+        return {
+            subscriber: item.subscriber,
+            createdAt: item.createdAt,
+        };
     }
 }

@@ -38,9 +38,9 @@ function addCors(event: APIGatewayProxyEvent, result: APIGatewayProxyResult): vo
     }
 }
 
-const handle = startServerAndCreateLambdaHandler<RequestHandler<LambdaEvent, LambdaResult>, RequestContext>(
+export const handle = startServerAndCreateLambdaHandler<RequestHandler<LambdaEvent, LambdaResult>, RequestContext>(
     server,
-    createRequestHandler<APIGatewayProxyEvent, APIGatewayProxyResult>(
+    createRequestHandler(
         {
             parseHttpMethod(event) {
                 return event.httpMethod;
@@ -58,7 +58,9 @@ const handle = startServerAndCreateLambdaHandler<RequestHandler<LambdaEvent, Lam
                     const parsedBody = event.isBase64Encoded
                         ? Buffer.from(event.body, "base64").toString("utf8")
                         : event.body;
-                    console.log(chalk.blue("Received: " + parsedBody));
+                    if (!event._disableLogRequest) {
+                        console.log(chalk.blue("Received: " + parsedBody));
+                    }
                     if (contentType?.startsWith("application/json")) {
                         return JSON.parse(parsedBody);
                     }
@@ -108,7 +110,7 @@ const handle = startServerAndCreateLambdaHandler<RequestHandler<LambdaEvent, Lam
             const currentUser = await getCurrentUser(batched, headers, event.requestContext.authorizer);
             const isAdminUser = getIsAdminUser(currentUser, event.requestContext.authorizer);
             const { serviceName, isServiceRequest } = getIsServiceRequest(domain, headers);
-            return Promise.resolve({
+            const context = {
                 currentUser,
                 service: serviceName,
                 isServiceRequest,
@@ -116,7 +118,8 @@ const handle = startServerAndCreateLambdaHandler<RequestHandler<LambdaEvent, Lam
                 isSQSMessage: false,
                 isAnonymousUser: currentUser == undefined,
                 isAdminUser,
-            });
+            };
+            return context;
         },
     }
 );

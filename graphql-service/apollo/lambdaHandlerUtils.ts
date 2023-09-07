@@ -2,7 +2,7 @@ import { APIGatewayProxyEventBase, APIGatewayProxyEventHeaders, APIGatewayProxyR
 import { Chalk } from "chalk";
 import { DefaultContextBatched, RequestService } from "./RequestContext";
 import { GQLUserIndex } from "./__generated__/resolvers-types";
-import { User } from "./dynamoose/models";
+import { User } from "./database/models";
 import { BadInput } from "./errors";
 import { createUserWithEmail } from "./functions/user";
 import { UserPK } from "./pks/UserPK";

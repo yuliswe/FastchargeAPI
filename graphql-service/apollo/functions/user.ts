@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import { MD5 } from "object-hash";
 import { v4 as uuidv4 } from "uuid";
 import { RequestContext } from "../RequestContext";
-import { User } from "../dynamoose/models";
+import { User } from "../database/models";
 import { UserPK } from "../pks/UserPK";
 import { getParameterFromAWSSystemsManager } from "./aws";
 

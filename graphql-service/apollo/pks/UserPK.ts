@@ -1,4 +1,4 @@
-import type { User } from "../dynamoose/models";
+import type { User } from "../database/models";
 
 export type UserPKContent = {
     uid: string;

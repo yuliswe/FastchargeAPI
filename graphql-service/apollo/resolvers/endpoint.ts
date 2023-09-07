@@ -2,12 +2,11 @@ import { RequestContext } from "../RequestContext";
 import {
     GQLEndpointResolvers,
     GQLEndpointUpdateEndpointArgs,
-    GQLHttpMethod,
     GQLMutationCreateEndpointArgs,
     GQLQueryEndpointArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
-import { Endpoint, EndpointModel } from "../dynamoose/models";
+import { Endpoint, EndpointModel } from "../database/models";
 import { BadInput, Denied } from "../errors";
 import { Can } from "../permissions";
 import { EndpointPK } from "../pks/EndpointPK";
@@ -23,7 +22,7 @@ function makeOwnerReadable<T>(
     };
 }
 
-export const endpointResolvers: GQLResolvers & {
+export const EndpointResolvers: GQLResolvers & {
     Endpoint: Required<GQLEndpointResolvers>;
 } = {
     Endpoint: {
@@ -34,7 +33,7 @@ export const endpointResolvers: GQLResolvers & {
          **************************/
 
         pk: (parent) => EndpointPK.stringify(parent),
-        method: (parent) => parent.method as GQLHttpMethod,
+        method: (parent) => parent.method,
         description: (parent) => parent.description,
         path: ({ path }) => path,
 
@@ -73,7 +72,7 @@ export const endpointResolvers: GQLResolvers & {
         /**
          * Offers an API to look up endpoints by either their primary key or by app+path.
          */
-        async endpoint(parent: {}, { pk, app, path }: GQLQueryEndpointArgs, context, info) {
+        async getEndpoint(parent: {}, { pk, app, path }: GQLQueryEndpointArgs, context, info) {
             if (!pk && !app) {
                 throw new BadInput("Must provide either pk or app");
             }
@@ -107,3 +106,6 @@ export const endpointResolvers: GQLResolvers & {
         },
     },
 };
+
+/* Deprecated */
+EndpointResolvers.Query!.endpoint = EndpointResolvers.Query?.getEndpoint;

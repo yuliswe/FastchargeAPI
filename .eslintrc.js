@@ -4,6 +4,7 @@ module.exports = {
         "eslint:recommended",
         "plugin:@typescript-eslint/recommended",
         "plugin:@typescript-eslint/recommended-requiring-type-checking",
+        "plugin:jest/recommended",
     ],
     parser: "@typescript-eslint/parser",
     parserOptions: {
@@ -12,7 +13,7 @@ module.exports = {
         project: ["./tsconfig.json"],
         projectFolderIgnoreList: ["**/dist/**", "**/node_modules/**", "**/build/**", "**/.aws-sam/**"],
     },
-    plugins: ["@typescript-eslint", "unused-imports"],
+    plugins: ["@typescript-eslint", "unused-imports", "jest"],
     root: true,
     ignorePatterns: [
         "**/dist/**",
@@ -26,7 +27,12 @@ module.exports = {
         "@typescript-eslint/no-misused-promises": "error",
         "@typescript-eslint/no-floating-promises": "error",
         "@typescript-eslint/no-unused-expressions": "error",
-        "@typescript-eslint/no-unused-vars": "off",
+        "@typescript-eslint/no-unused-vars": [
+            "error",
+            {
+                args: "none",
+            },
+        ],
         "@typescript-eslint/no-unsafe-argument": "off",
         "@typescript-eslint/no-unsafe-return": "off",
         "@typescript-eslint/no-unsafe-call": "off",
@@ -40,5 +46,20 @@ module.exports = {
         "require-yield": "off",
         "prefer-const": "error",
         "@typescript-eslint/restrict-template-expressions": "off",
+        "@typescript-eslint/no-empty-function": "warn",
+        "no-restricted-imports": [
+            "error",
+            {
+                patterns: [{ group: ["node:test"], message: "Please use @jest/global instead." }],
+                patterns: [{ importNames: ["graphql"], group: ["graphql"], message: "Please use @/typed-graphql." }],
+                patterns: [
+                    {
+                        importNames: ["RequestContext"],
+                        group: ["node-fetch"],
+                        message: "Did you mean to import it from @/RequestContext?",
+                    },
+                ],
+            },
+        ],
     },
 };

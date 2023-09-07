@@ -1,29 +1,30 @@
 import { ApolloServer } from "@apollo/server";
 import { ApolloServerPluginCacheControl } from "@apollo/server/plugin/cacheControl";
-import { readFileSync } from "fs";
+import { DocumentNode, ObjectTypeDefinitionNode, parse } from "graphql";
 import { resolvers as scalarResolvers, typeDefs as scalarTypeDefs } from "graphql-scalars";
 import process from "node:process";
 import { RequestContext } from "./RequestContext";
 import { GQLResolvers } from "./__generated__/resolvers-types";
 import { wakeUpAurora } from "./aurora";
 import { handleError } from "./errors";
-import { accountActivityResolvers } from "./resolvers/account";
-import { accountHistoryResolvers } from "./resolvers/account-history";
-import { appResolvers } from "./resolvers/app";
-import { appTagResolvers } from "./resolvers/app-tag";
-import { endpointResolvers } from "./resolvers/endpoint";
-import { gatewayResolvers } from "./resolvers/gateway";
-import { siteMetaDataResolvers } from "./resolvers/meta";
-import { stripePaymentAcceptResolvers } from "./resolvers/payment";
-import { pricingResolvers } from "./resolvers/pricing";
-import { secretResolvers } from "./resolvers/secret";
-import { subscriptionResolvers } from "./resolvers/subscription";
-import { userAppTokenResolvers } from "./resolvers/token";
-import { stripeTransferResolvers } from "./resolvers/transfer";
-import { usageLogResolvers } from "./resolvers/usage";
-import { usageSummaryResolvers } from "./resolvers/usage-sum";
-import { userResolvers } from "./resolvers/user";
+import { AccountActivityResolvers } from "./resolvers/AccountActivity";
+import { AccountHistoryResolvers } from "./resolvers/AccountHistory";
+import { AppResolvers } from "./resolvers/App";
+import { AppTagResolvers } from "./resolvers/AppTag";
+import { EndpointResolvers } from "./resolvers/Endpoint";
+import { PricingResolvers } from "./resolvers/Pricing";
+import { SecretResolvers } from "./resolvers/Secret";
+import { SiteMetaDataResolvers } from "./resolvers/SiteMetaData";
+import { StripePaymentAcceptResolvers } from "./resolvers/StripePaymentAccept";
+import { StripeTransferResolvers } from "./resolvers/StripeTransfer";
+import { SubscriptionResolvers } from "./resolvers/Subscription";
+import { UsageLogResolvers } from "./resolvers/UsageLog";
+import { UsageSummaryResolvers } from "./resolvers/UsageSummary";
+import { UserResolvers } from "./resolvers/User";
+import { UserAppTokenResolvers } from "./resolvers/UserAppToken";
+import { GatewayResolvers } from "./resolvers/gateway";
 import customScalars from "./scalars";
+import AppGraphQLSchema from "./schema/Public.graphql";
 
 // This will prevent NodeJS from crashing when an unhandled promise rejection
 // occurs.
@@ -36,58 +37,58 @@ process.on("uncaughtException", (err, origin) => {
 const resolvers: GQLResolvers = {
     ...scalarResolvers,
     ...customScalars,
-    App: appResolvers.App,
-    AppTag: appTagResolvers.AppTag,
-    User: userResolvers.User,
-    Endpoint: endpointResolvers.Endpoint,
-    Subscribe: subscriptionResolvers.Subscribe,
-    UsageLog: usageLogResolvers.UsageLog,
-    StripePaymentAccept: stripePaymentAcceptResolvers.StripePaymentAccept,
-    StripeTransfer: stripeTransferResolvers.StripeTransfer,
-    Pricing: pricingResolvers.Pricing,
-    UsageSummary: usageSummaryResolvers.UsageSummary,
-    Secret: secretResolvers.Secret,
-    AccountHistory: accountHistoryResolvers.AccountHistory,
-    AccountActivity: accountActivityResolvers.AccountActivity,
-    UserAppToken: userAppTokenResolvers.UserAppToken,
-    SiteMetaData: siteMetaDataResolvers.SiteMetaData,
+    App: AppResolvers.App,
+    AppTag: AppTagResolvers.AppTag,
+    User: UserResolvers.User,
+    Endpoint: EndpointResolvers.Endpoint,
+    Subscribe: SubscriptionResolvers.Subscribe,
+    UsageLog: UsageLogResolvers.UsageLog,
+    StripePaymentAccept: StripePaymentAcceptResolvers.StripePaymentAccept,
+    StripeTransfer: StripeTransferResolvers.StripeTransfer,
+    Pricing: PricingResolvers.Pricing,
+    UsageSummary: UsageSummaryResolvers.UsageSummary,
+    Secret: SecretResolvers.Secret,
+    AccountHistory: AccountHistoryResolvers.AccountHistory,
+    AccountActivity: AccountActivityResolvers.AccountActivity,
+    UserAppToken: UserAppTokenResolvers.UserAppToken,
+    SiteMetaData: SiteMetaDataResolvers.SiteMetaData,
     Query: {
-        ...gatewayResolvers.Query,
-        ...appResolvers.Query,
-        ...appTagResolvers.Query,
-        ...userResolvers.Query,
-        ...endpointResolvers.Query,
-        ...subscriptionResolvers.Query,
-        ...pricingResolvers.Query,
-        ...usageLogResolvers.Query,
-        ...stripePaymentAcceptResolvers.Query,
-        ...stripeTransferResolvers.Query,
-        ...pricingResolvers.Query,
-        ...usageSummaryResolvers.Query,
-        ...secretResolvers.Query,
-        ...accountHistoryResolvers.Query,
-        ...accountActivityResolvers.Query,
-        ...userAppTokenResolvers.Query,
-        ...siteMetaDataResolvers.Query,
+        ...GatewayResolvers.Query,
+        ...AppResolvers.Query,
+        ...AppTagResolvers.Query,
+        ...UserResolvers.Query,
+        ...EndpointResolvers.Query,
+        ...SubscriptionResolvers.Query,
+        ...PricingResolvers.Query,
+        ...UsageLogResolvers.Query,
+        ...StripePaymentAcceptResolvers.Query,
+        ...StripeTransferResolvers.Query,
+        ...PricingResolvers.Query,
+        ...UsageSummaryResolvers.Query,
+        ...SecretResolvers.Query,
+        ...AccountHistoryResolvers.Query,
+        ...AccountActivityResolvers.Query,
+        ...UserAppTokenResolvers.Query,
+        ...SiteMetaDataResolvers.Query,
     },
     Mutation: {
-        ...gatewayResolvers.Mutation,
-        ...appResolvers.Mutation,
-        ...appTagResolvers.Mutation,
-        ...userResolvers.Mutation,
-        ...endpointResolvers.Mutation,
-        ...subscriptionResolvers.Mutation,
-        ...pricingResolvers.Mutation,
-        ...usageLogResolvers.Mutation,
-        ...stripePaymentAcceptResolvers.Mutation,
-        ...stripeTransferResolvers.Mutation,
-        ...pricingResolvers.Mutation,
-        ...usageSummaryResolvers.Mutation,
-        ...secretResolvers.Mutation,
-        ...accountHistoryResolvers.Mutation,
-        ...accountActivityResolvers.Mutation,
-        ...userAppTokenResolvers.Mutation,
-        ...siteMetaDataResolvers.Mutation,
+        ...GatewayResolvers.Mutation,
+        ...AppResolvers.Mutation,
+        ...AppTagResolvers.Mutation,
+        ...UserResolvers.Mutation,
+        ...EndpointResolvers.Mutation,
+        ...SubscriptionResolvers.Mutation,
+        ...PricingResolvers.Mutation,
+        ...UsageLogResolvers.Mutation,
+        ...StripePaymentAcceptResolvers.Mutation,
+        ...StripeTransferResolvers.Mutation,
+        ...PricingResolvers.Mutation,
+        ...UsageSummaryResolvers.Mutation,
+        ...SecretResolvers.Mutation,
+        ...AccountHistoryResolvers.Mutation,
+        ...AccountActivityResolvers.Mutation,
+        ...UserAppTokenResolvers.Mutation,
+        ...SiteMetaDataResolvers.Mutation,
 
         ping(): boolean {
             void wakeUpAurora().catch((err) => {
@@ -98,7 +99,28 @@ const resolvers: GQLResolvers = {
     },
 };
 
-const typeDefs = [readFileSync("./schema/App.graphql", { encoding: "utf-8" }), ...scalarTypeDefs];
+resolvers.Mutation = {
+    ...resolvers.Mutation,
+    ...resolvers.Query,
+};
+
+// Perform a hacking here by ading all root queries into the root mutation.
+const publicSchema = parse(AppGraphQLSchema);
+const mutationDefs = publicSchema.definitions.find(
+    (def) => def.kind === "ObjectTypeDefinition" && def.name.value === "Mutation"
+) as ObjectTypeDefinitionNode;
+const queryDefs = publicSchema.definitions.find(
+    (def) => def.kind === "ObjectTypeDefinition" && def.name.value === "Query"
+) as ObjectTypeDefinitionNode;
+const otherTypeDefs = publicSchema.definitions.filter(
+    (def) => !(def.kind === "ObjectTypeDefinition" && (def.name.value == "Mutation" || def.name.value === "Query"))
+);
+const newMutationDefs = { ...mutationDefs, fields: [...(mutationDefs.fields ?? []), ...(queryDefs.fields ?? [])] };
+const newPublicSchmema: DocumentNode = {
+    ...publicSchema,
+    definitions: [newMutationDefs, queryDefs, ...otherTypeDefs],
+};
+const typeDefs = [newPublicSchmema, ...scalarTypeDefs];
 
 // The ApolloServer constructor requires two parameters: your schema
 // definition and your set of resolvers.

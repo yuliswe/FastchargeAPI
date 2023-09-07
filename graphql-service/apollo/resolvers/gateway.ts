@@ -7,7 +7,7 @@ import {
     GQLQueryCheckUserIsAllowedForGatewayRequestArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
-import { GatewayRequestCounter, GatewayRequestDecisionCache, Pricing, User } from "../dynamoose/models";
+import { GatewayRequestCounter, GatewayRequestDecisionCache, Pricing, User } from "../database/models";
 import { AlreadyExists, Denied, NotFound } from "../errors";
 import { getUserBalance } from "../functions/account";
 import { ShouldCollectMonthlyChargePromiseResult, shouldCollectMonthlyCharge } from "../functions/billing";
@@ -24,7 +24,7 @@ type GatewayDecisionResponse = {
     userPK: string | null;
 };
 
-export const gatewayResolvers: GQLResolvers & {
+export const GatewayResolvers: GQLResolvers & {
     Query: GQLGatewayDecisionResponseResolvers;
 } = {
     Query: {

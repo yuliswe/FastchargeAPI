@@ -1,0 +1,496 @@
+scalar Email
+scalar NonNegativeDecimal
+scalar Timestamp
+scalar URL
+scalar Any
+
+type Query {
+    ### App
+    getApp(pk: ID, name: String): App!
+    listApps(tag: String, limit: Int): [App!]!
+    appFullTextSearch(query: String, tag: String, orderBy: AppFullTextSearchOrderBy, limit: Int, offset: Int): [App!]!
+
+    ### User
+    getUser(pk: ID, email: Email): User!
+
+    ### Endpoint
+    getEndpoint(pk: ID, app: String, path: String): Endpoint!
+
+    ### Subscriptions
+    getSubscription(pk: ID, subscriber: ID, app: String): Subscribe!
+
+    ### User App Token
+    getUserAppToken(pk: ID, subscriber: ID, app: ID): UserAppToken!
+
+    ### Usage Summary
+    listUsageSummaries(
+        subscriber: ID!
+        app: ID!
+        limit: Int = 1000 # Support maximum of 1000
+        dateRange: DateRangeInput
+    ): [UsageSummary!]!
+
+    ### Pricing
+    getPricing(pk: ID): Pricing!
+
+    ### Account Activity
+    getAccountActivity(pk: ID): AccountActivity!
+    # listAccountActivities(
+    #     status: AccountActivityStatus
+    #     settleAtRange: DateRangeInput
+    #     using: AccountActivityIndex
+    # ): [AccountActivity!]!
+
+    ### Stripe Payment
+    getStripePaymentAccept(user: ID!, stripeSessionId: String!): StripePaymentAccept!
+
+    ### Secret
+    getSecret(key: String!): Secret!
+
+    ### Stripe Transfer
+    getStripeTransfer(pk: ID): StripeTransfer!
+
+    ### App Tags
+    listAppTags(tag: String): [AppTag!]!
+
+    ### Site Meta Data
+    listSiteMetaData(keys: [SiteMetaDataKey!]!): [SiteMetaData!]!
+
+    ### Others
+    checkUserIsAllowedForGatewayRequest(
+        user: ID!
+        app: ID!
+        forceBalanceCheck: Boolean = false
+        forceAwait: Boolean = false
+    ): GatewayDecisionResponse!
+
+    # Deprecated
+    apps(tag: String, limit: Int): [App!]! @deprecated(reason: "Use listApps() instead")
+    app(pk: ID, name: String): App! @deprecated(reason: "Use getApp() instead")
+    user(pk: ID, email: Email): User! @deprecated(reason: "Use getUser() instead")
+    endpoint(pk: ID, app: String, path: String): Endpoint! @deprecated(reason: "Use getEndpoint() instead")
+    subscription(pk: ID, subscriber: ID, app: String): Subscribe! @deprecated(reason: "Use getSubscription() instead")
+    pricing(pk: ID): Pricing! @deprecated(reason: "Use getPricing() instead")
+    secret(key: String!): Secret! @deprecated(reason: "Use getSecret() instead")
+    stripeTransfer(pk: ID): StripeTransfer! @deprecated(reason: "Use getStripeTransfer() instead")
+    appTags(tag: String): [AppTag!]! @deprecated(reason: "Use listAppTags() instead")
+    accountActivity(pk: ID): AccountActivity! @deprecated(reason: "Use getAccountActivity() instead")
+    siteMetaData(keys: [SiteMetaDataKey!]!): [SiteMetaData!]! @deprecated(reason: "Use listSiteMetaData() instead")
+}
+
+type Mutation {
+    createUser(email: Email!): User! # For testing CLI only
+    createApp(
+        name: String!
+        owner: ID!
+        title: String
+        gatewayMode: GatewayMode = proxy
+        description: String
+        repository: URL
+        homepage: URL
+        visibility: AppVisibility = public
+        logo: URL
+    ): App!
+    createEndpoint(app: ID!, path: String!, method: HTTPMethod!, destination: String!, description: String): Endpoint!
+    createPricing(
+        app: ID!
+        name: String!
+        minMonthlyCharge: NonNegativeDecimal!
+        chargePerRequest: NonNegativeDecimal!
+        freeQuota: Int!
+        availability: PricingAvailability!
+        callToAction: String
+    ): Pricing!
+    createSubscription(pricing: ID!, subscriber: ID!): Subscribe!
+    createUsageLog(app: ID!, path: String!, subscriber: ID!, volume: Int! = 1, pricing: ID!): UsageLog!
+    createStripeTransfer(
+        receiver: ID!
+        withdrawAmount: NonNegativeDecimal!
+        receiveAmount: NonNegativeDecimal!
+        currency: String!
+        stripeTransferId: String
+        stripeTransferObject: String
+    ): StripeTransfer!
+    createStripePaymentAccept(
+        user: ID!
+        amount: NonNegativeDecimal!
+        stripePaymentStatus: String!
+        stripePaymentIntent: String!
+        stripeSessionId: String!
+        stripeSessionObject: String!
+    ): StripePaymentAccept!
+    # Used by the gateway to trigger the billing flow
+    triggerBilling(user: ID!, app: ID!, path: String!): [UsageSummary!]!
+    createSecret(key: String!, value: String!, description: String, expireAt: Timestamp): Secret!
+    createAccountActivity( # For testing CLI only
+        user: ID!
+        type: AccountActivityType!
+        reason: AccountActivityReason!
+        amount: NonNegativeDecimal!
+        description: String!
+        settleAt: Timestamp
+    ): AccountActivity!
+    flushAppSearchIndex: Int!
+    createAppTag(app: String!, tag: String!): AppTag!
+    createSiteMetaData(key: SiteMetaDataKey!, value: Any!): SiteMetaData!
+    ping: Boolean!
+    createUserAppToken(subscriber: ID!, app: ID!): UserAppToken!
+}
+
+enum AppFullTextSearchOrderBy {
+    exact_match
+    github_popularity
+}
+
+enum GatewayDecisionResponseReason {
+    insufficient_balance
+    owner_insufficient_balance
+    pricing_not_available
+    not_subscribed
+    too_many_requests
+    unknown
+    failed_to_create_resource
+}
+
+type GatewayDecisionResponse {
+    allowed: Boolean!
+    reason: GatewayDecisionResponseReason
+    pricingPK: String
+    userPK: String
+}
+
+type Secret {
+    key: String!
+    value: String!
+    expireAt: Timestamp
+    createdAt: Timestamp!
+
+    deleteSecret: Secret
+}
+
+type User {
+    pk: ID!
+    email: Email!
+    author: String!
+    subscriptions: [Subscribe!]!
+    createdAt: Timestamp!
+    updatedAt: Timestamp!
+    balance: String!
+    balanceLimit: String!
+    stripeCustomerId: String
+    stripeConnectAccountId: String
+    apps: [App!]!
+
+    usageLogs(app: String, path: String, limit: Int = 5, dateRange: DateRangeInput): [UsageLog!]!
+
+    updateUser(author: String, stripeCustomerId: String, stripeConnectAccountId: String): User
+
+    usageSummaries(
+        app: ID!
+        limit: Int = 1000 # Support maximum of 1000
+        dateRange: DateRangeInput
+    ): [UsageSummary!]!
+
+    accountActivities(
+        limit: Int = 1000 # Support maximum of 1000
+        dateRange: DateRangeInput
+    ): [AccountActivity!]!
+
+    accountHistories(
+        limit: Int = 1000 # Support maximum of 1000
+        dateRange: DateRangeInput
+    ): [AccountHistory!]!
+
+    # Trigger a workflow where it goes through all user's activities, and settle
+    # those that are due. This should only be called from the billing queue.
+    settleAccountActivities: [AccountActivity!]!
+    # stripePaymentAccept(stripeSessionId: String): StripePaymentAccept!
+    updateBalance: User!
+    getFastchargeAPIIdToken(expireInSeconds: Int = 3600): String!
+}
+
+enum UserIndex {
+    indexByEmail__onlyPK
+}
+
+input DateRangeInput {
+    start: Timestamp
+    end: Timestamp
+}
+
+enum SortDirection {
+    ascending
+    descending
+}
+
+type App {
+    pk: ID!
+    name: String!
+    owner: User!
+    title: String
+    description: String
+    gatewayMode: GatewayMode!
+    repository: URL
+    homepage: URL
+    readme: URL
+    updatedAt: Timestamp!
+    createdAt: Timestamp!
+    visibility: AppVisibility!
+    logo: URL
+
+    endpoints: [Endpoint!]!
+    pricingPlans: [Pricing!]!
+
+    updateApp(
+        title: String
+        description: String
+        homepage: URL
+        repository: URL
+        readme: URL
+        visibility: AppVisibility
+    ): App!
+    deleteApp: App!
+
+    tags: [AppTag!]!
+}
+
+enum AppIndex {
+    indexByOwner__onlyPK
+}
+
+enum AppVisibility {
+    public
+    private
+}
+
+enum HTTPMethod {
+    GET
+    POST
+    PUT
+    PATCH
+    DELETE
+    OPTIONS
+    HEAD
+}
+
+type Endpoint {
+    pk: String!
+    path: String!
+    description: String
+    destination: String
+    method: HTTPMethod!
+    createdAt: Timestamp!
+    updatedAt: Timestamp!
+
+    updateEndpoint(method: HTTPMethod, path: String, destination: String, description: String): Endpoint!
+
+    deleteEndpoint: Endpoint!
+}
+
+type Pricing {
+    pk: ID!
+    app: App!
+    name: String!
+    callToAction: String!
+    minMonthlyCharge: String!
+    chargePerRequest: String!
+    freeQuota: Int!
+    availability: PricingAvailability!
+    updatedAt: Timestamp!
+    createdAt: Timestamp!
+
+    deletePricing: Pricing!
+    updatePricing(
+        name: String
+        callToAction: String
+        minMonthlyCharge: NonNegativeDecimal
+        chargePerRequest: NonNegativeDecimal
+        freeQuota: Int
+        availability: PricingAvailability
+    ): Pricing!
+}
+
+type Subscribe {
+    pk: String!
+    pricing: Pricing!
+    subscriber: User!
+    app: App!
+    createdAt: Timestamp!
+    updatedAt: Timestamp!
+
+    deleteSubscription: Subscribe
+    updateSubscription(pricing: ID): Subscribe
+}
+
+enum UsageLogStatus {
+    pending
+    collected
+}
+
+type UsageLog {
+    pk: ID!
+    subscriber: User!
+    app: App!
+    endpoint: Endpoint!
+    volume: Int!
+    createdAt: Timestamp!
+    status: UsageLogStatus!
+    collectedAt: Timestamp!
+}
+
+type UsageSummary {
+    pk: ID!
+    app: App!
+    subscriber: User!
+    volume: Int!
+    billed: Boolean!
+    status: UsageSummaryStatus!
+    billedAt: Timestamp
+    createdAt: Timestamp!
+    billingRequestChargeAccountActivity: AccountActivity
+}
+
+enum UsageSummaryStatus {
+    pending
+    billed
+    error
+}
+
+type StripePaymentAccept {
+    pk: ID!
+    user: User!
+    amount: NonNegativeDecimal!
+    currency: String!
+    stripePaymentStatus: String!
+    stripeSessionObject: String!
+    stripePaymentIntent: String!
+    stripeSessionId: String!
+    createdAt: Timestamp!
+    status: StripePaymentAcceptStatus!
+
+    # updateStripePaymentAccept(stripePaymentStatus: String, stripeSessionObject: String): StripePaymentAccept!
+
+    settlePayment(
+        stripePaymentStatus: String
+        stripeSessionObject: String
+        stripePaymentIntent: String
+    ): StripePaymentAccept!
+}
+
+enum StripePaymentAcceptStatus {
+    pending
+    settled
+}
+
+enum GatewayMode {
+    proxy
+    redirect
+}
+
+enum StripeTransferStatus {
+    pending
+    transferred
+    failed
+}
+
+type StripeTransfer {
+    pk: ID!
+    receiver: User!
+    withdrawAmount: NonNegativeDecimal!
+    receiveAmount: NonNegativeDecimal!
+    stripeTransferId: String
+    stripeTransferObject: String
+    createdAt: Timestamp!
+    currency: String
+    settleStripeTransfer: StripeTransfer!
+    transferAt: Timestamp!
+    status: StripeTransferStatus
+}
+
+enum StripeTransferIndex {
+    indexByStatus_transferAt__onlyPK
+}
+
+enum AccountActivityType {
+    credit
+    debit
+}
+enum AccountActivityReason {
+    payout
+    payout_fee
+    topup
+    api_per_request_charge
+    api_min_monthly_charge
+    api_min_monthly_charge_upgrade
+    fastchargeapi_per_request_service_fee
+    refund_api_min_monthly_charge
+}
+enum AccountActivityStatus {
+    pending
+    settled
+    failed
+}
+enum AccountActivityIndex {
+    indexByStatus_settleAt__onlyPK
+}
+type AccountActivity {
+    pk: ID!
+    user: User!
+    createdAt: Timestamp!
+    type: AccountActivityType!
+    amount: String!
+    reason: AccountActivityReason!
+    description: String!
+    stripeTransfer: StripeTransfer
+    status: AccountActivityStatus
+    settleAt: Timestamp!
+    billedApp: App
+    usageSummary: UsageSummary
+    consumedFreeQuota: Int
+}
+
+type AccountHistory {
+    pk: ID!
+    closingBalance: String!
+    closingTime: Timestamp!
+}
+
+type UserAppToken {
+    pk: ID!
+    subscriber: User!
+    app: App!
+    createdAt: Timestamp!
+    updatedAt: Timestamp!
+    signature: String!
+    token: String
+
+    deleteUserAppToken: UserAppToken!
+}
+
+type AppTag {
+    app: App!
+    tag: String!
+    createdAt: Timestamp!
+    updatedAt: Timestamp!
+
+    updateAppTag(tag: String): AppTag!
+}
+
+type SiteMetaData {
+    key: SiteMetaDataKey!
+    value: Any!
+
+    deleteSiteMetaData: SiteMetaData!
+    updateSiteMetaData(value: Any!): SiteMetaData!
+}
+
+enum SiteMetaDataKey {
+    pricingPerRequestCharge
+    pricingStripePercentageFee
+    pricingStripeFlatFee
+}
+
+enum PricingAvailability {
+    public
+    existing_subscribers
+}

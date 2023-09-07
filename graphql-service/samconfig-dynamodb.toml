@@ -9,7 +9,7 @@ parameter_overrides = [
     "MainDomain=\"devfastchargeapi.com\"",
     "Route53ZoneId=\"Z07362872NENGXHWMNLU5\"",
     "EnvDevDomain=\"1\"",
-    "TablePrefix=\"dev\"",
+    "TablePrefix=\"dev_restored_1686776400000_live_\"",
     "PointInTimeRecovery=0",
     "DeletionProtection=0"
 ]
@@ -30,7 +30,7 @@ capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND"
 parameter_overrides = [
     "MainDomain=\"fastchargeapi.com\"",
     "Route53ZoneId=\"Z0358815GI2I8U5CTHXW\"",
-    "TablePrefix=\"live\"",
+    "TablePrefix=\"live_\"",
     "PointInTimeRecovery=1",
     "DeletionProtection=1"
 ]

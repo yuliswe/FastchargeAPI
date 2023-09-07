@@ -1,19 +1,29 @@
 import { BatchExecuteStatementCommand, ExecuteStatementCommand } from "@aws-sdk/client-rds-data";
-import { Chalk } from "chalk";
 import { RequestContext } from "../RequestContext";
 import { GQLAppFullTextSearchOrderBy } from "../__generated__/resolvers-types";
 import { auroraResourceArn, auroraSecretArn, rdsClient } from "../aurora";
-import { App } from "../dynamoose/models";
+import { App, ValidationError } from "../database/models";
 import { AppPK } from "../pks/AppPK";
 
-const chalk = new Chalk({ level: 3 });
 export async function getAppByPK(context: RequestContext, pk: string): Promise<App> {
     return context.batched.App.get(AppPK.parse(pk));
 }
 
-export function isValidAppName(name: string): boolean {
+export function validateAppName(name: unknown): boolean {
+    if (typeof name !== "string") {
+        throw new ValidationError("name", "must be a string", name);
+    }
+    if (!/^[a-z\d][a-z\d\\-]*[a-z\d]$/.test(name)) {
+        throw new ValidationError("name", "can only contain lowercase letters, numbers, and dashes", name);
+    }
     const reserved = ["api", "login", "auth"];
-    return /^[a-z\d][a-z\d\\-]*[a-z\d]$/.test(name) && name.length <= 63 && !reserved.includes(name);
+    if (reserved.includes(name)) {
+        throw new ValidationError("name", "is a reserved name", name);
+    }
+    if (name.length > 63) {
+        throw new ValidationError("name", "must be less than 64 characters", name);
+    }
+    return true;
 }
 
 export async function updateAppSearchIndex(context: RequestContext, apps: App[]): Promise<number> {

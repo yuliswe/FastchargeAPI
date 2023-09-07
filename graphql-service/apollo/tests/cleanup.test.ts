@@ -1,7 +1,7 @@
 import { describe, expect, test } from "@jest/globals";
 import { RequestContext, createDefaultContextBatched } from "../RequestContext";
-import { User } from "../dynamoose/models";
 import { GQLUserIndex } from "../__generated__/resolvers-types";
+import { User } from "../database/models";
 
 const context: RequestContext = {
     batched: createDefaultContextBatched(),

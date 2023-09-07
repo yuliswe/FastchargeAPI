@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import { RequestContext } from "../RequestContext";
-import { UserAppToken } from "../dynamoose/models";
+import { UserAppToken } from "../database/models";
 import { getParameterFromAWSSystemsManager } from "./aws";
 
 export async function createUserAppToken(
