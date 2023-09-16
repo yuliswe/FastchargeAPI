@@ -91,7 +91,7 @@ type Mutation {
         visibility: AppVisibility = public
         logo: URL
     ): App!
-    createEndpoint(app: ID!, path: String!, method: HTTPMethod!, destination: String!, description: String): Endpoint!
+    createEndpoint(app: ID!, path: String!, method: HttpMethod!, destination: String!, description: String): Endpoint!
     createPricing(
         app: ID!
         name: String!
@@ -263,7 +263,7 @@ enum AppVisibility {
     private
 }
 
-enum HTTPMethod {
+enum HttpMethod {
     GET
     POST
     PUT
@@ -278,11 +278,11 @@ type Endpoint {
     path: String!
     description: String
     destination: String
-    method: HTTPMethod!
+    method: HttpMethod!
     createdAt: Timestamp!
     updatedAt: Timestamp!
 
-    updateEndpoint(method: HTTPMethod, path: String, destination: String, description: String): Endpoint!
+    updateEndpoint(method: HttpMethod, path: String, destination: String, description: String): Endpoint!
 
     deleteEndpoint: Endpoint!
 }

@@ -1,6 +1,6 @@
 import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
 import { graphql } from "@/__generated__/gql";
-import { GQLPricingAvailability } from "@/__generated__/resolvers-types";
+import { PricingAvailability } from "@/__generated__/gql/graphql";
 import { App, Pricing, UsageSummary, User } from "@/database/models";
 import { Can } from "@/permissions";
 import { AppPK } from "@/pks/AppPK";
@@ -71,7 +71,7 @@ beforeEach(async () => {
     testPricing = await context.batched.Pricing.create({
         name: "test-pricing",
         app: AppPK.stringify(testApp),
-        availability: GQLPricingAvailability.Public,
+        availability: PricingAvailability.Public,
         minMonthlyCharge: "0",
         chargePerRequest: "0",
         freeQuota: 0,

@@ -116,7 +116,7 @@ class _SubscriptionDetailPage extends React.Component<_Props, _State> {
     }
 
     summaryCost(log: UsageSummary): string {
-        return log.billingAccountActivity?.amount.toString() ?? "";
+        return log.billingRequestChargeAccountActivity?.amount.toString() ?? "";
     }
 
     handleSummaryPageChange: LogTableOnChangeHandler = ({ page, dateRange }) => {

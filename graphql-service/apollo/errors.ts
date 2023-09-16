@@ -103,6 +103,7 @@ export function handleError(formattedError: GraphQLFormattedError, error: unknow
         formattedError = {
             extensions: {
                 code: "BAD_USER_INPUT",
+                field: originalError.field,
             },
             message: originalError.toString(),
         };

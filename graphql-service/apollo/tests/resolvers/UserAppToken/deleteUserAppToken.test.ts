@@ -1,5 +1,5 @@
 import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
-import { GQLPricingAvailability } from "@/__generated__/resolvers-types";
+import { PricingAvailability } from "@/__generated__/gql/graphql";
 import { App, Pricing, User, UserAppToken } from "@/database/models";
 import { createUserAppToken } from "@/functions/token";
 import { AppPK } from "@/pks/AppPK";
@@ -50,7 +50,7 @@ describe("createUserAppToken", () => {
         testPricing = await context.batched.Pricing.create({
             app: AppPK.stringify(testApp),
             name: "test-pricing",
-            availability: GQLPricingAvailability.Public,
+            availability: PricingAvailability.Public,
         });
         await context.batched.Subscription.create({
             app: AppPK.stringify(testApp),

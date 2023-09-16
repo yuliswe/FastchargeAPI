@@ -1,5 +1,5 @@
 import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
-import { GQLPricingAvailability } from "@/__generated__/resolvers-types";
+import { PricingAvailability } from "@/__generated__/gql/graphql";
 import { App, Pricing, User } from "@/database/models";
 import { AppPK } from "@/pks/AppPK";
 import { PricingPK } from "@/pks/PricingPK";
@@ -33,7 +33,7 @@ beforeEach(async () => {
     testPricing = await context.batched.Pricing.create({
         name: "test-pricing",
         app: AppPK.stringify(testApp),
-        availability: GQLPricingAvailability.Public,
+        availability: PricingAvailability.Public,
         minMonthlyCharge: "0",
         chargePerRequest: "0",
         freeQuota: 0,
@@ -78,7 +78,7 @@ describe("Test read pricing", () => {
 
     test("Other user can read pricing they don't own if the pricing is private.", async () => {
         await context.batched.Pricing.update(testPricing, {
-            availability: GQLPricingAvailability.ExistingSubscribers,
+            availability: PricingAvailability.ExistingSubscribers,
         });
         for (const key of [
             "pk",

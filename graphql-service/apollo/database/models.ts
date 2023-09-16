@@ -1,18 +1,17 @@
+import { GatewayMode, HttpMethod, PricingAvailability } from "@/__generated__/gql/graphql";
 import { validateAppName } from "@/functions/app";
 import dynamoose from "dynamoose";
 import { ModelType } from "dynamoose/dist/General";
 import { Item } from "dynamoose/dist/Item";
 import { TableClass } from "dynamoose/dist/Table/types";
 import {
-    GQLAccountActivityReason,
-    GQLAccountActivityStatus,
-    GQLAccountActivityType,
-    GQLHttpMethod,
-    GQLPricingAvailability,
-    GQLSiteMetaDataKey,
-    GQLStripeTransferStatus,
-    GQLUsageLogStatus,
-    GQLUsageSummaryStatus,
+    AccountActivityReason,
+    AccountActivityStatus,
+    AccountActivityType,
+    SiteMetaDataKey,
+    StripeTransferStatus,
+    UsageLogStatus,
+    UsageSummaryStatus,
 } from "../__generated__/resolvers-types";
 
 export const NULL = dynamoose.type.NULL;
@@ -57,13 +56,8 @@ const tableConfigs = {
     tableClass: TableClass.standard,
 };
 
-export enum GatewayMode {
-    proxy = "proxy",
-    redirect = "redirect",
-}
-
 export class ValidationError extends Error {
-    constructor(field: string, message: string, current: unknown) {
+    constructor(public field: string, public message: string, public current: unknown) {
         super(`Validation faild on "${field}": ${message}.\nGot: ${JSON.stringify(current)}`);
     }
 }
@@ -236,8 +230,8 @@ const EndpointTableSchema = new dynamoose.Schema(
         },
         method: {
             type: String,
-            default: GQLHttpMethod.Get,
-            enum: Object.values(GQLHttpMethod),
+            default: HttpMethod.Get,
+            enum: Object.values(HttpMethod),
         },
         path: { ...String_Required_NotEmpty("path") },
         destination: { ...String_Required_NotEmpty("destination") },
@@ -255,7 +249,7 @@ const EndpointTableSchema = new dynamoose.Schema(
 export class Endpoint extends Item {
     app: string;
     path: string;
-    method: GQLHttpMethod;
+    method: HttpMethod;
     destination: string;
     description: string;
     createdAt: number;
@@ -285,8 +279,8 @@ const PricingTableSchema = new dynamoose.Schema(
         chargePerRequestFloat: Number,
         availability: {
             type: String,
-            default: GQLPricingAvailability.Public,
-            enum: Object.values(GQLPricingAvailability),
+            default: PricingAvailability.Public,
+            enum: Object.values(PricingAvailability),
         },
     },
     {
@@ -308,7 +302,7 @@ export class Pricing extends Item {
     freeQuota: number;
     minMonthlyChargeFloat: number;
     chargePerRequestFloat: number;
-    availability: GQLPricingAvailability;
+    availability: PricingAvailability;
     updatedAt: number;
 }
 
@@ -366,8 +360,8 @@ const UsageLogTableSchema = new dynamoose.Schema(
         app: { ...String_Required_NotEmpty("app") },
         status: {
             type: String,
-            enum: Object.values(GQLUsageLogStatus),
-            default: GQLUsageLogStatus.Pending,
+            enum: Object.values(UsageLogStatus),
+            default: UsageLogStatus.Pending,
         },
         collectedAt: { type: Number, required: false },
         path: String_Required_NotEmpty("path"),
@@ -395,7 +389,7 @@ export class UsageLog extends Item {
     path: string;
     createdAt: number;
     volume: number; // Number of requests. This is always 1 for now. Set to 2 for double rate charging.
-    status: GQLUsageLogStatus;
+    status: UsageLogStatus;
     collectedAt: number; // When the UsageSummary was created
     usageSummary: string | null; // ID of the UsageSummary item or null if not yet collected
     pricing: string;
@@ -420,7 +414,7 @@ export class UsageSummary extends Item {
     subscriber: string;
     volume: number;
     createdAt: number;
-    status: GQLUsageSummaryStatus; // billed when account activities have been created
+    status: UsageSummaryStatus; // billed when account activities have been created
     billedAt: number | null;
     numberOfLogs: number; // Number of usage logs in the queue when collected
     billingRequestChargeAccountActivity: string | null; // ID of the AccountActivity item or null if not yet billed
@@ -455,8 +449,8 @@ const UsageSummaryTableSchema = new dynamoose.Schema(
         volume: { type: Number, default: 1 },
         status: {
             type: String,
-            enum: Object.values(GQLUsageSummaryStatus),
-            default: GQLUsageSummaryStatus.Pending,
+            enum: Object.values(UsageSummaryStatus),
+            default: UsageSummaryStatus.Pending,
         },
         billedAt: { type: Number, default: undefined },
         numberOfLogs: { type: Number, required: true },
@@ -485,12 +479,12 @@ const AccountActivityTableSchema = new dynamoose.Schema(
         type: {
             type: String,
             required: true,
-            enum: Object.values(GQLAccountActivityType),
+            enum: Object.values(AccountActivityType),
         },
         reason: {
             type: String,
             required: true,
-            enum: Object.values(GQLAccountActivityReason),
+            enum: Object.values(AccountActivityReason),
         },
         status: {
             type: String,
@@ -500,9 +494,9 @@ const AccountActivityTableSchema = new dynamoose.Schema(
                 type: "global",
                 project: ["settleAt", "status"],
             },
-            enum: Object.values(GQLAccountActivityStatus),
+            enum: Object.values(AccountActivityStatus),
             required: true,
-            default: GQLAccountActivityStatus.Pending,
+            default: AccountActivityStatus.Pending,
         },
         settleAt: { type: Number, required: true },
         amount: {
@@ -537,9 +531,9 @@ const AccountActivityTableSchema = new dynamoose.Schema(
  */
 export class AccountActivity extends Item {
     user: string; // User who's account is affected
-    type: GQLAccountActivityType;
-    reason: GQLAccountActivityReason;
-    status: GQLAccountActivityStatus;
+    type: AccountActivityType;
+    reason: AccountActivityReason;
+    status: AccountActivityStatus;
     settleAt: number; // Unix timestamp when the activity is settled. Can be in the future.
     amount: string;
     usageSummary: string | null; // ID of the UsageSummary item or null if not related to usage
@@ -554,8 +548,8 @@ export class AccountActivity extends Item {
 
 export type AccountActivityRequiredCreateProps = {
     user: string;
-    type: GQLAccountActivityType;
-    reason: GQLAccountActivityReason;
+    type: AccountActivityType;
+    reason: AccountActivityReason;
     amount: string;
     settleAt: number;
 } & GQLPartial<AccountActivity>;
@@ -697,7 +691,7 @@ const StripeTransferTableSchema = new dynamoose.Schema(
                 type: "global",
                 project: ["transferAt", "status"],
             },
-            enum: Object.values(GQLStripeTransferStatus),
+            enum: Object.values(StripeTransferStatus),
             required: true,
         },
     },
@@ -734,7 +728,7 @@ export class StripeTransfer extends Item {
     accountActivity: string;
     feeActivity: string;
     transferAt: number;
-    status: GQLStripeTransferStatus;
+    status: StripeTransferStatus;
 }
 
 export type StripeTransferRequiredCreateProps = {
@@ -742,7 +736,7 @@ export type StripeTransferRequiredCreateProps = {
     receiveAmount: string;
     withdrawAmount: string;
     transferAt: number;
-    status: GQLStripeTransferStatus;
+    status: StripeTransferStatus;
 } & GQLPartial<StripeTransfer>;
 
 const SecretTableSchema = new dynamoose.Schema(
@@ -898,12 +892,12 @@ const SiteMetaDataTableSchema = new dynamoose.Schema(
 );
 
 export class SiteMetaData extends Item {
-    key: GQLSiteMetaDataKey;
+    key: SiteMetaDataKey;
     value: string;
 }
 
 export type SiteMetaDataRequiredCreateProps = {
-    key: GQLSiteMetaDataKey;
+    key: SiteMetaDataKey;
     value: string;
 } & GQLPartial<SiteMetaData>;
 

@@ -4,7 +4,7 @@ import { Item } from "dynamoose/dist/Item";
 import { RequestContext } from "../RequestContext";
 
 import { graphql } from "../__generated__/gql";
-import { GQLAccountActivityStatus } from "../__generated__/resolvers-types";
+import { AccountActivityStatus } from "../__generated__/resolvers-types";
 import { AccountActivity, AccountHistory } from "../database/models";
 import { AlreadyExists } from "../errors";
 import { AccountHistoryPK } from "../pks/AccountHistoryPK";
@@ -63,7 +63,7 @@ export async function settleAccountActivities(
     const activities = await context.batched.AccountActivity.many(
         {
             user: accountUser,
-            status: GQLAccountActivityStatus.Pending,
+            status: AccountActivityStatus.Pending,
             settleAt: { le: closingTime },
         },
         {
@@ -115,7 +115,7 @@ export async function settleAccountActivities(
 
     const promises: Promise<Item>[] = [];
     for (const activity of activities) {
-        activity.status = GQLAccountActivityStatus.Settled;
+        activity.status = AccountActivityStatus.Settled;
         activity.accountHistory = AccountHistoryPK.stringify(accountHistory);
         if (activity.type === "credit") {
             balance = balance.sub(activity.amount);

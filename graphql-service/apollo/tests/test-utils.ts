@@ -5,7 +5,7 @@ import { ApolloError } from "@apollo/client";
 import { v4 as uuid4 } from "uuid";
 import { RequestContext } from "../RequestContext";
 import { GQLUserIndex } from "../__generated__/resolvers-types";
-import { App, FreeQuotaUsage, Pricing } from "../database/models";
+import { App, FreeQuotaUsage, GQLPartial, Pricing, User } from "../database/models";
 import { createUserWithEmail } from "../functions/user";
 import { AppPK } from "../pks/AppPK";
 
@@ -53,10 +53,16 @@ export async function addMoneyForUser(
  * Create a user with the given email for testing purposes.
  * @returns Created user object.
  */
-export async function getOrCreateTestUser(context: RequestContext, { email }: { email: string }) {
+export async function getOrCreateTestUser(
+    context: RequestContext,
+    { email, ...additionalProps }: { email: string } & GQLPartial<User>
+) {
+    if (!email) {
+        email = `testuser_${uuid4()}@gmail_mock.com`;
+    }
     let user = await context.batched.User.getOrNull({ email }, { using: GQLUserIndex.IndexByEmailOnlyPk });
     if (user === null) {
-        user = await createUserWithEmail(context.batched, email);
+        user = await createUserWithEmail(context.batched, email, additionalProps);
     }
     return user;
 }

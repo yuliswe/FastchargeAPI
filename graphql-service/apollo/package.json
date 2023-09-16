@@ -22,7 +22,7 @@
         "watch:sqs": "npx nodemon --config ./.nodemon.config.json -x \"npm run start:sqs\"",
         "crosstypecheck": "(npm run typecheck) & (cd $WS_DIR/payment-service && npm run typecheck) & (cd $WS_DIR/auth-service && npm run typecheck) & (cd $WS_DIR/fastchargeapi-cli && npm run typecheck) & (cd $WS_DIR/gateway-service && npm run typecheck) && wait && echo All good!",
         "watch:crosstypecheck": "npx nodemon --config ./.nodemon.config.json -x \"npm run crosstypecheck\"",
-        "crosscheck": "(npm run typecheck) && (cd $WS_DIR/payment-service && npm run test) && (cd $WS_DIR/auth-service && npm run test) && (cd $WS_DIR/cli && npm run test) && (cd $WS_DIR/gateway-service && npm run test) && echo All good!"
+        "crosscheck": "(npm run typecheck) && (cd $WS_DIR/payment-service && npm run test) && (cd $WS_DIR/auth-service && npm run test) && (cd $WS_DIR/fastchargeapi-cli && npm run test) && (cd $WS_DIR/gateway-service && npm run test) && echo All good!"
     },
     "author": "",
     "license": "ISC",

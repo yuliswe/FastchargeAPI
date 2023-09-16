@@ -1,6 +1,6 @@
 import Decimal from "decimal.js-light";
 import { RequestContext } from "../RequestContext";
-import { GQLAccountActivityReason, GQLAccountActivityType } from "../__generated__/resolvers-types";
+import { AccountActivityReason, AccountActivityType } from "../__generated__/resolvers-types";
 import { AccountActivity, StripeTransfer } from "../database/models";
 import { BadInput } from "../errors";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
@@ -37,8 +37,8 @@ export async function createAccountActivitiesForTransfer(
     const payoutActivity = await context.batched.AccountActivity.create({
         user: userPK,
         amount: transfer.receiveAmount,
-        type: GQLAccountActivityType.Credit,
-        reason: GQLAccountActivityReason.Payout,
+        type: AccountActivityType.Credit,
+        reason: AccountActivityReason.Payout,
         settleAt: settleAt - 1, // set in the past so it's settled immediately
         description: `Payment to your Stripe account`,
         stripeTransfer: StripeTransferPK.stringify(transfer),
@@ -46,8 +46,8 @@ export async function createAccountActivitiesForTransfer(
     const feeActivity = await context.batched.AccountActivity.create({
         user: userPK,
         amount: transferFee.toString(),
-        type: GQLAccountActivityType.Credit,
-        reason: GQLAccountActivityReason.PayoutFee,
+        type: AccountActivityType.Credit,
+        reason: AccountActivityReason.PayoutFee,
         settleAt: settleAt - 2, // Set in the past so it's settled immediately. Use a different time
         // because settleAt is a range key and must be unique.
         description: `Stripe service fee`,

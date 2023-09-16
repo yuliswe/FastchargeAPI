@@ -5,7 +5,7 @@ import {
     GQLQueryStripeTransferArgs,
     GQLResolvers,
     GQLStripeTransferResolvers,
-    GQLStripeTransferStatus,
+    StripeTransferStatus,
 } from "../__generated__/resolvers-types";
 import { StripeTransfer, StripeTransferModel } from "../database/models";
 import { BadInput, Denied } from "../errors";
@@ -128,7 +128,7 @@ export const StripeTransferResolvers: GQLResolvers & {
                 currency,
                 stripeTransferObject: stripeTransferObject && JSON.parse(stripeTransferObject),
                 transferAt: Date.now() + 1000 * 60 * 60 * 24, // Transfer after 24 hours
-                status: GQLStripeTransferStatus.Pending,
+                status: StripeTransferStatus.Pending,
             });
         },
     },

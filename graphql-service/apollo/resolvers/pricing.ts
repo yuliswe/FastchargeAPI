@@ -1,10 +1,10 @@
 import { RequestContext } from "../RequestContext";
 import {
     GQLMutationCreatePricingArgs,
-    GQLPricingAvailability,
     GQLPricingUpdatePricingArgs,
     GQLQueryPricingArgs,
     GQLResolvers,
+    PricingAvailability,
 } from "../__generated__/resolvers-types";
 import { Pricing } from "../database/models";
 import { BadInput, Denied, ImmutableResource, TooManyResources } from "../errors";
@@ -31,7 +31,7 @@ export const PricingResolvers: GQLResolvers = {
     Pricing: {
         pk: makeOwnerReadableWhenInvisible((parent) => PricingPK.stringify(parent)),
         async app(parent, args, context, info) {
-            if (parent.availability != GQLPricingAvailability.Public) {
+            if (parent.availability != PricingAvailability.Public) {
                 if (!(await Can.viewPricingInvisiableAttributes(parent, context))) {
                     throw new Denied();
                 }

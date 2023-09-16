@@ -1,8 +1,6 @@
-import { AppEvent, AppEventStream, mapState, to } from "react-appevent-redux";
-import { RootAppState } from "../states/RootAppState";
-import { getGQLClient } from "../graphql-client";
-import { AppContext } from "../AppContext";
 import { gql } from "@apollo/client";
+import { AppEvent, AppEventStream, mapState, to } from "react-appevent-redux";
+import { AppContext } from "../AppContext";
 import {
     GQLGetAvailablePlansQuery,
     GQLGetAvailablePlansQueryVariables,
@@ -13,6 +11,8 @@ import {
     GQLGetUserSubscriptionDetailQuery,
     GQLGetUserSubscriptionDetailQueryVariables,
 } from "../__generated__/gql-operations";
+import { getGQLClient } from "../graphql-client";
+import { RootAppState } from "../states/RootAppState";
 import { SubscriptionDetailAppState } from "../states/SubscriptionDetailAppState";
 
 export type AvailablePlan = GQLGetAvailablePlansQuery["app"]["pricingPlans"][0];
@@ -70,7 +70,10 @@ class LoadUserSubscription extends AppEvent<RootAppState> {
     subscriptionDetail: SubscriptionDetail | null = null;
     async *run(state: RootAppState): AppEventStream<RootAppState> {
         const { client, currentUser } = await getGQLClient(this.context);
-        const result = await client.query<GQLGetUserSubscriptionDetailQuery, GQLGetUserSubscriptionDetailQueryVariables>({
+        const result = await client.query<
+            GQLGetUserSubscriptionDetailQuery,
+            GQLGetUserSubscriptionDetailQueryVariables
+        >({
             query: gql`
                 query GetUserSubscriptionDetail($user: ID!, $appName: String!) {
                     subscription(subscriber: $user, app: $appName) {
@@ -159,7 +162,7 @@ class LoadUsageSummary extends AppEvent<RootAppState> {
                         usageSummaries(app: $appName, dateRange: $dateRange) {
                             createdAt
                             volume
-                            billingAccountActivity {
+                            billingRequestChargeAccountActivity {
                                 amount
                             }
                         }

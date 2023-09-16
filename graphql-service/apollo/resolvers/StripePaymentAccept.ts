@@ -1,7 +1,7 @@
 import { RequestContext } from "../RequestContext";
 import {
-    GQLAccountActivityReason,
-    GQLAccountActivityType,
+    AccountActivityReason,
+    AccountActivityType,
     GQLMutationCreateStripePaymentAcceptArgs,
     GQLQueryGetStripePaymentAcceptArgs,
     GQLResolvers,
@@ -68,8 +68,8 @@ export const StripePaymentAcceptResolvers: GQLResolvers & {
             const activity = await context.batched.AccountActivity.create({
                 user: parent.user,
                 amount: parent.amount,
-                type: GQLAccountActivityType.Debit,
-                reason: GQLAccountActivityReason.Topup,
+                type: AccountActivityType.Debit,
+                reason: AccountActivityReason.Topup,
                 settleAt: Date.now(),
                 description: "Account top-up by you",
                 stripePaymentAccept: StripePaymentAcceptPK.stringify(parent),

@@ -5,8 +5,7 @@ import { beforeEach, describe, expect, test } from "@jest/globals";
 
 import { mockSQS } from "@/MockSQS";
 import { graphql } from "@/__generated__/gql";
-import { TestBillingTriggerBillingMutationVariables } from "@/__generated__/gql/graphql";
-import { GQLPricingAvailability } from "@/__generated__/resolvers-types";
+import { PricingAvailability, TestBillingTriggerBillingMutationVariables } from "@/__generated__/gql/graphql";
 import { AccountActivityPK } from "@/pks/AccountActivityPK";
 import { AppPK } from "@/pks/AppPK";
 import { PricingPK } from "@/pks/PricingPK";
@@ -39,7 +38,7 @@ beforeEach(async () => {
     testPricing = await context.batched.Pricing.create({
         name: "test-pricing",
         app: AppPK.stringify(testApp),
-        availability: GQLPricingAvailability.Public,
+        availability: PricingAvailability.Public,
         minMonthlyCharge: "10",
         chargePerRequest: "0.001",
         freeQuota: 0,

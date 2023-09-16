@@ -31,6 +31,7 @@ func lambdaHandler(request events.APIGatewayV2HTTPRequest) (*events.APIGatewayV2
 
 type EchoResponse = struct {
 	Body        string            `json:"body"`
+	Path        string            `json:"path"`
 	Headers     map[string]string `json:"headers"`
 	QueryParams map[string]string `json:"queryParams"`
 }
@@ -47,14 +48,21 @@ func handle(request events.APIGatewayV2HTTPRequest) (*events.APIGatewayV2HTTPRes
 			Body:        request.Body,
 			Headers:     request.Headers,
 			QueryParams: request.QueryStringParameters,
+			Path:        request.RawPath,
 		})
 	}
 	if err != nil {
 		return nil, err
 	}
+	if os.Getenv("LOG_RESPONSE") == "1" {
+		os.Stdout.Write(bytes)
+	}
 	return &events.APIGatewayV2HTTPResponse{
 		StatusCode: 200,
 		Body:       string(bytes),
+		Headers: map[string]string{
+			"Content-Type": "application/json",
+		},
 	}, nil
 }
 

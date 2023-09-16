@@ -1,6 +1,6 @@
 import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
 import { graphql } from "@/__generated__/gql";
-import { GQLPricingAvailability } from "@/__generated__/resolvers-types";
+import { PricingAvailability } from "@/__generated__/gql/graphql";
 import { App, Pricing, User } from "@/database/models";
 import { AppPK } from "@/pks/AppPK";
 import { PricingPK } from "@/pks/PricingPK";
@@ -34,7 +34,7 @@ beforeEach(async () => {
     testPricing = await context.batched.Pricing.create({
         name: "Premium",
         app: AppPK.stringify(testApp),
-        availability: GQLPricingAvailability.Public,
+        availability: PricingAvailability.Public,
     });
 });
 
@@ -63,7 +63,7 @@ describe("Test pricing subscribility", () => {
 
     test("User can't subscribe to private pricing plan", async () => {
         testPricing = await context.batched.Pricing.update(testPricing, {
-            availability: GQLPricingAvailability.ExistingSubscribers,
+            availability: PricingAvailability.ExistingSubscribers,
         });
         const promise = testGQLClient({ user: testAppUser }).mutate({
             mutation: createSubscriptionMutation,

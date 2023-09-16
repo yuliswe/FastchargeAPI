@@ -1,6 +1,6 @@
 import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
 
-import { GQLAccountActivityReason, GQLAccountActivityType } from "@/__generated__/resolvers-types";
+import { AccountActivityReason, AccountActivityType } from "@/__generated__/resolvers-types";
 import { AccountActivity, App, User } from "@/database/models";
 import { Can } from "@/permissions";
 import { AccountActivityPK } from "@/pks/AccountActivityPK";
@@ -36,8 +36,8 @@ beforeEach(async () => {
     testApp = await context.batched.App.getOrCreate({ name: testAppName, owner: UserPK.stringify(testAccountOwner) });
     testAccountActivity = await context.batched.AccountActivity.create({
         user: UserPK.stringify(testAccountOwner),
-        type: GQLAccountActivityType.Debit,
-        reason: GQLAccountActivityReason.ApiMinMonthlyCharge,
+        type: AccountActivityType.Debit,
+        reason: AccountActivityReason.ApiMinMonthlyCharge,
         settleAt: Date.now(),
         amount: "0",
         billedApp: AppPK.stringify(testApp),

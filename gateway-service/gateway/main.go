@@ -363,19 +363,19 @@ func getRoute(graphqlClient *graphql.Client, method string, app string, path str
 				}
 			}()
 			switch endpoint.Method {
-			case GQL.HTTPMethodGet:
+			case GQL.HttpMethodGet:
 				appRouter.GET(endpoint.Path, processFn)
-			case GQL.HTTPMethodPost:
+			case GQL.HttpMethodPost:
 				appRouter.POST(endpoint.Path, processFn)
-			case GQL.HTTPMethodPut:
+			case GQL.HttpMethodPut:
 				appRouter.PUT(endpoint.Path, processFn)
-			case GQL.HTTPMethodDelete:
+			case GQL.HttpMethodDelete:
 				appRouter.DELETE(endpoint.Path, processFn)
-			case GQL.HTTPMethodPatch:
+			case GQL.HttpMethodPatch:
 				appRouter.PATCH(endpoint.Path, processFn)
-			case GQL.HTTPMethodHead:
+			case GQL.HttpMethodHead:
 				appRouter.HEAD(endpoint.Path, processFn)
-			case GQL.HTTPMethodOptions:
+			case GQL.HttpMethodOptions:
 				appRouter.OPTIONS(endpoint.Path, processFn)
 			}
 		}() // Register the route with the handlers (processFn)

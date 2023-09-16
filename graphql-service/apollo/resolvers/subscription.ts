@@ -1,7 +1,7 @@
 import { RequestContext } from "../RequestContext";
+import { PricingAvailability } from "../__generated__/gql/graphql";
 import {
     GQLMutationCreateSubscriptionArgs,
-    GQLPricingAvailability,
     GQLQuerySubscriptionArgs,
     GQLResolvers,
     GQLSubscribeUpdateSubscriptionArgs,
@@ -95,7 +95,7 @@ export const SubscriptionResolvers: GQLResolvers = {
             context
         ) {
             const pricing = await context.batched.Pricing.getOrNull(PricingPK.parse(pricingPK)); // Checks if the pricing plan exists
-            if (!pricing || pricing.availability !== GQLPricingAvailability.Public) {
+            if (!pricing || pricing.availability !== PricingAvailability.Public) {
                 // Pricing was deleted
                 throw new Denied("This pricing plan is not available for purchase.");
             }

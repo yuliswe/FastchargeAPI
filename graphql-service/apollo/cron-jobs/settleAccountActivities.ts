@@ -3,7 +3,7 @@ import { Chalk } from "chalk";
 import { createDefaultContextBatched } from "../RequestContext";
 
 import { graphql } from "@/typed-graphql";
-import { GQLAccountActivityIndex, GQLAccountActivityStatus } from "../__generated__/resolvers-types";
+import { AccountActivityStatus, GQLAccountActivityIndex } from "../__generated__/resolvers-types";
 import { SQSQueueUrl, sqsGQLClient } from "../sqsClient";
 
 const chalk = new Chalk({ level: 3 });
@@ -17,7 +17,7 @@ const chalk = new Chalk({ level: 3 });
 async function handle(event: EventBridgeEvent<string, {}>, context: never, callback: never) {
     const batched = createDefaultContextBatched();
     const activities = await batched.AccountActivity.many(
-        { status: GQLAccountActivityStatus.Pending, settleAt: { le: Date.now() } },
+        { status: AccountActivityStatus.Pending, settleAt: { le: Date.now() } },
         { using: GQLAccountActivityIndex.IndexByStatusSettleAtOnlyPk }
     );
 

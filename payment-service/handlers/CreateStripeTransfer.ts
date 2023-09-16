@@ -1,5 +1,5 @@
 import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
-import { GQLSiteMetaDataKey } from "@/__generated__/resolvers-types";
+import { SiteMetaDataKey } from "@/__generated__/resolvers-types";
 import { getUserBalance } from "@/functions/account";
 import { UserPK } from "@/pks/UserPK";
 import { SQSQueueUrl, sqsGQLClient } from "@/sqsClient";
@@ -64,10 +64,10 @@ export async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStruc
     }
     const withdraw = bodyData!.withdraw;
     const stripeFeePercentage = new Decimal(
-        (await context.batched.SiteMetaData.get({ key: GQLSiteMetaDataKey.PricingStripePercentageFee })).value
+        (await context.batched.SiteMetaData.get({ key: SiteMetaDataKey.PricingStripePercentageFee })).value
     );
     const stripeFlatFee = new Decimal(
-        (await context.batched.SiteMetaData.get({ key: GQLSiteMetaDataKey.PricingStripeFlatFee })).value
+        (await context.batched.SiteMetaData.get({ key: SiteMetaDataKey.PricingStripeFlatFee })).value
     );
     const totalStripe = stripeFlatFee.add(withdraw.mul(stripeFeePercentage));
     const receivable = withdraw.minus(totalStripe);

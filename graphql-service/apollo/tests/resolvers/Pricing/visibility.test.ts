@@ -1,6 +1,6 @@
 import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
 import { graphql } from "@/__generated__/gql";
-import { GQLPricingAvailability } from "@/__generated__/resolvers-types";
+import { PricingAvailability } from "@/__generated__/gql/graphql";
 import { App, Pricing, User } from "@/database/models";
 import { AppPK } from "@/pks/AppPK";
 import { PricingPK } from "@/pks/PricingPK";
@@ -81,7 +81,7 @@ beforeEach(async () => {
     testPricing = await context.batched.Pricing.create({
         name: "test-pricing",
         app: AppPK.stringify(testApp),
-        availability: GQLPricingAvailability.Public,
+        availability: PricingAvailability.Public,
         minMonthlyCharge: "0",
         chargePerRequest: "0",
         freeQuota: 0,
@@ -100,7 +100,7 @@ describe("Test pricing visibility", () => {
             pk: PricingPK.stringify(testPricing),
             name: "test-pricing",
             app: { __typename: "App", pk: AppPK.stringify(testApp) },
-            availability: GQLPricingAvailability.Public,
+            availability: PricingAvailability.Public,
             minMonthlyCharge: "0",
             chargePerRequest: "0",
             freeQuota: 0,
@@ -120,7 +120,7 @@ describe("Test pricing visibility", () => {
 
     test("App user cannot see pricing if the user is not subscribed to it (ger pricing by PK)", async () => {
         testPricing = await context.batched.Pricing.update(testPricing, {
-            availability: GQLPricingAvailability.ExistingSubscribers,
+            availability: PricingAvailability.ExistingSubscribers,
         });
         for (const key of [
             "pk",
@@ -154,7 +154,7 @@ describe("Test pricing visibility", () => {
 
     test("App user cannot see pricing if the user is not subscribed to it (list app pricing)", async () => {
         testPricing = await context.batched.Pricing.update(testPricing, {
-            availability: GQLPricingAvailability.ExistingSubscribers,
+            availability: PricingAvailability.ExistingSubscribers,
         });
         const result = await testGQLClient({ user: testAppUser }).query({
             query: listAppPricingsQuery,
@@ -167,7 +167,7 @@ describe("Test pricing visibility", () => {
 
     test("App user can see pricing if subscribed (get pricing by PK)", async () => {
         testPricing = await context.batched.Pricing.update(testPricing, {
-            availability: GQLPricingAvailability.ExistingSubscribers,
+            availability: PricingAvailability.ExistingSubscribers,
         });
         await context.batched.Subscription.create({
             app: AppPK.stringify(testApp),
@@ -183,7 +183,7 @@ describe("Test pricing visibility", () => {
 
     test("App user can see pricing if subscribed (list app pricing)", async () => {
         testPricing = await context.batched.Pricing.update(testPricing, {
-            availability: GQLPricingAvailability.ExistingSubscribers,
+            availability: PricingAvailability.ExistingSubscribers,
         });
         await context.batched.Subscription.create({
             app: AppPK.stringify(testApp),

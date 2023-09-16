@@ -1,5 +1,5 @@
 import { createDefaultContextBatched } from "@/RequestContext";
-import { GQLStripeTransferStatus } from "@/__generated__/resolvers-types";
+import { StripeTransferStatus } from "@/__generated__/resolvers-types";
 import { StripeTransferPK } from "@/pks/StripeTransferPK";
 import { UserPK } from "@/pks/UserPK";
 import { EventBridgeEvent, EventBridgeHandler } from "aws-lambda";
@@ -34,7 +34,7 @@ async function handle(event: EventBridgeEvent<string, EventDetail>, context: nev
     due.setHours(0, 0, 0, 0);
     const pendingTransfers = await batched.StripeTransfer.many(
         {
-            status: GQLStripeTransferStatus.Pending,
+            status: StripeTransferStatus.Pending,
             transferAt: { lt: due.getTime() },
         },
         {
@@ -62,7 +62,7 @@ async function handle(event: EventBridgeEvent<string, EventDetail>, context: nev
 
                 // Save status right away to make sure we don't double transfer
                 await batched.StripeTransfer.update(transfer, {
-                    status: GQLStripeTransferStatus.Transferred,
+                    status: StripeTransferStatus.Transferred,
                 });
                 try {
                     const stripeClient = await getStripeClient();
@@ -75,7 +75,7 @@ async function handle(event: EventBridgeEvent<string, EventDetail>, context: nev
                     total = total.plus(transfer.receiveAmount);
                 } catch (error) {
                     await batched.StripeTransfer.update(transfer, {
-                        status: GQLStripeTransferStatus.Failed,
+                        status: StripeTransferStatus.Failed,
                     });
                     failureCount++;
                     try {

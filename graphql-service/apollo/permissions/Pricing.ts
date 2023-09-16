@@ -1,9 +1,10 @@
-import { GQLPricingAvailability, GQLPricingUpdatePricingArgs } from "../__generated__/resolvers-types";
+import { RequestContext } from "../RequestContext";
+import { PricingAvailability } from "../__generated__/gql/graphql";
+import { GQLPricingUpdatePricingArgs } from "../__generated__/resolvers-types";
 import { Pricing } from "../database/models";
 import { AppPK } from "../pks/AppPK";
 import { PricingPK } from "../pks/PricingPK";
 import { UserPK } from "../pks/UserPK";
-import { RequestContext } from "../RequestContext";
 
 export const PricingPermissions = {
     async viewPricingInvisiableAttributes(pricing: Pricing, context: RequestContext): Promise<boolean> {
@@ -18,10 +19,10 @@ export const PricingPermissions = {
         if (isOwner) {
             return true;
         }
-        if (pricing.availability === GQLPricingAvailability.Public) {
+        if (pricing.availability === PricingAvailability.Public) {
             return true;
         }
-        if (pricing.availability === GQLPricingAvailability.ExistingSubscribers) {
+        if (pricing.availability === PricingAvailability.ExistingSubscribers) {
             return await context.batched.Subscription.exists({
                 app: pricing.app,
                 subscriber: UserPK.stringify(context.currentUser),

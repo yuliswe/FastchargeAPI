@@ -5,11 +5,11 @@ import {
     GQLAppResolvers,
     GQLAppUpdateAppArgs,
     GQLMutationCreateAppArgs,
-    GQLPricingAvailability,
     GQLQueryAppArgs,
     GQLQueryAppFullTextSearchArgs,
     GQLQueryAppsArgs,
     GQLResolvers,
+    PricingAvailability,
 } from "../__generated__/resolvers-types";
 import { App, AppTagTableIndex } from "../database/models";
 import { BadInput, Denied, TooManyResources } from "../errors";
@@ -50,7 +50,7 @@ export const AppResolvers: GQLResolvers & {
             } else {
                 const plans = await context.batched.Pricing.many({
                     app: parent.name,
-                    availability: GQLPricingAvailability.Public,
+                    availability: PricingAvailability.Public,
                 });
                 // Regular users can only see public pricing plans, and the plan
                 // thay are already subscribed to.

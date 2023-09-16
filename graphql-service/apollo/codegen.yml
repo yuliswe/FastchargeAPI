@@ -26,7 +26,7 @@ generates:
       # makeResolverTypeCallable: true
       # wrapFieldDefinitions: true
       # resolverTypeWrapperSignature: "{[k in keyof T]: (T[k] | ((args: any, context: RequestContext, info: GraphQLResolveInfo) => T[k]) | ((args: any, context: RequestContext, info: GraphQLResolveInfo) => Promise<T[k]>))}"
-      useTypeImports: true
+      useTypeImports: false
       # avoidOptionals: true
       makeResolverTypeCallable: true
       customResolveInfo: "@apollo/cache-control-types#GraphQLResolveInfoWithCacheControl"
@@ -50,7 +50,16 @@ generates:
         UserAppToken: ../database/models#UserAppToken
         SiteMetaData: ../database/models#SiteMetaData
       enumValues:
-        GatewayMode: ../database/models#GatewayMode
+        GatewayMode: ../__generated__/gql/graphql#GatewayMode
+        PricingAvailability: ../__generated__/gql/graphql#PricingAvailability
+        HttpMethod: ../__generated__/gql/graphql#HttpMethod
+        AccountActivityReason: ../__generated__/gql/graphql#AccountActivityReason
+        AccountActivityStatus: ../__generated__/gql/graphql#AccountActivityStatus
+        AccountActivityType: ../__generated__/gql/graphql#AccountActivityType
+        SiteMetaDataKey: ../__generated__/gql/graphql#SiteMetaDataKey
+        StripeTransferStatus: ../__generated__/gql/graphql#StripeTransferStatus
+        UsageLogStatus: ../__generated__/gql/graphql#UsageLogStatus
+        UsageSummaryStatus: ../__generated__/gql/graphql#UsageSummaryStatus
       scalars:
         Email: string
         Timestamp: number

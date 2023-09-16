@@ -1,6 +1,6 @@
 import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
 import { graphql } from "@/__generated__/gql";
-import { GQLPricingAvailability } from "@/__generated__/resolvers-types";
+import { PricingAvailability } from "@/__generated__/gql/graphql";
 import { App, Pricing, User } from "@/database/models";
 import { AppPK } from "@/pks/AppPK";
 import { PricingPK } from "@/pks/PricingPK";
@@ -33,7 +33,7 @@ beforeEach(async () => {
     testPricing = await context.batched.Pricing.create({
         name: "test-pricing",
         app: AppPK.stringify(testApp),
-        availability: GQLPricingAvailability.Public,
+        availability: PricingAvailability.Public,
         minMonthlyCharge: "0",
         chargePerRequest: "0",
         freeQuota: 0,
@@ -76,7 +76,7 @@ describe("deletePricing", () => {
             pk: PricingPK.stringify(testPricing),
             name: "test-pricing",
             app: { __typename: "App", pk: AppPK.stringify(testApp) },
-            availability: GQLPricingAvailability.Public,
+            availability: PricingAvailability.Public,
             minMonthlyCharge: "0",
             chargePerRequest: "0",
             freeQuota: 0,

@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import { MD5 } from "object-hash";
 import { v4 as uuidv4 } from "uuid";
 import { RequestContext } from "../RequestContext";
-import { User } from "../database/models";
+import { GQLPartial, User } from "../database/models";
 import { UserPK } from "../pks/UserPK";
 import { getParameterFromAWSSystemsManager } from "./aws";
 
@@ -14,8 +14,13 @@ function createUserIDFromEmail(email: string): string {
     return MD5(email);
 }
 
-export async function createUserWithEmail(batched: RequestContext["batched"], email: string): Promise<User> {
+export async function createUserWithEmail(
+    batched: RequestContext["batched"],
+    email: string,
+    additionalProps?: GQLPartial<User>
+): Promise<User> {
     const user = await batched.User.create({
+        ...additionalProps,
         uid: createUserIDFromEmail(email),
         email: email,
     });

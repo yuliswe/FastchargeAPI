@@ -2,10 +2,10 @@ import { Chalk } from "chalk";
 import Decimal from "decimal.js-light";
 import { RequestContext } from "../RequestContext";
 import {
-    GQLAccountActivityReason,
-    GQLAccountActivityStatus,
-    GQLAccountActivityType,
-    GQLUsageSummaryStatus,
+    AccountActivityReason,
+    AccountActivityStatus,
+    AccountActivityType,
+    UsageSummaryStatus,
 } from "../__generated__/resolvers-types";
 import { AccountActivity, FreeQuotaUsage, Pricing, UsageSummary } from "../database/models";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
@@ -73,7 +73,7 @@ export async function generateAccountActivities(
     if (pricing == null) {
         // Pricing was deleted
         await context.batched.UsageSummary.update(usageSummary, {
-            status: GQLUsageSummaryStatus.Error,
+            status: UsageSummaryStatus.Error,
         });
         throw new Error("Could not generate account activity for usage summary. Pricing was deleted.");
     }
@@ -98,15 +98,15 @@ export async function generateAccountActivities(
     {
         // Process per-request charge
         const price = new Decimal(pricing.chargePerRequest);
-        usageSummary.status = GQLUsageSummaryStatus.Billed;
+        usageSummary.status = UsageSummaryStatus.Billed;
         usageSummary.billedAt = Date.now();
         results.updatedUsageSummary = usageSummary;
 
         const subscriberPerRequestActivityPromise = context.batched.AccountActivity.create({
             user: subscriber,
-            type: GQLAccountActivityType.Credit,
-            reason: GQLAccountActivityReason.ApiPerRequestCharge,
-            status: GQLAccountActivityStatus.Pending,
+            type: AccountActivityType.Credit,
+            reason: AccountActivityReason.ApiPerRequestCharge,
+            status: AccountActivityStatus.Pending,
             settleAt: Date.now(),
             amount: price.mul(volumeBillable).toString(),
             usageSummary: UsageSummaryPK.stringify(usageSummary),
@@ -122,9 +122,9 @@ export async function generateAccountActivities(
 
         const appAuthorPerRequestActivityPromise = context.batched.AccountActivity.create({
             user: appAuthor,
-            type: GQLAccountActivityType.Debit,
-            reason: GQLAccountActivityReason.ApiPerRequestCharge,
-            status: GQLAccountActivityStatus.Pending,
+            type: AccountActivityType.Debit,
+            reason: AccountActivityReason.ApiPerRequestCharge,
+            status: AccountActivityStatus.Pending,
             settleAt: Date.now(),
             amount: price.mul(volumeBillable).toString(),
             usageSummary: UsageSummaryPK.stringify(usageSummary),
@@ -139,9 +139,9 @@ export async function generateAccountActivities(
 
         const appAuthorServiceFeePerRequestActivityPromise = context.batched.AccountActivity.create({
             user: appAuthor,
-            type: GQLAccountActivityType.Credit,
-            reason: GQLAccountActivityReason.FastchargeapiPerRequestServiceFee,
-            status: GQLAccountActivityStatus.Pending,
+            type: AccountActivityType.Credit,
+            reason: AccountActivityReason.FastchargeapiPerRequestServiceFee,
+            status: AccountActivityStatus.Pending,
             settleAt: Date.now(),
             amount: new Decimal(serviceFeePerRequest).mul(usageSummary.volume).toString(), // We charge by the total volume regardless of free quota
             usageSummary: UsageSummaryPK.stringify(usageSummary),
@@ -174,11 +174,11 @@ export async function generateAccountActivities(
         if (forceMonthlyCharge || (!disableMonthlyCharge && shouldBillMonthly)) {
             const subscriberMonthlyActivityPromise = context.batched.AccountActivity.create({
                 user: subscriber,
-                type: GQLAccountActivityType.Credit,
+                type: AccountActivityType.Credit,
                 reason: isUpgrade
-                    ? GQLAccountActivityReason.ApiMinMonthlyChargeUpgrade
-                    : GQLAccountActivityReason.ApiMinMonthlyCharge,
-                status: GQLAccountActivityStatus.Pending,
+                    ? AccountActivityReason.ApiMinMonthlyChargeUpgrade
+                    : AccountActivityReason.ApiMinMonthlyCharge,
+                status: AccountActivityStatus.Pending,
                 settleAt: Date.now(), // We want to charge the subscriber immediately
                 amount: forceMonthlyCharge ? pricing.minMonthlyCharge : monthlyBill.toString(),
                 usageSummary: UsageSummaryPK.stringify(usageSummary),
@@ -192,11 +192,11 @@ export async function generateAccountActivities(
 
             const appAuthorMonthlyActivityPromise = context.batched.AccountActivity.create({
                 user: appAuthor,
-                type: GQLAccountActivityType.Debit,
+                type: AccountActivityType.Debit,
                 reason: isUpgrade
-                    ? GQLAccountActivityReason.ApiMinMonthlyChargeUpgrade
-                    : GQLAccountActivityReason.ApiMinMonthlyCharge,
-                status: GQLAccountActivityStatus.Pending,
+                    ? AccountActivityReason.ApiMinMonthlyChargeUpgrade
+                    : AccountActivityReason.ApiMinMonthlyCharge,
+                status: AccountActivityStatus.Pending,
                 settleAt: Date.now() + 1000 * monthlyChargeOnHoldPeriodInSeconds,
                 amount: forceMonthlyCharge ? pricing.minMonthlyCharge : monthlyBill.toString(),
                 usageSummary: UsageSummaryPK.stringify(usageSummary),
@@ -261,8 +261,8 @@ export async function shouldCollectMonthlyCharge(
     const allBillsThisMonth = await context.batched.AccountActivity.many({
         user: subscriber,
         billedApp: app,
-        type: GQLAccountActivityType.Credit,
-        reason: GQLAccountActivityReason.ApiMinMonthlyCharge,
+        type: AccountActivityType.Credit,
+        reason: AccountActivityReason.ApiMinMonthlyCharge,
         settleAt: { ge: Date.now() - 1000 * collectionPeriodInSeconds }, // get the last bill in 30 days
     });
     let totalPaidThisMonth = new Decimal(0);
@@ -349,7 +349,7 @@ export async function triggerBilling(
     const uncollectedUsageSummaries = await context.batched.UsageSummary.many({
         subscriber: user,
         app,
-        status: GQLUsageSummaryStatus.Pending,
+        status: UsageSummaryStatus.Pending,
     });
 
     const appItem = await context.batched.App.get(AppPK.parse(app));

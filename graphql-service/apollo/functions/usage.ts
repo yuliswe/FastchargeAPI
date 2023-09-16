@@ -1,7 +1,7 @@
 import { Chalk } from "chalk";
 import { Item } from "dynamoose/dist/Item";
 import { RequestContext } from "../RequestContext";
-import { GQLUsageLogStatus } from "../__generated__/resolvers-types";
+import { UsageLogStatus } from "../__generated__/resolvers-types";
 import { UsageLog, UsageSummary } from "../database/models";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
 
@@ -31,7 +31,7 @@ export async function collectUsageLogs(
     const usageLogs = await context.batched.UsageLog.many({
         subscriber: user,
         app,
-        status: GQLUsageLogStatus.Pending,
+        status: UsageLogStatus.Pending,
     });
     if (usageLogs.length === 0) {
         return {
@@ -67,7 +67,7 @@ export async function collectUsageLogs(
         const promises: Promise<Item>[] = [];
         for (const usage of usageLogs) {
             usage.usageSummary = UsageSummaryPK.stringify(usageSummary);
-            usage.status = GQLUsageLogStatus.Collected;
+            usage.status = UsageLogStatus.Collected;
             usage.collectedAt = usageSummary.createdAt;
             promises.push(usage.save());
         }

@@ -21,7 +21,7 @@ export function validateAppName(name: unknown): boolean {
         throw new ValidationError("name", "is a reserved name", name);
     }
     if (name.length > 63) {
-        throw new ValidationError("name", "must be less than 64 characters", name);
+        throw new ValidationError("name", "cannot be more than 63 characters", name);
     }
     return true;
 }
