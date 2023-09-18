@@ -12,4 +12,8 @@ export class AppPK {
     static stringify(item: AppPKContent): string {
         return item.name;
     }
+
+    static extract(item: AppPKContent): AppPKContent {
+        return { name: item.name };
+    }
 }

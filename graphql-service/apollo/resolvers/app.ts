@@ -1,5 +1,5 @@
+import { GraphQLResolveInfoWithCacheControl } from "@apollo/cache-control-types";
 import { Chalk } from "chalk";
-import { GraphQLResolveInfo } from "graphql";
 import { RequestContext } from "../RequestContext";
 import {
     GQLAppResolvers,
@@ -7,17 +7,20 @@ import {
     GQLMutationCreateAppArgs,
     GQLQueryAppArgs,
     GQLQueryAppFullTextSearchArgs,
-    GQLQueryAppsArgs,
+    GQLQueryGetAppArgs,
+    GQLQueryGetAppByNameArgs,
+    GQLQueryListAppsByTagArgs,
     GQLResolvers,
-    PricingAvailability,
 } from "../__generated__/resolvers-types";
 import { App, AppTagTableIndex } from "../database/models";
-import { BadInput, Denied, TooManyResources } from "../errors";
+import { Denied, ResourceDeleted, TooManyResources } from "../errors";
 import { appFullTextSearch, flushAppSearchIndex, updateAppSearchIndex, validateAppName } from "../functions/app";
 import { Can } from "../permissions";
 import { AppPK } from "../pks/AppPK";
-import { PricingPK } from "../pks/PricingPK";
 import { UserPK } from "../pks/UserPK";
+import { AppTagResolvers } from "./AppTag";
+import { EndpointResolvers } from "./Endpoint";
+import { PricingResolvers } from "./Pricing";
 
 const chalk = new Chalk({ level: 3 });
 
@@ -38,48 +41,44 @@ export const AppResolvers: GQLResolvers & {
         homepage: (parent) => parent.homepage,
         readme: (parent) => parent.readme,
         gatewayMode: (parent) => parent.gatewayMode,
+        deleted: (parent) => parent.deleted,
+        deletedAt: (parent) => parent.deletedAt,
         async owner(parent, args, context, info) {
             const user = await context.batched.User.get(UserPK.parse(parent.owner));
             return user;
         },
-        async pricingPlans(parent: App, args: {}, context: RequestContext) {
-            if (await Can.viewAppHiddenPricingPlans(parent, context)) {
-                return await context.batched.Pricing.many({
-                    app: parent.name,
-                });
-            } else {
-                const plans = await context.batched.Pricing.many({
-                    app: parent.name,
-                    availability: PricingAvailability.Public,
-                });
-                // Regular users can only see public pricing plans, and the plan
-                // thay are already subscribed to.
-                if (context.currentUser) {
-                    const userSub = await context.batched.Subscription.getOrNull({
-                        app: parent.name,
-                        subscriber: UserPK.stringify(context.currentUser),
-                    });
-                    if (userSub) {
-                        const currentPlan = await context.batched.Pricing.getOrNull(PricingPK.parse(userSub.pricing));
-                        if (currentPlan) {
-                            plans.push(currentPlan);
-                        }
-                    }
-                }
-                return plans;
-            }
+        async pricingPlans(parent: App, args: {}, context: RequestContext, info: GraphQLResolveInfoWithCacheControl) {
+            const listPricings = PricingResolvers.Query!.listPricings!;
+            return listPricings(
+                {},
+                {
+                    app: AppPK.stringify(parent),
+                },
+                context,
+                info
+            );
         },
-        async endpoints(parent, args, context) {
-            const endpoints = await context.batched.Endpoint.many({
-                app: parent.name,
-            });
-            return endpoints;
+        async endpoints(parent, args, context, info: GraphQLResolveInfoWithCacheControl) {
+            const listEndpoints = EndpointResolvers.Query!.listEndpoints!;
+            return listEndpoints(
+                {},
+                {
+                    app: AppPK.stringify(parent),
+                },
+                context,
+                info
+            );
         },
+
+        async tags(parent: App, args: {}, context: RequestContext, info: GraphQLResolveInfoWithCacheControl) {
+            const listAppTagsByApp = AppTagResolvers.Query!.listAppTagsByApp!;
+            return await listAppTagsByApp({}, { app: AppPK.stringify(parent) }, context, info);
+        },
+
         async updateApp(
             parent: App,
             { title, description, homepage, repository, readme, visibility }: GQLAppUpdateAppArgs,
-            context: RequestContext,
-            info: GraphQLResolveInfo
+            context: RequestContext
         ): Promise<App> {
             if (!(await Can.updateApp(parent, { title, description, homepage, repository }, context))) {
                 throw new Denied();
@@ -95,17 +94,14 @@ export const AppResolvers: GQLResolvers & {
             await updateAppSearchIndex(context, [app]);
             return app;
         },
+
         async deleteApp(parent: App, args: never, context: RequestContext): Promise<App> {
             if (!(await Can.deleteApp(parent, context))) {
                 throw new Denied();
             }
-            await context.batched.App.delete(parent.name);
-            return parent;
-        },
-
-        async tags(parent: App, args: {}, context: RequestContext) {
-            return await context.batched.AppTag.many({
-                app: parent.name,
+            return await context.batched.App.update(parent, {
+                deleted: true,
+                deletedAt: Date.now(),
             });
         },
 
@@ -114,19 +110,24 @@ export const AppResolvers: GQLResolvers & {
          **************************/
     },
     Query: {
-        async getApp(parent: {}, { pk, name }: GQLQueryAppArgs, context: RequestContext): Promise<App> {
-            if (!pk && !name) {
-                throw new BadInput("Must provide either pk or name");
+        async getApp(parent: {}, { pk }: GQLQueryGetAppArgs, context: RequestContext): Promise<App> {
+            const app = await context.batched.App.get(AppPK.parse(pk));
+            if (app.deleted) {
+                throw new ResourceDeleted("App");
             }
-            let app: App;
-            if (pk) {
-                app = await context.batched.App.get(AppPK.parse(pk));
-            } else if (name) {
-                app = await context.batched.App.get({ name });
-            }
-            return app!;
+            return app;
         },
-
+        async getAppByName(parent: {}, { name }: GQLQueryGetAppByNameArgs, context: RequestContext): Promise<App> {
+            return await context.batched.App.get({ name });
+        },
+        async app(parent: {}, { pk, name }: GQLQueryAppArgs, context: RequestContext): Promise<App> {
+            if (pk) {
+                return await context.batched.App.get(AppPK.parse(pk));
+            } else if (name) {
+                return await context.batched.App.get({ name });
+            }
+            throw new Error("Either pk or name must be provided");
+        },
         async appFullTextSearch(
             parent: {},
             { query, tag, orderBy, limit, offset }: GQLQueryAppFullTextSearchArgs,
@@ -141,26 +142,21 @@ export const AppResolvers: GQLResolvers & {
             });
         },
 
-        async listApps(parent: {}, { tag, limit = 10 }: GQLQueryAppsArgs, context: RequestContext): Promise<App[]> {
-            if (tag) {
-                const tags = await context.batched.AppTag.many(
-                    {
-                        tag: tag,
-                    },
-                    {
-                        limit,
-                        using: AppTagTableIndex.indexByTag_app__onlyPK,
-                    }
-                );
-                return await Promise.all(
-                    tags.map((tag) =>
-                        context.batched.App.get({
-                            name: tag.app,
-                        })
-                    )
-                );
-            }
-            return [];
+        async listAppsByTag(
+            parent: {},
+            { tag, limit = 10 }: GQLQueryListAppsByTagArgs,
+            context: RequestContext
+        ): Promise<App[]> {
+            // Each AppTag object contains an app PK
+            const appTags = await context.batched.AppTag.many(
+                { tag },
+                {
+                    limit,
+                    using: AppTagTableIndex.indexByTag_app__onlyPK,
+                }
+            );
+            const apps = await Promise.all(appTags.map((tag) => context.batched.App.get(AppPK.parse(tag.app))));
+            return apps.filter((app) => !app.deleted);
         },
     },
     Mutation: {
@@ -189,7 +185,7 @@ export const AppResolvers: GQLResolvers & {
             if (count >= 10) {
                 throw new TooManyResources("You can only have 10 apps");
             }
-            return await context.batched.App.create({
+            const app = await context.batched.App.create({
                 name,
                 title,
                 description,
@@ -200,6 +196,8 @@ export const AppResolvers: GQLResolvers & {
                 visibility,
                 logo,
             });
+            await updateAppSearchIndex(context, [app]);
+            return app;
         },
 
         async flushAppSearchIndex(parent: {}, args: {}, context: RequestContext) {
@@ -212,5 +210,4 @@ export const AppResolvers: GQLResolvers & {
 };
 
 /* Deprecated */
-AppResolvers.Query!.app = AppResolvers.Query!.getApp;
-AppResolvers.Query!.apps = AppResolvers.Query!.listApps;
+AppResolvers.Query!.apps = AppResolvers.Query!.listAppsByTag;

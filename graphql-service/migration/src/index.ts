@@ -1,14 +1,9 @@
+import { createDefaultContextBatched } from "@/RequestContext";
+import { Batched } from "@/database/dataloader";
 import { program } from "commander";
-import { createDefaultContextBatched } from "graphql-service/RequestContext";
-import { Batched } from "graphql-service/database/dataloader";
 import { exit } from "process";
-import readline from "readline";
-import { copyColumn } from "src/copy-column";
+import { copyColumn } from "./copy-column";
 
-let Rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-});
 program
     .command("copy-column")
     .description("Copy a column to a new column")
@@ -21,7 +16,7 @@ program
             console.error(`Model ${modelName} not found`);
             exit(1);
         }
-        let model = batched[modelName as keyof typeof batched] as Batched<any>;
+        const model = batched[modelName as keyof typeof batched] as Batched<any, any>;
         await copyColumn(model, oldColumn, newColumn);
     });
 

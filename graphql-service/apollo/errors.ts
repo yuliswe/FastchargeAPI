@@ -63,6 +63,14 @@ export class ImmutableResource extends GraphQLError {
     }
 }
 
+export class ResourceDeleted extends GraphQLError {
+    constructor(public resource: string, public msg?: string) {
+        super(msg ?? `This resource has been removed and will soon be deleted.`, {
+            extensions: { code: "RESOURCE_DELETED", resource },
+        });
+    }
+}
+
 export class Unauthorized extends GraphQLError {
     constructor() {
         super(`You must log in to perform this action.`, {

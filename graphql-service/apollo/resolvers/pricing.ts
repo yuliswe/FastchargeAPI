@@ -1,7 +1,9 @@
+import { UserPK } from "@/pks/UserPK";
 import { RequestContext } from "../RequestContext";
 import {
     GQLMutationCreatePricingArgs,
     GQLPricingUpdatePricingArgs,
+    GQLQueryListPricingsArgs,
     GQLQueryPricingArgs,
     GQLResolvers,
     PricingAvailability,
@@ -105,6 +107,34 @@ export const PricingResolvers: GQLResolvers = {
                 throw new BadInput("pk is required");
             }
             return await context.batched.Pricing.get(PricingPK.parse(pk));
+        },
+        async listPricings(parent: {}, { app: appPK }: GQLQueryListPricingsArgs, context: RequestContext) {
+            const app = await context.batched.App.get(AppPK.parse(appPK));
+            if (await Can.viewAppHiddenPricingPlans(app, context)) {
+                return await context.batched.Pricing.many({
+                    app: appPK,
+                });
+            } else {
+                const plans = await context.batched.Pricing.many({
+                    app: appPK,
+                    availability: PricingAvailability.Public,
+                });
+                // Regular users can only see public pricing plans, and the plan
+                // thay are already subscribed to.
+                if (context.currentUser) {
+                    const userSub = await context.batched.Subscription.getOrNull({
+                        app: appPK,
+                        subscriber: UserPK.stringify(context.currentUser),
+                    });
+                    if (userSub) {
+                        const currentPlan = await context.batched.Pricing.getOrNull(PricingPK.parse(userSub.pricing));
+                        if (currentPlan) {
+                            plans.push(currentPlan);
+                        }
+                    }
+                }
+                return plans;
+            }
         },
     },
     Mutation: {

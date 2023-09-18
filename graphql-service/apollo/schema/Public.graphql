@@ -6,15 +6,24 @@ scalar Any
 
 type Query {
     ### App
-    getApp(pk: ID, name: String): App!
-    listApps(tag: String, limit: Int): [App!]!
-    appFullTextSearch(query: String, tag: String, orderBy: AppFullTextSearchOrderBy, limit: Int, offset: Int): [App!]!
+    getApp(pk: ID!): App!
+    getAppByName(name: String!): App!
+    listAppsByTag(tag: String!, limit: Int): [App!]!
+    listAppsByOwner(owner: ID!, limit: Int): [App!]!
+    appFullTextSearch(
+        query: String
+        tag: String # if provided, constrain the search to this tag
+        orderBy: AppFullTextSearchOrderBy
+        limit: Int
+        offset: Int
+    ): [App!]!
 
     ### User
     getUser(pk: ID, email: Email): User!
 
     ### Endpoint
     getEndpoint(pk: ID, app: String, path: String): Endpoint!
+    listEndpoints(app: ID!): [Endpoint!]!
 
     ### Subscriptions
     getSubscription(pk: ID, subscriber: ID, app: String): Subscribe!
@@ -32,6 +41,7 @@ type Query {
 
     ### Pricing
     getPricing(pk: ID): Pricing!
+    listPricings(app: ID!): [Pricing!]!
 
     ### Account Activity
     getAccountActivity(pk: ID): AccountActivity!
@@ -51,7 +61,9 @@ type Query {
     getStripeTransfer(pk: ID): StripeTransfer!
 
     ### App Tags
-    listAppTags(tag: String): [AppTag!]!
+    getAppTag(app: ID!, tag: String!): AppTag!
+    listAppTagsByApp(app: ID!): [AppTag!]!
+    deleteAppTag(app: ID!, tag: String!): AppTag!
 
     ### Site Meta Data
     listSiteMetaData(keys: [SiteMetaDataKey!]!): [SiteMetaData!]!
@@ -237,9 +249,12 @@ type App {
     createdAt: Timestamp!
     visibility: AppVisibility!
     logo: URL
+    deleted: Boolean!
+    deletedAt: Timestamp
 
     endpoints: [Endpoint!]!
     pricingPlans: [Pricing!]!
+    tags: [AppTag!]!
 
     updateApp(
         title: String
@@ -248,10 +263,10 @@ type App {
         repository: URL
         readme: URL
         visibility: AppVisibility
+        logo: URL
     ): App!
-    deleteApp: App!
 
-    tags: [AppTag!]!
+    deleteApp: App!
 }
 
 enum AppIndex {
@@ -468,6 +483,7 @@ type UserAppToken {
 }
 
 type AppTag {
+    pk: ID!
     app: App!
     tag: String!
     createdAt: Timestamp!

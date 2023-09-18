@@ -1,1 +1,1 @@
-schema: "graphql-service/apollo/schema/Public.graphql"
+schema: "graphql-service/apollo/__generated__/Public.final.graphql"

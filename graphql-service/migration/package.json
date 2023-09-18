@@ -3,10 +3,10 @@
     "version": "1.0.0",
     "description": "",
     "main": "index.js",
+    "type": "module",
     "scripts": {
-        "symlink": "mkdir -p .symlinks && ln -sFh \"$(realpath ${PWD}/../apollo)\" .symlinks/graphql-service",
-        "build": "esbuild ./src/index.ts --bundle --outfile=./dist/index.js --platform=node",
-        "cli": "npm run build && node ./dist/index.js",
+        "build": "esbuild --bundle --outdir=./dist/ --platform=node --format=cjs --out-extension:.js=.cjs ./src/index.ts",
+        "cli": "npm run build && node ./dist/index.cjs",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "author": "",

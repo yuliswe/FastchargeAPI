@@ -1,13 +1,14 @@
+import { AppTagPK } from "@/pks/AppTagPK";
 import { RequestContext } from "../RequestContext";
 import {
     GQLAppTagResolvers,
     GQLAppTagUpdateAppTagArgs,
     GQLMutationCreateAppTagArgs,
-    GQLQueryAppTagsArgs,
+    GQLQueryListAppTagsByAppArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
-import { AppTag, AppTagModel, AppTagTableIndex } from "../database/models";
-import { BadInput, Denied } from "../errors";
+import { AppTag, AppTagModel } from "../database/models";
+import { Denied } from "../errors";
 import { updateAppSearchIndex } from "../functions/app";
 import { Can } from "../permissions";
 
@@ -16,6 +17,7 @@ export const AppTagResolvers: GQLResolvers & {
 } = {
     AppTag: {
         __isTypeOf: (parent) => parent instanceof AppTagModel,
+        pk: (parent) => AppTagPK.stringify(parent),
         app: (parent: AppTag, args: {}, context: RequestContext) => context.batched.App.get({ name: parent.app }),
         tag: (parent: AppTag) => parent.tag,
         createdAt: (parent: AppTag) => parent.createdAt,
@@ -40,18 +42,14 @@ export const AppTagResolvers: GQLResolvers & {
         },
     },
     Query: {
-        async listAppTags(parent: {}, { tag }: GQLQueryAppTagsArgs, context: RequestContext): Promise<AppTag[]> {
-            if (!tag) {
-                throw new BadInput("tag is required");
-            }
-            return await context.batched.AppTag.many(
-                {
-                    tag,
-                },
-                {
-                    using: AppTagTableIndex.indexByTag_app__onlyPK,
-                }
-            );
+        async listAppTagsByApp(
+            parent: {},
+            { app }: GQLQueryListAppTagsByAppArgs,
+            context: RequestContext
+        ): Promise<AppTag[]> {
+            return await context.batched.AppTag.many({
+                app,
+            });
         },
     },
     Mutation: {
@@ -73,6 +71,3 @@ export const AppTagResolvers: GQLResolvers & {
         },
     },
 };
-
-/* Deprecated */
-AppTagResolvers.Query!.appTags = AppTagResolvers.Query?.listAppTags;

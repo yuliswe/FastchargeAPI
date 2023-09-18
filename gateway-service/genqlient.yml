@@ -1,6 +1,6 @@
 # Default genqlient config; for full documentation see:
 # https://github.com/Khan/genqlient/blob/main/docs/genqlient.yaml
-schema: ../graphql-service/apollo/schema/Public.graphql
+schema: ../graphql-service/apollo/__generated__/Public.final.graphql
 operations:
   - ./gateway/genqlient.graphql
 generated: ./gateway/__generated__/gql-operations.go

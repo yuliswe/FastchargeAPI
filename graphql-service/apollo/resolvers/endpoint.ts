@@ -84,6 +84,13 @@ export const EndpointResolvers: GQLResolvers & {
             }
             return endpoint;
         },
+
+        async listEndpoints(parent: {}, { app }: { app: string }, context, info) {
+            const endpoints = await context.batched.Endpoint.many({
+                app,
+            });
+            return endpoints;
+        },
     },
     Mutation: {
         async createEndpoint(

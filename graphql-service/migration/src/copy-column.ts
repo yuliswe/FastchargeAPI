@@ -1,13 +1,13 @@
-import { Batched } from "graphql-service/database/dataloader";
-import { Item } from "graphql-service/database/models";
+import { Batched } from "@/database/dataloader";
+import { Item } from "@/database/models";
 
-export async function copyColumn<I extends Item>(model: Batched<I>, oldColumn: keyof I, newColumn: keyof I) {
+export async function copyColumn<I extends Item>(model: Batched<I, any>, oldColumn: keyof I, newColumn: keyof I) {
     let completed = 0;
     let page = 0;
-    for await (let items of model.scan()) {
+    for await (const items of model.scan()) {
         page += 1;
         const promises: Promise<I>[] = [];
-        for (let item of items) {
+        for (const item of items) {
             const p = model.update(item, { [newColumn]: item[oldColumn] } as Partial<I>).then(() => {
                 completed++;
                 console.log(`${completed} / ${items.length} on page ${page}`);

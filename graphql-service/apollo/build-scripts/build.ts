@@ -1,6 +1,6 @@
-import esbuild from "esbuild";
+import * as esbuild from "esbuild";
 
-await esbuild.build({
+esbuild.buildSync({
     entryPoints: ["./lambdaHandler.ts", "./sqsHandler.ts", "./cron-jobs/settleAccountActivities.ts", "devserver.ts"],
     bundle: true,
     outdir: "./dist",

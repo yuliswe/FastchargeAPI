@@ -130,7 +130,7 @@ export class User extends Item {
     updatedAt: number;
 }
 
-export type UserRequiredCreateProps = {
+export type UserCreateProps = {
     uid: string;
     email: string;
 } & GQLPartial<User>;
@@ -160,6 +160,9 @@ const AppTableSchema = new dynamoose.Schema(
         homepage: { type: String },
         readme: { type: String },
         visibility: { type: String, default: "private", enum: ["public", "private"] },
+
+        deleted: { type: Boolean, default: false },
+        deletedAt: { type: Number, required: false },
     },
     { timestamps: true }
 );
@@ -183,9 +186,11 @@ export class App extends Item {
     createdAt: number;
     visibility: AppVisibility;
     logo: string;
+    deleted: boolean;
+    deletedAt: number | null;
 }
 
-export type AppRequiredCreateProps = {
+export type AppCreateProps = {
     name: string;
     owner: string;
 } & GQLPartial<App>;
@@ -210,12 +215,13 @@ const AppTagTableSchema = new dynamoose.Schema(
 /// config.
 export class AppTag extends Item {
     app: string;
+    /** Tag name as string */
     tag: string;
     updatedAt: number;
     createdAt: number;
 }
 
-export type AppTagRequiredCreateProps = {
+export type AppTagCreateProps = {
     app: string;
     tag: string;
 } & GQLPartial<AppTag>;
@@ -256,7 +262,7 @@ export class Endpoint extends Item {
     updatedAt: number;
 }
 
-export type EndpointRequiredCreateProps = {
+export type EndpointCreateProps = {
     app: string;
     path: string;
     destination: string;
@@ -306,7 +312,7 @@ export class Pricing extends Item {
     updatedAt: number;
 }
 
-export type PricingRequiredCreateProps = {
+export type PricingCreateProps = {
     app: string;
     name: string;
 } & GQLPartial<Pricing>;
@@ -340,7 +346,7 @@ export class Subscription extends Item {
     updatedAt: number;
 }
 
-export type SubscriptionRequiredCreateProps = {
+export type SubscriptionCreateProps = {
     subscriber: string;
     app: string;
     pricing: string;
@@ -395,7 +401,7 @@ export class UsageLog extends Item {
     pricing: string;
 }
 
-export type UsageLogRequiredCreateProps = {
+export type UsageLogCreateProps = {
     subscriber: string;
     app: string;
     path: string;
@@ -425,7 +431,7 @@ export class UsageSummary extends Item {
     pricing: string;
 }
 
-export type UsageSummaryRequiredCreateProps = {
+export type UsageSummaryCreateProps = {
     subscriber: string;
     app: string;
     pricing: string;
@@ -546,7 +552,7 @@ export class AccountActivity extends Item {
     consumedFreeQuota: number | null; // Number of free quota consumed by the subscriber when the activity is related to API usage. Usually this is the same as usageSummary.volume
 }
 
-export type AccountActivityRequiredCreateProps = {
+export type AccountActivityCreateProps = {
     user: string;
     type: AccountActivityType;
     reason: AccountActivityReason;
@@ -589,7 +595,7 @@ export class AccountHistory extends Item {
     sequentialId: number;
 }
 
-export type AccountHistoryRequiredCreateProps = {
+export type AccountHistoryCreateProps = {
     user: string;
     startingTime: number;
     startingBalance: string;
@@ -647,7 +653,7 @@ export class StripePaymentAccept extends Item {
     accountActivity: string; // When the stripe payment is accepted, an account activity item is created
 }
 
-export type StripePaymentAcceptRequiredCreateProps = {
+export type StripePaymentAcceptCreateProps = {
     user: string;
     stripeSessionId: string;
     amount: string;
@@ -731,7 +737,7 @@ export class StripeTransfer extends Item {
     status: StripeTransferStatus;
 }
 
-export type StripeTransferRequiredCreateProps = {
+export type StripeTransferCreateProps = {
     receiver: string;
     receiveAmount: string;
     withdrawAmount: string;
@@ -762,7 +768,7 @@ export class Secret extends Item {
     createdAt: number;
 }
 
-export type SecretRequiredCreateProps = {
+export type SecretCreateProps = {
     key: string;
     value: string;
 } & GQLPartial<Secret>;
@@ -793,7 +799,7 @@ export class GatewayRequestCounter extends Item {
     isGlobalCounter: boolean;
 }
 
-export type GatewayRequestCounterRequiredCreateProps = {
+export type GatewayRequestCounterCreateProps = {
     requester: string;
     app: string;
 } & GQLPartial<GatewayRequestCounter>;
@@ -821,7 +827,7 @@ export class GatewayRequestDecisionCache extends Item {
     nextForcedBalanceCheckTime: number;
 }
 
-export type GatewayRequestDecisionCacheRequiredCreateProps = {
+export type GatewayRequestDecisionCacheCreateProps = {
     requester: string;
     app: string;
     nextForcedBalanceCheckRequestCount: number;
@@ -855,7 +861,7 @@ export class UserAppToken extends Item {
     token: string | null;
 }
 
-export type UserAppTokenRequiredCreateProps = {
+export type UserAppTokenCreateProps = {
     subscriber: string;
     app: string;
     signature: string;
@@ -876,7 +882,7 @@ export class FreeQuotaUsage extends Item {
     usage: number;
 }
 
-export type FreeQuotaUsageRequiredCreateProps = {
+export type FreeQuotaUsageCreateProps = {
     subscriber: string;
     app: string;
 } & GQLPartial<FreeQuotaUsage>;
@@ -896,7 +902,7 @@ export class SiteMetaData extends Item {
     value: string;
 }
 
-export type SiteMetaDataRequiredCreateProps = {
+export type SiteMetaDataCreateProps = {
     key: SiteMetaDataKey;
     value: string;
 } & GQLPartial<SiteMetaData>;

@@ -1,12 +1,12 @@
 import { ApolloServer } from "@apollo/server";
 import { ApolloServerPluginCacheControl } from "@apollo/server/plugin/cacheControl";
-import { DocumentNode, ObjectTypeDefinitionNode, parse } from "graphql";
 import { resolvers as scalarResolvers, typeDefs as scalarTypeDefs } from "graphql-scalars";
 import process from "node:process";
 import { RequestContext } from "./RequestContext";
 import { GQLResolvers } from "./__generated__/resolvers-types";
 import { wakeUpAurora } from "./aurora";
 import { handleError } from "./errors";
+import { getGraphQLAst } from "./getGraphQLAst";
 import { AccountActivityResolvers } from "./resolvers/AccountActivity";
 import { AccountHistoryResolvers } from "./resolvers/AccountHistory";
 import { AppResolvers } from "./resolvers/App";
@@ -104,23 +104,7 @@ resolvers.Mutation = {
     ...resolvers.Query,
 };
 
-// Perform a hacking here by ading all root queries into the root mutation.
-const publicSchema = parse(AppGraphQLSchema);
-const mutationDefs = publicSchema.definitions.find(
-    (def) => def.kind === "ObjectTypeDefinition" && def.name.value === "Mutation"
-) as ObjectTypeDefinitionNode;
-const queryDefs = publicSchema.definitions.find(
-    (def) => def.kind === "ObjectTypeDefinition" && def.name.value === "Query"
-) as ObjectTypeDefinitionNode;
-const otherTypeDefs = publicSchema.definitions.filter(
-    (def) => !(def.kind === "ObjectTypeDefinition" && (def.name.value == "Mutation" || def.name.value === "Query"))
-);
-const newMutationDefs = { ...mutationDefs, fields: [...(mutationDefs.fields ?? []), ...(queryDefs.fields ?? [])] };
-const newPublicSchmema: DocumentNode = {
-    ...publicSchema,
-    definitions: [newMutationDefs, queryDefs, ...otherTypeDefs],
-};
-const typeDefs = [newPublicSchmema, ...scalarTypeDefs];
+const typeDefs = [getGraphQLAst(AppGraphQLSchema), ...scalarTypeDefs];
 
 // The ApolloServer constructor requires two parameters: your schema
 // definition and your set of resolvers.

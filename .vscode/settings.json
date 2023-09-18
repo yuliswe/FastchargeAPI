@@ -2,27 +2,19 @@
   "terminal.integrated.profiles.osx": {
     "bash": {
       "path": "bash",
-      "args": [
-        "-l",
-        "--init-file",
-        "${workspaceFolder}/devenv.bash"
-      ],
+      "args": ["-l", "--init-file", "${workspaceFolder}/devenv.bash"],
       "icon": "terminal-bash"
     },
     "zsh": {
       "path": "zsh",
-      "args": [
-        "-l",
-      ],
+      "args": ["-l"],
       "env": {
         "ZDOTDIR": "${workspaceFolder}"
       }
     },
     "fish": {
       "path": "fish",
-      "args": [
-        "-l"
-      ]
+      "args": ["-l"]
     },
     "tmux": {
       "path": "tmux",
@@ -39,6 +31,7 @@
     ".venv": true,
     ".zcompdump": true,
     ".zsh_history": true,
+    "**/.coverage": true,
     "**/.DS_Store": true,
     "**/.git": true,
     "**/.hg": true,
@@ -49,7 +42,6 @@
     "**/src/build/": true,
     "**/Thumbs.db": true
   },
-  "python.formatting.provider": "none",
   "python.analysis.typeCheckingMode": "basic",
   "editor.codeActionsOnSave": {
     "source.organizeImports": true,
@@ -61,15 +53,12 @@
   },
   "python.autoComplete.extraPaths": [],
   "coverage-gutters.coverageFileNames": [
-    "lcov.info",
-    "cov.xml",
-    "coverage.xml",
-    "jacoco.xml",
-    "coverage.cobertura.xml"
+    "graphql-service/apollo/.coverage/lcov.info",
+    "payment-service/.coverage/lcov.info"
   ],
-  "coverage-gutters.coverageBaseDir": "*",
+  "coverage-gutters.coverageBaseDir": ".",
   "eslint.options": {
-    "cache": true,
+    "cache": true
   },
   "eslint.onIgnoredFiles": "warn",
   "eslint.workingDirectories": [
@@ -77,4 +66,7 @@
       "mode": "auto"
     }
   ],
+  "search.exclude": {
+    "**/.coverage": true
+  }
 }

@@ -127,6 +127,7 @@ type BatchScanOptions = {
     consistent?: boolean; // Use consistent read
     batchSize?: number; // Number of items to get per batch
 };
+
 /**
  * Used by DataLoader, this function takes a list of filter conditions and
  * returns a list of items of the same count.

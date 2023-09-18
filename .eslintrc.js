@@ -50,9 +50,9 @@ module.exports = {
         "no-restricted-imports": [
             "error",
             {
-                patterns: [{ group: ["node:test"], message: "Please use @jest/global instead." }],
-                patterns: [{ importNames: ["graphql"], group: ["graphql"], message: "Please use @/typed-graphql." }],
                 patterns: [
+                    { group: ["node:test"], message: "Please use @jest/global instead." },
+                    { importNames: ["graphql"], group: ["graphql"], message: "Please use @/typed-graphql." },
                     {
                         importNames: ["RequestContext"],
                         group: ["node-fetch"],

@@ -1,4 +1,5 @@
 import { mockSQS } from "@/MockSQS";
+import { createDefaultContextBatched } from "@/RequestContext";
 import { SQSQueueUrl, sqsGQLClient } from "@/sqsClient";
 import { graphql } from "@/typed-graphql";
 import { ApolloError } from "@apollo/client";
@@ -8,6 +9,14 @@ import { GQLUserIndex } from "../__generated__/resolvers-types";
 import { App, FreeQuotaUsage, GQLPartial, Pricing, User } from "../database/models";
 import { createUserWithEmail } from "../functions/user";
 import { AppPK } from "../pks/AppPK";
+
+export const baseRequestContext: RequestContext = {
+    batched: createDefaultContextBatched(),
+    isServiceRequest: false,
+    isSQSMessage: false,
+    isAnonymousUser: false,
+    isAdminUser: false,
+};
 
 export async function addMoneyForUser(
     context: RequestContext,
