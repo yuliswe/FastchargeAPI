@@ -5,8 +5,7 @@ import { graphql } from "@/typed-graphql";
 import { ApolloError } from "@apollo/client";
 import { v4 as uuid4 } from "uuid";
 import { RequestContext } from "../RequestContext";
-import { GQLUserIndex } from "../__generated__/resolvers-types";
-import { App, FreeQuotaUsage, GQLPartial, Pricing, User } from "../database/models";
+import { App, FreeQuotaUsage, GQLPartial, Pricing, User, UserIndex } from "../database/models";
 import { createUserWithEmail } from "../functions/user";
 import { AppPK } from "../pks/AppPK";
 
@@ -69,11 +68,18 @@ export async function getOrCreateTestUser(
     if (!email) {
         email = `testuser_${uuid4()}@gmail_mock.com`;
     }
-    let user = await context.batched.User.getOrNull({ email }, { using: GQLUserIndex.IndexByEmailOnlyPk });
+    let user = await context.batched.User.getOrNull({ email }, { using: UserIndex.IndexByEmailOnlyPk });
     if (user === null) {
         user = await createUserWithEmail(context.batched, email, additionalProps);
     }
     return user;
+}
+
+export async function getAdminUser(context: RequestContext): Promise<User> {
+    return await context.batched.User.get(
+        { email: "fastchargeapi@gmail.com" },
+        { using: UserIndex.IndexByEmailOnlyPk }
+    );
 }
 
 export async function createOrUpdatePricing(

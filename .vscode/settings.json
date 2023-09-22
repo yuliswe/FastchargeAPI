@@ -57,6 +57,8 @@
     "payment-service/.coverage/lcov.info"
   ],
   "coverage-gutters.coverageBaseDir": ".",
+  "koverage.coverageFileNames": ["lcov.info"],
+  "koverage.coverageFilePaths": ["graphql-service/apollo/.coverage/", "payment-service/.coverage/"],
   "eslint.options": {
     "cache": true
   },

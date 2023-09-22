@@ -9,18 +9,18 @@ import {
     GQLResolvers,
     GQLUserAccountActivitiesArgs,
     GQLUserGetFastchargeApiIdTokenArgs,
-    GQLUserIndex,
     GQLUserResolvers,
     GQLUserUpdateUserArgs,
     GQLUserUsageLogsArgs,
     GQLUserUsageSummariesArgs,
 } from "../__generated__/resolvers-types";
-import { AccountActivity, App, Subscription, User, UserModel } from "../database/models";
+import { AccountActivity, App, Subscription, User, UserIndex, UserModel } from "../database/models";
 import { BadInput, Denied } from "../errors";
 import { getUserBalance, settleAccountActivities } from "../functions/account";
 import { createUserWithEmail, makeFastchargeAPIIdTokenForUser } from "../functions/user";
 import { Can } from "../permissions";
 import { UserPK } from "../pks/UserPK";
+import { AccountHistoryResolvers } from "./AccountHistory";
 const chalk = new Chalk({ level: 3 });
 
 function makePrivate<T>(
@@ -127,26 +127,13 @@ export const UserResolvers: GQLResolvers & {
             return result;
         },
 
-        async accountHistories(parent: User, { limit, dateRange }: GQLUserAccountActivitiesArgs, context) {
-            if (!(await Can.viewUserPrivateAttributes(parent, context))) {
-                throw new Denied();
-            }
-            const result = await context.batched.AccountHistory.many(
-                {
-                    user: UserPK.stringify(parent),
-                    closingTime: dateRange
-                        ? {
-                              le: dateRange.end,
-                              ge: dateRange.start,
-                          }
-                        : undefined,
-                },
-                {
-                    limit,
-                    sort: "descending",
-                }
+        async accountHistories(parent: User, { limit, dateRange }: GQLUserAccountActivitiesArgs, context, info) {
+            return AccountHistoryResolvers.Query!.listAccountHistoryByUser!(
+                {},
+                { user: UserPK.stringify(parent), limit, dateRange },
+                context,
+                info
             );
-            return result;
         },
 
         async usageLogs(parent: User, args: GQLUserUsageLogsArgs, context, info) {
@@ -282,7 +269,7 @@ export const UserResolvers: GQLResolvers & {
                 user = await context.batched.User.get(
                     { email },
                     {
-                        using: GQLUserIndex.IndexByEmailOnlyPk,
+                        using: UserIndex.IndexByEmailOnlyPk,
                     }
                 );
             } else if (pk) {

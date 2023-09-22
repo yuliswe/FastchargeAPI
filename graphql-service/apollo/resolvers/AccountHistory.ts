@@ -1,5 +1,10 @@
+import { UserPK } from "@/pks/UserPK";
 import { RequestContext } from "../RequestContext";
-import { GQLAccountHistoryResolvers, GQLResolvers } from "../__generated__/resolvers-types";
+import {
+    GQLAccountHistoryResolvers,
+    GQLQueryListAccountHistoryByUserArgs,
+    GQLResolvers,
+} from "../__generated__/resolvers-types";
 import { AccountHistory, AccountHistoryModel } from "../database/models";
 import { Denied } from "../errors";
 import { Can } from "../permissions";
@@ -26,9 +31,43 @@ export const AccountHistoryResolvers: GQLResolvers & {
          * All attributes readable to the account owner
          **********************************************/
         pk: makeOwnerReadable((parent) => AccountHistoryPK.stringify(parent)),
+        startingTime: makeOwnerReadable((parent) => parent.startingTime),
         closingTime: makeOwnerReadable((parent) => parent.closingTime),
+        startingBalance: makeOwnerReadable((parent) => parent.startingBalance),
         closingBalance: makeOwnerReadable((parent) => parent.closingBalance),
+        user: makeOwnerReadable((parent, _: {}, context) => context.batched.User.get(UserPK.parse(parent.user))),
     },
-    Query: {},
+    Query: {
+        async listAccountHistoryByUser(
+            parent,
+            { user, dateRange, limit }: GQLQueryListAccountHistoryByUserArgs,
+            context
+        ) {
+            if (!(await Can.listAccountHistoryByUser({ user }, context))) {
+                throw new Denied();
+            }
+            return await context.batched.AccountHistory.many(
+                {
+                    user,
+                    closingTime: dateRange
+                        ? {
+                              le: dateRange.end,
+                              ge: dateRange.start,
+                          }
+                        : undefined,
+                },
+                {
+                    limit,
+                    sort: "descending",
+                }
+            );
+        },
+        async getAccountHistory(parent, { pk }, context) {
+            if (!(await Can.getAccountHistory(context))) {
+                throw new Denied();
+            }
+            return await context.batched.AccountHistory.get(AccountHistoryPK.parse(pk));
+        },
+    },
     Mutation: {},
 };

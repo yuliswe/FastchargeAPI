@@ -2,67 +2,76 @@
 # to generate types based on our schema.
 # documents:
 #   - "./cron-jobs/*.ts"
-generates:
-  # Specify where our generated types should live.
-  ./__generated__/gql/:
-    schema: "./__generated__/Public.final.graphql"
-    preset: client
-    documents:
-      - "./cron-jobs/*.ts"
-      - "./functions/*.ts"
-      - "./pks/*.ts"
-      - "./tests/**/*.ts"
-  ./__generated__/resolvers-types.ts:
-    schema: "./schema/Public.graphql"
-    plugins:
-      - "typescript"
-      - "typescript-resolvers"
-      - "typescript-operations"
-    config:
-      typesPrefix: GQL
-      useIndexSignature: true
-      # More on this below!
-      contextType: "../RequestContext#RequestContext"
-      mapperTypeSuffix: "Data"
-      # makeResolverTypeCallable: true
-      # wrapFieldDefinitions: true
-      # resolverTypeWrapperSignature: "{[k in keyof T]: (T[k] | ((args: any, context: RequestContext, info: GraphQLResolveInfo) => T[k]) | ((args: any, context: RequestContext, info: GraphQLResolveInfo) => Promise<T[k]>))}"
-      useTypeImports: false
-      # avoidOptionals: true
-      makeResolverTypeCallable: true
-      customResolveInfo: "@apollo/cache-control-types#GraphQLResolveInfoWithCacheControl"
-      # defaultMapper: "{[k in keyof {T}]: {T}[k] | (() => {T})}"
-      mappers:
-        App: ../database/models#App
-        AppTag: ../database/models#AppTag
-        User: ../database/models#User
-        Endpoint: ../database/models#Endpoint
-        Pricing: ../database/models#Pricing
-        Subscribe: ../database/models#Subscription
-        UsageLog: ../database/models#UsageLog
-        StripePaymentAccept: ../database/models#StripePaymentAccept
-        StripeTransfer: ../database/models#StripeTransfer
-        AccountActivity: ../database/models#AccountActivity
-        AccountHistory: ../database/models#AccountHistory
-        UsageSummary: ../database/models#UsageSummary
-        Secret: ../database/models#Secret
-        GatewayRequestCounter: ../database/models#GatewayRequestCounter
-        GatewayRequestDecisionCache: ../database/models#GatewayRequestDecisionCache
-        UserAppToken: ../database/models#UserAppToken
-        SiteMetaData: ../database/models#SiteMetaData
-      enumValues:
-        GatewayMode: ../__generated__/gql/graphql#GatewayMode
-        PricingAvailability: ../__generated__/gql/graphql#PricingAvailability
-        HttpMethod: ../__generated__/gql/graphql#HttpMethod
-        AccountActivityReason: ../__generated__/gql/graphql#AccountActivityReason
-        AccountActivityStatus: ../__generated__/gql/graphql#AccountActivityStatus
-        AccountActivityType: ../__generated__/gql/graphql#AccountActivityType
-        SiteMetaDataKey: ../__generated__/gql/graphql#SiteMetaDataKey
-        StripeTransferStatus: ../__generated__/gql/graphql#StripeTransferStatus
-        UsageLogStatus: ../__generated__/gql/graphql#UsageLogStatus
-        UsageSummaryStatus: ../__generated__/gql/graphql#UsageSummaryStatus
-      scalars:
-        Email: string
-        Timestamp: number
-        NonNegativeDecimal: string
-        Any: any
+projects:
+  default:
+    extensions:
+      codegen:
+        generates:
+          # Specify where our generated types should live.
+          ./__generated__/gql/:
+            schema: "./__generated__/Public.final.graphql"
+            preset: client
+            documents:
+              - "./cron-jobs/*.ts"
+              - "./functions/*.ts"
+              - "./pks/*.ts"
+              - "./tests/**/*.ts"
+
+  tests:
+    extensions:
+      codegen:
+        generates:
+          ./__generated__/resolvers-types.ts:
+            schema: "./__generated__/Public.final.graphql"
+            plugins:
+              - "typescript"
+              - "typescript-resolvers"
+              - "typescript-operations"
+            config:
+              typesPrefix: GQL
+              useIndexSignature: true
+              # More on this below!
+              contextType: "../RequestContext#RequestContext"
+              mapperTypeSuffix: "Data"
+              # makeResolverTypeCallable: true
+              # wrapFieldDefinitions: true
+              # resolverTypeWrapperSignature: "{[k in keyof T]: (T[k] | ((args: any, context: RequestContext, info: GraphQLResolveInfo) => T[k]) | ((args: any, context: RequestContext, info: GraphQLResolveInfo) => Promise<T[k]>))}"
+              useTypeImports: false
+              # avoidOptionals: true
+              makeResolverTypeCallable: true
+              customResolveInfo: "@apollo/cache-control-types#GraphQLResolveInfoWithCacheControl"
+              # defaultMapper: "{[k in keyof {T}]: {T}[k] | (() => {T})}"
+              mappers:
+                App: ../database/models#App
+                AppTag: ../database/models#AppTag
+                User: ../database/models#User
+                Endpoint: ../database/models#Endpoint
+                Pricing: ../database/models#Pricing
+                Subscribe: ../database/models#Subscription
+                UsageLog: ../database/models#UsageLog
+                StripePaymentAccept: ../database/models#StripePaymentAccept
+                StripeTransfer: ../database/models#StripeTransfer
+                AccountActivity: ../database/models#AccountActivity
+                AccountHistory: ../database/models#AccountHistory
+                UsageSummary: ../database/models#UsageSummary
+                Secret: ../database/models#Secret
+                GatewayRequestCounter: ../database/models#GatewayRequestCounter
+                GatewayRequestDecisionCache: ../database/models#GatewayRequestDecisionCache
+                UserAppToken: ../database/models#UserAppToken
+                SiteMetaData: ../database/models#SiteMetaData
+              enumValues:
+                GatewayMode: ../__generated__/gql/graphql#GatewayMode
+                PricingAvailability: ../__generated__/gql/graphql#PricingAvailability
+                HttpMethod: ../__generated__/gql/graphql#HttpMethod
+                AccountActivityReason: ../__generated__/gql/graphql#AccountActivityReason
+                AccountActivityStatus: ../__generated__/gql/graphql#AccountActivityStatus
+                AccountActivityType: ../__generated__/gql/graphql#AccountActivityType
+                SiteMetaDataKey: ../__generated__/gql/graphql#SiteMetaDataKey
+                StripeTransferStatus: ../__generated__/gql/graphql#StripeTransferStatus
+                UsageLogStatus: ../__generated__/gql/graphql#UsageLogStatus
+                UsageSummaryStatus: ../__generated__/gql/graphql#UsageSummaryStatus
+              scalars:
+                Email: string
+                Timestamp: number
+                NonNegativeDecimal: string
+                Any: any

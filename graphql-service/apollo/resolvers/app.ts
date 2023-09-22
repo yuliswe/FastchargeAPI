@@ -59,8 +59,7 @@ export const AppResolvers: GQLResolvers & {
             );
         },
         async endpoints(parent, args, context, info: GraphQLResolveInfoWithCacheControl) {
-            const listEndpoints = EndpointResolvers.Query!.listEndpoints!;
-            return listEndpoints(
+            return EndpointResolvers.Query!.listEndpointsByApp!(
                 {},
                 {
                     app: AppPK.stringify(parent),

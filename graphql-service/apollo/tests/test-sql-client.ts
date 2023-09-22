@@ -5,7 +5,7 @@ import { SendMessageCommandInput } from "@aws-sdk/client-sqs";
 import { Headers, RequestInit, Response } from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
 import { User } from "../database/models";
-import { handle } from "../lambdaHandler";
+import { handle as serverLambdaHandler } from "../lambdaHandler";
 import { LambdaResult } from "../lambdaHandlerUtils";
 import { UserPK } from "../pks/UserPK";
 import { exampleLambdaEvent } from "./example-lambda-event";
@@ -30,7 +30,7 @@ export function testGQLClient({ user }: { user: User }) {
         link: new HttpLink({
             fetch: async (uri: string, options: RequestInit) => {
                 const body = options.body?.toString() ?? "";
-                const result = (await handle(
+                const result = (await serverLambdaHandler(
                     {
                         ...exampleLambdaEvent,
                         body,

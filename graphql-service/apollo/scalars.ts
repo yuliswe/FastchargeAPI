@@ -14,6 +14,15 @@ function checkNonNegativeDecimal(value: string) {
     }
 }
 
+function checkDecimal(value: string) {
+    const n = Number.parseFloat(value);
+    if (Number.isNaN(n)) {
+        throw new GraphQLError("Provided string is a malformed number.", {
+            extensions: { code: "BAD_USER_INPUT" },
+        });
+    }
+}
+
 const NonNegativeDecimal = new GraphQLScalarType({
     name: "NonNegativeDecimal",
 
@@ -35,6 +44,33 @@ const NonNegativeDecimal = new GraphQLScalarType({
     parseLiteral(ast) {
         if (ast.kind === Kind.STRING) {
             checkNonNegativeDecimal(ast.value);
+            return ast.value;
+        }
+        return null;
+    },
+});
+
+const Decimal = new GraphQLScalarType({
+    name: "Decimal",
+
+    description: "An arbitrary precision decimal type represented as a string",
+
+    // Convert from server to client
+    serialize(value: string): string {
+        checkDecimal(value);
+        return value;
+    },
+
+    // Convert from client to server
+    parseValue(value: string): string {
+        checkDecimal(value);
+        return value;
+    },
+
+    // Convert hard-coded value in the .graphql schema
+    parseLiteral(ast) {
+        if (ast.kind === Kind.STRING) {
+            checkDecimal(ast.value);
             return ast.value;
         }
         return null;
@@ -89,6 +125,7 @@ const URLScalar = new GraphQLScalarType({
 
 export default {
     NonNegativeDecimal,
+    Decimal,
     Timestamp: new GraphQLScalarType({
         ...GraphQLSafeInt.toConfig(),
         name: "Timestamp",

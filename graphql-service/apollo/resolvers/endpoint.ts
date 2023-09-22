@@ -1,12 +1,14 @@
+import { AppPK } from "@/pks/AppPK";
 import { RequestContext } from "../RequestContext";
 import {
     GQLEndpointResolvers,
     GQLEndpointUpdateEndpointArgs,
     GQLMutationCreateEndpointArgs,
     GQLQueryEndpointArgs,
+    GQLQueryGetEndpointArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
-import { Endpoint, EndpointModel } from "../database/models";
+import { Endpoint, EndpointModel, PK } from "../database/models";
 import { BadInput, Denied } from "../errors";
 import { Can } from "../permissions";
 import { EndpointPK } from "../pks/EndpointPK";
@@ -36,6 +38,9 @@ export const EndpointResolvers: GQLResolvers & {
         method: (parent) => parent.method,
         description: (parent) => parent.description,
         path: ({ path }) => path,
+        app: (parent, args: {}, context) => context.batched.App.get(AppPK.parse(parent.app)),
+        deleted: (parent) => parent.deleted,
+        deletedAt: (parent) => parent.deletedAt,
 
         /***********************************************
          * All arributes only readable by the app owner
@@ -64,30 +69,33 @@ export const EndpointResolvers: GQLResolvers & {
             if (!(await Can.deleteEndpoint(parent, args, context))) {
                 throw new Denied();
             }
-            await context.batched.Endpoint.delete(parent);
-            return parent;
+            return await context.batched.Endpoint.update(parent, {
+                deleted: true,
+                deletedAt: Date.now(),
+            });
         },
     },
     Query: {
-        /**
-         * Offers an API to look up endpoints by either their primary key or by app+path.
-         */
-        async getEndpoint(parent: {}, { pk, app, path }: GQLQueryEndpointArgs, context, info) {
-            if (!pk && !app) {
-                throw new BadInput("Must provide either pk or app");
-            }
-            let endpoint: Endpoint;
-            if (pk) {
-                endpoint = await context.batched.Endpoint.get(EndpointPK.parse(pk));
-            } else {
-                endpoint = await context.batched.Endpoint.get({ app, path });
-            }
-            return endpoint;
+        async getEndpoint(parent: {}, { pk }: GQLQueryGetEndpointArgs, context, info) {
+            return await context.batched.Endpoint.get(EndpointPK.parse(pk));
         },
 
-        async listEndpoints(parent: {}, { app }: { app: string }, context, info) {
+        async endpoint(parent: {}, { pk, app, path }: GQLQueryEndpointArgs, context, info) {
+            if (pk) {
+                return EndpointResolvers.Query!.getEndpoint!(parent, { pk }, context, info);
+            }
+
+            if (app && path) {
+                return EndpointResolvers.Query!.getEndpointByApp!(parent, { app, path }, context, info);
+            }
+
+            throw new BadInput("Must provide either pk or app+path");
+        },
+
+        async listEndpointsByApp(parent: {}, { app }: { app: PK }, context: RequestContext) {
             const endpoints = await context.batched.Endpoint.many({
                 app,
+                deleted: false,
             });
             return endpoints;
         },

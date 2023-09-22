@@ -1,7 +1,6 @@
 import { describe, expect, test } from "@jest/globals";
 import { RequestContext, createDefaultContextBatched } from "../RequestContext";
-import { GQLUserIndex } from "../__generated__/resolvers-types";
-import { User } from "../database/models";
+import { User, UserIndex } from "../database/models";
 
 const context: RequestContext = {
     batched: createDefaultContextBatched(),
@@ -16,7 +15,7 @@ const testUser = "testuser1.fastchargeapi@gmail.com";
 describe.skip("Clean up everything", () => {
     let user: User;
     test("Preparation: get test user 1", async () => {
-        user = await context.batched.User.get({ email: testUser }, { using: GQLUserIndex.IndexByEmailOnlyPk });
+        user = await context.batched.User.get({ email: testUser }, { using: UserIndex.IndexByEmailOnlyPk });
         expect(user).not.toBe(null);
     });
 

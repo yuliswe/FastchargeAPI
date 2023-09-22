@@ -29,7 +29,6 @@ export const Can = {
     ...UserAppTokenPermissions,
     ...AppPermissions,
     ...AppTagPermissions,
-    ...UserAppTokenPermissions,
     ...AppTagPermissions,
     ...UsageSummaryPermissions,
 };

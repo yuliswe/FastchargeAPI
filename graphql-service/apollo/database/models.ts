@@ -36,6 +36,7 @@ export async function disableDBLogging() {
 
 type Optional<T> = T | undefined | null;
 export type GQLPartial<T> = { [K in keyof T]?: Optional<T[K]> };
+export type PK = string;
 
 const tableConfigs = {
     create: false,
@@ -93,6 +94,10 @@ const validateStringDecimal = (fieldName: string) => (str: string) => {
     return true;
 };
 
+export enum UserIndex {
+    IndexByEmailOnlyPk = "indexByEmail__onlyPK",
+}
+
 const UserTableSchema = new dynamoose.Schema(
     {
         uid: { type: String, hashKey: true },
@@ -101,7 +106,7 @@ const UserTableSchema = new dynamoose.Schema(
             required: true,
             index: {
                 type: "global",
-                name: "indexByEmail__onlyPK",
+                name: UserIndex.IndexByEmailOnlyPk,
                 project: ["uid"],
             },
         },
@@ -242,6 +247,8 @@ const EndpointTableSchema = new dynamoose.Schema(
         path: { ...String_Required_NotEmpty("path") },
         destination: { ...String_Required_NotEmpty("destination") },
         description: { type: String, default: "" },
+        deleted: { type: Boolean, default: false },
+        deletedAt: { type: Number, required: false },
     },
     {
         timestamps: {
@@ -260,6 +267,8 @@ export class Endpoint extends Item {
     description: string;
     createdAt: number;
     updatedAt: number;
+    deleted: boolean;
+    deletedAt: number | null;
 }
 
 export type EndpointCreateProps = {

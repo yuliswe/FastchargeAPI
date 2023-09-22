@@ -1,43 +1,45 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Python: pytest",
-            "type": "python",
-            "request": "launch",
-            "module": "pytest",
-            "justMyCode": true,
-            "args": [
-                "/Users/yu/lab/FastchargeAPI/cli/tests/fastcharge/login/test_login.py"
-            ]
-        },
-        {
-            "type": "aws-sam",
-            "request": "direct-invoke",
-            "name": "apollo:lambdaHandler.lambdaHandler (nodejs18.x)",
-            "cwd": "${workspaceFolder}/graphql-service/apollo",
-            // "preLaunchTask": "tsc: build - tsconfig.json",
-            "invokeTarget": {
-                "target": "code",
-                "projectRoot": "${workspaceFolder}/graphql-service/apollo",
-                "lambdaHandler": "lambdaHandler.lambdaHandler",
-                "architecture": "arm64"
-            },
-            "lambda": {
-                "runtime": "nodejs18.x",
-                "payload": {},
-                "environmentVariables": {}
-            }
-        },
-        {
-            "type": "node",
-            "request": "attach",
-            "name": "Attach Program",
-            "processId": "${command:PickProcess}",
-            "port": 5858
-        }
-    ]
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: pytest",
+      "type": "python",
+      "request": "launch",
+      "module": "pytest",
+      "justMyCode": true,
+      "args": ["/Users/yu/lab/FastchargeAPI/cli/tests/fastcharge/login/test_login.py"]
+    },
+    {
+      "type": "aws-sam",
+      "request": "direct-invoke",
+      "name": "apollo:lambdaHandler.lambdaHandler (nodejs18.x)",
+      "cwd": "${workspaceFolder}/graphql-service/apollo",
+      // "preLaunchTask": "tsc: build - tsconfig.json",
+      "invokeTarget": {
+        "target": "code",
+        "projectRoot": "${workspaceFolder}/graphql-service/apollo",
+        "lambdaHandler": "lambdaHandler.lambdaHandler",
+        "architecture": "arm64"
+      },
+      "lambda": {
+        "runtime": "nodejs18.x",
+        "payload": {},
+        "environmentVariables": {}
+      }
+    },
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach Program",
+      "processId": "${command:PickProcess}",
+      "port": 9229,
+      "resolveSourceMapLocations": null,
+      "sourceMaps": true,
+      "continueOnAttach": true,
+      "pauseForSourceMap": true
+    }
+  ]
 }

@@ -1,3 +1,4 @@
+import { SecretPK } from "@/pks/SecretPK";
 import { RequestContext } from "../RequestContext";
 import {
     GQLMutationCreateSecretArgs,
@@ -12,6 +13,7 @@ export const SecretResolvers: GQLResolvers & {
 } = {
     Secret: {
         __isTypeOf: (parent) => parent instanceof SecretModel,
+        pk: (parent) => SecretPK.stringify(parent),
         key: (parent) => parent.key,
         value: (parent) => parent.value,
         expireAt: (parent) => parent.expireAt,

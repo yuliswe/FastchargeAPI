@@ -3,6 +3,7 @@ scalar NonNegativeDecimal
 scalar Timestamp
 scalar URL
 scalar Any
+scalar Decimal
 
 type Query {
     ### App
@@ -22,8 +23,9 @@ type Query {
     getUser(pk: ID, email: Email): User!
 
     ### Endpoint
-    getEndpoint(pk: ID, app: String, path: String): Endpoint!
-    listEndpoints(app: ID!): [Endpoint!]!
+    getEndpoint(pk: ID!): Endpoint!
+    listEndpointsByApp(app: ID!): [Endpoint!]!
+    getEndpointByApp(app: ID!, path: String!): Endpoint!
 
     ### Subscriptions
     getSubscription(pk: ID, subscriber: ID, app: String): Subscribe!
@@ -44,12 +46,21 @@ type Query {
     listPricings(app: ID!): [Pricing!]!
 
     ### Account Activity
-    getAccountActivity(pk: ID): AccountActivity!
-    # listAccountActivities(
-    #     status: AccountActivityStatus
-    #     settleAtRange: DateRangeInput
-    #     using: AccountActivityIndex
-    # ): [AccountActivity!]!
+    getAccountActivity(pk: ID!): AccountActivity!
+    listAccountActivitiesByUser(user: ID!, status: AccountActivityStatus): [AccountActivity!]!
+    listAccountActivitiesBySettleAt(
+        user: ID!
+        settleAt: DateRangeInput!
+        status: AccountActivityStatus
+    ): [AccountActivity!]!
+
+    ### Account History
+    getAccountHistory(pk: ID!): AccountHistory!
+    listAccountHistoryByUser(
+        user: ID!
+        limit: Int # Support maximum of 1000
+        dateRange: DateRangeInput
+    ): [AccountHistory!]!
 
     ### Stripe Payment
     getStripePaymentAccept(user: ID!, stripeSessionId: String!): StripePaymentAccept!
@@ -172,6 +183,7 @@ type GatewayDecisionResponse {
 }
 
 type Secret {
+    pk: ID!
     key: String!
     value: String!
     expireAt: Timestamp
@@ -219,10 +231,6 @@ type User {
     # stripePaymentAccept(stripeSessionId: String): StripePaymentAccept!
     updateBalance: User!
     getFastchargeAPIIdToken(expireInSeconds: Int = 3600): String!
-}
-
-enum UserIndex {
-    indexByEmail__onlyPK
 }
 
 input DateRangeInput {
@@ -290,12 +298,15 @@ enum HttpMethod {
 
 type Endpoint {
     pk: String!
+    app: App!
     path: String!
     description: String
     destination: String
     method: HttpMethod!
     createdAt: Timestamp!
     updatedAt: Timestamp!
+    deleted: Boolean!
+    deletedAt: Timestamp
 
     updateEndpoint(method: HttpMethod, path: String, destination: String, description: String): Endpoint!
 
@@ -466,8 +477,11 @@ type AccountActivity {
 
 type AccountHistory {
     pk: ID!
-    closingBalance: String!
+    user: User!
+    startingTime: Timestamp!
     closingTime: Timestamp!
+    startingBalance: Decimal!
+    closingBalance: Decimal!
 }
 
 type UserAppToken {

@@ -1,5 +1,5 @@
 import { createDefaultContextBatched } from "@/RequestContext";
-import { User } from "@/database/models";
+import { User, UserIndex } from "@/database/models";
 import { UserPK } from "@/pks/UserPK";
 import {
     APIGatewayProxyEventV2WithLambdaAuthorizer,
@@ -7,7 +7,6 @@ import {
     APIGatewayProxyStructuredResultV2,
     Callback as LmabdaCallback,
 } from "aws-lambda";
-import { GQLUserIndex } from "../__generated__/gql-operations";
 
 export type AuthorizerContext = {
     userPK?: string;
@@ -39,6 +38,6 @@ export async function getCurrentUserFromEvent(event: LambdaEventV2): Promise<Use
     if (userPK) {
         return await batched.User.get(UserPK.parse(userPK));
     } else {
-        return await batched.User.get({ email: userEmail }, { using: GQLUserIndex.IndexByEmailOnlyPk });
+        return await batched.User.get({ email: userEmail }, { using: UserIndex.IndexByEmailOnlyPk });
     }
 }

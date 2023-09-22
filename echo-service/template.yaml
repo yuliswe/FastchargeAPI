@@ -68,3 +68,6 @@ Resources:
             Path: /{proxy+}
             Method: ANY
             ApiId: !Ref APIGatewayV2
+      Environment:
+        Variables:
+          LOG_RESPONSE: 1

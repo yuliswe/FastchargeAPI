@@ -1,8 +1,7 @@
 import { APIGatewayProxyEventBase, APIGatewayProxyEventHeaders, APIGatewayProxyResult } from "aws-lambda";
 import { Chalk } from "chalk";
 import { DefaultContextBatched, RequestService } from "./RequestContext";
-import { GQLUserIndex } from "./__generated__/resolvers-types";
-import { User } from "./database/models";
+import { User, UserIndex } from "./database/models";
 import { BadInput } from "./errors";
 import { createUserWithEmail } from "./functions/user";
 import { UserPK } from "./pks/UserPK";
@@ -75,7 +74,7 @@ export function getIsAdminUser(currentUser: User | undefined, authorizerContext:
     if (authorizerContext?.["isAdminUser"] === "true") {
         return true;
     }
-    if (currentUser?.email == "fastchargeapi@gmail.com") {
+    if (currentUser && UserPK.isAdmin(currentUser)) {
         return true;
     }
     return false;
@@ -113,7 +112,7 @@ export async function getOrCreateUserFromEmail(batched: DefaultContextBatched, e
             email,
         },
         {
-            using: GQLUserIndex.IndexByEmailOnlyPk,
+            using: UserIndex.IndexByEmailOnlyPk,
         }
     );
     if (currentUser === null) {

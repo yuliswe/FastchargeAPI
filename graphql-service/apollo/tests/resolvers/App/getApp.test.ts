@@ -118,32 +118,3 @@ describe("getApp", () => {
         ]);
     });
 });
-
-describe("getAppByName", () => {
-    const queryGetAppByName = graphql(`
-        query TestGetAppByName($name: String!) {
-            getAppByName(name: $name) {
-                pk
-                name
-            }
-        }
-    `);
-
-    test("Can get a public app by name", async () => {
-        const promise = testGQLClient({ user: testOtherOwner }).query({
-            query: queryGetAppByName,
-            variables: {
-                name: testApp.name,
-            },
-        });
-        await expect(promise).resolves.toMatchObject({
-            data: {
-                getAppByName: {
-                    __typename: "App",
-                    pk: AppPK.stringify(testApp),
-                    name: testApp.name,
-                },
-            },
-        });
-    });
-});

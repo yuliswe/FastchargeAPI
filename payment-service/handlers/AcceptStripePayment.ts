@@ -1,5 +1,5 @@
 import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
-import { StripePaymentAccept, User } from "@/database/models";
+import { StripePaymentAccept, User, UserIndex } from "@/database/models";
 import { UserPK } from "@/pks/UserPK";
 import { baseDomain } from "@/runtime-config";
 import { SQSQueueUrl, sqsGQLClient } from "@/sqsClient";
@@ -14,7 +14,6 @@ import {
     GQLFulfillUserStripePaymentAcceptQuery,
     GQLFulfillUserStripePaymentAcceptQueryVariables,
     GQLMutationCreateStripePaymentAcceptArgs,
-    GQLUserIndex,
 } from "../__generated__/gql-operations";
 import { getPaymentAcceptedEmail } from "../email-templates/payment-accepted";
 import { LambdaEventV2, LambdaHandlerV2 } from "../utils/LambdaContext";
@@ -65,7 +64,7 @@ export async function handle(
             if (!email) {
                 throw new Error("Email not found in Stripe session.");
             }
-            const user = await context.batched.User.get({ email }, { using: GQLUserIndex.IndexByEmailOnlyPk });
+            const user = await context.batched.User.get({ email }, { using: UserIndex.IndexByEmailOnlyPk });
             // Check if the order is already paid (for example, from a card
             // payment)
             //
@@ -94,7 +93,7 @@ export async function handle(
         case "checkout.session.async_payment_succeeded": {
             const session = stripeEvent.data.object as StripeSessionObject;
             const email = session.customer_details.email;
-            const user = await context.batched.User.get({ email }, { using: GQLUserIndex.IndexByEmailOnlyPk });
+            const user = await context.batched.User.get({ email }, { using: UserIndex.IndexByEmailOnlyPk });
             const paymentAccept = await context.batched.StripePaymentAccept.get({
                 user: UserPK.stringify(user),
             });
@@ -119,7 +118,7 @@ export async function handle(
         case "checkout.session.expired": {
             const session = stripeEvent.data.object as StripeSessionObject;
             const email = session.customer_details.email;
-            const user = await context.batched.User.get({ email }, { using: GQLUserIndex.IndexByEmailOnlyPk });
+            const user = await context.batched.User.get({ email }, { using: UserIndex.IndexByEmailOnlyPk });
             const paymentAccept = await context.batched.StripePaymentAccept.get({
                 user: UserPK.stringify(user),
             });
