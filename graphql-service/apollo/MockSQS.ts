@@ -11,7 +11,7 @@ type Message = {
 };
 
 function getKey({ queueUrl, groupId }: QueueIdentifier): string {
-    return `${queueUrl}:${groupId}`;
+    return `${queueUrl}:${groupId ?? "undefined"}`;
 }
 
 function identifyQueue({ input: { QueueUrl, MessageGroupId } }: Message): QueueIdentifier {

@@ -1,3 +1,4 @@
+import { SendMessageCommandInput } from "@aws-sdk/client-sqs";
 import http from "http";
 import { handSendMessageCommandData } from "./sqsHandler";
 const PORT = 4100;
@@ -15,7 +16,7 @@ const server = http.createServer((req, res) => {
             console.log(body);
             let parsedBody = null;
             try {
-                parsedBody = JSON.parse(body);
+                parsedBody = JSON.parse(body) as SendMessageCommandInput;
             } catch (e) {
                 console.error("Could not parse JSON:");
                 console.error(e);

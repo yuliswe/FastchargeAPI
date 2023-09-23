@@ -1,5 +1,5 @@
 import { GQLUserUpdateUserArgs } from "@/__generated__/resolvers-types";
-import { User } from "@/database/models";
+import { User } from "@/database/models/User";
 import { RequestContext } from "../RequestContext";
 
 export const UserPermissions = {

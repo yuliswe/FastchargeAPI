@@ -1,3 +1,4 @@
+import { StripeTransfer, StripeTransferModel } from "@/database/models/StripeTransfer";
 import Decimal from "decimal.js-light";
 import { RequestContext } from "../RequestContext";
 import {
@@ -7,7 +8,6 @@ import {
     GQLStripeTransferResolvers,
     StripeTransferStatus,
 } from "../__generated__/resolvers-types";
-import { StripeTransfer, StripeTransferModel } from "../database/models";
 import { BadInput, Denied } from "../errors";
 import { getUserBalance, settleAccountActivities } from "../functions/account";
 import { enforceCalledFromQueue } from "../functions/aws";
@@ -126,7 +126,7 @@ export const StripeTransferResolvers: GQLResolvers & {
                 receiveAmount,
                 stripeTransferId,
                 currency,
-                stripeTransferObject: stripeTransferObject && JSON.parse(stripeTransferObject),
+                stripeTransferObject: stripeTransferObject ? (JSON.parse(stripeTransferObject) as object) : undefined,
                 transferAt: Date.now() + 1000 * 60 * 60 * 24, // Transfer after 24 hours
                 status: StripeTransferStatus.Pending,
             });

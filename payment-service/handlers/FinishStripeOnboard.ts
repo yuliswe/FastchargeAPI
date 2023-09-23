@@ -3,12 +3,12 @@
  */
 
 import { createDefaultContextBatched } from "@/RequestContext";
+import { UserTableIndex } from "@/database/models";
 import { APIGatewayProxyStructuredResultV2, Context as LambdaContext } from "aws-lambda";
 import { Chalk } from "chalk";
 import Stripe from "stripe";
 import { LambdaCallbackV2, LambdaEventV2, LambdaHandlerV2 } from "../utils/LambdaContext";
 import { parseStripeWebhookEvent } from "../utils/stripe-client";
-import { UserIndex } from "@/database/models";
 
 const chalk = new Chalk({ level: 3 });
 const batched = createDefaultContextBatched();
@@ -25,7 +25,7 @@ async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredRe
                 throw new Error("No email on stripeEvent.data.object.email");
             }
 
-            const user = await batched.User.get({ email: userEmail }, { using: UserIndex.IndexByEmailOnlyPk });
+            const user = await batched.User.get({ email: userEmail }, { using: UserTableIndex.IndexByEmailOnlyPk });
             await batched.User.update(user, {
                 stripeConnectAccountId: accountUpdatedObject.id,
             });

@@ -1,3 +1,4 @@
+import { Subscription } from "@/database/models/Subscription";
 import { RequestContext } from "../RequestContext";
 import { PricingAvailability } from "../__generated__/gql/graphql";
 import {
@@ -6,7 +7,6 @@ import {
     GQLResolvers,
     GQLSubscribeUpdateSubscriptionArgs,
 } from "../__generated__/resolvers-types";
-import { Subscription } from "../database/models";
 import { Denied } from "../errors";
 import { Can } from "../permissions";
 import { AppPK } from "../pks/AppPK";

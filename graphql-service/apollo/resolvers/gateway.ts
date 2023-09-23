@@ -1,3 +1,7 @@
+import { GatewayRequestCounter } from "@/database/models/GatewayRequestCounter";
+import { GatewayRequestDecisionCache } from "@/database/models/GatewayRequestDecisionCache";
+import { Pricing } from "@/database/models/Pricing";
+import { User } from "@/database/models/User";
 import { Chalk } from "chalk";
 import Decimal from "decimal.js-light";
 import { RequestContext } from "../RequestContext";
@@ -7,7 +11,6 @@ import {
     GQLQueryCheckUserIsAllowedForGatewayRequestArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
-import { GatewayRequestCounter, GatewayRequestDecisionCache, Pricing, User } from "../database/models";
 import { AlreadyExists, Denied, NotFound } from "../errors";
 import { getUserBalance } from "../functions/account";
 import { ShouldCollectMonthlyChargePromiseResult, shouldCollectMonthlyCharge } from "../functions/billing";

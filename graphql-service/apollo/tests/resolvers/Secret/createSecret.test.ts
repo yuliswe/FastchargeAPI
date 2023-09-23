@@ -1,4 +1,4 @@
-import { User } from "@/database/models";
+import { User } from "@/database/models/User";
 import { testGQLClient } from "@/tests/test-sql-client";
 import { baseRequestContext as context, getOrCreateTestUser } from "@/tests/test-utils";
 import { graphql } from "@/typed-graphql";

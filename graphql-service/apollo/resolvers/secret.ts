@@ -1,3 +1,4 @@
+import { Secret, SecretModel } from "@/database/models/Secret";
 import { SecretPK } from "@/pks/SecretPK";
 import { RequestContext } from "../RequestContext";
 import {
@@ -6,7 +7,6 @@ import {
     GQLResolvers,
     GQLSecretResolvers,
 } from "../__generated__/resolvers-types";
-import { Secret, SecretModel } from "../database/models";
 
 export const SecretResolvers: GQLResolvers & {
     Secret: Required<GQLSecretResolvers>;

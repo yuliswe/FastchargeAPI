@@ -1,5 +1,7 @@
 import { HttpMethod } from "@/__generated__/resolvers-types";
-import { App, Endpoint, User } from "@/database/models";
+import { App } from "@/database/models/App";
+import { Endpoint } from "@/database/models/Endpoint";
+import { User } from "@/database/models/User";
 import { AppPK } from "@/pks/AppPK";
 import { EndpointPK } from "@/pks/EndpointPK";
 import { testGQLClient } from "@/tests/test-sql-client";

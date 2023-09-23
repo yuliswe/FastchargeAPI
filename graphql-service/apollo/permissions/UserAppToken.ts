@@ -1,4 +1,6 @@
-import { App, User, UserAppToken } from "@/database/models";
+import { App } from "@/database/models/App";
+import { User } from "@/database/models/User";
+import { UserAppToken } from "@/database/models/UserAppToken";
 import { RequestContext } from "../RequestContext";
 import { isCurrentUser, isCurrentUserPK } from "./utils";
 

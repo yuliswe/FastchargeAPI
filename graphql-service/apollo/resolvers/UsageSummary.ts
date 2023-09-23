@@ -1,4 +1,4 @@
-import { Chalk } from "chalk";
+import { UsageSummary, UsageSummaryModel } from "@/database/models/UsageSummary";
 import { RequestContext } from "../RequestContext";
 import {
     GQLMutationTriggerBillingArgs,
@@ -6,7 +6,6 @@ import {
     GQLResolvers,
     GQLUsageSummaryResolvers,
 } from "../__generated__/resolvers-types";
-import { UsageSummary, UsageSummaryModel } from "../database/models";
 import { Denied } from "../errors";
 import { triggerBilling } from "../functions/billing";
 import { Can } from "../permissions";
@@ -15,7 +14,6 @@ import { AppPK } from "../pks/AppPK";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
 import { UserPK } from "../pks/UserPK";
 
-const chalk = new Chalk({ level: 3 });
 /**
  * Make is so that only the owner can read the private attributes.
  */

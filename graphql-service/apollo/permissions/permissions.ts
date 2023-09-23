@@ -1,6 +1,6 @@
 import { RequestContext } from "../RequestContext";
 
-import { Endpoint } from "../database/models";
+import { Endpoint } from "@/database/models/Endpoint";
 import { AppPK } from "../pks/AppPK";
 import { UserPK } from "../pks/UserPK";
 

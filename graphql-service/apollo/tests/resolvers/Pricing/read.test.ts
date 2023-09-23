@@ -1,6 +1,8 @@
 import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
 import { PricingAvailability } from "@/__generated__/gql/graphql";
-import { App, Pricing, User } from "@/database/models";
+import { App } from "@/database/models/App";
+import { Pricing } from "@/database/models/Pricing";
+import { User } from "@/database/models/User";
 import { AppPK } from "@/pks/AppPK";
 import { PricingPK } from "@/pks/PricingPK";
 import { UserPK } from "@/pks/UserPK";

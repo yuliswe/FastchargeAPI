@@ -3,9 +3,10 @@ import Decimal from "decimal.js-light";
 import { Item } from "dynamoose/dist/Item";
 import { RequestContext } from "../RequestContext";
 
+import { AccountActivity } from "@/database/models/AccountActivity";
+import { AccountHistory } from "@/database/models/AccountHistory";
 import { graphql } from "../__generated__/gql";
 import { AccountActivityStatus } from "../__generated__/resolvers-types";
-import { AccountActivity, AccountHistory } from "../database/models";
 import { AlreadyExists } from "../errors";
 import { AccountHistoryPK } from "../pks/AccountHistoryPK";
 import { SQSQueueUrl, sqsGQLClient } from "../sqsClient";
@@ -29,6 +30,7 @@ export async function settleAccountActivitiesOnSQS(context: RequestContext, acco
             user: accountUser,
         },
     });
+    return result;
 }
 
 /**
@@ -133,7 +135,7 @@ export async function settleAccountActivities(
     for (const result of await Promise.allSettled(promises)) {
         if (result.status === "rejected") {
             console.error("Error when creating AccountHistory:", result.reason);
-            errors.push(result.reason);
+            errors.push(result.reason as string);
         } else {
             results.push(result.value);
         }

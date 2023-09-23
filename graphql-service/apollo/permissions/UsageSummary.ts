@@ -1,4 +1,4 @@
-import { UsageSummary } from "@/database/models";
+import { UsageSummary } from "@/database/models/UsageSummary";
 import { RequestContext } from "../RequestContext";
 import { AppPK } from "../pks/AppPK";
 import { isCurrentUserPK } from "./utils";

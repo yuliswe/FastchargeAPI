@@ -1,3 +1,5 @@
+import { StripePaymentAccept, StripePaymentAcceptModel } from "@/database/models/StripePaymentAccept";
+import { User } from "@/database/models/User";
 import { RequestContext } from "../RequestContext";
 import {
     AccountActivityReason,
@@ -9,7 +11,6 @@ import {
     GQLStripePaymentAcceptSettlePaymentArgs,
     GQLStripePaymentAcceptStatus,
 } from "../__generated__/resolvers-types";
-import { StripePaymentAccept, StripePaymentAcceptModel, User } from "../database/models";
 import { AlreadyExists, Denied } from "../errors";
 import { settleAccountActivities } from "../functions/account";
 import { enforceCalledFromQueue } from "../functions/aws";
@@ -78,7 +79,7 @@ export const StripePaymentAcceptResolvers: GQLResolvers & {
                 consistentReadAccountActivities: true,
             });
             parent = await context.batched.StripePaymentAccept.update(parent, {
-                stripeSessionObject: stripeSessionObject && JSON.parse(stripeSessionObject),
+                stripeSessionObject: stripeSessionObject ? (JSON.parse(stripeSessionObject) as object) : undefined,
                 stripePaymentStatus: stripePaymentStatus as StripePaymentAccept["stripePaymentStatus"] | undefined,
                 stripePaymentIntent,
                 accountActivity: AccountActivityPK.stringify(activity),
@@ -130,7 +131,7 @@ export const StripePaymentAcceptResolvers: GQLResolvers & {
                 user,
                 amount,
                 stripeSessionId,
-                stripeSessionObject: JSON.parse(stripeSessionObject),
+                stripeSessionObject: JSON.parse(stripeSessionObject) as object,
                 stripePaymentIntent,
                 stripePaymentStatus: stripePaymentStatus,
             });

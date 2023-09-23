@@ -1,7 +1,7 @@
 import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
 
 import { AccountActivityReason, AccountActivityType } from "@/__generated__/resolvers-types";
-import { User } from "@/database/models";
+import { User } from "@/database/models/User";
 import { UserPK } from "@/pks/UserPK";
 import { testGQLClient } from "@/tests/test-sql-client";
 import { getAdminUser, getOrCreateTestUser, simplifyGraphQLPromiseRejection } from "@/tests/test-utils";

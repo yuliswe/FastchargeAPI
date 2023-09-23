@@ -1,5 +1,6 @@
+import { Pricing } from "@/database/models/Pricing";
+import { Subscription } from "@/database/models/Subscription";
 import { RequestContext } from "../RequestContext";
-import { Pricing, Subscription } from "../database/models";
 import { PricingPK } from "../pks/PricingPK";
 
 export async function findUserSubscription(

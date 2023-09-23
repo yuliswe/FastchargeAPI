@@ -1,3 +1,4 @@
+import { UserAppToken, UserAppTokenModel } from "@/database/models/UserAppToken";
 import { RequestContext } from "../RequestContext";
 import {
     GQLMutationCreateUserAppTokenArgs,
@@ -5,7 +6,6 @@ import {
     GQLResolvers,
     GQLUserAppTokenResolvers,
 } from "../__generated__/resolvers-types";
-import { UserAppToken, UserAppTokenModel } from "../database/models";
 import { Denied, NotFound, RequirementNotSatisfied, TooManyResources } from "../errors";
 import { createUserAppToken } from "../functions/token";
 import { Can } from "../permissions";

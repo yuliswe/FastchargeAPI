@@ -1,8 +1,9 @@
+import { User } from "@/database/models/User";
+import { GQLPartial } from "@/database/utils";
 import jwt from "jsonwebtoken";
 import { MD5 } from "object-hash";
 import { v4 as uuidv4 } from "uuid";
 import { RequestContext } from "../RequestContext";
-import { GQLPartial, User } from "../database/models";
 import { UserPK } from "../pks/UserPK";
 import { getParameterFromAWSSystemsManager } from "./aws";
 

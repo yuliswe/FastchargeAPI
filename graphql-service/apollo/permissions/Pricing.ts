@@ -1,7 +1,7 @@
+import { Pricing } from "@/database/models/Pricing";
 import { RequestContext } from "../RequestContext";
 import { PricingAvailability } from "../__generated__/gql/graphql";
 import { GQLPricingUpdatePricingArgs } from "../__generated__/resolvers-types";
-import { Pricing } from "../database/models";
 import { AppPK } from "../pks/AppPK";
 import { PricingPK } from "../pks/PricingPK";
 import { UserPK } from "../pks/UserPK";

@@ -1,3 +1,7 @@
+import { AccountActivity } from "@/database/models/AccountActivity";
+import { App } from "@/database/models/App";
+import { Subscription } from "@/database/models/Subscription";
+import { User, UserModel, UserTableIndex } from "@/database/models/User";
 import type { GraphQLResolveInfoWithCacheControl } from "@apollo/cache-control-types";
 import { Chalk } from "chalk";
 import { GraphQLResolveInfo } from "graphql";
@@ -14,7 +18,6 @@ import {
     GQLUserUsageLogsArgs,
     GQLUserUsageSummariesArgs,
 } from "../__generated__/resolvers-types";
-import { AccountActivity, App, Subscription, User, UserIndex, UserModel } from "../database/models";
 import { BadInput, Denied } from "../errors";
 import { getUserBalance, settleAccountActivities } from "../functions/account";
 import { createUserWithEmail, makeFastchargeAPIIdTokenForUser } from "../functions/user";
@@ -269,7 +272,7 @@ export const UserResolvers: GQLResolvers & {
                 user = await context.batched.User.get(
                     { email },
                     {
-                        using: UserIndex.IndexByEmailOnlyPk,
+                        using: UserTableIndex.IndexByEmailOnlyPk,
                     }
                 );
             } else if (pk) {

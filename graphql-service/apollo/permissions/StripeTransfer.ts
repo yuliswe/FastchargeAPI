@@ -1,4 +1,4 @@
-import { StripeTransfer } from "@/database/models";
+import { StripeTransfer } from "@/database/models/StripeTransfer";
 import { UserPK } from "@/pks/UserPK";
 import { RequestContext } from "../RequestContext";
 

@@ -62,7 +62,7 @@ export const handle = startServerAndCreateLambdaHandler<RequestHandler<LambdaEve
                         console.log(chalk.blue("Received: " + parsedBody));
                     }
                     if (contentType?.startsWith("application/json")) {
-                        return JSON.parse(parsedBody);
+                        return JSON.parse(parsedBody) as string; // upstream might have wrong type for this
                     }
                     if (contentType?.startsWith("text/plain")) {
                         return parsedBody;

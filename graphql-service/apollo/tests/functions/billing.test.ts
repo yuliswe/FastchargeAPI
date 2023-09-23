@@ -1,5 +1,7 @@
 import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
-import { App, Pricing, User } from "@/database/models";
+import { App } from "@/database/models/App";
+import { Pricing } from "@/database/models/Pricing";
+import { User } from "@/database/models/User";
 import { UserPK } from "@/pks/UserPK";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 

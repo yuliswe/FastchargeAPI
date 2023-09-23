@@ -1,5 +1,5 @@
 import { GQLAppUpdateAppArgs } from "@/__generated__/resolvers-types";
-import { App } from "@/database/models";
+import { App } from "@/database/models/App";
 import { UserPK } from "@/pks/UserPK";
 import { RequestContext } from "../RequestContext";
 

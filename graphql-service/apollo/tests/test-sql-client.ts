@@ -1,10 +1,11 @@
+import { User } from "@/database/models/User";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient } from "@apollo/client/core";
 import { HttpLink } from "@apollo/client/link/http";
 import { SendMessageCommandInput } from "@aws-sdk/client-sqs";
+import { Context as LambdaContext } from "aws-lambda";
 import { Headers, RequestInit, Response } from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
-import { User } from "../database/models";
 import { handle as serverLambdaHandler } from "../lambdaHandler";
 import { LambdaResult } from "../lambdaHandlerUtils";
 import { UserPK } from "../pks/UserPK";
@@ -44,8 +45,8 @@ export function testGQLClient({ user }: { user: User }) {
                         },
                         _disableLogRequest: true,
                     },
-                    {} as any,
-                    (() => undefined) as any
+                    {} as LambdaContext,
+                    () => undefined
                 )) as LambdaResult;
                 return new Response(result.body, {
                     status: result.statusCode,

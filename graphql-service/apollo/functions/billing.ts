@@ -1,4 +1,7 @@
-import { Chalk } from "chalk";
+import { AccountActivity } from "@/database/models/AccountActivity";
+import { FreeQuotaUsage } from "@/database/models/FreeQuotaUsage";
+import { Pricing } from "@/database/models/Pricing";
+import { UsageSummary } from "@/database/models/UsageSummary";
 import Decimal from "decimal.js-light";
 import { RequestContext } from "../RequestContext";
 import {
@@ -7,7 +10,6 @@ import {
     AccountActivityType,
     UsageSummaryStatus,
 } from "../__generated__/resolvers-types";
-import { AccountActivity, FreeQuotaUsage, Pricing, UsageSummary } from "../database/models";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { AppPK } from "../pks/AppPK";
 import { PricingPK } from "../pks/PricingPK";
@@ -15,7 +17,6 @@ import { UsageSummaryPK } from "../pks/UsageSummaryPK";
 import { settleAccountActivitiesOnSQS } from "./account";
 import { enforceCalledFromQueue } from "./aws";
 import { collectUsageLogs } from "./usage";
-const chalk = new Chalk({ level: 3 });
 
 export const fastchargeRequestServiceFee = "0.0001";
 
@@ -215,7 +216,7 @@ export async function generateAccountActivities(
     for (const result of await Promise.allSettled(promises)) {
         if (result.status === "rejected") {
             console.error("Error creating AccountActivity:", result.reason, "for usage summary:", usageSummary);
-            errors.push(result.reason);
+            errors.push(result.reason as string);
         }
     }
     await usageSummary.save();

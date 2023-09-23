@@ -1,6 +1,6 @@
+import { User, UserTableIndex } from "@/database/models/User";
 import { describe, expect, test } from "@jest/globals";
 import { RequestContext, createDefaultContextBatched } from "../RequestContext";
-import { User, UserIndex } from "../database/models";
 
 const context: RequestContext = {
     batched: createDefaultContextBatched(),
@@ -15,7 +15,7 @@ const testUser = "testuser1.fastchargeapi@gmail.com";
 describe.skip("Clean up everything", () => {
     let user: User;
     test("Preparation: get test user 1", async () => {
-        user = await context.batched.User.get({ email: testUser }, { using: UserIndex.IndexByEmailOnlyPk });
+        user = await context.batched.User.get({ email: testUser }, { using: UserTableIndex.IndexByEmailOnlyPk });
         expect(user).not.toBe(null);
     });
 

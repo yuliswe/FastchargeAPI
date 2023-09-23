@@ -1,3 +1,5 @@
+import { AccountActivity, AccountActivityModel } from "@/database/models/AccountActivity";
+import { User } from "@/database/models/User";
 import { GraphQLResolveInfo } from "graphql";
 import { RequestContext } from "../RequestContext";
 import { QueryAccountActivityArgs } from "../__generated__/gql/graphql";
@@ -6,7 +8,6 @@ import {
     GQLMutationCreateAccountActivityArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
-import { AccountActivity, AccountActivityModel, User } from "../database/models";
 import { BadInput, Denied } from "../errors";
 import { Can } from "../permissions";
 import { AccountActivityPK } from "../pks/AccountActivityPK";

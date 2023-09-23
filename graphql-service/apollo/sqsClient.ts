@@ -48,10 +48,14 @@ export function sqsGQLClient({ queueUrl, dedupId, groupId }: { queueUrl: string;
                     const { handSendMessageCommandData } = await import("./sqsHandler");
                     try {
                         mockSQS.enqueue({ input, handler: handSendMessageCommandData });
-                    } catch (error: any) {
-                        throw new Error(`Error during MockSQS.enqueue:\n${error.stack}`, {
-                            cause: errorWithCorrectStackTrace,
-                        });
+                    } catch (error: unknown) {
+                        if (error instanceof Error) {
+                            throw new Error(`Error during MockSQS.enqueue:\n${error.stack}`, {
+                                cause: errorWithCorrectStackTrace,
+                            });
+                        } else {
+                            throw error;
+                        }
                     }
                 } else {
                     await sqsClient.send(new SendMessageCommand(input));

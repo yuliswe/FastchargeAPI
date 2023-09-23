@@ -3,7 +3,7 @@
 # documents:
 #   - "./cron-jobs/*.ts"
 projects:
-  default:
+  tests:
     extensions:
       codegen:
         generates:
@@ -17,7 +17,7 @@ projects:
               - "./pks/*.ts"
               - "./tests/**/*.ts"
 
-  tests:
+  default:
     extensions:
       codegen:
         generates:
@@ -33,7 +33,6 @@ projects:
               # More on this below!
               contextType: "../RequestContext#RequestContext"
               mapperTypeSuffix: "Data"
-              # makeResolverTypeCallable: true
               # wrapFieldDefinitions: true
               # resolverTypeWrapperSignature: "{[k in keyof T]: (T[k] | ((args: any, context: RequestContext, info: GraphQLResolveInfo) => T[k]) | ((args: any, context: RequestContext, info: GraphQLResolveInfo) => Promise<T[k]>))}"
               useTypeImports: false
@@ -42,23 +41,23 @@ projects:
               customResolveInfo: "@apollo/cache-control-types#GraphQLResolveInfoWithCacheControl"
               # defaultMapper: "{[k in keyof {T}]: {T}[k] | (() => {T})}"
               mappers:
-                App: ../database/models#App
-                AppTag: ../database/models#AppTag
-                User: ../database/models#User
-                Endpoint: ../database/models#Endpoint
-                Pricing: ../database/models#Pricing
-                Subscribe: ../database/models#Subscription
-                UsageLog: ../database/models#UsageLog
-                StripePaymentAccept: ../database/models#StripePaymentAccept
-                StripeTransfer: ../database/models#StripeTransfer
-                AccountActivity: ../database/models#AccountActivity
-                AccountHistory: ../database/models#AccountHistory
-                UsageSummary: ../database/models#UsageSummary
-                Secret: ../database/models#Secret
-                GatewayRequestCounter: ../database/models#GatewayRequestCounter
-                GatewayRequestDecisionCache: ../database/models#GatewayRequestDecisionCache
-                UserAppToken: ../database/models#UserAppToken
-                SiteMetaData: ../database/models#SiteMetaData
+                App: ../database/models/App#App
+                AppTag: ../database/models/AppTag#AppTag
+                User: ../database/models/User#User
+                Endpoint: ../database/models/Endpoint#Endpoint
+                Pricing: ../database/models/Pricing#Pricing
+                Subscribe: ../database/models/Subscription#Subscription
+                UsageLog: ../database/models/UsageLog#UsageLog
+                StripePaymentAccept: ../database/models/StripePaymentAccept#StripePaymentAccept
+                StripeTransfer: ../database/models/StripeTransfer#StripeTransfer
+                AccountActivity: ../database/models/AccountActivity#AccountActivity
+                AccountHistory: ../database/models/AccountHistory#AccountHistory
+                UsageSummary: ../database/models/UsageSummary#UsageSummary
+                Secret: ../database/models/Secret#Secret
+                GatewayRequestCounter: ../database/models/GatewayRequestCounter#GatewayRequestCounter
+                GatewayRequestDecisionCache: ../database/models/GatewayRequestDecisionCache#GatewayRequestDecisionCache
+                UserAppToken: ../database/models/UserAppToken#UserAppToken
+                SiteMetaData: ../database/models/SiteMetaData#SiteMetaData
               enumValues:
                 GatewayMode: ../__generated__/gql/graphql#GatewayMode
                 PricingAvailability: ../__generated__/gql/graphql#PricingAvailability
@@ -74,4 +73,5 @@ projects:
                 Email: string
                 Timestamp: number
                 NonNegativeDecimal: string
-                Any: any
+                URL: string
+                Any: unknown

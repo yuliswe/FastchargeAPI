@@ -1,6 +1,7 @@
+import { AccountHistory } from "@/database/models/AccountHistory";
+import { PK } from "@/database/utils";
 import { UserPK } from "@/pks/UserPK";
 import { RequestContext } from "../RequestContext";
-import { AccountHistory, PK } from "../database/models";
 import { isCurrentUserPK } from "./utils";
 
 export const AccountHistoryPermissions = {

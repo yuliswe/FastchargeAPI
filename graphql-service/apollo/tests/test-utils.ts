@@ -1,11 +1,15 @@
 import { mockSQS } from "@/MockSQS";
 import { createDefaultContextBatched } from "@/RequestContext";
+import { App } from "@/database/models/App";
+import { FreeQuotaUsage } from "@/database/models/FreeQuotaUsage";
+import { Pricing } from "@/database/models/Pricing";
+import { User, UserTableIndex } from "@/database/models/User";
+import { GQLPartial } from "@/database/utils";
 import { SQSQueueUrl, sqsGQLClient } from "@/sqsClient";
 import { graphql } from "@/typed-graphql";
 import { ApolloError } from "@apollo/client";
 import { v4 as uuid4 } from "uuid";
 import { RequestContext } from "../RequestContext";
-import { App, FreeQuotaUsage, GQLPartial, Pricing, User, UserIndex } from "../database/models";
 import { createUserWithEmail } from "../functions/user";
 import { AppPK } from "../pks/AppPK";
 
@@ -68,7 +72,7 @@ export async function getOrCreateTestUser(
     if (!email) {
         email = `testuser_${uuid4()}@gmail_mock.com`;
     }
-    let user = await context.batched.User.getOrNull({ email }, { using: UserIndex.IndexByEmailOnlyPk });
+    let user = await context.batched.User.getOrNull({ email }, { using: UserTableIndex.IndexByEmailOnlyPk });
     if (user === null) {
         user = await createUserWithEmail(context.batched, email, additionalProps);
     }
@@ -78,7 +82,7 @@ export async function getOrCreateTestUser(
 export async function getAdminUser(context: RequestContext): Promise<User> {
     return await context.batched.User.get(
         { email: "fastchargeapi@gmail.com" },
-        { using: UserIndex.IndexByEmailOnlyPk }
+        { using: UserTableIndex.IndexByEmailOnlyPk }
     );
 }
 

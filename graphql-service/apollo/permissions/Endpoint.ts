@@ -1,5 +1,5 @@
 import { GQLEndpointUpdateEndpointArgs, GQLMutationCreateEndpointArgs } from "@/__generated__/resolvers-types";
-import { Endpoint } from "@/database/models";
+import { Endpoint } from "@/database/models/Endpoint";
 import { UserPK } from "@/pks/UserPK";
 import { RequestContext } from "../RequestContext";
 import { AppPK } from "../pks/AppPK";

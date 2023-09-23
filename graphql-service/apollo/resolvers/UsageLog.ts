@@ -1,7 +1,7 @@
+import type { UsageLog } from "@/database/models/UsageLog";
 import { GraphQLResolveInfo } from "graphql";
 import { RequestContext } from "../RequestContext";
 import { GQLMutationCreateUsageLogArgs, GQLResolvers, GQLUsageLogResolvers } from "../__generated__/resolvers-types";
-import type { UsageLog } from "../database/models";
 import { Denied } from "../errors";
 import { Can } from "../permissions";
 import { AppPK } from "../pks/AppPK";

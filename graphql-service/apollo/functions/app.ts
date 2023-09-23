@@ -1,8 +1,9 @@
+import { App } from "@/database/models/App";
+import { ValidationError } from "@/database/utils";
 import { BatchExecuteStatementCommand, ExecuteStatementCommand } from "@aws-sdk/client-rds-data";
 import { RequestContext } from "../RequestContext";
 import { GQLAppFullTextSearchOrderBy } from "../__generated__/resolvers-types";
 import { auroraResourceArn, auroraSecretArn, rdsClient } from "../aurora";
-import { App, ValidationError } from "../database/models";
 import { AppPK } from "../pks/AppPK";
 
 export async function getAppByPK(context: RequestContext, pk: string): Promise<App> {

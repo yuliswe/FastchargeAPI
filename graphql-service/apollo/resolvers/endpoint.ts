@@ -1,3 +1,5 @@
+import { Endpoint, EndpointModel } from "@/database/models/Endpoint";
+import { PK } from "@/database/utils";
 import { AppPK } from "@/pks/AppPK";
 import { RequestContext } from "../RequestContext";
 import {
@@ -8,7 +10,6 @@ import {
     GQLQueryGetEndpointArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
-import { Endpoint, EndpointModel, PK } from "../database/models";
 import { BadInput, Denied } from "../errors";
 import { Can } from "../permissions";
 import { EndpointPK } from "../pks/EndpointPK";

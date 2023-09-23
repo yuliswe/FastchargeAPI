@@ -7,7 +7,7 @@
     "module": "node",
     "scripts": {
         "build:build-scripts": "esbuild --platform=node --outdir='./dist' --format=cjs --out-extension:.js=.cjs --bundle --external:esbuild --external:graphql ./build-scripts/*.ts",
-        "gen:schema": "(npm run build:build-scripts) && node ./dist/genSchema.cjs",
+        "gen:schema": "(npm run build:build-scripts) && node ./dist/genSchema.cjs && npm run vsc-hack-restart-sql-language-server",
         "gen": "(npm run gen:schema) && graphql-codegen --config codegen.yml --project default && graphql-codegen --config codegen.yml --project tests",
         "typecheck": "(npm run gen) && tsc --noEmit",
         "build": "(npm run typecheck) && node ./dist/build.cjs",
@@ -16,7 +16,9 @@
         "test": "npx jest",
         "coverage": "npx jest --coverage --runInBand",
         "coverage:incremental": "./build-scripts/runINcrementalCoverage.bash",
+        "cov:incr": "npm run coverage:incremental",
         "coverage:reset": "./build-scripts/resetCoverageForFile.bash",
+        "vsc-hack-restart-sql-language-server": "open 'vscode://mattorp.vscode-graphql-restart/'",
         "sam": "cd ../ && make watch",
         "fix": "eslint --fix ./",
         "start:sqs": "npx ts-node-esm --experimentalSpecifierResolution=node ./dev-sqs-server.ts",

@@ -23,7 +23,7 @@ void startStandaloneServer<RequestContext>(server, {
     context: async ({ req }: { req: IncomingMessage }) => {
         printWarnings();
         const batched = createDefaultContextBatched();
-        const headers: { [header: string]: string } = normalizeHeaders(req.headers as any);
+        const headers: { [header: string]: string } = normalizeHeaders(req.headers as Record<string, string>);
         const currentUser = await getCurrentUser(batched, headers, undefined);
         const isAdminUser = getIsAdminUser(currentUser, undefined);
         const { serviceName, isServiceRequest } = getIsServiceRequest("", headers);

@@ -1,7 +1,8 @@
+import { App } from "@/database/models/App";
+import { User } from "@/database/models/User";
 import { describe, expect, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
 import { RequestContext, createDefaultContextBatched } from "../RequestContext";
-import { App, User } from "../database/models";
 import { lambdaHandler } from "../lambdaHandler";
 import { LambdaEvent } from "../lambdaHandlerUtils";
 import { AppPK } from "../pks/AppPK";

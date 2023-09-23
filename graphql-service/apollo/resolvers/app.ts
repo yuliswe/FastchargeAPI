@@ -1,5 +1,6 @@
+import { App } from "@/database/models/App";
+import { AppTagTableIndex } from "@/database/models/AppTag";
 import { GraphQLResolveInfoWithCacheControl } from "@apollo/cache-control-types";
-import { Chalk } from "chalk";
 import { RequestContext } from "../RequestContext";
 import {
     GQLAppResolvers,
@@ -12,7 +13,6 @@ import {
     GQLQueryListAppsByTagArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
-import { App, AppTagTableIndex } from "../database/models";
 import { Denied, ResourceDeleted, TooManyResources } from "../errors";
 import { appFullTextSearch, flushAppSearchIndex, updateAppSearchIndex, validateAppName } from "../functions/app";
 import { Can } from "../permissions";
@@ -21,8 +21,6 @@ import { UserPK } from "../pks/UserPK";
 import { AppTagResolvers } from "./AppTag";
 import { EndpointResolvers } from "./Endpoint";
 import { PricingResolvers } from "./Pricing";
-
-const chalk = new Chalk({ level: 3 });
 
 export const AppResolvers: GQLResolvers & {
     App: GQLAppResolvers;
@@ -151,7 +149,7 @@ export const AppResolvers: GQLResolvers & {
                 { tag },
                 {
                     limit,
-                    using: AppTagTableIndex.indexByTag_app__onlyPK,
+                    using: AppTagTableIndex.indexByTagAppOnlyPK,
                 }
             );
             const apps = await Promise.all(appTags.map((tag) => context.batched.App.get(AppPK.parse(tag.app))));

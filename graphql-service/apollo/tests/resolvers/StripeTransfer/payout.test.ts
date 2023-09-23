@@ -1,5 +1,5 @@
 import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
-import { User } from "@/database/models";
+import { User } from "@/database/models/User";
 import { getUserBalance } from "@/functions/account";
 import { AccountActivityPK } from "@/pks/AccountActivityPK";
 import { UserPK } from "@/pks/UserPK";

@@ -1,4 +1,4 @@
-import { AccountActivity } from "@/database/models";
+import { AccountActivity } from "@/database/models/AccountActivity";
 import { RequestContext } from "../RequestContext";
 import { isCurrentUserPK } from "./utils";
 

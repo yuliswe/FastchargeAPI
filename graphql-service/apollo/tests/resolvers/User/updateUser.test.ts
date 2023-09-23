@@ -1,6 +1,7 @@
 import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
 import { GQLStripePaymentAcceptStatus } from "@/__generated__/resolvers-types";
-import { App, StripePaymentAccept, User, UserAppToken } from "@/database/models";
+import { App } from "@/database/models/App";
+import { User } from "@/database/models/User";
 import { Can } from "@/permissions";
 import { AppPK } from "@/pks/AppPK";
 import { UserPK } from "@/pks/UserPK";
@@ -21,9 +22,6 @@ const context: RequestContext = {
 let testMainUser: User;
 let testOtherUser: User;
 let testApp: App;
-let testUserAppToken: UserAppToken;
-let testStripePaymentAccept: StripePaymentAccept;
-
 beforeAll(async () => {
     testMainUser = await getOrCreateTestUser(context, { email: `testuser_${uuidv4()}@gmail_mock.com` });
     testOtherUser = await getOrCreateTestUser(context, { email: `testuser_${uuidv4()}@gmail_mock.com` });
@@ -31,13 +29,13 @@ beforeAll(async () => {
         name: `testapp-${uuidv4()}`,
         owner: UserPK.stringify(testMainUser),
     });
-    testUserAppToken = await context.batched.UserAppToken.create({
+    await context.batched.UserAppToken.create({
         app: AppPK.stringify(testApp),
         createdAt: Date.now(),
         subscriber: UserPK.stringify(testMainUser),
         signature: uuidv4(),
     });
-    testStripePaymentAccept = await context.batched.StripePaymentAccept.create({
+    await context.batched.StripePaymentAccept.create({
         amount: "100",
         currency: "usd",
         stripePaymentStatus: GQLStripePaymentAcceptStatus.Pending,

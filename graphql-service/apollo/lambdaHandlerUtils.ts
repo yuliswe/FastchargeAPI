@@ -1,7 +1,7 @@
 import { APIGatewayProxyEventBase, APIGatewayProxyEventHeaders, APIGatewayProxyResult } from "aws-lambda";
 import { Chalk } from "chalk";
 import { DefaultContextBatched, RequestService } from "./RequestContext";
-import { User, UserIndex } from "./database/models";
+import { User, UserTableIndex } from "./database/models/User";
 import { BadInput } from "./errors";
 import { createUserWithEmail } from "./functions/user";
 import { UserPK } from "./pks/UserPK";
@@ -112,7 +112,7 @@ export async function getOrCreateUserFromEmail(batched: DefaultContextBatched, e
             email,
         },
         {
-            using: UserIndex.IndexByEmailOnlyPk,
+            using: UserTableIndex.IndexByEmailOnlyPk,
         }
     );
     if (currentUser === null) {

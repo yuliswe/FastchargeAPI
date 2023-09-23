@@ -1,4 +1,4 @@
-import { StripePaymentAccept } from "@/database/models";
+import { StripePaymentAccept } from "@/database/models/StripePaymentAccept";
 import { UserPK } from "@/pks/UserPK";
 import { RequestContext } from "../RequestContext";
 import { isCurrentUserPK } from "./utils";

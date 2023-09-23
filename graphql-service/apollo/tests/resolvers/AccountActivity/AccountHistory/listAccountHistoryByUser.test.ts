@@ -1,4 +1,5 @@
-import { AccountHistory, User } from "@/database/models";
+import { AccountHistory } from "@/database/models/AccountHistory";
+import { User } from "@/database/models/User";
 import { AccountHistoryPK } from "@/pks/AccountHistoryPK";
 import { UserPK } from "@/pks/UserPK";
 import { testGQLClient } from "@/tests/test-sql-client";

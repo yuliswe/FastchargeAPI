@@ -1,6 +1,6 @@
 import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
 import { AppVisibility, GatewayMode } from "@/__generated__/gql/graphql";
-import { User } from "@/database/models";
+import { User } from "@/database/models/User";
 import { UserPK } from "@/pks/UserPK";
 import { testGQLClient } from "@/tests/test-sql-client";
 import { getOrCreateTestUser, simplifyGraphQLPromiseRejection } from "@/tests/test-utils";

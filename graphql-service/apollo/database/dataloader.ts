@@ -5,7 +5,7 @@ import { Item } from "dynamoose/dist/Item";
 import { Query as DynamogooseQuery, Scan as DynamogooseScan } from "dynamoose/dist/ItemRetriever";
 import hash from "object-hash";
 import { AlreadyExists, NotFound, UpdateContainsPrimaryKey } from "../errors";
-import { GQLPartial } from "./models";
+import { GQLPartial } from "./utils";
 
 type Optional<T> = T | undefined | null;
 type ConditionQuery<V> = {
@@ -162,7 +162,7 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
         // Other types are unbatchable
         const unbatchable: number[] = [];
         const bkType: number[] = [];
-        const resultArr: I[][] = Array(bkArray.length).fill([]);
+        const resultArr: I[][] = Array(bkArray.length).fill([]) as I[][];
         const hashKeyName = model.table().hashKey as keyof I & string;
         const rangeKeyName = model.table().rangeKey as (keyof I & string) | undefined;
         for (const [index, bk] of bkArray.entries()) {
@@ -306,16 +306,16 @@ function stripNullKeys<T extends object>(
         return object;
     }
     if (Array.isArray(object)) {
-        return object.map((item) => stripNullKeys(item, options)) as any;
+        return object.map((item) => stripNullKeys(item, options)) as T;
     }
     const data: Partial<T> = {};
     // eslint-disable-next-line prefer-const
-    for (let [key, val] of Object.entries(object)) {
+    for (let [key, val] of Object.entries(object) as [keyof T, any][]) {
         if (options?.deep) {
             val = stripNullKeys(val, options);
         }
         if (val !== undefined && val !== null) {
-            data[key as keyof T] = val;
+            data[key] = val as T[keyof T];
         }
     }
     if (options?.returnUndefined && Object.keys(data).length == 0) {
@@ -528,11 +528,15 @@ export class Batched<I extends Item, T_CreateProps extends GQLPartial<I>> {
      */
     async create(item: T_CreateProps): Promise<I> {
         const stripped = stripNullKeys(item) as Partial<I>;
-        const maxAttempts = 2;
+        const maxAttempts = 10;
         for (let retries = 0; retries < maxAttempts; retries++) {
             try {
                 this.clearCache();
-                return await this.model.create(stripped);
+                const result = await this.model.create(stripped);
+                if (retries > 0) {
+                    console.warn(`Retried ${retries} times to create ${this.model.name} ${JSON.stringify(item)}`);
+                }
+                return result;
             } catch (e) {
                 // We want to catch the case where the item already exists. DynamoDB
                 // in this case throws a ConditionalCheckFailedException. But it
@@ -541,11 +545,11 @@ export class Batched<I extends Item, T_CreateProps extends GQLPartial<I>> {
                 if (e instanceof ConditionalCheckFailedException) {
                     const query = extractKeysFromItems(this.model, stripped);
                     if (await this.exists(query)) {
-                        throw new AlreadyExists(this.model.name, JSON.stringify(item));
+                        throw new AlreadyExists(this.model.name, item);
                     } else if (retries < maxAttempts - 1) {
                         // The insert could fail when the item uses createdAt as
                         // a range key. In this case we just retry the insert.
-                        await sleep(2 ** retries);
+                        await sleep(2 ** retries * Math.random());
                         continue;
                     } else {
                         console.error(e);
@@ -571,6 +575,17 @@ export class Batched<I extends Item, T_CreateProps extends GQLPartial<I>> {
         this.clearCache();
         await item.delete();
         return item;
+    }
+
+    async deleteIfExists(keys: string | Partial<I>): Promise<I | null> {
+        try {
+            return await this.delete(keys);
+        } catch (e) {
+            if (e instanceof NotFound) {
+                return null;
+            }
+            throw e;
+        }
     }
 
     async deleteMany(query: Partial<I>, options?: BatchQueryOptions): Promise<I[]> {

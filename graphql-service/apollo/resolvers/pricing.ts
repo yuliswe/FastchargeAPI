@@ -1,3 +1,4 @@
+import { Pricing } from "@/database/models/Pricing";
 import { UserPK } from "@/pks/UserPK";
 import { RequestContext } from "../RequestContext";
 import {
@@ -8,7 +9,6 @@ import {
     GQLResolvers,
     PricingAvailability,
 } from "../__generated__/resolvers-types";
-import { Pricing } from "../database/models";
 import { BadInput, Denied, ImmutableResource, TooManyResources } from "../errors";
 import { Can } from "../permissions";
 import { AppPK } from "../pks/AppPK";

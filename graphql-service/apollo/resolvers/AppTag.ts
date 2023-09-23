@@ -1,13 +1,13 @@
+import { AppTag, AppTagModel } from "@/database/models/AppTag";
 import { AppTagPK } from "@/pks/AppTagPK";
 import { RequestContext } from "../RequestContext";
 import {
     GQLAppTagResolvers,
-    GQLAppTagUpdateAppTagArgs,
     GQLMutationCreateAppTagArgs,
+    GQLQueryGetAppTagArgs,
     GQLQueryListAppTagsByAppArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
-import { AppTag, AppTagModel } from "../database/models";
 import { Denied } from "../errors";
 import { updateAppSearchIndex } from "../functions/app";
 import { Can } from "../permissions";
@@ -23,22 +23,11 @@ export const AppTagResolvers: GQLResolvers & {
         createdAt: (parent: AppTag) => parent.createdAt,
         updatedAt: (parent: AppTag) => parent.updatedAt,
 
-        async updateAppTag(
-            parent: AppTag,
-            { tag }: GQLAppTagUpdateAppTagArgs,
-            context: RequestContext
-        ): Promise<AppTag> {
-            if (!(await Can.updateAppTag(parent, { tag }, context))) {
+        async deleteAppTag(parent: AppTag, args: {}, context: RequestContext): Promise<AppTag> {
+            if (!(await Can.deleteAppTag(parent, context))) {
                 throw new Denied();
             }
-            if (tag) {
-                await context.batched.AppTag.delete(parent);
-                return await context.batched.AppTag.create({
-                    app: parent.app,
-                    tag,
-                });
-            }
-            return parent;
+            return await context.batched.AppTag.delete(parent);
         },
     },
     Query: {
@@ -50,6 +39,10 @@ export const AppTagResolvers: GQLResolvers & {
             return await context.batched.AppTag.many({
                 app,
             });
+        },
+
+        async getAppTag(parent: {}, { pk }: GQLQueryGetAppTagArgs, context: RequestContext) {
+            return await context.batched.AppTag.get(AppTagPK.parse(pk));
         },
     },
     Mutation: {

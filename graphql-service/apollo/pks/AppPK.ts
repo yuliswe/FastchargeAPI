@@ -1,15 +1,17 @@
+import { PK } from "@/database/utils";
+
 export type AppPKContent = {
     name: string;
 };
 
 export class AppPK {
-    static parse(pk: string): AppPKContent {
+    static parse(pk: PK): AppPKContent {
         return {
             name: pk,
         };
     }
 
-    static stringify(item: AppPKContent): string {
+    static stringify(item: AppPKContent): PK {
         return item.name;
     }
 

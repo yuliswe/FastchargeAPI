@@ -1,6 +1,7 @@
+import { AccountActivity } from "@/database/models/AccountActivity";
+import { StripePaymentAccept } from "@/database/models/StripePaymentAccept";
 import { RequestContext } from "../RequestContext";
 import { AccountActivityReason, AccountActivityType } from "../__generated__/resolvers-types";
-import { AccountActivity, StripePaymentAccept } from "../database/models";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { StripePaymentAcceptPK } from "../pks/StripePaymentAccept";
 

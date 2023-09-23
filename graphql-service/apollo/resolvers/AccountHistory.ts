@@ -1,3 +1,4 @@
+import { AccountHistory, AccountHistoryModel } from "@/database/models/AccountHistory";
 import { UserPK } from "@/pks/UserPK";
 import { RequestContext } from "../RequestContext";
 import {
@@ -5,7 +6,6 @@ import {
     GQLQueryListAccountHistoryByUserArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
-import { AccountHistory, AccountHistoryModel } from "../database/models";
 import { Denied } from "../errors";
 import { Can } from "../permissions";
 import { AccountHistoryPK } from "../pks/AccountHistoryPK";

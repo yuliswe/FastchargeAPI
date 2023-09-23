@@ -3,7 +3,7 @@ import {
     GQLQuerySubscriptionArgs,
     GQLSubscribeUpdateSubscriptionArgs,
 } from "@/__generated__/resolvers-types";
-import { Subscription } from "@/database/models";
+import { Subscription } from "@/database/models/Subscription";
 import { RequestContext } from "../RequestContext";
 import { AppPK } from "../pks/AppPK";
 import { UserPK } from "../pks/UserPK";

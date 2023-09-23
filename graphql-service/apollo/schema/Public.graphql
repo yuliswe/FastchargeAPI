@@ -72,12 +72,13 @@ type Query {
     getStripeTransfer(pk: ID): StripeTransfer!
 
     ### App Tags
-    getAppTag(app: ID!, tag: String!): AppTag!
+    getAppTag(pk: ID!): AppTag!
+    getAppTagByTag(app: String!, tag: String!): AppTag!
     listAppTagsByApp(app: ID!): [AppTag!]!
     deleteAppTag(app: ID!, tag: String!): AppTag!
 
     ### Site Meta Data
-    listSiteMetaData(keys: [SiteMetaDataKey!]!): [SiteMetaData!]!
+    getSiteMetaData(key: SiteMetaDataKey!): SiteMetaData!
 
     ### Others
     checkUserIsAllowedForGatewayRequest(
@@ -98,7 +99,7 @@ type Query {
     stripeTransfer(pk: ID): StripeTransfer! @deprecated(reason: "Use getStripeTransfer() instead")
     appTags(tag: String): [AppTag!]! @deprecated(reason: "Use listAppTags() instead")
     accountActivity(pk: ID): AccountActivity! @deprecated(reason: "Use getAccountActivity() instead")
-    siteMetaData(keys: [SiteMetaDataKey!]!): [SiteMetaData!]! @deprecated(reason: "Use listSiteMetaData() instead")
+    siteMetaData(keys: [SiteMetaDataKey!]!): [SiteMetaData!]! @deprecated(reason: "Use getSiteMetaData() instead")
 }
 
 type Mutation {
@@ -503,12 +504,14 @@ type AppTag {
     createdAt: Timestamp!
     updatedAt: Timestamp!
 
-    updateAppTag(tag: String): AppTag!
+    deleteAppTag: AppTag!
 }
 
 type SiteMetaData {
     key: SiteMetaDataKey!
     value: Any!
+    createdAt: Timestamp!
+    updatedAt: Timestamp!
 
     deleteSiteMetaData: SiteMetaData!
     updateSiteMetaData(value: Any!): SiteMetaData!
@@ -518,6 +521,7 @@ enum SiteMetaDataKey {
     pricingPerRequestCharge
     pricingStripePercentageFee
     pricingStripeFlatFee
+    _testingKey
 }
 
 enum PricingAvailability {

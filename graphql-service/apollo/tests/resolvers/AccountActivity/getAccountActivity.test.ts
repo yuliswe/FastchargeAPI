@@ -1,7 +1,9 @@
 import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
 
 import { AccountActivityReason, AccountActivityType } from "@/__generated__/resolvers-types";
-import { AccountActivity, App, User } from "@/database/models";
+import { AccountActivity } from "@/database/models/AccountActivity";
+import { App } from "@/database/models/App";
+import { User } from "@/database/models/User";
 import { Can } from "@/permissions";
 import { AccountActivityPK } from "@/pks/AccountActivityPK";
 import { AppPK } from "@/pks/AppPK";

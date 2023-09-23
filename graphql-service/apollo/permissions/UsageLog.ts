@@ -1,4 +1,4 @@
-import { UsageLog } from "@/database/models";
+import { UsageLog } from "@/database/models/UsageLog";
 import { UserPK } from "@/pks/UserPK";
 import { RequestContext } from "../RequestContext";
 

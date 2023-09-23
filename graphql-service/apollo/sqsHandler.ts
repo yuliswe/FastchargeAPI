@@ -42,7 +42,7 @@ const handle = startServerAndCreateLambdaHandler<RequestHandler<SQSRecord, HTTPG
             // I'm not sure why when the graphl query success, the status is undefined
             if (response.status === 200 || response.status == undefined) {
                 if (response.body && response.body.kind === "complete") {
-                    const body = JSON.parse(response.body.string);
+                    const body = JSON.parse(response.body.string) as { errors: any };
                     if (body.errors) {
                         console.error(
                             chalk.red(
@@ -66,7 +66,7 @@ const handle = startServerAndCreateLambdaHandler<RequestHandler<SQSRecord, HTTPG
                 throw new Error("Non-200 response to SQSGraphQLClient:\n" + JSON.stringify(response, null, 2));
             }
         },
-        toErrorResult(error: any) {
+        toErrorResult(error: Error) {
             console.error(chalk.red(error.toString()));
             throw error;
         },
@@ -137,7 +137,7 @@ export async function handSendMessageCommandData(command: SendMessageCommandInpu
             eventSourceARN: "",
             awsRegion: "",
         },
-        {} as any,
+        {} as LambdaContext,
         (err, result) => {
             // nothing
         }

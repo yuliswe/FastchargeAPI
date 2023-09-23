@@ -1,11 +1,9 @@
-import { Chalk } from "chalk";
+import { UsageLog } from "@/database/models/UsageLog";
+import { UsageSummary } from "@/database/models/UsageSummary";
 import { Item } from "dynamoose/dist/Item";
 import { RequestContext } from "../RequestContext";
 import { UsageLogStatus } from "../__generated__/resolvers-types";
-import { UsageLog, UsageSummary } from "../database/models";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
-
-const chalk = new Chalk({ level: 3 });
 
 /**
  * Create a UsageSummary for the given user's usage logs that are not collected.

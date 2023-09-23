@@ -27,7 +27,7 @@ const jestConfig: JestConfigWithTsJest = {
     modulePathIgnorePatterns: ["dist"],
     testTimeout: 120_000,
     coverageDirectory: ".coverage",
-    coverageReporters: ["text", "lcov"],
+    coverageReporters: ["lcov"],
     maxWorkers: "75%",
 };
 

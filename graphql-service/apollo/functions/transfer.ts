@@ -1,7 +1,8 @@
+import { AccountActivity } from "@/database/models/AccountActivity";
+import { StripeTransfer } from "@/database/models/StripeTransfer";
 import Decimal from "decimal.js-light";
 import { RequestContext } from "../RequestContext";
 import { AccountActivityReason, AccountActivityType } from "../__generated__/resolvers-types";
-import { AccountActivity, StripeTransfer } from "../database/models";
 import { BadInput } from "../errors";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { StripeTransferPK } from "../pks/StripeTransferPK";
