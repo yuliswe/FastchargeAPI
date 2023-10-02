@@ -14,14 +14,14 @@ export const SiteMetaDataTableSchema = new dynamoose.Schema(
 );
 
 export class SiteMetaData extends Item {
-    key: SiteMetaDataKey;
+    key: SiteMetaDataKey | string;
     value: unknown;
     createdAt: number;
     updatedAt: number;
 }
 
 export type SiteMetaDataCreateProps = {
-    key: SiteMetaDataKey;
+    key: SiteMetaDataKey | string;
     value: unknown;
 } & GQLPartial<SiteMetaData>;
 

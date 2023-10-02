@@ -2,13 +2,13 @@ import { AccountActivity, AccountActivityModel } from "@/database/models/Account
 import { User } from "@/database/models/User";
 import { GraphQLResolveInfo } from "graphql";
 import { RequestContext } from "../RequestContext";
-import { QueryAccountActivityArgs } from "../__generated__/gql/graphql";
 import {
     GQLAccountActivityResolvers,
     GQLMutationCreateAccountActivityArgs,
+    GQLQueryGetAccountActivityArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
-import { BadInput, Denied } from "../errors";
+import { Denied } from "../errors";
 import { Can } from "../permissions";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { AppPK } from "../pks/AppPK";
@@ -96,12 +96,9 @@ export const AccountActivityResolvers: GQLResolvers & {
         // },
         async getAccountActivity(
             parent: {},
-            { pk }: QueryAccountActivityArgs,
+            { pk }: GQLQueryGetAccountActivityArgs,
             context: RequestContext
         ): Promise<AccountActivity> {
-            if (!pk) {
-                throw new BadInput("pk is required");
-            }
             const item = await context.batched.AccountActivity.get(AccountActivityPK.parse(pk));
             if (!(await Can.queryAccountActivity(item, context))) {
                 throw new Denied();

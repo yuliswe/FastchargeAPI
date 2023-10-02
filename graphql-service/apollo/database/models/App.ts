@@ -1,7 +1,10 @@
+import { AppVisibility } from "@/__generated__/gql/graphql";
 import { GatewayMode } from "@/__generated__/resolvers-types";
 import { validateAppName } from "@/functions/app";
 import dynamoose from "dynamoose";
 import { GQLPartial, Item, tableConfigs } from "../utils";
+
+export { AppVisibility, GatewayMode };
 
 export const AppTableSchema = new dynamoose.Schema(
     {
@@ -34,7 +37,6 @@ export const AppTableSchema = new dynamoose.Schema(
     },
     { timestamps: true }
 );
-export type AppVisibility = "public" | "private";
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
 export class App extends Item {

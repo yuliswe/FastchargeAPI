@@ -3,6 +3,8 @@ import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
 import { GQLPartial, PK, String_Required_NotEmpty, defaultCreatedAt, tableConfigs } from "../utils";
 
+export { PricingAvailability };
+
 export const PricingTableSchema = new dynamoose.Schema(
     {
         app: { hashKey: true, ...String_Required_NotEmpty("app") },
@@ -55,4 +57,5 @@ export type PricingCreateProps = {
     app: PK;
     name: string;
 } & GQLPartial<Pricing>;
+
 export const PricingModel = dynamoose.model<Pricing>("Pricing", PricingTableSchema, { ...tableConfigs });

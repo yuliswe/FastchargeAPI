@@ -1,3 +1,4 @@
+import { StripePaymentAcceptStatus } from "@/__generated__/gql/graphql";
 import { AccountActivity } from "@/database/models/AccountActivity";
 import { StripePaymentAccept } from "@/database/models/StripePaymentAccept";
 import { RequestContext } from "../RequestContext";
@@ -28,10 +29,14 @@ export async function generateAccountActivityForStripePayment(
     stripePaymentAccept = await context.batched.StripePaymentAccept.update(stripePaymentAccept, {
         stripeSessionObject: stripeSessionObject,
         accountActivity: AccountActivityPK.stringify(activity),
-        status: "settled",
+        status: StripePaymentAcceptStatus.Settled,
     });
     return {
         createdAccountActivity: activity,
         updatedStripePaymentAccept: stripePaymentAccept,
     };
+}
+
+export function getDedupIdForSettleStripePaymentAcceptSQS(stripePaymentAccept: StripePaymentAccept) {
+    return ("settleStripePaymentAccept-" + StripePaymentAcceptPK.stringify(stripePaymentAccept)).slice(0, 128);
 }

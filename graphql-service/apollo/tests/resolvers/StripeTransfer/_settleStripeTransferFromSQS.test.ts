@@ -1,0 +1,173 @@
+import { StripeTransferStatus } from "@/__generated__/resolvers-types";
+import { StripeTransfer } from "@/database/models/StripeTransfer";
+import { User } from "@/database/models/User";
+import { getSQSDedupIdForSettleStripeTransfer } from "@/functions/transfer";
+import { StripeTransferPK } from "@/pks/StripeTransferPK";
+import { UserPK } from "@/pks/UserPK";
+import { SQSQueueName } from "@/sqsClient";
+import {
+    addMoneyForUser,
+    baseRequestContext as context,
+    getOrCreateTestUser,
+    getUserBalanceNoCache,
+    simplifyGraphQLPromiseRejection,
+} from "@/tests/test-utils";
+import { testGQLClient, testGQLClientForSQS } from "@/tests/testGQLClient";
+import { graphql } from "@/typed-graphql";
+import { beforeEach, expect } from "@jest/globals";
+import * as uuid from "uuid";
+
+describe("_settleStripeTransferFromSQS", () => {
+    let testOwnerUser: User;
+    let testStripeTransfer: StripeTransfer;
+
+    beforeEach(async () => {
+        testOwnerUser = await getOrCreateTestUser(context, { email: "testuser" + uuid.v4() });
+        testStripeTransfer = await context.batched.StripeTransfer.create({
+            receiver: UserPK.stringify(testOwnerUser),
+            withdrawAmount: "10",
+            receiveAmount: "10",
+            status: StripeTransferStatus.Created,
+            transferAt: Date.now(),
+        });
+        await addMoneyForUser({ context, user: UserPK.stringify(testOwnerUser), amount: "100" });
+    });
+    const _settleStripeTransferFromSQSMutation = graphql(`
+        mutation Test_settleStripeTransferFromSQS($pk: ID!) {
+            getStripeTransfer(pk: $pk) {
+                _settleStripeTransferFromSQS {
+                    pk
+                    status
+                }
+            }
+        }
+    `);
+
+    function getVariables() {
+        return {
+            pk: StripeTransferPK.stringify(testStripeTransfer),
+        };
+    }
+
+    test("Can be called from SQS", async () => {
+        const promise = testGQLClientForSQS({
+            queueName: SQSQueueName.BillingQueue,
+            groupId: UserPK.stringify(testOwnerUser),
+            dedupId: getSQSDedupIdForSettleStripeTransfer(testStripeTransfer),
+        }).mutate({
+            mutation: _settleStripeTransferFromSQSMutation,
+            variables: getVariables(),
+        });
+        await expect(promise).resolves.toMatchObject({
+            data: {
+                getStripeTransfer: {
+                    __typename: "StripeTransfer",
+                    _settleStripeTransferFromSQS: {
+                        __typename: "StripeTransfer",
+                        pk: StripeTransferPK.stringify(testStripeTransfer),
+                        status: StripeTransferStatus.PendingTransfer,
+                    },
+                },
+            },
+        });
+    });
+
+    test("If user balance is insufficient, update status to FailedDueToInsufficientBalance", async () => {
+        await context.batched.StripeTransfer.update(testStripeTransfer, {
+            withdrawAmount: "1000000",
+            receiveAmount: "1000000",
+        });
+        const oldBalance = await getUserBalanceNoCache(context, testOwnerUser);
+        const promise = testGQLClientForSQS({
+            queueName: SQSQueueName.BillingQueue,
+            groupId: UserPK.stringify(testOwnerUser),
+            dedupId: getSQSDedupIdForSettleStripeTransfer(testStripeTransfer),
+        }).mutate({
+            mutation: _settleStripeTransferFromSQSMutation,
+            variables: getVariables(),
+        });
+        await expect(promise).resolves.toMatchObject({
+            data: {
+                getStripeTransfer: {
+                    __typename: "StripeTransfer",
+                    _settleStripeTransferFromSQS: {
+                        __typename: "StripeTransfer",
+                        pk: StripeTransferPK.stringify(testStripeTransfer),
+                        status: StripeTransferStatus.FailedDueToInsufficientBalance,
+                    },
+                },
+            },
+        });
+        const newBalance = await getUserBalanceNoCache(context, testOwnerUser);
+        expect(newBalance).toEqual(oldBalance);
+    });
+
+    test("Should reject if not called from SQS", async () => {
+        const promise = testGQLClient({ isServiceRequest: true }).mutate({
+            mutation: _settleStripeTransferFromSQSMutation,
+            variables: getVariables(),
+        });
+        await expect(simplifyGraphQLPromiseRejection(promise)).rejects.toMatchObject([
+            {
+                code: "NOT_ACCEPTED",
+                message: "Must be called from SQS",
+                path: "getStripeTransfer._settleStripeTransferFromSQS",
+            },
+        ]);
+    });
+
+    test("Should reject is not called on the billing queue", async () => {
+        const promise = testGQLClientForSQS({
+            queueName: SQSQueueName.UsageLogQueue,
+            groupId: UserPK.stringify(testOwnerUser),
+            dedupId: getSQSDedupIdForSettleStripeTransfer(testStripeTransfer),
+        }).mutate({
+            mutation: _settleStripeTransferFromSQSMutation,
+            variables: getVariables(),
+        });
+        await expect(simplifyGraphQLPromiseRejection(promise)).rejects.toMatchObject([
+            {
+                code: "NOT_ACCEPTED",
+                message:
+                    'Must be called on SQS with QueueUrl = "graphql-service-billing-queue.fifo". Got: graphql-service-usage-log-queue.fifo',
+                path: "getStripeTransfer._settleStripeTransferFromSQS",
+            },
+        ]);
+    });
+
+    test("Should reject if group id is not user pk", async () => {
+        const promise = testGQLClientForSQS({
+            queueName: SQSQueueName.BillingQueue,
+            groupId: "xxx",
+            dedupId: getSQSDedupIdForSettleStripeTransfer(testStripeTransfer),
+        }).mutate({
+            mutation: _settleStripeTransferFromSQSMutation,
+            variables: getVariables(),
+        });
+        await expect(simplifyGraphQLPromiseRejection(promise)).rejects.toMatchObject([
+            {
+                code: "NOT_ACCEPTED",
+                message: expect.stringContaining("Must be called on SQS with MessageGroupId = "),
+                path: "getStripeTransfer._settleStripeTransferFromSQS",
+            },
+        ]);
+    });
+
+    test("Should reject if dedup id is incorrect", async () => {
+        const promise = testGQLClientForSQS({
+            queueName: SQSQueueName.BillingQueue,
+            groupId: UserPK.stringify(testOwnerUser),
+            dedupId: "XXX",
+        }).mutate({
+            mutation: _settleStripeTransferFromSQSMutation,
+            variables: getVariables(),
+        });
+        await expect(simplifyGraphQLPromiseRejection(promise)).rejects.toMatchObject([
+            {
+                code: "NOT_ACCEPTED",
+                message: expect.stringContaining("Must be called on SQS with MessageDeduplicationId = "),
+                path: "getStripeTransfer._settleStripeTransferFromSQS",
+            },
+        ]);
+    });
+});

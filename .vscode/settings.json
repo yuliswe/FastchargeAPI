@@ -70,5 +70,8 @@
   ],
   "search.exclude": {
     "**/.coverage": true
+  },
+  "files.watcherExclude": {
+    "**/dist/**": true
   }
 }

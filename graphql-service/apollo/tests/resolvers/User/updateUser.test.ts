@@ -1,12 +1,12 @@
 import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
-import { GQLStripePaymentAcceptStatus } from "@/__generated__/resolvers-types";
+import { Currency, StripePaymentAcceptStatus } from "@/__generated__/gql/graphql";
 import { App } from "@/database/models/App";
 import { User } from "@/database/models/User";
 import { Can } from "@/permissions";
 import { AppPK } from "@/pks/AppPK";
 import { UserPK } from "@/pks/UserPK";
-import { testGQLClient } from "@/tests/test-sql-client";
 import { getOrCreateTestUser, simplifyGraphQLPromiseRejection } from "@/tests/test-utils";
+import { testGQLClient } from "@/tests/testGQLClient";
 import { graphql } from "@/typed-graphql";
 import { beforeAll, describe, expect, jest, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
@@ -37,8 +37,8 @@ beforeAll(async () => {
     });
     await context.batched.StripePaymentAccept.create({
         amount: "100",
-        currency: "usd",
-        stripePaymentStatus: GQLStripePaymentAcceptStatus.Pending,
+        currency: Currency.Usd,
+        stripePaymentStatus: StripePaymentAcceptStatus.Pending,
         stripePaymentIntent: uuidv4(),
         stripeSessionId: uuidv4(),
         stripeSessionObject: {},

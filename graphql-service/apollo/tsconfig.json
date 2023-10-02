@@ -9,7 +9,7 @@
     "module": "ESNext",
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "types": ["node"],
+    "types": ["node", "jest"],
     "noImplicitAny": true,
     "noImplicitThis": true,
     "alwaysStrict": true,

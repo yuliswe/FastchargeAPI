@@ -1,6 +1,6 @@
 import { SendMessageCommandInput } from "@aws-sdk/client-sqs";
 import http from "http";
-import { handSendMessageCommandData } from "./sqsHandler";
+import { handSendMessageCommandData } from "./sqsHandlerUtils";
 const PORT = 4100;
 
 const server = http.createServer((req, res) => {

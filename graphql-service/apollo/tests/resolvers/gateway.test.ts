@@ -27,7 +27,7 @@ describe("Gateway API success access", () => {
 
     test("Prepare: Create test user and test app", async () => {
         testUser = await getOrCreateTestUser(context, { email: testUserEmail });
-        testApp = await context.batched.App.getOrCreate({ name: testAppName, owner: UserPK.stringify(testUser) });
+        testApp = await context.batched.App.createOverwrite({ name: testAppName, owner: UserPK.stringify(testUser) });
         context.sqsMessageGroupId = UserPK.stringify(testUser);
     });
 
@@ -63,7 +63,7 @@ describe("Gateway API success access", () => {
     });
 
     test("Prepration: Add monty to the account", async () => {
-        await addMoneyForUser(context, { user: UserPK.stringify(testUser), amount: "10" });
+        await addMoneyForUser({ user: UserPK.stringify(testUser), amount: "10", context });
     });
 
     test("Call checkUserIsAllowedForGatewayRequest", async () => {
@@ -91,7 +91,7 @@ describe("Test making an API request when not subscribed", () => {
 
     test("Prepare: Create test user and test app", async () => {
         testUser = await getOrCreateTestUser(context, { email: testUserEmail });
-        testApp = await context.batched.App.getOrCreate({ name: testAppName, owner: UserPK.stringify(testUser) });
+        testApp = await context.batched.App.createOverwrite({ name: testAppName, owner: UserPK.stringify(testUser) });
     });
 
     let pricingPK: string;
@@ -134,7 +134,7 @@ describe("Calling checkUserIsAllowedForGatewayRequest with an invalid app name s
 
     test("Prepare: Create test user and test app", async () => {
         testUser = await getOrCreateTestUser(context, { email: testUserEmail });
-        testApp = await context.batched.App.getOrCreate({ name: testAppName, owner: UserPK.stringify(testUser) });
+        testApp = await context.batched.App.createOverwrite({ name: testAppName, owner: UserPK.stringify(testUser) });
     });
 
     test("Call checkUserIsAllowedForGatewayRequest with invalid app", async () => {

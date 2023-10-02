@@ -30,6 +30,7 @@ import { UsageLog, UsageLogCreateProps, UsageLogModel } from "./database/models/
 import { UsageSummary, UsageSummaryCreateProps, UsageSummaryModel } from "./database/models/UsageSummary";
 import { User, UserCreateProps, UserModel } from "./database/models/User";
 import { UserAppToken, UserAppTokenCreateProps, UserAppTokenModel } from "./database/models/UserAppToken";
+import { SQSQueueName } from "./sqsClient";
 
 export type RequestService = "payment" | "gateway" | "internal";
 export interface RequestContext extends BaseContext {
@@ -41,7 +42,8 @@ export interface RequestContext extends BaseContext {
     batched: ReturnType<typeof createDefaultContextBatched>;
     isSQSMessage: boolean;
     sqsMessageGroupId?: string;
-    sqsQueueName?: string;
+    sqsQueueName?: SQSQueueName;
+    sqsMessageDeduplicationId?: string;
 }
 
 // Add more models here when new models are created

@@ -1,8 +1,9 @@
 import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
-import { StripePaymentAccept, User, UserTableIndex } from "@/database/models";
+import { StripePaymentAccept } from "@/database/models/StripePaymentAccept";
+import { User, UserTableIndex } from "@/database/models/User";
 import { UserPK } from "@/pks/UserPK";
 import { baseDomain } from "@/runtime-config";
-import { SQSQueueUrl, sqsGQLClient } from "@/sqsClient";
+import { SQSQueueName, sqsGQLClient } from "@/sqsClient";
 import { gql } from "@apollo/client";
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
@@ -18,6 +19,7 @@ import {
 import { getPaymentAcceptedEmail } from "../email-templates/payment-accepted";
 import { LambdaEventV2, LambdaHandlerV2 } from "../utils/LambdaContext";
 import { parseStripeWebhookEvent } from "../utils/stripe-client";
+import { StripePaymentAcceptStatus } from "@/__generated__/resolvers-types";
 
 const chalk = new Chalk({ level: 3 });
 
@@ -123,7 +125,7 @@ export async function handle(
                 user: UserPK.stringify(user),
             });
             await context.batched.StripePaymentAccept.update(paymentAccept, {
-                status: "expired",
+                status: StripePaymentAcceptStatus.Expired,
                 stripePaymentStatus: "expired",
             });
             return {
@@ -176,7 +178,7 @@ async function createAndFufillOrder({
     amount: string;
 }): Promise<void> {
     const billingQueueClient = sqsGQLClient({
-        queueUrl: SQSQueueUrl.BillingQueue,
+        queueName: SQSQueueName.BillingQueue,
         groupId: UserPK.stringify(user),
         dedupId: `createAndFufillOrder-${UserPK.stringify(user)}-${md5(session.id)}`,
     });
@@ -184,7 +186,7 @@ async function createAndFufillOrder({
         mutation: gql(`
             mutation CreateStripePaymentAcceptAndSettle($user: ID!, $amount: NonNegativeDecimal!, $stripeSessionId: String!, $stripeSessionObject: String!, $stripePaymentIntent: String!, $stripePaymentStatus: String!) {
                 createStripePaymentAccept(user: $user, amount: $amount, stripeSessionId: $stripeSessionId, stripeSessionObject: $stripeSessionObject, stripePaymentIntent: $stripePaymentIntent, stripePaymentStatus: $stripePaymentStatus) {
-                    settlePayment {
+                    settleStripePaymentAccept {
                         status
                     }
                 }
@@ -216,7 +218,7 @@ async function createOrder({
 }): Promise<void> {
     // console.log(chalk.yellow("Creating order"), email, amount, session);
     const billingQueueClient = sqsGQLClient({
-        queueUrl: SQSQueueUrl.BillingQueue,
+        queueName: SQSQueueName.BillingQueue,
         groupId: UserPK.stringify(user),
         dedupId: `createOrder-${UserPK.stringify(user)}-${session.id}`,
     });
@@ -246,7 +248,7 @@ async function fulfillOrder(session: StripeSessionObject, paymentAccept: StripeP
     // console.log(chalk.yellow("Fulfilling order"), paymentAccept, session);
     // Settling the payment must be done on the billing queue
     const billingQueueClient = sqsGQLClient({
-        queueUrl: SQSQueueUrl.BillingQueue,
+        queueName: SQSQueueName.BillingQueue,
         groupId: paymentAccept.user,
         dedupId: md5(`${paymentAccept.user}-fulfillOrder-${session.id}`),
     });
@@ -257,8 +259,8 @@ async function fulfillOrder(session: StripeSessionObject, paymentAccept: StripeP
         query: gql(`
             query FulfillUserStripePaymentAccept($user: ID!, $stripeSessionId: String!, $stripeSessionObject: String!, $stripePaymentStatus: String!, $stripePaymentIntent: String!,
                ) {
-                getStripePaymentAccept(user: $user, stripeSessionId: $stripeSessionId) {
-                    settlePayment(stripeSessionObject: $stripeSessionObject, stripePaymentStatus:$stripePaymentStatus, stripePaymentIntent: $stripePaymentIntent) {
+                getStripePaymentAcceptByStripeSessionId(user: $user, stripeSessionId: $stripeSessionId) {
+                    settleStripePaymentAccept(stripeSessionObject: $stripeSessionObject, stripePaymentStatus:$stripePaymentStatus, stripePaymentIntent: $stripePaymentIntent) {
                         stripePaymentStatus
                     }
                 }

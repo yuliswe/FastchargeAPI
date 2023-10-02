@@ -109,8 +109,8 @@ describe(`Test that the creation of StripeTransfer is properly queued, by making
     let testUser: User;
     let userBalance: Decimal;
 
-    const withdrawlAmount = "3";
-    const requiredBalance = new Decimal(testSize).times(withdrawlAmount);
+    const withdrawAmount = "3";
+    const requiredBalance = new Decimal(testSize).times(withdrawAmount);
 
     beforeAll(async () => {
         testUser = await getOrCreateTestUser(context, { email: testUserEmail });

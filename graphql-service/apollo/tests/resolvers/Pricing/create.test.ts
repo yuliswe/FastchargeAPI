@@ -5,8 +5,8 @@ import { App } from "@/database/models/App";
 import { User } from "@/database/models/User";
 import { AppPK } from "@/pks/AppPK";
 import { UserPK } from "@/pks/UserPK";
-import { testGQLClient } from "@/tests/test-sql-client";
 import { getOrCreateTestUser, simplifyGraphQLPromiseRejection } from "@/tests/test-utils";
+import { testGQLClient } from "@/tests/testGQLClient";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
 
@@ -28,7 +28,7 @@ beforeEach(async () => {
     const testOtherUserEmail = `testuser_otheruser_${uuidv4()}@gmail_mock.com`;
     testAppOwner = await getOrCreateTestUser(context, { email: testAppOwnerEmail });
     testOtherUser = await getOrCreateTestUser(context, { email: testOtherUserEmail });
-    testApp = await context.batched.App.getOrCreate({ name: testAppName, owner: UserPK.stringify(testAppOwner) });
+    testApp = await context.batched.App.createOverwrite({ name: testAppName, owner: UserPK.stringify(testAppOwner) });
 });
 
 const createPricingMutation = graphql(`

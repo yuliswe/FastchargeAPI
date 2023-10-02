@@ -7,6 +7,8 @@ import { BadInput } from "../errors";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { StripeTransferPK } from "../pks/StripeTransferPK";
 import { enforceCalledFromQueue } from "./aws";
+import { getRecivableAmountForWithdrawal } from "./fees";
+import { PK } from "@/database/utils";
 
 /**
  * Takes a StripeTransfer, and create AccountActivities for the transfer,
@@ -61,4 +63,20 @@ export async function createAccountActivitiesForTransfer(
         accountActivity: payoutActivity,
         feeActivity: feeActivity,
     };
+}
+
+export function getSQSDedupIdForSettleStripeTransfer(stripeTransfer: StripeTransfer) {
+    return ("settleStripeTransfer-" + StripeTransferPK.stringify(stripeTransfer)).slice(0, 128);
+}
+
+export function createStripeTransferAndSettleOnSQS({
+    receiver,
+    withdrawalAmount,
+    context,
+}: {
+    receiver: PK;
+    withdrawalAmount: Decimal;
+    context: RequestContext;
+}) {
+    const receivableAmount = getRecivableAmountForWithdrawal(withdrawalAmount, context);
 }

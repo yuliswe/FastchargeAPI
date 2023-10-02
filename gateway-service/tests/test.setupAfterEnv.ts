@@ -1,4 +1,4 @@
-import { mockSQS } from "@/MockSQS";
+import { mockSQS } from "@/tests/MockSQS";
 import { afterEach, jest } from "@jest/globals";
 
 if ((process.env.LOG || "0") !== "1") {

@@ -1,21 +1,17 @@
-import { Chalk } from "chalk";
 import Decimal from "decimal.js-light";
-import { Item } from "dynamoose/dist/Item";
 import { RequestContext } from "../RequestContext";
 
 import { AccountActivity } from "@/database/models/AccountActivity";
 import { AccountHistory } from "@/database/models/AccountHistory";
 import { graphql } from "../__generated__/gql";
-import { AccountActivityStatus } from "../__generated__/resolvers-types";
-import { AlreadyExists } from "../errors";
+import { AccountActivityStatus, AccountActivityType } from "../__generated__/resolvers-types";
 import { AccountHistoryPK } from "../pks/AccountHistoryPK";
-import { SQSQueueUrl, sqsGQLClient } from "../sqsClient";
+import { SQSQueueName, sqsGQLClient } from "../sqsClient";
 import { enforceCalledFromQueue } from "./aws";
-
-const chalk = new Chalk({ level: 3 });
+import { settlePromisesInBatches } from "./promise";
 
 export async function settleAccountActivitiesOnSQS(context: RequestContext, accountUser: string) {
-    const client = sqsGQLClient({ queueUrl: SQSQueueUrl.BillingQueue, dedupId: accountUser, groupId: accountUser });
+    const client = sqsGQLClient({ queueName: SQSQueueName.BillingQueue, dedupId: accountUser, groupId: accountUser });
     const result = await client.query({
         query: graphql(`
             query SettleAccountActivitiesOnSQS($user: ID!) {
@@ -86,63 +82,34 @@ export async function settleAccountActivities(
         }
     );
 
-    let accountHistory: AccountHistory | undefined = undefined;
-    try {
-        accountHistory = await context.batched.AccountHistory.create({
-            user: accountUser,
-            startingBalance: previous == null ? "0" : previous.closingBalance,
-            closingBalance: previous == null ? "0" : previous.closingBalance,
-            startingTime: previous == null ? 0 : previous.closingTime,
-            closingTime,
-            sequentialId: previous == null ? 0 : previous.sequentialId + 1,
-        });
-    } catch (e) {
-        if (e instanceof AlreadyExists) {
-            if (process.env.UNSAFE_BILLING == "1") {
-                return null;
-            }
-            throw new Error(
-                chalk.red(
-                    "AccountHistory already exists. If you are running in production, this is a bug. " +
-                        "settleAccountActivities() might be called from multiple workers, while it is not multi-workers safe. " +
-                        "If you are running in development, this is likely to be ok. " +
-                        "You can set the UNSAFE_BILLING=1 environment variable to bypass this check."
-                )
-            );
-        }
-        throw e;
-    }
+    const accountHistory = await context.batched.AccountHistory.create({
+        user: accountUser,
+        startingBalance: previous == null ? "0" : previous.closingBalance,
+        closingBalance: previous == null ? "0" : previous.closingBalance,
+        startingTime: previous == null ? 0 : previous.closingTime,
+        closingTime,
+        sequentialId: previous == null ? 0 : previous.sequentialId + 1,
+    });
 
     let balance = new Decimal(accountHistory.startingBalance);
 
-    const promises: Promise<Item>[] = [];
-    for (const activity of activities) {
-        activity.status = AccountActivityStatus.Settled;
-        activity.accountHistory = AccountHistoryPK.stringify(accountHistory);
-        if (activity.type === "credit") {
-            balance = balance.sub(activity.amount);
-        } else if (activity.type === "debit") {
-            balance = balance.add(activity.amount);
-        }
-        promises.push(activity.save());
-    }
+    const promises = activities.map((activity) =>
+        context.batched.AccountActivity.update(activity, {
+            status: AccountActivityStatus.Settled,
+            accountHistory: AccountHistoryPK.stringify(accountHistory),
+        }).then((activity) => {
+            // Only update the balance when successfully settled.
+            if (activity.type === AccountActivityType.Credit) {
+                balance = balance.sub(activity.amount);
+            } else if (activity.type === AccountActivityType.Debit) {
+                balance = balance.add(activity.amount);
+            }
+            return activity;
+        })
+    );
 
-    accountHistory.closingBalance = balance.toString();
-    promises.push(accountHistory.save());
-
-    const results: Item[] = [];
-    const errors: string[] = [];
-    for (const result of await Promise.allSettled(promises)) {
-        if (result.status === "rejected") {
-            console.error("Error when creating AccountHistory:", result.reason);
-            errors.push(result.reason as string);
-        } else {
-            results.push(result.value);
-        }
-    }
-    if (errors.length > 0) {
-        throw new Error("Error when creating AccountHistory.");
-    }
+    await settlePromisesInBatches(promises, { batchSize: 10 });
+    await context.batched.AccountHistory.update(accountHistory, { closingBalance: balance.toString() });
 
     return {
         previousAccountHistory: previous,

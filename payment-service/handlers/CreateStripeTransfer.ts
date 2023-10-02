@@ -1,8 +1,8 @@
 import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
-import { SiteMetaDataKey } from "@/__generated__/resolvers-types";
+import { Currency, SiteMetaDataKey } from "@/__generated__/resolvers-types";
 import { getUserBalance } from "@/functions/account";
 import { UserPK } from "@/pks/UserPK";
-import { SQSQueueUrl, sqsGQLClient } from "@/sqsClient";
+import { SQSQueueName, sqsGQLClient } from "@/sqsClient";
 import { gql } from "@apollo/client";
 import { APIGatewayProxyStructuredResultV2, Context as LambdaContext } from "aws-lambda";
 import { Chalk } from "chalk";
@@ -46,7 +46,7 @@ export const context: RequestContext = {
  *      FastchargeAPI account.
  *   2. This API checks if the API publisher has enough money in their
  *      FastchargeAPI account, as a sanity check. However, because the API could
- *      be called parallelly, the balance retrieved could be not trusted.
+ *      be called parallelly, the balance retrieved must be not trusted.
  *   3. This API puts a createStripeTransfer mutation in the GraphQL queue, which
  *      is processed sequentially. The graphql server upon receiving the command,
  *      checks again if the API publisher has enough money in their
@@ -64,10 +64,10 @@ export async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStruc
     }
     const withdraw = bodyData!.withdraw;
     const stripeFeePercentage = new Decimal(
-        (await context.batched.SiteMetaData.get({ key: SiteMetaDataKey.PricingStripePercentageFee })).value
+        (await context.batched.SiteMetaData.get({ key: SiteMetaDataKey.PricingStripePercentageFee })).value as string
     );
     const stripeFlatFee = new Decimal(
-        (await context.batched.SiteMetaData.get({ key: SiteMetaDataKey.PricingStripeFlatFee })).value
+        (await context.batched.SiteMetaData.get({ key: SiteMetaDataKey.PricingStripeFlatFee })).value as string
     );
     const totalStripe = stripeFlatFee.add(withdraw.mul(stripeFeePercentage));
     const receivable = withdraw.minus(totalStripe);
@@ -91,7 +91,7 @@ export async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStruc
     }
 
     const billingQueueClient = sqsGQLClient({
-        queueUrl: SQSQueueUrl.BillingQueue,
+        queueName: SQSQueueName.BillingQueue,
         groupId: UserPK.stringify(user),
         dedupId: `createStripeTransfer-${UserPK.stringify(user)}-${event.requestContext.requestId}`,
     });
@@ -101,12 +101,13 @@ export async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStruc
                 $user: ID!
                 $withdrawAmount: NonNegativeDecimal!
                 $receiveAmount: NonNegativeDecimal!
+                $currency: Currency!
             ) {
                 createStripeTransfer(
                     receiver: $user, 
                     withdrawAmount: $withdrawAmount,
                     receiveAmount: $receiveAmount,
-                    currency: "usd",
+                    currency: $currency,
                 ) {
                     settleStripeTransfer {
                         createdAt
@@ -118,6 +119,7 @@ export async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStruc
             user: UserPK.stringify(user),
             withdrawAmount: withdraw.toString(),
             receiveAmount: receivable.toString(),
+            currency: Currency.Usd,
         },
     });
 
@@ -157,7 +159,7 @@ function parseBody(event: LambdaEventV2): {
     errorResponse?: LambdaResultV2;
 } {
     try {
-        const { withdraw: withdrawStr } = JSON.parse(event.body ?? "{}");
+        const { withdraw: withdrawStr } = JSON.parse(event.body ?? "{}") as { withdraw: string };
         if (!withdrawStr) {
             return {
                 errorResponse: {

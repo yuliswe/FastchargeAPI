@@ -4,7 +4,7 @@ import { createDefaultContextBatched } from "../RequestContext";
 
 import { graphql } from "@/typed-graphql";
 import { AccountActivityStatus, GQLAccountActivityIndex } from "../__generated__/resolvers-types";
-import { SQSQueueUrl, sqsGQLClient } from "../sqsClient";
+import { SQSQueueName, sqsGQLClient } from "../sqsClient";
 
 const chalk = new Chalk({ level: 3 });
 
@@ -27,7 +27,7 @@ async function handle(event: EventBridgeEvent<string, {}>, context: never, callb
     // Important Note: You must process the account activities in the Billing
     // queue, even though it is attempting to write to the AccountActivity
     // directly using the DB APi here.
-    const sqsClient = sqsGQLClient({ queueUrl: SQSQueueUrl.BillingQueue });
+    const sqsClient = sqsGQLClient({ queueName: SQSQueueName.BillingQueue });
 
     for (const user of users) {
         try {

@@ -1,6 +1,6 @@
 import { User } from "@/database/models/User";
-import { testGQLClient } from "@/tests/test-sql-client";
 import { baseRequestContext as context, getOrCreateTestUser } from "@/tests/test-utils";
+import { testGQLClient } from "@/tests/testGQLClient";
 import { graphql } from "@/typed-graphql";
 import { beforeAll, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";

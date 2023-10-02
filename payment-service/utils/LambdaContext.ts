@@ -1,5 +1,5 @@
 import { createDefaultContextBatched } from "@/RequestContext";
-import { User, UserTableIndex } from "@/database/models";
+import { User, UserTableIndex } from "@/database/models/User";
 import { UserPK } from "@/pks/UserPK";
 import {
     APIGatewayProxyEventV2WithLambdaAuthorizer,

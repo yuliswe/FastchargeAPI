@@ -57,6 +57,10 @@ module.exports = {
                         group: ["node-fetch"],
                         message: "Did you mean to import it from @/RequestContext?",
                     },
+                    {
+                        group: ["@/lambdaHandler", "**/lambdaHandler", "@/sqsHandler", "**/sqsHandler"],
+                        message: "Do not import the entrypoint module.",
+                    },
                 ],
             },
         ],

@@ -3,7 +3,8 @@ import { RequestContext } from "../RequestContext";
 import { PricingAvailability } from "../__generated__/gql/graphql";
 import {
     GQLMutationCreateSubscriptionArgs,
-    GQLQuerySubscriptionArgs,
+    GQLQueryGetSubscriptionArgs,
+    GQLQueryGetSubscriptionByAppSubscriberArgs,
     GQLResolvers,
     GQLSubscribeUpdateSubscriptionArgs,
 } from "../__generated__/resolvers-types";
@@ -72,17 +73,23 @@ export const SubscriptionResolvers: GQLResolvers = {
         },
     },
     Query: {
-        async getSubscription(parent: {}, { pk, subscriber, app }: GQLQuerySubscriptionArgs, context: RequestContext) {
-            let subscription: Subscription;
-            if (pk) {
-                subscription = await context.batched.Subscription.get(SubscriptionPK.parse(pk));
-            } else {
-                subscription = await context.batched.Subscription.get({
-                    subscriber,
-                    app,
-                });
+        async getSubscription(parent: {}, { pk }: GQLQueryGetSubscriptionArgs, context: RequestContext) {
+            const subscription = await context.batched.Subscription.get(SubscriptionPK.parse(pk));
+            if (!(await Can.getSubscription(subscription, context))) {
+                throw new Denied();
             }
-            if (!(await Can.viewSubscription(subscription, { subscriber, app }, context))) {
+            return subscription;
+        },
+        async getSubscriptionByAppSubscriber(
+            parent: {},
+            { subscriber, app }: GQLQueryGetSubscriptionByAppSubscriberArgs,
+            context: RequestContext
+        ) {
+            const subscription = await context.batched.Subscription.get({
+                subscriber,
+                app,
+            });
+            if (!(await Can.getSubscriptionByAppSubscriber(subscription, context))) {
                 throw new Denied();
             }
             return subscription;

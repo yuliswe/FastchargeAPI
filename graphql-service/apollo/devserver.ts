@@ -10,18 +10,17 @@ import {
     normalizeHeaders,
     printWarnings,
 } from "./lambdaHandlerUtils";
-import { server } from "./server";
+import { getServer } from "./server";
 
 if (process.env.TRACE_CONSOLE === "1") {
     setUpTraceConsole();
 }
 
-void startStandaloneServer<RequestContext>(server, {
+void startStandaloneServer<RequestContext>(getServer(), {
     listen: {
         port: process.env.PORT ? Number.parseInt(process.env.PORT) : 4000,
     },
     context: async ({ req }: { req: IncomingMessage }) => {
-        printWarnings();
         const batched = createDefaultContextBatched();
         const headers: { [header: string]: string } = normalizeHeaders(req.headers as Record<string, string>);
         const currentUser = await getCurrentUser(batched, headers, undefined);
@@ -38,5 +37,6 @@ void startStandaloneServer<RequestContext>(server, {
         });
     },
 }).then(({ url }) => {
+    printWarnings();
     console.log(chalk.green(`Server ready at: ${url}`));
 });

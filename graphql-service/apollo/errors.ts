@@ -18,6 +18,7 @@ export enum GQLErrorCode {
     RESOURCE_DELETED = "RESOURCE_DELETED",
     UNAUTHORIZED = "UNAUTHORIZED",
     INTERNAL_SERVER_ERROR = "INTERNAL_SERVER_ERROR",
+    NOT_ACCEPTED = "NOT_ACCEPTED",
 }
 
 export class NotFound extends GraphQLError {
@@ -44,6 +45,12 @@ export class TooManyResources extends GraphQLError {
     }
 }
 
+/**
+ * Throw this error when user has to act on something before re-attempting the
+ * request. For example, when user has to verify their email before logging in.
+ * Or when user has to accept terms and conditions before performing an action.
+ * If the user input is invalid, use BadInput instead.
+ */
 export class RequirementNotSatisfied extends GraphQLError {
     constructor(public msg: string) {
         super(msg, {
@@ -52,6 +59,10 @@ export class RequirementNotSatisfied extends GraphQLError {
     }
 }
 
+/**
+ * Use this for validaton error on user input. For example, date format is
+ * wrong. Or the user input is missing a required field.
+ */
 export class BadInput extends GraphQLError {
     constructor(public msg: string, public detailCode?: string) {
         super(msg, {
@@ -88,6 +99,19 @@ export class Unauthorized extends GraphQLError {
     constructor() {
         super(`You must log in to perform this action.`, {
             extensions: { code: GQLErrorCode.UNAUTHORIZED },
+        });
+    }
+}
+
+/**
+ * Used when there's something wrong with the way the request is sent, usually
+ * due to programming error. For example, when the request is sent to the HTTP
+ * graphql endpoint when using SQS is required.
+ */
+export class NotAccepted extends GraphQLError {
+    constructor(public msg: string) {
+        super(msg ?? "The endpoint does not accept this request.", {
+            extensions: { code: GQLErrorCode.NOT_ACCEPTED },
         });
     }
 }

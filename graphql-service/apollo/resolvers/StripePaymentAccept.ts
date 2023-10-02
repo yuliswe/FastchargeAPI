@@ -1,25 +1,27 @@
 import { StripePaymentAccept, StripePaymentAcceptModel } from "@/database/models/StripePaymentAccept";
-import { User } from "@/database/models/User";
+import { enforceCalledFromSQS } from "@/functions/aws";
+import { getDedupIdForSettleStripePaymentAcceptSQS } from "@/functions/payment";
+import { SQSQueueName } from "@/sqsClient";
 import { RequestContext } from "../RequestContext";
 import {
     AccountActivityReason,
     AccountActivityType,
     GQLMutationCreateStripePaymentAcceptArgs,
     GQLQueryGetStripePaymentAcceptArgs,
+    GQLQueryGetStripePaymentAcceptByStripeSessionIdArgs,
     GQLResolvers,
     GQLStripePaymentAcceptResolvers,
-    GQLStripePaymentAcceptSettlePaymentArgs,
-    GQLStripePaymentAcceptStatus,
+    GQLStripePaymentAccept_SettleStripePaymentAcceptFromSqsArgs,
+    StripePaymentAcceptStatus,
 } from "../__generated__/resolvers-types";
 import { AlreadyExists, Denied } from "../errors";
 import { settleAccountActivities } from "../functions/account";
-import { enforceCalledFromQueue } from "../functions/aws";
 import { Can } from "../permissions";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { StripePaymentAcceptPK } from "../pks/StripePaymentAccept";
 import { UserPK } from "../pks/UserPK";
 
-function makeOwnerReadable<T>(
+function makePrivate<T>(
     getter: (parent: StripePaymentAccept, args: {}, context: RequestContext) => T
 ): (parent: StripePaymentAccept, args: {}, context: RequestContext) => Promise<T> {
     return async (parent: StripePaymentAccept, args: {}, context: RequestContext): Promise<T> => {
@@ -35,34 +37,37 @@ export const StripePaymentAcceptResolvers: GQLResolvers & {
 } = {
     StripePaymentAccept: {
         __isTypeOf: (parent) => parent instanceof StripePaymentAcceptModel,
-        pk: makeOwnerReadable((parent) => StripePaymentAcceptPK.stringify(parent)),
-        amount: makeOwnerReadable((parent) => parent.amount),
-        currency: makeOwnerReadable((parent) => parent.currency),
-        stripePaymentIntent: makeOwnerReadable((parent) => parent.stripePaymentIntent),
-        stripeSessionId: makeOwnerReadable((parent) => parent.stripeSessionId),
-        stripePaymentStatus: makeOwnerReadable((parent) => parent.stripePaymentStatus),
-        stripeSessionObject: makeOwnerReadable((parent) => JSON.stringify(parent.stripeSessionObject)),
-        createdAt: makeOwnerReadable((parent) => parent.createdAt),
-        status: makeOwnerReadable((parent) => parent.status as GQLStripePaymentAcceptStatus),
-
-        async user(parent: StripePaymentAccept, args, context, info) {
-            if (!(await Can.viewStripePaymentAcceptPrivateAttributes(parent, context))) {
-                throw new Denied();
-            }
-            const user = await context.batched.User.get(UserPK.parse(parent.user));
-            return user;
-        },
+        pk: makePrivate((parent) => StripePaymentAcceptPK.stringify(parent)),
+        amount: makePrivate((parent) => parent.amount),
+        currency: makePrivate((parent) => parent.currency),
+        stripePaymentIntent: makePrivate((parent) => parent.stripePaymentIntent),
+        stripeSessionId: makePrivate((parent) => parent.stripeSessionId),
+        stripePaymentStatus: makePrivate((parent) => parent.stripePaymentStatus),
+        stripeSessionObject: makePrivate((parent) => JSON.stringify(parent.stripeSessionObject)),
+        createdAt: makePrivate((parent) => parent.createdAt),
+        updatedAt: makePrivate((parent) => parent.updatedAt),
+        status: makePrivate((parent) => parent.status),
+        user: makePrivate((parent, args, context) => context.batched.User.get(UserPK.parse(parent.user))),
 
         /**
          * Important: This method must be idempotent. It must be safe to call
          * this more than once without adding more money to the user's balance.
          */
-        async settlePayment(
+        async _settleStripePaymentAcceptFromSQS(
             parent: StripePaymentAccept,
-            { stripePaymentStatus, stripeSessionObject, stripePaymentIntent }: GQLStripePaymentAcceptSettlePaymentArgs,
-            context
+            {
+                stripePaymentStatus,
+                stripeSessionObject,
+                stripePaymentIntent,
+            }: GQLStripePaymentAccept_SettleStripePaymentAcceptFromSqsArgs,
+            context: RequestContext
         ) {
-            enforceCalledFromQueue(context, parent.user);
+            enforceCalledFromSQS({
+                context,
+                queueName: SQSQueueName.BillingQueue,
+                dedupId: getDedupIdForSettleStripePaymentAcceptSQS(parent),
+                groupId: parent.user,
+            });
             if (!(await Can.settleUserAccountActivities(context))) {
                 throw new Denied();
             }
@@ -83,25 +88,37 @@ export const StripePaymentAcceptResolvers: GQLResolvers & {
                 stripePaymentStatus: stripePaymentStatus as StripePaymentAccept["stripePaymentStatus"] | undefined,
                 stripePaymentIntent,
                 accountActivity: AccountActivityPK.stringify(activity),
-                status: "settled",
+                status: StripePaymentAcceptStatus.Settled,
             });
             return parent;
         },
     },
     Query: {
         async getStripePaymentAccept(
-            parent: User,
-            { user, stripeSessionId }: GQLQueryGetStripePaymentAcceptArgs,
-            context
-        ) {
-            const item = await context.batched.StripePaymentAccept.get({
+            parent: {},
+            { pk }: GQLQueryGetStripePaymentAcceptArgs,
+            context: RequestContext
+        ): Promise<StripePaymentAccept> {
+            const stripePaymentAccept = await context.batched.StripePaymentAccept.get(StripePaymentAcceptPK.parse(pk));
+            if (!(await Can.getStripePaymentAccept(stripePaymentAccept, context))) {
+                throw new Denied();
+            }
+            return stripePaymentAccept;
+        },
+
+        async getStripePaymentAcceptByStripeSessionId(
+            parent: {},
+            { user, stripeSessionId }: GQLQueryGetStripePaymentAcceptByStripeSessionIdArgs,
+            context: RequestContext
+        ): Promise<StripePaymentAccept> {
+            const stripePaymentAccept = await context.batched.StripePaymentAccept.get({
                 user: user,
                 stripeSessionId: stripeSessionId,
             });
-            if (!(await Can.viewStripePaymentAccept(item, context))) {
+            if (!(await Can.getStripePaymentAcceptByStripeSessionId(stripePaymentAccept, context))) {
                 throw new Denied();
             }
-            return item;
+            return stripePaymentAccept;
         },
     },
     Mutation: {

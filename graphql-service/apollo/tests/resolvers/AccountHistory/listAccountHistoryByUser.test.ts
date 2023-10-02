@@ -2,8 +2,8 @@ import { AccountHistory } from "@/database/models/AccountHistory";
 import { User } from "@/database/models/User";
 import { AccountHistoryPK } from "@/pks/AccountHistoryPK";
 import { UserPK } from "@/pks/UserPK";
-import { testGQLClient } from "@/tests/test-sql-client";
 import { baseRequestContext, getOrCreateTestUser, simplifyGraphQLPromiseRejection } from "@/tests/test-utils";
+import { testGQLClient } from "@/tests/testGQLClient";
 import { graphql } from "@/typed-graphql";
 import { beforeAll, describe, expect, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
@@ -20,7 +20,7 @@ beforeAll(async () => {
     testOtherOwner = await getOrCreateTestUser(context, {
         email: `testOtherOwner_${uuidv4()}@gmail_mock.com`,
     });
-    testAccountHistory = await context.batched.AccountHistory.getOrCreate({
+    testAccountHistory = await context.batched.AccountHistory.createOverwrite({
         user: UserPK.stringify(testOwnerUser),
         sequentialId: 0,
         startingTime: 0,

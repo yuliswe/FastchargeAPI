@@ -1,19 +1,20 @@
 import { SiteMetaDataKey } from "@/__generated__/resolvers-types";
+import { SiteMetaData } from "@/database/models/SiteMetaData";
 import { User } from "@/database/models/User";
-import { testGQLClient } from "@/tests/test-sql-client";
 import {
     baseRequestContext as context,
     getAdminUser,
     getOrCreateTestUser,
     simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils";
+import { testGQLClient } from "@/tests/testGQLClient";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
 
 const updateSiteMetaDataMutation = graphql(`
-    mutation TestupdateSiteMetaData($key: SiteMetaDataKey!, $value: Any!) {
-        getSiteMetaData(key: $key) {
+    mutation TestupdateSiteMetaData($key: String!, $value: Any!) {
+        getSiteMetaDataByKey(key: $key) {
             updateSiteMetaData(value: $value) {
                 key
                 value
@@ -26,27 +27,31 @@ const updateSiteMetaDataMutation = graphql(`
 
 describe("updateSiteMetaData", () => {
     let testOtherUser: User;
+    let testSiteMetaData: SiteMetaData;
     beforeEach(async () => {
-        await context.batched.SiteMetaData.deleteIfExists({ key: SiteMetaDataKey.TestingKey });
         testOtherUser = await getOrCreateTestUser(context, { email: "testuser" + uuid.v4() });
-        await context.batched.SiteMetaData.getOrCreate({
-            key: SiteMetaDataKey.TestingKey,
+        testSiteMetaData = await context.batched.SiteMetaData.createOverwrite({
+            key: ("testkey-" + uuid.v4()) as SiteMetaDataKey,
             value: "testvalue" + uuid.v4(),
         });
     });
 
+    function getVariables() {
+        return { key: testSiteMetaData.key, value: "testvalue" + uuid.v4() };
+    }
+
     test("Admin can update site meta data", async () => {
-        const variables = { key: SiteMetaDataKey.TestingKey, value: "testvalue" + uuid.v4() };
+        const variables = getVariables();
         const promise = testGQLClient({ user: await getAdminUser(context) }).mutate({
             mutation: updateSiteMetaDataMutation,
             variables,
         });
         await expect(promise).resolves.toMatchObject({
             data: {
-                getSiteMetaData: {
+                getSiteMetaDataByKey: {
                     updateSiteMetaData: {
                         __typename: "SiteMetaData",
-                        key: "_testingKey",
+                        key: testSiteMetaData.key,
                         value: variables.value,
                         updatedAt: expect.any(Number),
                         createdAt: expect.any(Number),
@@ -59,13 +64,13 @@ describe("updateSiteMetaData", () => {
     test("Other users cannot update site meta data", async () => {
         const promise = testGQLClient({ user: testOtherUser }).mutate({
             mutation: updateSiteMetaDataMutation,
-            variables: { key: SiteMetaDataKey.TestingKey, value: "testvalue" + uuid.v4() },
+            variables: getVariables(),
         });
         await expect(simplifyGraphQLPromiseRejection(promise)).rejects.toMatchObject([
             {
                 code: "PERMISSION_DENIED",
                 message: "You do not have permission to perform this action.",
-                path: "getSiteMetaData.updateSiteMetaData",
+                path: "getSiteMetaDataByKey.updateSiteMetaData",
             },
         ]);
     });

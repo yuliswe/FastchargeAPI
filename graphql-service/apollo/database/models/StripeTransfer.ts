@@ -1,3 +1,4 @@
+import { Currency } from "@/__generated__/gql/graphql";
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
 import { StripeTransferStatus } from "../../__generated__/resolvers-types";
@@ -9,6 +10,10 @@ import {
     tableConfigs,
     validateStringDecimal,
 } from "../utils";
+
+export enum StripeTransferTableIndex {
+    indexByStatusTransferAtOnlyPK = "indexByStatus_transferAt__onlyPK",
+}
 
 export const StripeTransferTableSchema = new dynamoose.Schema(
     {
@@ -31,7 +36,7 @@ export const StripeTransferTableSchema = new dynamoose.Schema(
             required: true,
             validate: validateStringDecimal("withdrawAmount"),
         },
-        currency: { ...String_Required_NotEmpty("currency") },
+        currency: { type: String, required: false, default: Currency.Usd },
         stripeTransferId: { type: String, required: false },
         stripeTransferObject: { type: Object, required: false },
         accountActivity: { type: String, required: false },
@@ -40,7 +45,7 @@ export const StripeTransferTableSchema = new dynamoose.Schema(
         status: {
             type: String,
             index: {
-                name: "indexByStatus_transferAt__onlyPK",
+                name: StripeTransferTableIndex.indexByStatusTransferAtOnlyPK,
                 rangeKey: "transferAt",
                 type: "global",
                 project: ["transferAt", "status"],
@@ -77,7 +82,7 @@ export class StripeTransfer extends Item {
     receiver: PK;
     withdrawAmount: string;
     receiveAmount: string;
-    currency: string;
+    currency: Currency;
     stripeTransferObject: object | null;
     stripeTransferId: string | null;
     createdAt: number;

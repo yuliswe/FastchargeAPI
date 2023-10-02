@@ -1,1 +1,9 @@
-schema: "graphql-service/apollo/__generated__/Public.final.graphql"
+projects:
+  default:
+    schema:
+      - "graphql-service/apollo/schema/Public.graphql"
+      - "graphql-service/apollo/__generated__/Public.final.graphql"
+    extensions:
+      languageService:
+        cacheSchemaFileForLookup: false
+        enableValidation: true

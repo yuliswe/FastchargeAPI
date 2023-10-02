@@ -28,7 +28,7 @@ describe("Payout API", () => {
     });
 
     test("Prepration: Add monty to the account", async () => {
-        await addMoneyForUser(context, { user: UserPK.stringify(testUser), amount: "100" });
+        await addMoneyForUser({ user: UserPK.stringify(testUser), amount: "100", context });
     });
 
     test("Test: Withdraw the money", async () => {
@@ -38,8 +38,6 @@ describe("Payout API", () => {
             {
                 receiver: UserPK.stringify(testUser),
                 withdrawAmount: "100",
-                receiveAmount: "75",
-                currency: "usd",
             },
             context,
             {} as GraphQLResolveInfoWithCacheControl

@@ -32,7 +32,9 @@ export type UsageSummaryCreateProps = {
     app: PK;
     pricing: PK;
     path: string;
+    numberOfLogs: number;
 } & GQLPartial<UsageSummary>;
+
 export const UsageSummaryTableSchema = new dynamoose.Schema(
     {
         subscriber: {

@@ -2,7 +2,7 @@ import { SiteMetaData, SiteMetaDataModel } from "@/database/models/SiteMetaData"
 import { RequestContext } from "../RequestContext";
 import {
     GQLMutationCreateSiteMetaDataArgs,
-    GQLQueryGetSiteMetaDataArgs,
+    GQLQueryGetSiteMetaDataByKeyArgs,
     GQLQuerySiteMetaDataArgs,
     GQLResolvers,
     GQLSiteMetaDataResolvers,
@@ -38,9 +38,9 @@ export const SiteMetaDataResolvers: GQLResolvers & {
         },
     },
     Query: {
-        async getSiteMetaData(
+        async getSiteMetaDataByKey(
             parent: {},
-            { key }: GQLQueryGetSiteMetaDataArgs,
+            { key }: GQLQueryGetSiteMetaDataByKeyArgs,
             context: RequestContext
         ): Promise<SiteMetaData> {
             if (!(await Can.viewSiteMetaData(key, context))) {
@@ -55,7 +55,9 @@ export const SiteMetaDataResolvers: GQLResolvers & {
             info
         ): Promise<SiteMetaData[]> {
             return await Promise.all(
-                keys.map(async (key) => SiteMetaDataResolvers.Query!.getSiteMetaData!(parent, { key }, context, info))
+                keys.map(async (key) =>
+                    SiteMetaDataResolvers.Query!.getSiteMetaDataByKey!(parent, { key }, context, info)
+                )
             );
         },
     },

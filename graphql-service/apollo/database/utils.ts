@@ -4,13 +4,6 @@ import { Item } from "dynamoose/dist/Item";
 import { TableClass } from "dynamoose/dist/Table/types";
 
 export const NULL = dynamoose.type.NULL;
-if (process.env.DEV_DOMAIN === "1") {
-    if (process.env.DISABLE_WARNINGS != "1") {
-        console.warn("Using remote DEV database us-east-1");
-    }
-} else {
-    console.warn("Using remote LIVE database us-east-1");
-}
 
 export async function enableDBLogging() {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

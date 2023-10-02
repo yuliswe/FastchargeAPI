@@ -1,18 +1,33 @@
-import { APIGatewayProxyEventBase, APIGatewayProxyEventHeaders, APIGatewayProxyResult } from "aws-lambda";
+import { HeaderMap } from "@apollo/server";
+import { LambdaHandler, startServerAndCreateLambdaHandler } from "@as-integrations/aws-lambda";
+import { RequestHandler, createRequestHandler } from "@as-integrations/aws-lambda/dist/request-handlers/_create";
+import {
+    APIGatewayProxyEvent,
+    APIGatewayProxyEventBase,
+    APIGatewayProxyEventHeaders,
+    APIGatewayProxyResult,
+    Callback as LambdaCallback,
+    Context as LambdaContext,
+} from "aws-lambda";
 import { Chalk } from "chalk";
-import { DefaultContextBatched, RequestService } from "./RequestContext";
+import { DefaultContextBatched, RequestContext, RequestService, createDefaultContextBatched } from "./RequestContext";
 import { User, UserTableIndex } from "./database/models/User";
 import { BadInput } from "./errors";
 import { createUserWithEmail } from "./functions/user";
 import { UserPK } from "./pks/UserPK";
+import { getServer } from "./server";
 
 const chalk = new Chalk({ level: 3 });
 
 export function printWarnings() {
-    if (process.env.DEV_DOMAIN === "0") {
-        if (process.env.DISABLE_WARNINGS != "1") {
-            console.warn(chalk.red("DEV_DOMAIN is not set to 0. You are now connected to the production database!"));
-        }
+    if (process.env.DEV_DOMAIN === "1") {
+        console.warn(chalk.blue("Using remote DEV database us-east-1"));
+    } else {
+        console.warn(
+            chalk.red(
+                "DEV_DOMAIN is not set to 0. You are now connected to the production database! Using remote LIVE database us-east-1"
+            )
+        );
     }
 }
 
@@ -35,28 +50,20 @@ export async function getCurrentUser(
     if (process.env.TRUST_X_USER_PK_HEADER == "1" || process.env.TRUST_X_USER_EMAIL_HEADER == "1") {
         if (process.env.TRUST_X_USER_PK_HEADER === "1") {
             const userPK = headers["x-user-pk"] || "";
-            if (process.env.DISABLE_WARNINGS != "1") {
-                console.warn(chalk.yellow("TRUST_X_USER_PK_HEADER is enabled. Do not use this in production!"));
-            }
+            console.warn(chalk.yellow("TRUST_X_USER_PK_HEADER is enabled. Do not use this in production!"));
             if (userPK) {
                 currentUser = (await batched.User.getOrNull(UserPK.parse(userPK))) ?? undefined;
             } else {
-                if (process.env.DISABLE_WARNINGS != "1") {
-                    console.warn(chalk.yellow("X-User-PK header is missing."));
-                }
+                console.warn(chalk.yellow("X-User-PK header is missing."));
             }
         }
         if (process.env.TRUST_X_USER_EMAIL_HEADER === "1") {
             const userEmail = headers["x-user-email"] || "";
-            if (process.env.DISABLE_WARNINGS != "1") {
-                console.warn(chalk.yellow("TRUST_X_USER_EMAIL_HEADER is enabled. Do not use this in production!"));
-            }
+            console.warn(chalk.yellow("TRUST_X_USER_EMAIL_HEADER is enabled. Do not use this in production!"));
             if (userEmail) {
                 currentUser = await getOrCreateUserFromEmail(batched, userEmail);
             } else {
-                if (process.env.DISABLE_WARNINGS != "1") {
-                    console.warn(chalk.yellow("X-User-Email header is missing."));
-                }
+                console.warn(chalk.yellow("X-User-Email header is missing."));
             }
         }
     }
@@ -96,10 +103,8 @@ export function getIsServiceRequest(domain: string, headers: { [header: string]:
         isServiceRequest = true;
         // When the request is from a service to IAM, there's no user.
     } else if (process.env.TRUST_X_IS_SERVICE_REQUEST_HEADER === "1") {
-        if (process.env.DISABLE_WARNINGS != "1") {
-            console.warn(chalk.yellow("TRUST_X_IS_SERVICE_REQUEST_HEADER is enabled. Do not use this in production!"));
-        }
-        if (headers["x-is-service-request"] === "true") {
+        console.warn(chalk.yellow("TRUST_X_IS_SERVICE_REQUEST_HEADER is enabled. Do not use this in production!"));
+        if (headers["x-is-service-request"] == "1") {
             isServiceRequest = true;
         }
     }
@@ -127,3 +132,119 @@ export type AuthorizerContext = {
 };
 export type LambdaEvent = APIGatewayProxyEventBase<AuthorizerContext> & { _disableLogRequest?: boolean };
 export type LambdaResult = APIGatewayProxyResult;
+export function addCors(event: APIGatewayProxyEvent, result: APIGatewayProxyResult): void {
+    const origin = event.headers["Origin"] || event.headers["origin"];
+    if (
+        origin &&
+        [
+            /^http:\/\/yumbp16.local(:\\d+)?/,
+            /^http:\/\/localhost(:\\d+)?/,
+            /^https:\/\/fastchargeapi.com/,
+            /^https:\/\/devfastchargeapi.com/,
+        ].some((x) => x.test(origin))
+    ) {
+        result.headers = {
+            ...(result.headers ?? {}),
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Allow-Origin": origin,
+            Vary: "Origin",
+        };
+    }
+}
+let handlerInstance: LambdaHandler<RequestHandler<LambdaEvent, LambdaResult>> | undefined;
+export function callOrCreateHandler(
+    event: LambdaEvent,
+    context: LambdaContext,
+    callback: LambdaCallback
+): Promise<LambdaResult> {
+    if (!handlerInstance) {
+        handlerInstance = startServerAndCreateLambdaHandler<RequestHandler<LambdaEvent, LambdaResult>, RequestContext>(
+            getServer(),
+            createRequestHandler(
+                {
+                    parseHttpMethod(event) {
+                        return event.httpMethod;
+                    },
+                    parseHeaders(event) {
+                        const headerMap = new HeaderMap();
+                        for (const [key, value] of Object.entries(event.headers ?? {})) {
+                            headerMap.set(key, value ?? "");
+                        }
+                        return headerMap;
+                    },
+                    parseBody(event, headers) {
+                        if (event.body) {
+                            const contentType = headers.get("content-type");
+                            const parsedBody = event.isBase64Encoded
+                                ? Buffer.from(event.body, "base64").toString("utf8")
+                                : event.body;
+                            if (!event._disableLogRequest) {
+                                console.log(chalk.blue("Received: " + parsedBody));
+                            }
+                            if (contentType?.startsWith("application/json")) {
+                                return JSON.parse(parsedBody) as string; // upstream might have wrong type for this
+                            }
+                            if (contentType?.startsWith("text/plain")) {
+                                return parsedBody;
+                            }
+                        }
+                        return "";
+                    },
+                    parseQueryParams(event) {
+                        const params = new URLSearchParams();
+                        for (const [key, value] of Object.entries(event.multiValueQueryStringParameters ?? {})) {
+                            for (const v of value ?? []) {
+                                params.append(key, v);
+                            }
+                        }
+                        return params.toString();
+                    },
+                },
+                {
+                    success({ body, headers, status }) {
+                        if (body.kind !== "complete") {
+                            throw new Error("Only complete body type supported");
+                        }
+                        return {
+                            statusCode: status ?? 200,
+                            headers: {
+                                ...Object.fromEntries(headers),
+                                "content-length": Buffer.byteLength(body.string).toString(),
+                            },
+                            body: body.string,
+                        };
+                    },
+                    error(error: Error) {
+                        return {
+                            statusCode: 400,
+                            body: error.message,
+                        };
+                    },
+                }
+            ),
+            {
+                async context({ event }: { event: LambdaEvent }): Promise<RequestContext> {
+                    const batched = createDefaultContextBatched();
+                    const headers: { [header: string]: string } = normalizeHeaders(event.headers ?? {});
+                    const domain = event.requestContext.domainName || "";
+                    const currentUser = await getCurrentUser(batched, headers, event.requestContext.authorizer);
+                    const isAdminUser = getIsAdminUser(currentUser, event.requestContext.authorizer);
+                    const { serviceName, isServiceRequest } = getIsServiceRequest(domain, headers);
+                    const context = {
+                        currentUser,
+                        service: serviceName,
+                        isServiceRequest,
+                        batched,
+                        isSQSMessage: false,
+                        isAnonymousUser: currentUser == undefined,
+                        isAdminUser,
+                    };
+                    return context;
+                },
+            }
+        );
+    }
+    const result = handlerInstance(event, context, callback);
+    return result as Exclude<typeof result, void>;
+}

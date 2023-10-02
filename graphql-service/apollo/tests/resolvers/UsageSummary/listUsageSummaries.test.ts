@@ -9,8 +9,8 @@ import { Can } from "@/permissions";
 import { AppPK } from "@/pks/AppPK";
 import { PricingPK } from "@/pks/PricingPK";
 import { UserPK } from "@/pks/UserPK";
-import { testGQLClient } from "@/tests/test-sql-client";
 import { getOrCreateTestUser, simplifyGraphQLPromiseRejection, sortGraphQLErrors } from "@/tests/test-utils";
+import { testGQLClient } from "@/tests/testGQLClient";
 import { beforeEach, describe, expect, jest, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
 
@@ -70,7 +70,7 @@ beforeEach(async () => {
     testOtherUser = await getOrCreateTestUser(context, { email: `testuser_${uuidv4()}@gmail_mock.com` });
     testAppOwner = await getOrCreateTestUser(context, { email: testAppOwnerEmail });
     testSubscriber = await getOrCreateTestUser(context, { email: testSubscriberEmail });
-    testApp = await context.batched.App.getOrCreate({ name: testAppName, owner: UserPK.stringify(testAppOwner) });
+    testApp = await context.batched.App.createOverwrite({ name: testAppName, owner: UserPK.stringify(testAppOwner) });
     testPricing = await context.batched.Pricing.create({
         name: "test-pricing",
         app: AppPK.stringify(testApp),

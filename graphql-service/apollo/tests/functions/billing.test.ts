@@ -5,7 +5,6 @@ import { User } from "@/database/models/User";
 import { UserPK } from "@/pks/UserPK";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 
-import { mockSQS } from "@/MockSQS";
 import { graphql } from "@/__generated__/gql";
 import { PricingAvailability, TestBillingTriggerBillingMutationVariables } from "@/__generated__/gql/graphql";
 import { AccountActivityPK } from "@/pks/AccountActivityPK";
@@ -13,7 +12,8 @@ import { AppPK } from "@/pks/AppPK";
 import { PricingPK } from "@/pks/PricingPK";
 import { UsageLogPK } from "@/pks/UsageLogPK";
 import { UsageSummaryPK } from "@/pks/UsageSummaryPK";
-import { SQSQueueUrl, sqsGQLClient } from "@/sqsClient";
+import { SQSQueueName, sqsGQLClient } from "@/sqsClient";
+import { mockSQS } from "@/tests/MockSQS";
 import { v4 as uuidv4 } from "uuid";
 import { getOrCreateTestUser } from "../test-utils";
 
@@ -36,7 +36,7 @@ beforeEach(async () => {
     const testSubscriberEmail = `testuser_${uuidv4()}@gmail_mock.com`;
     testAppOwner = await getOrCreateTestUser(context, { email: testAppOwnerEmail });
     testSubscriber = await getOrCreateTestUser(context, { email: testSubscriberEmail });
-    testApp = await context.batched.App.getOrCreate({ name: testAppName, owner: UserPK.stringify(testAppOwner) });
+    testApp = await context.batched.App.createOverwrite({ name: testAppName, owner: UserPK.stringify(testAppOwner) });
     testPricing = await context.batched.Pricing.create({
         name: "test-pricing",
         app: AppPK.stringify(testApp),
@@ -50,7 +50,7 @@ beforeEach(async () => {
 
 async function triggerBilling(variables: TestBillingTriggerBillingMutationVariables) {
     await sqsGQLClient({
-        queueUrl: SQSQueueUrl.BillingQueue,
+        queueName: SQSQueueName.BillingQueue,
         groupId: UserPK.stringify(testSubscriber),
     }).mutate({
         mutation: graphql(`

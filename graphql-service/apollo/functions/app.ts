@@ -3,7 +3,7 @@ import { ValidationError } from "@/database/utils";
 import { BatchExecuteStatementCommand, ExecuteStatementCommand } from "@aws-sdk/client-rds-data";
 import { RequestContext } from "../RequestContext";
 import { GQLAppFullTextSearchOrderBy } from "../__generated__/resolvers-types";
-import { auroraResourceArn, auroraSecretArn, rdsClient } from "../aurora";
+import { auroraResourceArn, auroraSecretArn, rdsClient } from "../database/aurora";
 import { AppPK } from "../pks/AppPK";
 
 export async function getAppByPK(context: RequestContext, pk: string): Promise<App> {

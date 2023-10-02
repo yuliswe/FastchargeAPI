@@ -1,17 +1,22 @@
-import { mockSQS } from "@/MockSQS";
 import { createDefaultContextBatched } from "@/RequestContext";
+import { Currency } from "@/__generated__/resolvers-types";
 import { App } from "@/database/models/App";
 import { FreeQuotaUsage } from "@/database/models/FreeQuotaUsage";
 import { Pricing } from "@/database/models/Pricing";
 import { User, UserTableIndex } from "@/database/models/User";
 import { GQLPartial } from "@/database/utils";
-import { SQSQueueUrl, sqsGQLClient } from "@/sqsClient";
+import { getUserBalance } from "@/functions/account";
+import { getDedupIdForSettleStripePaymentAcceptSQS } from "@/functions/payment";
+import { StripePaymentAcceptPK } from "@/pks/StripePaymentAccept";
+import { UserPK } from "@/pks/UserPK";
+import { SQSQueueName } from "@/sqsClient";
 import { graphql } from "@/typed-graphql";
 import { ApolloError } from "@apollo/client";
 import { v4 as uuid4 } from "uuid";
 import { RequestContext } from "../RequestContext";
 import { createUserWithEmail } from "../functions/user";
 import { AppPK } from "../pks/AppPK";
+import { testGQLClientForSQS } from "./testGQLClient";
 
 export const baseRequestContext: RequestContext = {
     batched: createDefaultContextBatched(),
@@ -21,44 +26,44 @@ export const baseRequestContext: RequestContext = {
     isAdminUser: false,
 };
 
-export async function addMoneyForUser(
-    context: RequestContext,
-    { user, amount }: { user: string; amount: string }
-): Promise<void> {
+export async function addMoneyForUser({
+    user,
+    amount,
+    context,
+}: {
+    user: string;
+    amount: string;
+    context: RequestContext;
+}): Promise<void> {
     const stripeSessionId = uuid4();
-    await context.batched.StripePaymentAccept.create({
+    const stripePaymentAccept = await context.batched.StripePaymentAccept.create({
         user: user,
         amount: amount,
-        currency: "usd",
+        currency: Currency.Usd,
         stripePaymentStatus: "paid",
         stripeSessionId,
         stripePaymentIntent: "test",
         stripeSessionObject: {},
     });
 
-    await sqsGQLClient({
-        queueUrl: SQSQueueUrl.BillingQueue,
-        dedupId: `addMoneyForUser-${user}-${amount}-${uuid4()}`,
+    await testGQLClientForSQS({
+        queueName: SQSQueueName.BillingQueue,
+        dedupId: getDedupIdForSettleStripePaymentAcceptSQS(stripePaymentAccept),
         groupId: user,
-    }).query({
-        query: graphql(`
-            query GetAndSettleStripePaymentAccept($user: ID!, $stripeSessionId: String!) {
-                getStripePaymentAccept(user: $user, stripeSessionId: $stripeSessionId) {
-                    settlePayment {
+    }).mutate({
+        mutation: graphql(`
+            mutation GetAndSettleStripePaymentAccept($pk: ID!) {
+                getStripePaymentAccept(pk: $pk) {
+                    _settleStripePaymentAcceptFromSQS {
                         status
                     }
                 }
             }
         `),
         variables: {
-            stripeSessionId,
-            user: user,
+            pk: StripePaymentAcceptPK.stringify(stripePaymentAccept),
         },
     });
-
-    if (process.env.LOCAL_SQS === "1") {
-        await mockSQS.waitForQueuesToEmpty();
-    }
 }
 
 /**
@@ -67,7 +72,7 @@ export async function addMoneyForUser(
  */
 export async function getOrCreateTestUser(
     context: RequestContext,
-    { email, ...additionalProps }: { email: string } & GQLPartial<User>
+    { email, ...additionalProps }: { email?: string } & GQLPartial<User> = {}
 ) {
     if (!email) {
         email = `testuser_${uuid4()}@gmail_mock.com`;
@@ -164,4 +169,9 @@ export async function simplifyGraphQLPromiseRejection(errorPromise: Promise<unkn
     } catch (error) {
         throw simplifyGraphQLError(error);
     }
+}
+
+export async function getUserBalanceNoCache(context: RequestContext, user: User): Promise<string> {
+    context.batched.AccountHistory.clearCache();
+    return getUserBalance(context, UserPK.stringify(user));
 }

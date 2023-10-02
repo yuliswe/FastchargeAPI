@@ -1,17 +1,20 @@
 import { StripeTransfer, StripeTransferModel } from "@/database/models/StripeTransfer";
+import { getMinWithdrawalAmount, getRecivableAmountForWithdrawal } from "@/functions/fees";
+import { SQSQueueName, sqsGQLClient } from "@/sqsClient";
+import { graphql } from "@/typed-graphql";
 import Decimal from "decimal.js-light";
 import { RequestContext } from "../RequestContext";
 import {
     GQLMutationCreateStripeTransferArgs,
-    GQLQueryStripeTransferArgs,
+    GQLQueryGetStripeTransferArgs,
     GQLResolvers,
     GQLStripeTransferResolvers,
     StripeTransferStatus,
 } from "../__generated__/resolvers-types";
 import { BadInput, Denied } from "../errors";
 import { getUserBalance, settleAccountActivities } from "../functions/account";
-import { enforceCalledFromQueue } from "../functions/aws";
-import { createAccountActivitiesForTransfer } from "../functions/transfer";
+import { enforceCalledFromSQS } from "../functions/aws";
+import { createAccountActivitiesForTransfer, getSQSDedupIdForSettleStripeTransfer } from "../functions/transfer";
 import { Can } from "../permissions";
 import { StripeTransferPK } from "../pks/StripeTransferPK";
 import { UserPK } from "../pks/UserPK";
@@ -44,24 +47,32 @@ export const StripeTransferResolvers: GQLResolvers & {
         currency: makePrivate((parent) => parent.currency),
         transferAt: makePrivate((parent) => parent.transferAt),
         status: makePrivate((parent) => parent.status),
+        receiver: makePrivate((parent, args, context) => context.batched.User.get(UserPK.parse(parent.receiver))),
 
-        async receiver(parent, args, context, info) {
-            if (!(await Can.viewStripeTransferPrivateAttributes(parent, context))) {
-                throw new Denied();
-            }
-            return await context.batched.User.get(UserPK.parse(parent.receiver));
-        },
         /**
          * A StripeTransfer happens when the user withdraws money from their
          * account. Calling this method creates an AccountActivity for the user,
          * substracting the withdrawl amount from their balance.
-         *
-         * This method is tipically called from the payment-service.
          */
-        async settleStripeTransfer(parent: StripeTransfer, args: {}, context: RequestContext): Promise<StripeTransfer> {
-            enforceCalledFromQueue(context, parent.receiver);
+        async _settleStripeTransferFromSQS(
+            parent: StripeTransfer,
+            args: {},
+            context: RequestContext
+        ): Promise<StripeTransfer> {
+            enforceCalledFromSQS({
+                context,
+                groupId: parent.receiver,
+                queueName: SQSQueueName.BillingQueue,
+                dedupId: getSQSDedupIdForSettleStripeTransfer(parent),
+            });
             if (!(await Can.settleUserAccountActivities(context))) {
                 throw new Denied();
+            }
+            const balance = await getUserBalance(context, parent.receiver);
+            if (new Decimal(balance).lessThan(parent.withdrawAmount)) {
+                return context.batched.StripeTransfer.update(parent, {
+                    status: StripeTransferStatus.FailedDueToInsufficientBalance,
+                });
             }
             const user = await context.batched.User.get(UserPK.parse(parent.receiver));
             await createAccountActivitiesForTransfer(context, {
@@ -71,20 +82,19 @@ export const StripeTransferResolvers: GQLResolvers & {
             await settleAccountActivities(context, parent.receiver, {
                 consistentReadAccountActivities: true,
             });
-            return parent;
+            return await context.batched.StripeTransfer.update(parent, {
+                status: StripeTransferStatus.PendingTransfer,
+            });
         },
     },
     Query: {
         async getStripeTransfer(
             parent: {},
-            { pk }: GQLQueryStripeTransferArgs,
+            { pk }: GQLQueryGetStripeTransferArgs,
             context: RequestContext
         ): Promise<StripeTransfer> {
-            if (!pk) {
-                throw new BadInput("pk is required");
-            }
             const transfer = await context.batched.StripeTransfer.get(StripeTransferPK.parse(pk));
-            if (!(await Can.viewStripeTransfer(transfer, context))) {
+            if (!(await Can.getStripeTransfer(transfer, context))) {
                 throw new Denied();
             }
             return transfer;
@@ -93,43 +103,47 @@ export const StripeTransferResolvers: GQLResolvers & {
     Mutation: {
         async createStripeTransfer(
             parent,
-            {
-                receiver,
-                withdrawAmount,
-                receiveAmount,
-                currency,
-                stripeTransferId,
-                stripeTransferObject,
-            }: GQLMutationCreateStripeTransferArgs,
+            { receiver, withdrawAmount }: GQLMutationCreateStripeTransferArgs,
             context: RequestContext
         ) {
-            if (!(await Can.createStripeTransfer(context))) {
+            if (!(await Can.createStripeTransfer({ receiver }, context))) {
                 throw new Denied();
             }
-            if (!context.isSQSMessage) {
-                throw new Error("createStripeTransfer can only be called from the SQS");
-            }
-            if (context.sqsMessageGroupId !== receiver) {
-                throw new Error(
-                    `sqsMessageGroupId must match receiver: ${receiver}. Current: ${
-                        context.sqsMessageGroupId ?? "undefined"
-                    }`
-                );
+            const withdrawAmountDecimal = new Decimal(withdrawAmount);
+            const minWithdrawal = await getMinWithdrawalAmount(context);
+            if (withdrawAmountDecimal.lessThan(minWithdrawal)) {
+                throw new BadInput(`Withdrawal amount cannot be less than ${minWithdrawal.toString()}`);
             }
             const balance = await getUserBalance(context, receiver);
             if (new Decimal(balance).lessThan(withdrawAmount)) {
                 throw new BadInput(`User does not have enough balance to withdraw ${withdrawAmount}`);
             }
-            return await context.batched.StripeTransfer.create({
+            const receiveAmount = await getRecivableAmountForWithdrawal(withdrawAmountDecimal, context);
+            const stripeTransfer = await context.batched.StripeTransfer.create({
                 receiver,
                 withdrawAmount,
-                receiveAmount,
-                stripeTransferId,
-                currency,
-                stripeTransferObject: stripeTransferObject ? (JSON.parse(stripeTransferObject) as object) : undefined,
+                receiveAmount: receiveAmount.toString(),
                 transferAt: Date.now() + 1000 * 60 * 60 * 24, // Transfer after 24 hours
-                status: StripeTransferStatus.Pending,
+                status: StripeTransferStatus.Created,
             });
+            await sqsGQLClient({
+                queueName: SQSQueueName.BillingQueue,
+                groupId: receiver,
+                dedupId: getSQSDedupIdForSettleStripeTransfer(stripeTransfer),
+            }).mutate({
+                mutation: graphql(`
+                    mutation SettleStripeTransferFromSQS($pk: ID!) {
+                        getStripeTransfer(pk: $pk) {
+                            _settleStripeTransferFromSQS {
+                                pk
+                                status
+                            }
+                        }
+                    }
+                `),
+                variables: { pk: StripeTransferPK.stringify(stripeTransfer) },
+            });
+            return stripeTransfer;
         },
     },
 };

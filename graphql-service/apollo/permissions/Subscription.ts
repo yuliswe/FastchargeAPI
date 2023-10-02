@@ -7,6 +7,7 @@ import { Subscription } from "@/database/models/Subscription";
 import { RequestContext } from "../RequestContext";
 import { AppPK } from "../pks/AppPK";
 import { UserPK } from "../pks/UserPK";
+import { isAdminOrServiceUser, isCurrentUserPK } from "./utils";
 
 export const SubscriptionPermissions = {
     async viewSubscriptionPrivateAttributes(parent: Subscription, context: RequestContext): Promise<boolean> {
@@ -25,6 +26,7 @@ export const SubscriptionPermissions = {
         }
         return false;
     },
+
     async createSubscription(
         { pricing, subscriber }: GQLMutationCreateSubscriptionArgs,
         context: RequestContext
@@ -40,6 +42,7 @@ export const SubscriptionPermissions = {
         }
         return Promise.resolve(false);
     },
+
     async updateSubscription(
         parent: Subscription,
         { pricing }: GQLSubscribeUpdateSubscriptionArgs,
@@ -56,6 +59,7 @@ export const SubscriptionPermissions = {
         }
         return Promise.resolve(false);
     },
+
     async deleteSubscription(parent: Subscription, args: {}, context: RequestContext): Promise<boolean> {
         if (context.isServiceRequest || context.isAdminUser) {
             return true;
@@ -68,6 +72,7 @@ export const SubscriptionPermissions = {
         }
         return Promise.resolve(false);
     },
+
     async viewSubscription(
         subscription: Subscription,
         args: GQLQuerySubscriptionArgs,
@@ -84,6 +89,34 @@ export const SubscriptionPermissions = {
         }
         const app = await context.batched.App.get(AppPK.parse(subscription.app));
         if (app.owner === UserPK.stringify(context.currentUser)) {
+            return true;
+        }
+        return false;
+    },
+
+    async getSubscription(subscription: Subscription, context: RequestContext): Promise<boolean> {
+        if (isAdminOrServiceUser(context)) {
+            return true;
+        }
+        if (isCurrentUserPK(subscription.subscriber, context)) {
+            return true;
+        }
+        const app = await context.batched.App.get(AppPK.parse(subscription.app));
+        if (isCurrentUserPK(app.owner, context)) {
+            return true;
+        }
+        return false;
+    },
+
+    async getSubscriptionByAppSubscriber(subscription: Subscription, context: RequestContext): Promise<boolean> {
+        if (isAdminOrServiceUser(context)) {
+            return true;
+        }
+        if (isCurrentUserPK(subscription.subscriber, context)) {
+            return true;
+        }
+        const app = await context.batched.App.get(AppPK.parse(subscription.app));
+        if (isCurrentUserPK(app.owner, context)) {
             return true;
         }
         return false;

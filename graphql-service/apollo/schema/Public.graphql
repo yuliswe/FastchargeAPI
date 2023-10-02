@@ -28,7 +28,8 @@ type Query {
     getEndpointByApp(app: ID!, path: String!): Endpoint!
 
     ### Subscriptions
-    getSubscription(pk: ID, subscriber: ID, app: String): Subscribe!
+    getSubscription(pk: ID!): Subscribe!
+    getSubscriptionByAppSubscriber(subscriber: ID!, app: String!): Subscribe!
 
     ### User App Token
     getUserAppToken(pk: ID, subscriber: ID, app: ID): UserAppToken!
@@ -63,13 +64,14 @@ type Query {
     ): [AccountHistory!]!
 
     ### Stripe Payment
-    getStripePaymentAccept(user: ID!, stripeSessionId: String!): StripePaymentAccept!
+    getStripePaymentAccept(pk: ID!): StripePaymentAccept!
+    getStripePaymentAcceptByStripeSessionId(user: ID!, stripeSessionId: String!): StripePaymentAccept!
 
     ### Secret
     getSecret(key: String!): Secret!
 
     ### Stripe Transfer
-    getStripeTransfer(pk: ID): StripeTransfer!
+    getStripeTransfer(pk: ID!): StripeTransfer!
 
     ### App Tags
     getAppTag(pk: ID!): AppTag!
@@ -78,7 +80,7 @@ type Query {
     deleteAppTag(app: ID!, tag: String!): AppTag!
 
     ### Site Meta Data
-    getSiteMetaData(key: SiteMetaDataKey!): SiteMetaData!
+    getSiteMetaDataByKey(key: String!): SiteMetaData!
 
     ### Others
     checkUserIsAllowedForGatewayRequest(
@@ -127,14 +129,7 @@ type Mutation {
     ): Pricing!
     createSubscription(pricing: ID!, subscriber: ID!): Subscribe!
     createUsageLog(app: ID!, path: String!, subscriber: ID!, volume: Int! = 1, pricing: ID!): UsageLog!
-    createStripeTransfer(
-        receiver: ID!
-        withdrawAmount: NonNegativeDecimal!
-        receiveAmount: NonNegativeDecimal!
-        currency: String!
-        stripeTransferId: String
-        stripeTransferObject: String
-    ): StripeTransfer!
+    createStripeTransfer(receiver: ID!, withdrawAmount: NonNegativeDecimal!): StripeTransfer!
     createStripePaymentAccept(
         user: ID!
         amount: NonNegativeDecimal!
@@ -156,7 +151,7 @@ type Mutation {
     ): AccountActivity!
     flushAppSearchIndex: Int!
     createAppTag(app: String!, tag: String!): AppTag!
-    createSiteMetaData(key: SiteMetaDataKey!, value: Any!): SiteMetaData!
+    createSiteMetaData(key: String!, value: Any!): SiteMetaData!
     ping: Boolean!
     createUserAppToken(subscriber: ID!, app: ID!): UserAppToken!
 }
@@ -387,17 +382,18 @@ type StripePaymentAccept {
     pk: ID!
     user: User!
     amount: NonNegativeDecimal!
-    currency: String!
+    currency: Currency!
     stripePaymentStatus: String!
     stripeSessionObject: String!
     stripePaymentIntent: String!
     stripeSessionId: String!
-    createdAt: Timestamp!
     status: StripePaymentAcceptStatus!
+    createdAt: Timestamp!
+    updatedAt: Timestamp!
 
     # updateStripePaymentAccept(stripePaymentStatus: String, stripeSessionObject: String): StripePaymentAccept!
 
-    settlePayment(
+    _settleStripePaymentAcceptFromSQS(
         stripePaymentStatus: String
         stripeSessionObject: String
         stripePaymentIntent: String
@@ -407,6 +403,7 @@ type StripePaymentAccept {
 enum StripePaymentAcceptStatus {
     pending
     settled
+    expired
 }
 
 enum GatewayMode {
@@ -415,9 +412,10 @@ enum GatewayMode {
 }
 
 enum StripeTransferStatus {
-    pending
+    created
+    pending_transfer
     transferred
-    failed
+    failed_due_to_insufficient_balance
 }
 
 type StripeTransfer {
@@ -428,10 +426,11 @@ type StripeTransfer {
     stripeTransferId: String
     stripeTransferObject: String
     createdAt: Timestamp!
-    currency: String
-    settleStripeTransfer: StripeTransfer!
+    currency: Currency!
     transferAt: Timestamp!
     status: StripeTransferStatus
+
+    _settleStripeTransferFromSQS: StripeTransfer!
 }
 
 enum StripeTransferIndex {
@@ -455,7 +454,7 @@ enum AccountActivityReason {
 enum AccountActivityStatus {
     pending
     settled
-    failed
+    failed_due_to_insufficient_balance
 }
 enum AccountActivityIndex {
     indexByStatus_settleAt__onlyPK
@@ -508,7 +507,7 @@ type AppTag {
 }
 
 type SiteMetaData {
-    key: SiteMetaDataKey!
+    key: String!
     value: Any!
     createdAt: Timestamp!
     updatedAt: Timestamp!
@@ -518,13 +517,17 @@ type SiteMetaData {
 }
 
 enum SiteMetaDataKey {
-    pricingPerRequestCharge
-    pricingStripePercentageFee
-    pricingStripeFlatFee
-    _testingKey
+    per_request_charge
+    stripe_percentage_fee
+    stripe_flat_fee
+    min_withdrawal_amount
 }
 
 enum PricingAvailability {
     public
     existing_subscribers
+}
+
+enum Currency {
+    usd
 }

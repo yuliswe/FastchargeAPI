@@ -119,7 +119,7 @@ describe("Test a request from the gateway", () => {
 
     test("Prepare: Create test user and test app", async () => {
         testUser = await getOrCreateTestUser(context, { email: testUserEmail });
-        testApp = await context.batched.App.getOrCreate({ name: testAppName, owner: UserPK.stringify(testUser) });
+        testApp = await context.batched.App.createOverwrite({ name: testAppName, owner: UserPK.stringify(testUser) });
     });
 
     test("Replay a request to https://myapp.fastchargeapi.com/google", async () => {

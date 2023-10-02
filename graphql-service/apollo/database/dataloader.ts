@@ -405,12 +405,18 @@ export class Batched<I extends Item, T_CreateProps extends GQLPartial<I>> {
         }
     }
 
-    async getOrCreate(key: GQLPartial<I>, options?: BatchQueryOptions): Promise<I> {
-        let item = await this.getOrNull(key, options);
+    async createOverwrite(data: GQLPartial<I>, options?: BatchQueryOptions): Promise<I> {
+        const lookupKeys = extractKeysFromItems(this.model, data);
+        const item = await this.getOrNull(lookupKeys, options);
         if (item === null) {
-            item = await this.create(key as T_CreateProps);
+            return await this.create(data as T_CreateProps);
+        } else {
+            const nonPKData = { ...data };
+            for (const pkPart of Object.keys(lookupKeys)) {
+                delete nonPKData[pkPart as keyof I];
+            }
+            return await this.update(item, nonPKData);
         }
-        return item;
     }
 
     async assertExists(key: Query<I>): Promise<void> {
@@ -531,11 +537,11 @@ export class Batched<I extends Item, T_CreateProps extends GQLPartial<I>> {
         const maxAttempts = 10;
         for (let retries = 0; retries < maxAttempts; retries++) {
             try {
-                this.clearCache();
                 const result = await this.model.create(stripped);
                 if (retries > 0) {
                     console.warn(`Retried ${retries} times to create ${this.model.name} ${JSON.stringify(item)}`);
                 }
+                this.clearCache();
                 return result;
             } catch (e) {
                 // We want to catch the case where the item already exists. DynamoDB
