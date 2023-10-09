@@ -35,7 +35,7 @@ export const SecretResolvers: GQLResolvers & {
             const secret = await context.batched.Secret.create({
                 key,
                 value,
-                expireAt,
+                expireAt: expireAt ?? undefined,
             });
             return secret;
         },

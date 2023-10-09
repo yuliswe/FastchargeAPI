@@ -93,22 +93,24 @@ export async function settleAccountActivities(
 
     let balance = new Decimal(accountHistory.startingBalance);
 
-    const promises = activities.map((activity) =>
-        context.batched.AccountActivity.update(activity, {
-            status: AccountActivityStatus.Settled,
-            accountHistory: AccountHistoryPK.stringify(accountHistory),
-        }).then((activity) => {
-            // Only update the balance when successfully settled.
-            if (activity.type === AccountActivityType.Credit) {
-                balance = balance.sub(activity.amount);
-            } else if (activity.type === AccountActivityType.Debit) {
-                balance = balance.add(activity.amount);
-            }
-            return activity;
-        })
+    await settlePromisesInBatches(
+        activities,
+        (activity) =>
+            context.batched.AccountActivity.update(activity, {
+                status: AccountActivityStatus.Settled,
+                accountHistory: AccountHistoryPK.stringify(accountHistory),
+            }).then((activity) => {
+                // Only update the balance when successfully settled.
+                if (activity.type === AccountActivityType.Credit) {
+                    balance = balance.sub(activity.amount);
+                } else if (activity.type === AccountActivityType.Debit) {
+                    balance = balance.add(activity.amount);
+                }
+                return activity;
+            }),
+        { batchSize: 10 }
     );
 
-    await settlePromisesInBatches(promises, { batchSize: 10 });
     await context.batched.AccountHistory.update(accountHistory, { closingBalance: balance.toString() });
 
     return {

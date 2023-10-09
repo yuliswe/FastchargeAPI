@@ -1,7 +1,7 @@
 import { PK } from "@/database/utils";
 
 export type SubscriptionPKContent = {
-    app: string;
+    app: PK;
     subscriber: string;
 };
 

@@ -1,4 +1,5 @@
 import { Pricing } from "@/database/models/Pricing";
+import { PK } from "@/database/utils";
 import { RequestContext } from "../RequestContext";
 import { PricingAvailability } from "../__generated__/gql/graphql";
 import { GQLPricingUpdatePricingArgs } from "../__generated__/resolvers-types";
@@ -31,7 +32,7 @@ export const PricingPermissions = {
         }
         return false;
     },
-    async createPricing({ app: appPK }: { app: string }, context: RequestContext): Promise<boolean> {
+    async createPricing({ app: appPK }: { app: PK }, context: RequestContext): Promise<boolean> {
         if (context.isServiceRequest || context.isAdminUser) {
             return true;
         }

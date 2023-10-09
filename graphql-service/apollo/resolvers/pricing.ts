@@ -1,4 +1,5 @@
 import { Pricing } from "@/database/models/Pricing";
+import { AppPK } from "@/pks/AppPK";
 import { UserPK } from "@/pks/UserPK";
 import { RequestContext } from "../RequestContext";
 import {
@@ -11,7 +12,6 @@ import {
 } from "../__generated__/resolvers-types";
 import { BadInput, Denied, ImmutableResource, TooManyResources } from "../errors";
 import { Can } from "../permissions";
-import { AppPK } from "../pks/AppPK";
 import "../pks/PricingPK";
 import { PricingPK } from "../pks/PricingPK";
 
@@ -90,14 +90,14 @@ export const PricingResolvers: GQLResolvers = {
                 throw new Denied();
             }
             return await context.batched.Pricing.update(parent, {
-                name,
-                minMonthlyCharge,
-                chargePerRequest,
-                callToAction,
-                freeQuota,
+                name: name ?? undefined,
+                minMonthlyCharge: minMonthlyCharge ?? undefined,
+                chargePerRequest: chargePerRequest ?? undefined,
+                callToAction: callToAction ?? undefined,
+                freeQuota: freeQuota ?? undefined,
                 minMonthlyChargeFloat: minMonthlyCharge ? Number.parseFloat(minMonthlyCharge) : undefined,
                 chargePerRequestFloat: chargePerRequest ? Number.parseFloat(chargePerRequest) : undefined,
-                availability,
+                availability: availability ?? undefined,
             });
         },
     },
@@ -165,7 +165,7 @@ export const PricingResolvers: GQLResolvers = {
             const chargePerRequestFloat = Number.parseFloat(chargePerRequest);
             const pricing = await context.batched.Pricing.create({
                 app,
-                callToAction,
+                callToAction: callToAction ?? undefined,
                 chargePerRequest,
                 minMonthlyCharge,
                 name,

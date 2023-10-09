@@ -2,6 +2,7 @@ import { GatewayRequestCounter } from "@/database/models/GatewayRequestCounter";
 import { GatewayRequestDecisionCache } from "@/database/models/GatewayRequestDecisionCache";
 import { Pricing } from "@/database/models/Pricing";
 import { User } from "@/database/models/User";
+import { PK } from "@/database/utils";
 import { Chalk } from "chalk";
 import Decimal from "decimal.js-light";
 import { RequestContext } from "../RequestContext";
@@ -273,7 +274,7 @@ export const GatewayResolvers: GQLResolvers & {
 
 async function checkHasSufficientFreeQuota(
     context: RequestContext,
-    { app, user, pricingPromise }: { app: string; user: string; pricingPromise: Promise<Pricing | null> }
+    { app, user, pricingPromise }: { app: PK; user: string; pricingPromise: Promise<Pricing | null> }
 ): Promise<boolean | null> {
     const pricing = await pricingPromise;
     if (pricing == null) {
@@ -344,11 +345,11 @@ async function checkOwnerHasSufficientBalance(
         app,
         shouldCollectMonthlyChargePromise,
     }: {
-        app: string;
+        app: PK;
         shouldCollectMonthlyChargePromise: Promise<ShouldCollectMonthlyChargePromiseResult | null>;
     }
 ): Promise<boolean | null> {
-    const balancePromise = context.batched.App.get({ name: app })
+    const balancePromise = context.batched.App.get(AppPK.parse(app))
         .then(async (app) => {
             try {
                 return await getUserBalance(context, app.owner);
@@ -397,7 +398,7 @@ async function checkShouldChargeMonthlyFee(
         app,
         userPromise,
         pricingPromise,
-    }: { app: string; userPromise: Promise<User>; pricingPromise: Promise<Pricing | null> }
+    }: { app: PK; userPromise: Promise<User>; pricingPromise: Promise<Pricing | null> }
 ): Promise<ShouldCollectMonthlyChargePromiseResult | null> {
     const pricing = await pricingPromise;
     const user = await userPromise;
@@ -427,7 +428,7 @@ async function getGatewayDecisionCache(
         globalRequestCounterPromise,
     }: {
         user: string;
-        app: string;
+        app: PK;
         globalRequestCounterPromise: Promise<GatewayRequestCounter | null>;
     }
 ): Promise<{ result?: GatewayRequestDecisionCache | null; error?: GatewayDecisionResponse }> {
@@ -491,8 +492,8 @@ async function createOrUpdateGatewayDecisionCache(
         pricingPromise,
         globalRequestCounterPromise,
     }: {
-        user: string;
-        app: string;
+        user: PK;
+        app: PK;
         pricingPromise: Promise<Pricing | null>;
         globalRequestCounterPromise: Promise<GatewayRequestCounter | null>;
     }
@@ -578,7 +579,7 @@ type EstimateAllowanceToSkipBalanceCheckResult = {
  */
 async function estimateAllowanceToSkipBalanceCheck(
     context: RequestContext,
-    { app, user, pricing }: { app: string; user: string; pricing: Pricing }
+    { app, user, pricing }: { app: PK; user: PK; pricing: Pricing }
 ): Promise<EstimateAllowanceToSkipBalanceCheckResult> {
     // Heuristic: take the user's balance, substract the monthly charge, and
     // devide by the request charge, and divide by 100.

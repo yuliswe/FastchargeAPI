@@ -117,8 +117,8 @@ export const UserResolvers: GQLResolvers & {
                     user: UserPK.stringify(parent),
                     createdAt: dateRange
                         ? {
-                              le: dateRange.end,
-                              ge: dateRange.start,
+                              le: dateRange.end ?? undefined,
+                              ge: dateRange.start ?? undefined,
                           }
                         : undefined,
                 },
@@ -147,12 +147,12 @@ export const UserResolvers: GQLResolvers & {
             const usage = await context.batched.UsageLog.many(
                 {
                     subscriber: UserPK.stringify(parent),
-                    app: app,
-                    path,
+                    app: app ?? undefined,
+                    path: path ?? undefined,
                     createdAt: dateRange
                         ? {
-                              le: dateRange.end,
-                              ge: dateRange.start,
+                              le: dateRange.end ?? undefined,
+                              ge: dateRange.start ?? undefined,
                           }
                         : undefined,
                 },
@@ -173,8 +173,8 @@ export const UserResolvers: GQLResolvers & {
                     app,
                     createdAt: dateRange
                         ? {
-                              le: dateRange.end,
-                              ge: dateRange.start,
+                              le: dateRange.end ?? undefined,
+                              ge: dateRange.start ?? undefined,
                           }
                         : undefined,
                 },
@@ -196,7 +196,7 @@ export const UserResolvers: GQLResolvers & {
                 throw new Denied();
             }
             const user = await context.batched.User.update(parent, {
-                author,
+                author: author ?? undefined,
                 stripeCustomerId,
                 stripeConnectAccountId,
             });

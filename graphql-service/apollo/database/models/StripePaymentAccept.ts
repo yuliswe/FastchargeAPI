@@ -1,14 +1,7 @@
 import { Currency, StripePaymentAcceptStatus } from "@/__generated__/gql/graphql";
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
-import {
-    GQLPartial,
-    PK,
-    String_Required_NotEmpty,
-    defaultCreatedAt,
-    tableConfigs,
-    validateStringDecimal,
-} from "../utils";
+import { PK, String_Required_NotEmpty, defaultCreatedAt, tableConfigs, validateStringDecimal } from "../utils";
 
 /**
  * StripePaymentAccept represents an event when the user successfully pays over
@@ -38,7 +31,7 @@ export type StripePaymentAcceptCreateProps = {
     stripePaymentStatus: string;
     stripePaymentIntent: string;
     stripeSessionObject: object;
-} & GQLPartial<StripePaymentAccept>;
+} & Partial<StripePaymentAccept>;
 
 export const StripePaymentAcceptTableSchema = new dynamoose.Schema(
     {

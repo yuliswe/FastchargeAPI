@@ -5,6 +5,7 @@ import { RequestContext } from "../RequestContext";
 import { GQLAppFullTextSearchOrderBy } from "../__generated__/resolvers-types";
 import { auroraResourceArn, auroraSecretArn, rdsClient } from "../database/aurora";
 import { AppPK } from "../pks/AppPK";
+import { settlePromisesInBatches } from "./promise";
 
 export async function getAppByPK(context: RequestContext, pk: string): Promise<App> {
     return context.batched.App.get(AppPK.parse(pk));
@@ -28,7 +29,7 @@ export function validateAppName(name: unknown): boolean {
 }
 
 export async function updateAppSearchIndex(context: RequestContext, apps: App[]): Promise<number> {
-    const tags = apps.map((app) => context.batched.AppTag.many({ app: app.name }));
+    const tags = apps.map((app) => context.batched.AppTag.many({ app: AppPK.stringify(app) }));
     const parameterSets = apps.map(async (app, index) => [
         {
             name: "name",
@@ -140,16 +141,14 @@ export async function appFullTextSearch(
     const response = await rdsClient.send(command, {
         requestTimeout: 60_000,
     });
-    const promises = [];
-    for (const record of response.records ?? []) {
-        const app_name = record[0].stringValue;
-        if (app_name) {
-            promises.push(context.batched.App.many({ name: app_name }));
-        }
-    }
-    const results = [];
-    for (const promise of promises) {
-        results.push(...(await promise));
-    }
+    const results: App[] = [];
+    await settlePromisesInBatches(
+        response.records ?? [],
+        async (record) => {
+            const app_name = record[0].stringValue;
+            results.push(...(await context.batched.App.many({ name: app_name })));
+        },
+        { batchSize: 10 }
+    );
     return results;
 }

@@ -1,13 +1,18 @@
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
-import { GQLPartial, PK, String_Required_NotEmpty, tableConfigs } from "../utils";
+import { PK, String_Required_NotEmpty, tableConfigs } from "../utils";
 
 export enum AppTagTableIndex {
     indexByTagAppOnlyPK = "indexByTag_app__onlyPK",
 }
+
 export const AppTagTableSchema = new dynamoose.Schema(
     {
-        app: { hashKey: true, ...String_Required_NotEmpty("app") },
+        app: {
+            hashKey: true,
+            type: String,
+            required: true,
+        },
         tag: {
             rangeKey: true,
             ...String_Required_NotEmpty("tag"),
@@ -20,6 +25,7 @@ export const AppTagTableSchema = new dynamoose.Schema(
     },
     { timestamps: true }
 );
+
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
 
@@ -33,8 +39,9 @@ export class AppTag extends Item {
 
 export type AppTagCreateProps = {
     app: PK;
-    tag: PK;
-} & GQLPartial<AppTag>;
+    tag: string;
+} & Partial<AppTag>;
+
 export const AppTagModel = dynamoose.model<AppTag>("AppTag", AppTagTableSchema, {
     ...tableConfigs,
 });

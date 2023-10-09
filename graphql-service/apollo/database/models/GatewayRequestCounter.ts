@@ -1,6 +1,6 @@
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
-import { GQLPartial, PK, tableConfigs } from "../utils";
+import { PK, tableConfigs } from "../utils";
 
 export const GatewayRequestCounterTableSchema = new dynamoose.Schema(
     {
@@ -30,7 +30,7 @@ export class GatewayRequestCounter extends Item {
 export type GatewayRequestCounterCreateProps = {
     requester: PK;
     app: PK;
-} & GQLPartial<GatewayRequestCounter>;
+} & Partial<GatewayRequestCounter>;
 
 export const GatewayRequestCounterModel = dynamoose.model<GatewayRequestCounter>(
     "GatewayRequestCounter",

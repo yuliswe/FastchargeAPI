@@ -29,7 +29,7 @@ type Query {
 
     ### Subscriptions
     getSubscription(pk: ID!): Subscribe!
-    getSubscriptionByAppSubscriber(subscriber: ID!, app: String!): Subscribe!
+    getSubscriptionByAppSubscriber(subscriber: ID!, app: ID!): Subscribe!
 
     ### User App Token
     getUserAppToken(pk: ID, subscriber: ID, app: ID): UserAppToken!
@@ -75,7 +75,7 @@ type Query {
 
     ### App Tags
     getAppTag(pk: ID!): AppTag!
-    getAppTagByTag(app: String!, tag: String!): AppTag!
+    getAppTagByTag(app: ID!, tag: String!): AppTag!
     listAppTagsByApp(app: ID!): [AppTag!]!
     deleteAppTag(app: ID!, tag: String!): AppTag!
 
@@ -94,8 +94,8 @@ type Query {
     apps(tag: String, limit: Int): [App!]! @deprecated(reason: "Use listApps() instead")
     app(pk: ID, name: String): App! @deprecated(reason: "Use getApp() instead")
     user(pk: ID, email: Email): User! @deprecated(reason: "Use getUser() instead")
-    endpoint(pk: ID, app: String, path: String): Endpoint! @deprecated(reason: "Use getEndpoint() instead")
-    subscription(pk: ID, subscriber: ID, app: String): Subscribe! @deprecated(reason: "Use getSubscription() instead")
+    endpoint(pk: ID, app: ID, path: String): Endpoint! @deprecated(reason: "Use getEndpoint() instead")
+    subscription(pk: ID, subscriber: ID, app: ID): Subscribe! @deprecated(reason: "Use getSubscription() instead")
     pricing(pk: ID): Pricing! @deprecated(reason: "Use getPricing() instead")
     secret(key: String!): Secret! @deprecated(reason: "Use getSecret() instead")
     stripeTransfer(pk: ID): StripeTransfer! @deprecated(reason: "Use getStripeTransfer() instead")
@@ -150,7 +150,7 @@ type Mutation {
         settleAt: Timestamp
     ): AccountActivity!
     flushAppSearchIndex: Int!
-    createAppTag(app: String!, tag: String!): AppTag!
+    createAppTag(app: ID!, tag: String!): AppTag!
     createSiteMetaData(key: String!, value: Any!): SiteMetaData!
     ping: Boolean!
     createUserAppToken(subscriber: ID!, app: ID!): UserAppToken!
@@ -201,7 +201,7 @@ type User {
     stripeConnectAccountId: String
     apps: [App!]!
 
-    usageLogs(app: String, path: String, limit: Int = 5, dateRange: DateRangeInput): [UsageLog!]!
+    usageLogs(app: ID, path: String, limit: Int = 5, dateRange: DateRangeInput): [UsageLog!]!
 
     updateUser(author: String, stripeCustomerId: String, stripeConnectAccountId: String): User
 

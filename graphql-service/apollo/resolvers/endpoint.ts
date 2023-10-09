@@ -1,5 +1,4 @@
 import { Endpoint, EndpointModel } from "@/database/models/Endpoint";
-import { PK } from "@/database/utils";
 import { AppPK } from "@/pks/AppPK";
 import { RequestContext } from "../RequestContext";
 import {
@@ -8,6 +7,7 @@ import {
     GQLMutationCreateEndpointArgs,
     GQLQueryEndpointArgs,
     GQLQueryGetEndpointArgs,
+    GQLQueryListEndpointsByAppArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
 import { BadInput, Denied } from "../errors";
@@ -60,10 +60,10 @@ export const EndpointResolvers: GQLResolvers & {
                 throw new Denied();
             }
             return await context.batched.Endpoint.update(parent, {
-                method,
-                path,
-                description,
-                destination,
+                method: method ?? undefined,
+                path: path ?? undefined,
+                description: description ?? undefined,
+                destination: destination ?? undefined,
             });
         },
         async deleteEndpoint(parent, args: never, context, info) {
@@ -93,7 +93,7 @@ export const EndpointResolvers: GQLResolvers & {
             throw new BadInput("Must provide either pk or app+path");
         },
 
-        async listEndpointsByApp(parent: {}, { app }: { app: PK }, context: RequestContext) {
+        async listEndpointsByApp(parent: {}, { app }: GQLQueryListEndpointsByAppArgs, context: RequestContext) {
             const endpoints = await context.batched.Endpoint.many({
                 app,
                 deleted: false,
@@ -115,8 +115,8 @@ export const EndpointResolvers: GQLResolvers & {
                 app,
                 path,
                 method,
-                description,
                 destination,
+                description: description ?? undefined,
             });
             return endpoint;
         },

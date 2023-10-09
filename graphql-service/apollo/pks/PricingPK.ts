@@ -1,7 +1,7 @@
 import { PK } from "@/database/utils";
 
 export type PricingPKContent = {
-    app: string;
+    app: PK;
     createdAt: number;
 };
 

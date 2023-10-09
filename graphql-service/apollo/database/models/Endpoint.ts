@@ -1,7 +1,7 @@
 import { HttpMethod } from "@/__generated__/gql/graphql";
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
-import { GQLPartial, PK, String_Required_NotEmpty, defaultCreatedAt, tableConfigs } from "../utils";
+import { PK, String_Required_NotEmpty, defaultCreatedAt, tableConfigs } from "../utils";
 
 export const EndpointTableSchema = new dynamoose.Schema(
     {
@@ -51,5 +51,6 @@ export type EndpointCreateProps = {
     app: PK;
     path: string;
     destination: string;
-} & GQLPartial<Endpoint>;
+} & Partial<Endpoint>;
+
 export const EndpointModel = dynamoose.model<Endpoint>("Endpoint", EndpointTableSchema, { ...tableConfigs });

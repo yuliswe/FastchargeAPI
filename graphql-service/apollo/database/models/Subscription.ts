@@ -1,6 +1,6 @@
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
-import { GQLPartial, PK, String_Required_NotEmpty, tableConfigs } from "../utils";
+import { PK, String_Required_NotEmpty, tableConfigs } from "../utils";
 
 export const SubscriptionTableSchema = new dynamoose.Schema(
     {
@@ -35,7 +35,8 @@ export type SubscriptionCreateProps = {
     subscriber: PK;
     app: PK;
     pricing: PK;
-} & GQLPartial<Subscription>;
+} & Partial<Subscription>;
+
 export const SubscriptionModel = dynamoose.model<Subscription>("Subscription", SubscriptionTableSchema, {
     ...tableConfigs,
 });

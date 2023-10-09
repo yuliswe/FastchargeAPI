@@ -51,8 +51,8 @@ export const AccountHistoryResolvers: GQLResolvers & {
                     user,
                     closingTime: dateRange
                         ? {
-                              le: dateRange.end,
-                              ge: dateRange.start,
+                              le: dateRange.end ?? undefined,
+                              ge: dateRange.start ?? undefined,
                           }
                         : undefined,
                 },

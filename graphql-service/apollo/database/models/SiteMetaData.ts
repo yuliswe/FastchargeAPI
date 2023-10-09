@@ -1,7 +1,7 @@
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
 import { SiteMetaDataKey } from "../../__generated__/resolvers-types";
-import { GQLPartial, tableConfigs } from "../utils";
+import { tableConfigs } from "../utils";
 
 export const SiteMetaDataTableSchema = new dynamoose.Schema(
     {
@@ -23,7 +23,7 @@ export class SiteMetaData extends Item {
 export type SiteMetaDataCreateProps = {
     key: SiteMetaDataKey | string;
     value: unknown;
-} & GQLPartial<SiteMetaData>;
+} & Partial<SiteMetaData>;
 
 export const SiteMetaDataModel = dynamoose.model<SiteMetaData>("SiteMetaData", SiteMetaDataTableSchema, {
     ...tableConfigs,

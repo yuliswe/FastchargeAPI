@@ -1,6 +1,6 @@
 import { UsageSummary } from "@/database/models/UsageSummary";
+import { AppPK } from "@/pks/AppPK";
 import { RequestContext } from "../RequestContext";
-import { AppPK } from "../pks/AppPK";
 import { isCurrentUserPK } from "./utils";
 
 export const UsageSummaryPermissions = {

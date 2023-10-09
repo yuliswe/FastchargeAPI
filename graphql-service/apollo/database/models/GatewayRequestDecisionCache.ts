@@ -1,6 +1,6 @@
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
-import { GQLPartial, PK, tableConfigs } from "../utils";
+import { PK, tableConfigs } from "../utils";
 
 export const GatewayRequestDecisionCacheTableSchema = new dynamoose.Schema(
     {
@@ -30,7 +30,7 @@ export type GatewayRequestDecisionCacheCreateProps = {
     app: PK;
     nextForcedBalanceCheckRequestCount: number;
     nextForcedBalanceCheckTime: number;
-} & GQLPartial<GatewayRequestDecisionCache>;
+} & Partial<GatewayRequestDecisionCache>;
 
 export const GatewayRequestDecisionCacheModel = dynamoose.model<GatewayRequestDecisionCache>(
     "GatewayRequestDecisionCache",

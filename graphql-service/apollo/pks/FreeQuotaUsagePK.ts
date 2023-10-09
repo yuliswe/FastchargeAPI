@@ -2,7 +2,7 @@ import { PK } from "@/database/utils";
 
 export type FreeQuotaUsagePKContent = {
     subscriber: string;
-    app: string;
+    app: PK;
 };
 
 export class FreeQuotaUsagePK {

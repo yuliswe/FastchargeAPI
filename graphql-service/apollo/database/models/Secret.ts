@@ -1,6 +1,6 @@
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
-import { GQLPartial, String_Required_NotEmpty, tableConfigs } from "../utils";
+import { String_Required_NotEmpty, tableConfigs } from "../utils";
 
 export const SecretTableSchema = new dynamoose.Schema(
     {
@@ -28,5 +28,6 @@ export class Secret extends Item {
 export type SecretCreateProps = {
     key: string;
     value: string;
-} & GQLPartial<Secret>;
+} & Partial<Secret>;
+
 export const SecretModel = dynamoose.model<Secret>("Secret", SecretTableSchema, { ...tableConfigs });

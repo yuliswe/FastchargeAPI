@@ -1,6 +1,6 @@
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
-import { GQLPartial, tableConfigs, validateStringDecimal } from "../utils";
+import { tableConfigs, validateStringDecimal } from "../utils";
 
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
@@ -21,7 +21,7 @@ export class User extends Item {
 export type UserCreateProps = {
     uid: string;
     email: string;
-} & GQLPartial<User>;
+} & Partial<User>;
 
 export enum UserTableIndex {
     IndexByEmailOnlyPk = "indexByEmail__onlyPK",
@@ -48,6 +48,7 @@ export const UserTableSchema = new dynamoose.Schema(
         timestamps: true,
     }
 );
+
 export const UserModel = dynamoose.model<User>("User", UserTableSchema, {
     ...tableConfigs,
 });

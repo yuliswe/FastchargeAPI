@@ -1,7 +1,7 @@
 import { PK } from "@/database/utils";
 
 export type AppTagPKContent = {
-    app: string;
+    app: PK;
     tag: string;
 };
 

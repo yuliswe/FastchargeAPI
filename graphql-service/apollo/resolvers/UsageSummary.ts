@@ -1,4 +1,5 @@
 import { UsageSummary, UsageSummaryModel } from "@/database/models/UsageSummary";
+import { AppPK } from "@/pks/AppPK";
 import { RequestContext } from "../RequestContext";
 import {
     GQLMutationTriggerBillingArgs,
@@ -10,7 +11,6 @@ import { Denied } from "../errors";
 import { triggerBilling } from "../functions/billing";
 import { Can } from "../permissions";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
-import { AppPK } from "../pks/AppPK";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
 import { UserPK } from "../pks/UserPK";
 
@@ -82,8 +82,8 @@ export const UsageSummaryResolvers: GQLResolvers & {
                     app,
                     createdAt: dateRange
                         ? {
-                              le: dateRange.end,
-                              ge: dateRange.start,
+                              le: dateRange.end ?? undefined,
+                              ge: dateRange.start ?? undefined,
                           }
                         : undefined,
                 },

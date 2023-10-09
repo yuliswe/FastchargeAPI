@@ -1,20 +1,22 @@
-export async function settlePromisesInBatchesByIterator<T>(
-    promises: Iterator<T, T, T>,
+export async function settlePromisesInBatchesByIterator<Arg, PromiseValue>(
+    args: Iterator<Arg, Arg, Arg>,
+    handler: (args: Arg, index: number) => Promise<PromiseValue>,
     { batchSize }: { batchSize: number }
-): Promise<PromiseSettledResult<T>[]> {
-    const results: PromiseSettledResult<T>[] = [];
-    let nextBatch = takeNextN(batchSize, promises);
+): Promise<PromiseSettledResult<PromiseValue>[]> {
+    const results: PromiseSettledResult<PromiseValue>[] = [];
+    let nextBatch = takeNextN(batchSize, args);
     while (nextBatch.length > 0) {
-        results.push(...(await Promise.allSettled(nextBatch)));
-        nextBatch = takeNextN(batchSize, promises);
+        results.push(...(await Promise.allSettled(nextBatch.map(handler))));
+        nextBatch = takeNextN(batchSize, args);
     }
     return results;
 }
-export async function settlePromisesInBatches<T>(
-    promises: T[],
+export async function settlePromisesInBatches<Arg, PromiseValue>(
+    args: Arg[],
+    handler: (args: Arg, index: number) => Promise<PromiseValue>,
     { batchSize }: { batchSize: number }
-): Promise<PromiseSettledResult<T>[]> {
-    return settlePromisesInBatchesByIterator(promises[Symbol.iterator](), { batchSize });
+): Promise<PromiseSettledResult<PromiseValue>[]> {
+    return settlePromisesInBatchesByIterator(args[Symbol.iterator](), handler, { batchSize });
 }
 
 function takeNextN<T>(n: number, iterator: Iterator<T, T, T>): T[] {

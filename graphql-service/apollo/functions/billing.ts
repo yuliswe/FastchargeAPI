@@ -2,6 +2,7 @@ import { AccountActivity } from "@/database/models/AccountActivity";
 import { FreeQuotaUsage } from "@/database/models/FreeQuotaUsage";
 import { Pricing } from "@/database/models/Pricing";
 import { UsageSummary } from "@/database/models/UsageSummary";
+import { PK } from "@/database/utils";
 import Decimal from "decimal.js-light";
 import { RequestContext } from "../RequestContext";
 import {
@@ -242,12 +243,7 @@ export type ShouldCollectMonthlyChargePromiseResult = {
  */
 export async function shouldCollectMonthlyCharge(
     context: RequestContext,
-    {
-        subscriber,
-        app,
-        pricing,
-        volumeBillable,
-    }: { subscriber: string; app: string; pricing: Pricing; volumeBillable: number },
+    { subscriber, app, pricing, volumeBillable }: { subscriber: PK; app: PK; pricing: Pricing; volumeBillable: number },
     {
         collectionPeriodInSeconds = 60 * 60 * 24 * 30, // default to 30 days
     }: { collectionPeriodInSeconds?: number } = {}
@@ -299,12 +295,7 @@ export type ComputeBillableVolumeResult = {
  */
 export async function computeBillableVolume(
     context: RequestContext,
-    {
-        app,
-        subscriber,
-        volume,
-        pricingFreeQuota,
-    }: { app: string; subscriber: string; volume: number; pricingFreeQuota: number }
+    { app, subscriber, volume, pricingFreeQuota }: { app: PK; subscriber: PK; volume: number; pricingFreeQuota: number }
 ): Promise<ComputeBillableVolumeResult> {
     const freeQuotaUsage = await context.batched.FreeQuotaUsage.getOrNull({
         subscriber,
@@ -343,7 +334,7 @@ export async function computeBillableVolume(
  */
 export async function triggerBilling(
     context: RequestContext,
-    { user, app, path }: { user: string; app: string; path: string }
+    { user, app, path }: { user: PK; app: PK; path: string }
 ): Promise<{ affectedUsageSummaries: UsageSummary[] }> {
     enforceCalledFromQueue(context, user);
     await collectUsageLogs(context, { user, app, path });

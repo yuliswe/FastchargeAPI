@@ -2,14 +2,7 @@ import { Currency } from "@/__generated__/gql/graphql";
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
 import { StripeTransferStatus } from "../../__generated__/resolvers-types";
-import {
-    GQLPartial,
-    PK,
-    String_Required_NotEmpty,
-    defaultCreatedAt,
-    tableConfigs,
-    validateStringDecimal,
-} from "../utils";
+import { PK, String_Required_NotEmpty, defaultCreatedAt, tableConfigs, validateStringDecimal } from "../utils";
 
 export enum StripeTransferTableIndex {
     indexByStatusTransferAtOnlyPK = "indexByStatus_transferAt__onlyPK",
@@ -98,7 +91,8 @@ export type StripeTransferCreateProps = {
     withdrawAmount: string;
     transferAt: number;
     status: StripeTransferStatus;
-} & GQLPartial<StripeTransfer>;
+} & Partial<StripeTransfer>;
+
 export const StripeTransferModel = dynamoose.model<StripeTransfer>("StripeTransfer", StripeTransferTableSchema, {
     ...tableConfigs,
 });

@@ -1,45 +1,42 @@
+import { settlePromisesInBatches } from "@/functions/promise";
 import { ConditionalCheckFailedException } from "@aws-sdk/client-dynamodb";
 import DataLoader from "dataloader";
-import { InputKey, KeyObject, ModelType } from "dynamoose/dist/General";
+import { KeyObject, ModelType } from "dynamoose/dist/General";
 import { Item } from "dynamoose/dist/Item";
 import { Query as DynamogooseQuery, Scan as DynamogooseScan } from "dynamoose/dist/ItemRetriever";
 import hash from "object-hash";
 import { AlreadyExists, NotFound, UpdateContainsPrimaryKey } from "../errors";
-import { GQLPartial } from "./utils";
 
-type Optional<T> = T | undefined | null;
+/**
+ * This file is a collection of functions that are used to bridge Dynamoose with
+ * DataLoader.
+ */
+
 type ConditionQuery<V> = {
-    where?: Optional<V>;
-    filter?: Optional<V>;
-    attribute?: Optional<V>;
-    eq?: Optional<V>;
-    lt?: Optional<V>;
-    le?: Optional<V>;
-    gt?: Optional<V>;
-    ge?: Optional<V>;
-    beginsWith?: Optional<V>;
-    contains?: Optional<V>;
+    // where?: Optional<V>;
+    // filter?: Optional<V>;
+    // attribute?: Optional<V>;
+    eq?: V;
+    lt?: V;
+    le?: V;
+    gt?: V;
+    ge?: V;
+    beginsWith?: V;
+    contains?: V;
     // exists?: () => Condition;
     in?: V[];
     between?: [V, V];
 };
 type Query<T> = {
-    [K in keyof T & string]?: Optional<T[K] | ConditionQuery<T[K]>>;
+    [K in keyof T & string]?: T[K] | ConditionQuery<T[K]>;
 };
-type UpdateQuery<T> = NormalUpdateQuery<T> | AdvancedUpdateQuery<T>;
-type NormalUpdateQuery<T> = {
-    [K in keyof T]?: Optional<T[K] | ConditionQuery<T[K]>>;
-};
+type UpdateQuery<T> = Partial<T> | AdvancedUpdateQuery<T>;
 type AdvancedUpdateQuery<T> = {
-    $SET?: NormalUpdateQuery<T>;
+    $SET?: Partial<T>;
     $REMOVE?: (keyof T)[];
-    $ADD?: NormalUpdateQuery<T>;
-    $DELETE?: NormalUpdateQuery<T>;
+    $ADD?: Partial<T>;
+    $DELETE?: Partial<T>;
 };
-/**
- * This file is a collection of functions that are used to bridge Dynamoose with
- * DataLoader.
- */
 
 function applyBatchOptionsToQuery<T>(query: DynamogooseQuery<T>, options: BatchQueryOptions): DynamogooseQuery<T> {
     if (options) {
@@ -80,18 +77,26 @@ function applyBatchOptionsToScan<T>(query: DynamogooseScan<T>, options: BatchQue
  * @param item
  * @returns An object { [hashKeyName]: hashKey, [rangeKeyName]?: rangeKey }
  */
-function extractKeysFromItems<I extends Item>(model: ModelType<I>, item: GQLPartial<I>): Partial<I> {
-    const hashKeyName = model.table().hashKey;
-    const rangeKeyName: keyof I | undefined = model.table().rangeKey as keyof I;
+function extractKeysFromItems<I extends Item, Input extends Partial<I>>(
+    model: ModelType<I>,
+    item: Input
+): Partial<Input> {
+    const hashKeyName = model.table().hashKey as keyof Input;
+    const rangeKeyName = model.table().rangeKey as keyof Input;
     const query = {
-        [hashKeyName]: item[hashKeyName as keyof I],
-    } as Partial<I>;
+        [hashKeyName]: item[hashKeyName],
+    } as Partial<Input>;
     if (rangeKeyName != undefined && item[rangeKeyName] != null) {
         query[rangeKeyName] = item[rangeKeyName]!;
     }
     return query;
 }
 
+/**
+ * Adds default values to the item, if the value is undefined. Unlike
+ * Item.withDefaults(), this function returns the original Item type instead of
+ * a plain object.
+ */
 async function assignDefaults<I extends Item>(item: I): Promise<I> {
     // TODO: There is a bug with item.withDefaults(), in that in converts a Date
     // type to a string. This may cause issues when the item is saved back to
@@ -109,7 +114,6 @@ async function assignDefaults<I extends Item>(item: I): Promise<I> {
     return item;
 }
 
-type PrimaryKey = string | number;
 type BatchQueryOptions = {
     limit?: number | null;
     sort?: "ascending" | "descending" | null;
@@ -118,7 +122,7 @@ type BatchQueryOptions = {
     batchSize?: number; // Number of items to get per batch
 };
 type BatchKey<I extends Item> = {
-    query: PrimaryKey | Query<I>;
+    query: Query<I>;
     options?: BatchQueryOptions;
 };
 type BatchScanOptions = {
@@ -129,16 +133,15 @@ type BatchScanOptions = {
 };
 
 /**
- * Used by DataLoader, this function takes a list of filter conditions and
- * returns a list of items of the same count.
+ * Used by DataLoader, this function takes a list of primary keys and returns a
+ * list of items of the same count.
  *
- * Possible valid filter conditions:
+ * The batch key can be a BasePK. a hash key, or a hash key + range key.
+ * Model.getBatch() uses BatchGetItem, which requires that for each primary key,
+ * all of the key attributes are present. Since BatchGetItem doesn't support a
+ * filter expression, we can only use getBatch if no filter is needed.
  *
- * 1. A string, which is the partition key
- * 2. An object which is the primary/index/partition key + key value:
- *      {"breed": "Pug", "name": "Fido"}
- * 3. An object which is the primary/index/partition key + filter condition:
- *      {"breed": {"contains": "Terrier"}}
+ * https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchGetItem.html
  *
  * This method cannot filter which keys are used for lookup from the keys
  * object. It means that you can only pass in keys that are used for lookup.
@@ -147,181 +150,134 @@ type BatchScanOptions = {
  * @returns
  */
 function createBatchGet<I extends Item>(model: ModelType<I>) {
-    // At the moment, DynamoDB's BatchGetItem can handle at most 100 items at a
-    // time
-    async function batchGet100Max(bkArray: BatchKey<I>[]): Promise<I[][]> {
+    function isBatchable(model: ModelType<Item>, batchKey: BatchKey<Item>): boolean {
+        if (batchKey.options) {
+            return false;
+        }
+        const { query } = batchKey;
+        const { hashKey, rangeKey } = model.table();
+        if (!hashKey) {
+            throw new Error("Table must have a hashKey");
+        }
+        if (!(hashKey in query)) {
+            throw new Error("Query must contain hashKey");
+        }
+        // If hashkey query is not a string or number, it is not batchable
+        if (!["string", "number"].includes(typeof query[hashKey as keyof typeof query])) {
+            return false;
+        }
+        // If the primary key has only a hash key
+        if (Object.keys(query).length == 1 && hashKey in query && !rangeKey) {
+            return true;
+        }
+        // If only rangeKey and primaryKey are present
+        if (
+            rangeKey &&
+            Object.keys(query).length == 2 &&
+            hashKey in query &&
+            rangeKey in query &&
+            ["string", "number"].includes(typeof query[rangeKey as keyof typeof query])
+        ) {
+            return true;
+        }
+        return false;
+    }
+
+    return async (bkArray: BatchKey<I>[]): Promise<I[][]> => {
         if (bkArray.length > 100) {
             throw new Error("Cannot batch get more than 100 items at a time");
         }
-        // Type 1 is when the query contains only a hashKey, and the table only
-        // has a hashKey as well (no rangeKey)
-        const batch1: PrimaryKey[] = [];
-        // Type 2 is when the query contains a hashKey and a rangeKey, and the
-        // table has both a hashKey and a rangeKey.
-        const batch2: Query<I>[] = [];
-        // Other types are unbatchable
-        const unbatchable: number[] = [];
-        const bkType: number[] = [];
-        const resultArr: I[][] = Array(bkArray.length).fill([]) as I[][];
-        const hashKeyName = model.table().hashKey as keyof I & string;
-        const rangeKeyName = model.table().rangeKey as (keyof I & string) | undefined;
+        type BatchableItem = { batchable: boolean; ko: KeyObject; index: number };
+        type UnbatchableItem = { batchable: boolean; bk: BatchKey<I>; index: number };
+        const batchable: BatchableItem[][] = [];
+        const unbatchable: UnbatchableItem[] = [];
+        const results = Array<I[]>(bkArray.length).fill([]);
+
         for (const [index, bk] of bkArray.entries()) {
-            // Case 1: query is a hashkey string
-            if (
-                hashKeyName &&
-                !rangeKeyName &&
-                typeof bk.query === "string" &&
-                (!bk.options || Object.keys(bk.options).length == 0)
-            ) {
-                batch1.push(bk.query);
-                bkType.push(1);
-            }
-            // Case 2: query is an object containing only the hashkey
-            else if (
-                hashKeyName &&
-                !rangeKeyName &&
-                typeof bk.query === "object" &&
-                Object.keys(bk.query).length === 1 &&
-                Object.keys(bk.query)[0] === hashKeyName &&
-                (!bk.options || Object.keys(bk.options).length == 0)
-            ) {
-                batch1.push(bk.query[hashKeyName] as PrimaryKey);
-                bkType.push(1);
-            }
-            // Case 3: query is an object containing only the hashkey and the
-            // range key
-            else if (
-                hashKeyName &&
-                rangeKeyName &&
-                typeof bk.query === "object" &&
-                Object.keys(bk.query).length === 2 &&
-                Object.keys(bk.query).includes(hashKeyName) &&
-                Object.keys(bk.query).includes(rangeKeyName) &&
-                (!bk.options || Object.keys(bk.options).length == 0)
-            ) {
-                batch2.push(bk.query);
-                bkType.push(2);
-            }
-            // Other cases are unbatchable
-            else {
-                // could be a pk (string or object) with options
-                unbatchable.push(index);
-                bkType.push(3);
+            if (isBatchable(model, bk)) {
+                if (batchable.length === 0 || batchable.at(-1)!.keys.length === 100) {
+                    batchable.push([]);
+                }
+                batchable.at(-1)!.push({ ko: bk.query as KeyObject, index, batchable: true });
+            } else {
+                unbatchable.push({ bk: bk, index, batchable: false });
             }
         }
 
-        function queryUnbatchable(index: number): Promise<I[]> {
-            const bk = bkArray[index];
-            let query: DynamogooseQuery<I>;
-            if (typeof bk.query === "string") {
-                query = model.query(hashKeyName).eq(bk.query);
-            } else if (typeof bk.query === "object") {
-                query = model.query(bk.query);
-            } else {
-                throw new Error("Invalid query type: " + typeof bk.query + " " + bk.query.toString());
+        async function queryUnbatchable(bk: BatchKey<I>): Promise<I[]> {
+            if (process.env.LOG_DATALOADER === "1") {
+                console.log("Query unbatchable", bk);
             }
-            query = query.using({ auto: false });
+            let query: DynamogooseQuery<I> = model.query(bk.query).using({ auto: false });
             if (bk.options != undefined) {
                 query = applyBatchOptionsToQuery(query, bk.options);
             }
-            return query.exec();
+            return await query.exec();
         }
 
-        // Type 1 and 2 can be batched at once.
-        const [result1, result2, ...result3] = await Promise.all([
-            batch1.length > 0 ? model.batchGet(batch1) : [], // an array of I
-            batch2.length > 0 ? model.batchGet(batch2 as InputKey[]) : [], // an array of I
-            ...unbatchable.map(queryUnbatchable), // multiple arrays of I[]
-        ]);
-
-        const promises = [];
-        for (const [index, items] of result3.entries()) {
-            const promise = Promise.all(items.map(assignDefaults)).then((result) => {
-                resultArr[unbatchable[index]] = result;
-                return result;
-            });
-            promises.push(promise);
+        if (process.env.LOG_DATALOADER === "1") {
+            console.log("Query batchable", JSON.stringify(batchable));
+            console.log("Query unbatchable", JSON.stringify(unbatchable));
         }
 
-        const keyMap1 = new Map<PrimaryKey, I[]>();
-        for (const item of result1) {
-            // batch1 only contains hashKey
-            const promise = assignDefaults(item).then((item) => {
-                const key = item[hashKeyName] as PrimaryKey;
-                if (keyMap1.has(key)) {
-                    keyMap1.get(key)?.push(item);
+        await settlePromisesInBatches<BatchableItem[] | UnbatchableItem, void>(
+            [...batchable, ...unbatchable],
+            async (arg) => {
+                if (arg instanceof Array) {
+                    const keys = arg.map((b) => b.ko);
+                    const batchResult = await model.batchGet(keys);
+                    for (const [index, item] of batchResult.entries()) {
+                        results[arg[index].index] = [await assignDefaults(item)];
+                    }
                 } else {
-                    keyMap1.set(key, [item]);
+                    const queryResults = await queryUnbatchable(arg.bk);
+                    results[arg.index] = await Promise.all(queryResults.map((item) => assignDefaults(item)));
                 }
-            });
-            promises.push(promise);
-        }
-
-        const keyMap2 = new Map<string, I[]>();
-        for (const item of result2) {
-            // batch2 only contains hashKey and rangeKey
-            const promise = assignDefaults(item).then((item) => {
-                const key = [item[hashKeyName], item[rangeKeyName!]].toString();
-                if (keyMap2.has(key)) {
-                    keyMap2.get(key)?.push(item);
-                } else {
-                    keyMap2.set(key, [item]);
-                }
-            });
-            promises.push(promise);
-        }
-
-        await Promise.all(promises);
-
-        for (const [index, type] of bkType.entries()) {
-            if (type === 1) {
-                resultArr[index] = keyMap1.get(batch1[index]) || [];
-            } else if (type === 2) {
-                const key = [batch2[index][hashKeyName], batch2[index][rangeKeyName!]].toString();
-                resultArr[index] = keyMap2.get(key) || [];
+            },
+            {
+                batchSize: 10,
             }
-        }
+        );
 
-        return resultArr;
-    }
-
-    // Split the batch into chunks of 100, and call batchGet100Max on each chunk
-    return async (bkArray: BatchKey<I>[]): Promise<I[][]> => {
-        const promises: Promise<I[][]>[] = [];
-        for (let i = 0; i < bkArray.length; i += 100) {
-            const batch = bkArray.slice(i, Math.min(i + 100, bkArray.length));
-            const result = batchGet100Max(batch);
-            promises.push(result);
+        if (process.env.LOG_DATALOADER === "1") {
+            console.log("dataloader load results", results);
         }
-        const results = await Promise.all(promises);
-        return results.flat();
+        return results;
     };
 }
 
-function stripNullKeys<T extends object>(
-    object: T,
-    options?: { returnUndefined?: boolean; deep?: boolean }
-): Partial<T> | undefined {
+type WithNullKeysRemoved<T> = { [K in keyof T]: T[K] extends null | undefined ? never : T[K] };
+function _stripNullKeys<T extends object>(
+    object: unknown,
+    options?: { returnUndefinedIfNothingLeft?: boolean; deep?: boolean }
+): unknown {
     if (object === null || typeof object !== "object") {
         return object;
     }
     if (Array.isArray(object)) {
-        return object.map((item) => stripNullKeys(item, options)) as T;
+        return object.map((item) => _stripNullKeys(item, options)) as T;
     }
     const data: Partial<T> = {};
     // eslint-disable-next-line prefer-const
     for (let [key, val] of Object.entries(object) as [keyof T, any][]) {
         if (options?.deep) {
-            val = stripNullKeys(val, options);
+            val = _stripNullKeys(val, options);
         }
         if (val !== undefined && val !== null) {
             data[key] = val as T[keyof T];
         }
     }
-    if (options?.returnUndefined && Object.keys(data).length == 0) {
+    if (options?.returnUndefinedIfNothingLeft && Object.keys(data).length == 0) {
         return undefined;
     }
     return data;
+}
+
+function stripNullKeys<T>(
+    object: T,
+    options?: { returnUndefinedIfNothingLeft?: boolean; deep?: boolean }
+): WithNullKeysRemoved<T> | undefined {
+    return _stripNullKeys(object, options) as WithNullKeysRemoved<T> | undefined;
 }
 
 // class Cache {
@@ -347,7 +303,7 @@ function stripNullKeys<T extends object>(
 //     }
 // }
 
-export class Batched<I extends Item, T_CreateProps extends GQLPartial<I>> {
+export class Batched<I extends Item, CreateProps extends Partial<I>> {
     /**
      * Wrapps the dataloader to provide a get method that throws a NotFound
      * error if the item is not found.
@@ -405,11 +361,11 @@ export class Batched<I extends Item, T_CreateProps extends GQLPartial<I>> {
         }
     }
 
-    async createOverwrite(data: GQLPartial<I>, options?: BatchQueryOptions): Promise<I> {
+    async createOverwrite(data: Partial<I>, options?: BatchQueryOptions): Promise<I> {
         const lookupKeys = extractKeysFromItems(this.model, data);
         const item = await this.getOrNull(lookupKeys, options);
         if (item === null) {
-            return await this.create(data as T_CreateProps);
+            return await this.create(data as CreateProps);
         } else {
             const nonPKData = { ...data };
             for (const pkPart of Object.keys(lookupKeys)) {
@@ -443,54 +399,49 @@ export class Batched<I extends Item, T_CreateProps extends GQLPartial<I>> {
      *          than the actual number of items matching the query.
      * @returns An array of objects of the model type.
      */
-    async many(key: Query<I>, options?: BatchQueryOptions): Promise<I[]> {
-        let strippedKey;
-        if (typeof key === "object") {
-            strippedKey = stripNullKeys(key, {
-                deep: true,
-                returnUndefined: true,
-            });
-        }
-        if (strippedKey == undefined) {
+    async many(lookup: Query<I>, lookupOptions?: BatchQueryOptions): Promise<I[]> {
+        const query = stripNullKeys(lookup, {
+            deep: true,
+            returnUndefinedIfNothingLeft: true,
+        });
+        if (query == undefined) {
             throw new Error("All keys are null");
         }
-        if (options != undefined) {
-            options = stripNullKeys(options, {
+        let queryOptions: WithNullKeysRemoved<BatchQueryOptions> | undefined = undefined;
+        if (lookupOptions != undefined) {
+            queryOptions = stripNullKeys(lookupOptions, {
                 deep: true,
-                returnUndefined: true,
+                returnUndefinedIfNothingLeft: true,
             });
         }
         // If index is used, first use the index to get the primary keys, then
         // do a second lookup with the primary keys.
-        if (options?.using) {
-            const result = await this.loader.load({
-                query: strippedKey,
-                options,
-            });
+        if (queryOptions?.using) {
             // The result only contains primary keys
-            const primaryKeys = result.map((item) => extractKeysFromItems(this.model, item));
+            const resultWithOnlyPKs = await this.loader.load({
+                query,
+                options: queryOptions,
+            });
+            const primaryKeys = resultWithOnlyPKs.map((item) => extractKeysFromItems(this.model, item));
             // Options shouldn't be needed this time.
             const promises = primaryKeys.map((pk) => this.loader.load({ query: pk }));
             const results = await Promise.all(promises);
             return results.flat();
         } else {
             const result = await this.loader.load({
-                query: strippedKey,
-                options,
+                query,
+                options: queryOptions,
             });
             return result;
         }
     }
 
-    async count(key: Query<I>, options?: BatchQueryOptions): Promise<number> {
-        if (typeof key === "object") {
-            key = stripNullKeys(key)!;
-        }
-        let query = this.model.query(key);
+    async count(lookup: Query<I>, options?: BatchQueryOptions): Promise<number> {
+        let query = this.model.query(stripNullKeys(lookup));
         if (options != undefined) {
             options = stripNullKeys(options, {
                 deep: true,
-                returnUndefined: true,
+                returnUndefinedIfNothingLeft: true,
             });
         }
         if (options != undefined) {
@@ -500,44 +451,20 @@ export class Batched<I extends Item, T_CreateProps extends GQLPartial<I>> {
         return result.count;
     }
 
-    async exists(key: Partial<I>, options?: BatchQueryOptions): Promise<boolean> {
+    async exists(key: Query<I>, options?: BatchQueryOptions): Promise<boolean> {
         const result = await this.many(key, options);
         return result.length > 0;
     }
 
-    /**
-     * If the item already exists, technically we have three options:
-     *
-     *  A: Throw an error.
-     *  B: Update the item so that the request acts as a "put".
-     *  C: Do nothing and return the existing item.
-     *
-     * Option B has some security implications, because usually in the context
-     * where create is called, we only remember to check if the current user has
-     * create permission. On the other hand, if we update the item, we might
-     * update an item that the user does not have permission to update.
-     *
-     *
-     * Option C has the same problem. Suppose in a context where we want to
-     * create an object for the current user, and then do some operation on it.
-     * In this case, we might unintentionally do the operation on an object that
-     * the user doesn't own.
-     *
-     * For example:
-     * if (user has permission to create app) {
-     *      let app = await db.create({name: "my-app"})
-     *      // do something with app
-     * }
-     *
-     * This code is wrong if B/C is implemented, because app might be another
-     * app.
-     */
-    async create(item: T_CreateProps): Promise<I> {
-        const stripped = stripNullKeys(item) as Partial<I>;
+    async create(item: CreateProps): Promise<I> {
+        const stripped = stripNullKeys(item);
+        if (stripped == undefined) {
+            throw new Error("Object is empty.");
+        }
         const maxAttempts = 10;
         for (let retries = 0; retries < maxAttempts; retries++) {
             try {
-                const result = await this.model.create(stripped);
+                const result = await this.model.create(stripped as Partial<I>);
                 if (retries > 0) {
                     console.warn(`Retried ${retries} times to create ${this.model.name} ${JSON.stringify(item)}`);
                 }
@@ -549,8 +476,8 @@ export class Batched<I extends Item, T_CreateProps extends GQLPartial<I>> {
                 // also throws this exception in other cases. So a check using the
                 // .exists() call is needed to confirm that the item already exists.
                 if (e instanceof ConditionalCheckFailedException) {
-                    const query = extractKeysFromItems(this.model, stripped);
-                    if (await this.exists(query)) {
+                    const query = extractKeysFromItems(this.model, stripped as Partial<I>);
+                    if (await this.exists(query as Query<I>)) {
                         throw new AlreadyExists(this.model.name, item);
                     } else if (retries < maxAttempts - 1) {
                         // The insert could fail when the item uses createdAt as
@@ -570,20 +497,15 @@ export class Batched<I extends Item, T_CreateProps extends GQLPartial<I>> {
         throw new Error("unreachable");
     }
 
-    async delete(keys: string | Partial<I>): Promise<I> {
-        let query: Partial<I>;
-        if (typeof keys === "string") {
-            query = { [this.model.table().hashKey]: keys } as Partial<I>;
-        } else {
-            query = extractKeysFromItems(this.model, keys);
-        }
+    async delete(lookup: Partial<I>): Promise<I> {
+        const query = extractKeysFromItems(this.model, lookup);
         const item = await this.get(query);
-        this.clearCache();
         await item.delete();
+        this.clearCache();
         return item;
     }
 
-    async deleteIfExists(keys: string | Partial<I>): Promise<I | null> {
+    async deleteIfExists(keys: Partial<I>): Promise<I | null> {
         try {
             return await this.delete(keys);
         } catch (e) {
@@ -619,7 +541,7 @@ export class Batched<I extends Item, T_CreateProps extends GQLPartial<I>> {
      * It is normal to use get() to look up the item, and then update the item
      * by putting the item in the first argument.
      *
-     * @param keys A primary + range key (optional) to lookup the item. If extra
+     * @param lookup A primary + range key (optional) to lookup the item. If extra
      * keys are provided, they are ignored.
      * @param newVals New values for the item. If the new values contain the
      * range key, the range key is updated. Any value that is undefined or null
@@ -638,17 +560,17 @@ export class Batched<I extends Item, T_CreateProps extends GQLPartial<I>> {
     // mistakes. So we disallow updating the primary key. If updating the
     // primary key is needed, the client should delete the old object and create
     // a new one.
-    async update(keys: GQLPartial<I>, newVals: UpdateQuery<I>): Promise<I> {
+    async update(lookup: Partial<I>, newVals: UpdateQuery<I>): Promise<I> {
         newVals = stripNullKeys(newVals, {
             deep: true,
-            returnUndefined: true,
+            returnUndefinedIfNothingLeft: true,
         })!;
-        return this.updateWithNull(keys, newVals);
+        return this.updateWithNull(lookup, newVals);
     }
 
-    async updateWithNull(keys: GQLPartial<I>, newVals: UpdateQuery<I>): Promise<I> {
+    async updateWithNull(lookup: Partial<I>, newVals: UpdateQuery<I>): Promise<I> {
         // Extract keys to ingore extra properties
-        const query = extractKeysFromItems(this.model, keys);
+        const query = extractKeysFromItems(this.model, lookup);
 
         const hashKeyName = this.model.table().hashKey;
         if (newVals && hashKeyName in newVals) {
@@ -681,10 +603,10 @@ export class Batched<I extends Item, T_CreateProps extends GQLPartial<I>> {
     }
 
     async *scan(
-        conditions: ConditionQuery<I> = {},
+        query: Query<I> = {},
         { batchSize = 100, limit = Infinity, ...options }: BatchScanOptions = {}
     ): AsyncIterable<I[]> {
-        const baseQuery = applyBatchOptionsToScan(this.model.scan(conditions), options);
+        const baseQuery = applyBatchOptionsToScan(this.model.scan(query), options);
         let remaining = limit as number;
         let response = await baseQuery.limit(Math.min(batchSize, remaining)).exec();
         if (response.length > 0) {
@@ -699,21 +621,6 @@ export class Batched<I extends Item, T_CreateProps extends GQLPartial<I>> {
             }
         }
     }
-    // prime(values: Iterable<I>) {
-    //     let keyName = this.model.table().hashKey;
-    //     let keyMap = new Map();
-    //     for (let v of values) {
-    //         let hashKey = v[keyName];
-    //         if (!keyMap.has(hashKey)) {
-    //             keyMap.set(hashKey, []);
-    //         }
-    //         let arr = keyMap.get(hashKey);
-    //         arr.push(v);
-    //     }
-    //     for (let [key, value] of keyMap) {
-    //         this.loader.prime(key, value);
-    //     }
-    // }
 
     clearCache() {
         this.loader.clearAll();

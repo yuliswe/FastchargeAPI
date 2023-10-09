@@ -1,4 +1,5 @@
 import { AppTag, AppTagModel } from "@/database/models/AppTag";
+import { AppPK } from "@/pks/AppPK";
 import { AppTagPK } from "@/pks/AppTagPK";
 import { RequestContext } from "../RequestContext";
 import {
@@ -18,7 +19,7 @@ export const AppTagResolvers: GQLResolvers & {
     AppTag: {
         __isTypeOf: (parent) => parent instanceof AppTagModel,
         pk: (parent) => AppTagPK.stringify(parent),
-        app: (parent: AppTag, args: {}, context: RequestContext) => context.batched.App.get({ name: parent.app }),
+        app: (parent: AppTag, args: {}, context: RequestContext) => context.batched.App.get(AppPK.parse(parent.app)),
         tag: (parent: AppTag) => parent.tag,
         createdAt: (parent: AppTag) => parent.createdAt,
         updatedAt: (parent: AppTag) => parent.updatedAt,
@@ -48,19 +49,19 @@ export const AppTagResolvers: GQLResolvers & {
     Mutation: {
         async createAppTag(
             parent: {},
-            { app: appName, tag: tagName }: GQLMutationCreateAppTagArgs,
+            { app, tag }: GQLMutationCreateAppTagArgs,
             context: RequestContext
         ): Promise<AppTag> {
             if (!(await Can.createAppTag(context))) {
                 throw new Denied();
             }
-            const app = await context.batched.App.get({ name: appName });
-            const tag = await context.batched.AppTag.createOverwrite({
-                app: appName,
-                tag: tagName,
+            const appObject = await context.batched.App.get(AppPK.parse(app));
+            const tagObject = await context.batched.AppTag.createOverwrite({
+                app,
+                tag,
             });
-            await updateAppSearchIndex(context, [app]);
-            return tag;
+            await updateAppSearchIndex(context, [appObject]);
+            return tagObject;
         },
     },
 };

@@ -1,7 +1,7 @@
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
 import { UsageLogStatus } from "../../__generated__/resolvers-types";
-import { GQLPartial, PK, String_Required_NotEmpty, defaultCreatedAt, tableConfigs } from "../utils";
+import { PK, String_Required_NotEmpty, defaultCreatedAt, tableConfigs } from "../utils";
 
 export const UsageLogTableSchema = new dynamoose.Schema(
     {
@@ -61,5 +61,6 @@ export type UsageLogCreateProps = {
     app: PK;
     path: string;
     pricing: PK;
-} & GQLPartial<UsageLog>;
+} & Partial<UsageLog>;
+
 export const UsageLogModel = dynamoose.model<UsageLog>("UsageLog", UsageLogTableSchema, { ...tableConfigs });

@@ -1,4 +1,5 @@
 import { UserAppToken, UserAppTokenModel } from "@/database/models/UserAppToken";
+import { AppPK } from "@/pks/AppPK";
 import { RequestContext } from "../RequestContext";
 import {
     GQLMutationCreateUserAppTokenArgs,
@@ -9,7 +10,6 @@ import {
 import { Denied, NotFound, RequirementNotSatisfied, TooManyResources } from "../errors";
 import { createUserAppToken } from "../functions/token";
 import { Can } from "../permissions";
-import { AppPK } from "../pks/AppPK";
 import { UserAppTokenPK } from "../pks/UserAppToken";
 import { UserPK } from "../pks/UserPK";
 /**

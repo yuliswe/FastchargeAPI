@@ -4,7 +4,7 @@ import { App } from "@/database/models/App";
 import { FreeQuotaUsage } from "@/database/models/FreeQuotaUsage";
 import { Pricing } from "@/database/models/Pricing";
 import { User, UserTableIndex } from "@/database/models/User";
-import { GQLPartial } from "@/database/utils";
+import { PK } from "@/database/utils";
 import { getUserBalance } from "@/functions/account";
 import { getDedupIdForSettleStripePaymentAcceptSQS } from "@/functions/payment";
 import { StripePaymentAcceptPK } from "@/pks/StripePaymentAccept";
@@ -72,7 +72,7 @@ export async function addMoneyForUser({
  */
 export async function getOrCreateTestUser(
     context: RequestContext,
-    { email, ...additionalProps }: { email?: string } & GQLPartial<User> = {}
+    { email, ...additionalProps }: { email?: string } & Partial<User> = {}
 ) {
     if (!email) {
         email = `testuser_${uuid4()}@gmail_mock.com`;
@@ -115,8 +115,8 @@ export async function getOrCreateFreeQuotaUsage(
         subscriber,
         app,
     }: {
-        subscriber: string;
-        app: string;
+        subscriber: PK;
+        app: PK;
     }
 ): Promise<FreeQuotaUsage> {
     let freeQuotaUsage = await context.batched.FreeQuotaUsage.getOrNull({ subscriber, app });

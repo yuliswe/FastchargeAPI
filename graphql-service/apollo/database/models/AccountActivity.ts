@@ -1,15 +1,7 @@
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
 import { AccountActivityReason, AccountActivityStatus, AccountActivityType } from "../../__generated__/resolvers-types";
-import {
-    GQLPartial,
-    NULL,
-    PK,
-    String_Required_NotEmpty,
-    defaultCreatedAt,
-    tableConfigs,
-    validateStringDecimal,
-} from "../utils";
+import { NULL, PK, String_Required_NotEmpty, defaultCreatedAt, tableConfigs, validateStringDecimal } from "../utils";
 
 export enum AccountActivityTableIndex {
     indexByStatusSettleAtOnlyPK = "indexByStatus_settleAt__onlyPK",
@@ -99,7 +91,8 @@ export type AccountActivityCreateProps = {
     reason: AccountActivityReason;
     amount: string;
     settleAt: number;
-} & GQLPartial<AccountActivity>;
+} & Partial<AccountActivity>;
+
 export const AccountActivityModel = dynamoose.model<AccountActivity>("AccountActivity", AccountActivityTableSchema, {
     ...tableConfigs,
 });

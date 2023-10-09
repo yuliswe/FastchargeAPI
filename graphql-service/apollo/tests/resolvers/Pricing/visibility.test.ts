@@ -65,7 +65,7 @@ function getPricingByPKQueryExpectedValue(pricing: Pricing) {
 
 const listAppPricingsQuery = graphql(`
     query VisibilityTest_ListAppPlans($app: ID!) {
-        app(pk: $app) {
+        getApp(pk: $app) {
             pricingPlans {
                 pk
             }
@@ -164,7 +164,7 @@ describe("Test pricing visibility", () => {
                 app: AppPK.stringify(testApp),
             },
         });
-        expect(result?.data.app.pricingPlans.length).toBe(0);
+        expect(result?.data.getApp.pricingPlans.length).toBe(0);
     });
 
     test("App user can see pricing if subscribed (get pricing by PK)", async () => {
@@ -199,7 +199,7 @@ describe("Test pricing visibility", () => {
                 app: AppPK.stringify(testApp),
             },
         });
-        expect(result?.data.app.pricingPlans.length).toBe(1);
-        expect(result?.data.app.pricingPlans[0].pk).toEqual(PricingPK.stringify(testPricing));
+        expect(result?.data.getApp.pricingPlans.length).toBe(1);
+        expect(result?.data.getApp.pricingPlans[0].pk).toEqual(PricingPK.stringify(testPricing));
     });
 });

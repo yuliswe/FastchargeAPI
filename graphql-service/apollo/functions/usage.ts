@@ -1,5 +1,6 @@
 import { UsageLog } from "@/database/models/UsageLog";
 import { UsageSummary } from "@/database/models/UsageSummary";
+import { PK } from "@/database/utils";
 import { Item } from "dynamoose/dist/Item";
 import { RequestContext } from "../RequestContext";
 import { UsageLogStatus } from "../__generated__/resolvers-types";
@@ -21,8 +22,8 @@ export async function collectUsageLogs(
         app,
         path,
     }: {
-        user: string;
-        app: string;
+        user: PK;
+        app: PK;
         path: string;
     }
 ): Promise<{ affectedUsageSummaries: UsageSummary[] }> {

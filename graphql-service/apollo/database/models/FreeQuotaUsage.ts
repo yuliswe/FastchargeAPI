@@ -1,6 +1,6 @@
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
-import { GQLPartial, PK, tableConfigs } from "../utils";
+import { PK, tableConfigs } from "../utils";
 
 export const FreeQuotaUsageTableSchema = new dynamoose.Schema(
     {
@@ -20,7 +20,8 @@ export class FreeQuotaUsage extends Item {
 export type FreeQuotaUsageCreateProps = {
     subscriber: PK;
     app: PK;
-} & GQLPartial<FreeQuotaUsage>;
+} & Partial<FreeQuotaUsage>;
+
 export const FreeQuotaUsageModel = dynamoose.model<FreeQuotaUsage>("FreeQuotaUsage", FreeQuotaUsageTableSchema, {
     ...tableConfigs,
 });

@@ -4,8 +4,8 @@ import {
     GQLSubscribeUpdateSubscriptionArgs,
 } from "@/__generated__/resolvers-types";
 import { Subscription } from "@/database/models/Subscription";
+import { AppPK } from "@/pks/AppPK";
 import { RequestContext } from "../RequestContext";
-import { AppPK } from "../pks/AppPK";
 import { UserPK } from "../pks/UserPK";
 import { isAdminOrServiceUser, isCurrentUserPK } from "./utils";
 

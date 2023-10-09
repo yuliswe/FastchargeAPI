@@ -1,7 +1,7 @@
 import { PricingAvailability } from "@/__generated__/gql/graphql";
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
-import { GQLPartial, PK, String_Required_NotEmpty, defaultCreatedAt, tableConfigs } from "../utils";
+import { PK, String_Required_NotEmpty, defaultCreatedAt, tableConfigs } from "../utils";
 
 export { PricingAvailability };
 
@@ -56,6 +56,6 @@ export class Pricing extends Item {
 export type PricingCreateProps = {
     app: PK;
     name: string;
-} & GQLPartial<Pricing>;
+} & Partial<Pricing>;
 
 export const PricingModel = dynamoose.model<Pricing>("Pricing", PricingTableSchema, { ...tableConfigs });

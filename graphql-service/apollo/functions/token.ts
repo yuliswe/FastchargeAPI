@@ -1,4 +1,5 @@
 import { UserAppToken } from "@/database/models/UserAppToken";
+import { PK } from "@/database/utils";
 import jwt from "jsonwebtoken";
 import { v4 as uuidv4 } from "uuid";
 import { RequestContext } from "../RequestContext";
@@ -10,8 +11,8 @@ export async function createUserAppToken(
         user,
         app,
     }: {
-        user: string;
-        app: string;
+        user: PK;
+        app: PK;
     }
 ): Promise<{
     userAppToken: UserAppToken;
@@ -38,8 +39,8 @@ async function makeAppTokenForUser(
         user,
         app,
     }: {
-        user: string;
-        app: string;
+        user: PK;
+        app: PK;
     }
 ): Promise<{ token: string; signature: string }> {
     const privateKey = await getParameterFromAWSSystemsManager("auth.user_app_token.private_key");

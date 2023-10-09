@@ -1,6 +1,6 @@
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
-import { GQLPartial, PK, String_Required_NotEmpty, tableConfigs, validateStringDecimal } from "../utils";
+import { PK, String_Required_NotEmpty, tableConfigs, validateStringDecimal } from "../utils";
 
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
@@ -21,7 +21,7 @@ export type AccountHistoryCreateProps = {
     closingBalance: string;
     closingTime: number;
     sequentialId: number;
-} & GQLPartial<AccountHistory>;
+} & Partial<AccountHistory>;
 
 export const AccountHistoryTableSchema = new dynamoose.Schema(
     {

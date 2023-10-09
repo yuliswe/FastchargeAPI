@@ -1,6 +1,6 @@
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
-import { GQLPartial, PK, defaultCreatedAt, tableConfigs } from "../utils";
+import { PK, defaultCreatedAt, tableConfigs } from "../utils";
 
 export const UserAppTokenTableSchema = new dynamoose.Schema(
     {
@@ -37,7 +37,8 @@ export type UserAppTokenCreateProps = {
     subscriber: PK;
     app: PK;
     signature: string;
-} & GQLPartial<UserAppToken>;
+} & Partial<UserAppToken>;
+
 export const UserAppTokenModel = dynamoose.model<UserAppToken>("UserAppToken", UserAppTokenTableSchema, {
     ...tableConfigs,
 });

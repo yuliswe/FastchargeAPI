@@ -1,5 +1,6 @@
 import { AccountActivity, AccountActivityModel } from "@/database/models/AccountActivity";
 import { User } from "@/database/models/User";
+import { AppPK } from "@/pks/AppPK";
 import { GraphQLResolveInfo } from "graphql";
 import { RequestContext } from "../RequestContext";
 import {
@@ -11,7 +12,6 @@ import {
 import { Denied } from "../errors";
 import { Can } from "../permissions";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
-import { AppPK } from "../pks/AppPK";
 import { StripeTransferPK } from "../pks/StripeTransferPK";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
 import { UserPK } from "../pks/UserPK";

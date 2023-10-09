@@ -1,7 +1,7 @@
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
 import { UsageSummaryStatus } from "../../__generated__/resolvers-types";
-import { GQLPartial, PK, String_Required_NotEmpty, defaultCreatedAt, tableConfigs } from "../utils";
+import { PK, String_Required_NotEmpty, defaultCreatedAt, tableConfigs } from "../utils";
 
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
@@ -33,7 +33,7 @@ export type UsageSummaryCreateProps = {
     pricing: PK;
     path: string;
     numberOfLogs: number;
-} & GQLPartial<UsageSummary>;
+} & Partial<UsageSummary>;
 
 export const UsageSummaryTableSchema = new dynamoose.Schema(
     {

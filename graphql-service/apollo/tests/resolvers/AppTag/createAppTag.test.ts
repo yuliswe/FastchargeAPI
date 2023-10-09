@@ -14,7 +14,7 @@ import { beforeAll, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
 
 const createAppTagMutation = graphql(`
-    mutation TestCreateAppTag($app: String!, $tag: String!) {
+    mutation TestCreateAppTag($app: ID!, $tag: String!) {
         createAppTag(app: $app, tag: $tag) {
             pk
             app {

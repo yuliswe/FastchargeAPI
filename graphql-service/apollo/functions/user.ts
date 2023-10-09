@@ -1,5 +1,4 @@
 import { User } from "@/database/models/User";
-import { GQLPartial } from "@/database/utils";
 import jwt from "jsonwebtoken";
 import { MD5 } from "object-hash";
 import { v4 as uuidv4 } from "uuid";
@@ -18,7 +17,7 @@ function createUserIDFromEmail(email: string): string {
 export async function createUserWithEmail(
     batched: RequestContext["batched"],
     email: string,
-    additionalProps?: GQLPartial<User>
+    additionalProps?: Partial<User>
 ): Promise<User> {
     const user = await batched.User.create({
         ...additionalProps,

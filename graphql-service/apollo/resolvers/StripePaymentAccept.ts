@@ -86,7 +86,7 @@ export const StripePaymentAcceptResolvers: GQLResolvers & {
             parent = await context.batched.StripePaymentAccept.update(parent, {
                 stripeSessionObject: stripeSessionObject ? (JSON.parse(stripeSessionObject) as object) : undefined,
                 stripePaymentStatus: stripePaymentStatus as StripePaymentAccept["stripePaymentStatus"] | undefined,
-                stripePaymentIntent,
+                stripePaymentIntent: stripePaymentIntent ?? undefined,
                 accountActivity: AccountActivityPK.stringify(activity),
                 status: StripePaymentAcceptStatus.Settled,
             });

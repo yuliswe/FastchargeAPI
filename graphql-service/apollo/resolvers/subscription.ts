@@ -1,4 +1,5 @@
 import { Subscription } from "@/database/models/Subscription";
+import { AppPK } from "@/pks/AppPK";
 import { RequestContext } from "../RequestContext";
 import { PricingAvailability } from "../__generated__/gql/graphql";
 import {
@@ -10,7 +11,6 @@ import {
 } from "../__generated__/resolvers-types";
 import { Denied } from "../errors";
 import { Can } from "../permissions";
-import { AppPK } from "../pks/AppPK";
 import { PricingPK } from "../pks/PricingPK";
 import { SubscriptionPK } from "../pks/SubscriptionPK";
 import { UserPK } from "../pks/UserPK";
@@ -68,7 +68,7 @@ export const SubscriptionResolvers: GQLResolvers = {
                 throw new Denied();
             }
             return context.batched.Subscription.update(parent, {
-                pricing,
+                pricing: pricing ?? undefined,
             });
         },
     },

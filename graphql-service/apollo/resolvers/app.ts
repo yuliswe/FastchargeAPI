@@ -81,12 +81,12 @@ export const AppResolvers: GQLResolvers & {
                 throw new Denied();
             }
             const app = await context.batched.App.update(parent, {
-                title,
-                description,
-                homepage,
-                repository,
-                readme,
-                visibility,
+                title: title ?? undefined,
+                description: description ?? undefined,
+                homepage: homepage ?? undefined,
+                repository: repository ?? undefined,
+                readme: readme ?? undefined,
+                visibility: visibility ?? undefined,
             });
             await updateAppSearchIndex(context, [app]);
             return app;
@@ -129,7 +129,7 @@ export const AppResolvers: GQLResolvers & {
             parent: {},
             { query, tag, orderBy, limit, offset }: GQLQueryAppFullTextSearchArgs,
             context: RequestContext
-        ): Promise<Array<App>> {
+        ): Promise<App[]> {
             return await appFullTextSearch(context, {
                 query,
                 tag,
@@ -138,7 +138,6 @@ export const AppResolvers: GQLResolvers & {
                 offset,
             });
         },
-
         async listAppsByTag(
             parent: {},
             { tag, limit = 10 }: GQLQueryListAppsByTagArgs,
@@ -184,14 +183,14 @@ export const AppResolvers: GQLResolvers & {
             }
             const app = await context.batched.App.create({
                 name,
-                title,
-                description,
-                gatewayMode,
-                homepage,
                 owner,
-                repository,
-                visibility,
-                logo,
+                title: title ?? undefined,
+                description: description ?? undefined,
+                gatewayMode: gatewayMode ?? undefined,
+                homepage: homepage ?? undefined,
+                repository: repository ?? undefined,
+                visibility: visibility ?? undefined,
+                logo: logo ?? undefined,
             });
             await updateAppSearchIndex(context, [app]);
             return app;

@@ -2,7 +2,7 @@ import { AppVisibility } from "@/__generated__/gql/graphql";
 import { GatewayMode } from "@/__generated__/resolvers-types";
 import { validateAppName } from "@/functions/app";
 import dynamoose from "dynamoose";
-import { GQLPartial, Item, tableConfigs } from "../utils";
+import { Item, tableConfigs } from "../utils";
 
 export { AppVisibility, GatewayMode };
 
@@ -59,7 +59,8 @@ export class App extends Item {
 export type AppCreateProps = {
     name: string;
     owner: string;
-} & GQLPartial<App>;
+} & Partial<App>;
+
 export const AppModel = dynamoose.model<App>("App", AppTableSchema, {
     ...tableConfigs,
 });
