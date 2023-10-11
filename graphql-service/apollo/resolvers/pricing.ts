@@ -5,7 +5,7 @@ import { RequestContext } from "../RequestContext";
 import {
     GQLMutationCreatePricingArgs,
     GQLPricingUpdatePricingArgs,
-    GQLQueryListPricingsArgs,
+    GQLQueryListPricingsByAppArgs,
     GQLQueryPricingArgs,
     GQLResolvers,
     PricingAvailability,
@@ -108,22 +108,22 @@ export const PricingResolvers: GQLResolvers = {
             }
             return await context.batched.Pricing.get(PricingPK.parse(pk));
         },
-        async listPricings(parent: {}, { app: appPK }: GQLQueryListPricingsArgs, context: RequestContext) {
-            const app = await context.batched.App.get(AppPK.parse(appPK));
-            if (await Can.viewAppHiddenPricingPlans(app, context)) {
+        async listPricingsByApp(parent: {}, { app }: GQLQueryListPricingsByAppArgs, context: RequestContext) {
+            const appObj = await context.batched.App.get(AppPK.parse(app));
+            if (await Can.viewAppHiddenPricingPlans(appObj, context)) {
                 return await context.batched.Pricing.many({
-                    app: appPK,
+                    app: AppPK.guard(app),
                 });
             } else {
                 const plans = await context.batched.Pricing.many({
-                    app: appPK,
+                    app: AppPK.guard(app),
                     availability: PricingAvailability.Public,
                 });
                 // Regular users can only see public pricing plans, and the plan
                 // thay are already subscribed to.
                 if (context.currentUser) {
                     const userSub = await context.batched.Subscription.getOrNull({
-                        app: appPK,
+                        app: AppPK.guard(app),
                         subscriber: UserPK.stringify(context.currentUser),
                     });
                     if (userSub) {

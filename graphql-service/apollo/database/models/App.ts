@@ -5,6 +5,9 @@ import dynamoose from "dynamoose";
 import { Item, tableConfigs } from "../utils";
 
 export { AppVisibility, GatewayMode };
+export enum AppTableIndex {
+    Owner = "indexByOwner__onlyPK",
+}
 
 export const AppTableSchema = new dynamoose.Schema(
     {
@@ -19,7 +22,7 @@ export const AppTableSchema = new dynamoose.Schema(
             required: true,
             index: {
                 type: "global",
-                name: "indexByOwner__onlyPK",
+                name: AppTableIndex.Owner,
                 project: ["name", "owner"],
             },
         },

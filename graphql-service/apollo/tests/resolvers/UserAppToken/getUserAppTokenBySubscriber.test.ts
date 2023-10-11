@@ -18,7 +18,7 @@ import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
 
-describe("getUserAppToken", () => {
+describe("getUserAppTokenBySubscriber", () => {
     let testAppOwner: User;
     let testSubscriber: User;
     let testApp: App;
@@ -50,9 +50,9 @@ describe("getUserAppToken", () => {
         ).userAppToken;
     });
 
-    const getUserAppTokenQuery = graphql(`
-        query Test_GetUserAppToken($pk: ID!) {
-            getUserAppToken(pk: $pk) {
+    const getUserAppTokenBySubscriberQuery = graphql(`
+        query Test_getUserAppTokenBySubscriber($subscriber: ID!, $app: ID) {
+            getUserAppTokenBySubscriber(subscriber: $subscriber, app: $app) {
                 pk
                 createdAt
                 updatedAt
@@ -70,14 +70,15 @@ describe("getUserAppToken", () => {
 
     function getVariables() {
         return {
-            pk: UserAppTokenPK.stringify(testUserAppToken),
+            subscriber: UserPK.stringify(testSubscriber),
+            app: AppPK.stringify(testApp),
         };
     }
 
     function getExpected() {
         return {
             data: {
-                getUserAppToken: {
+                getUserAppTokenBySubscriber: {
                     __typename: "UserAppToken",
                     pk: UserAppTokenPK.stringify(testUserAppToken),
                     signature: testUserAppToken.signature,
@@ -100,7 +101,7 @@ describe("getUserAppToken", () => {
         const promise = testGQLClient({
             user: testSubscriber,
         }).query({
-            query: getUserAppTokenQuery,
+            query: getUserAppTokenBySubscriberQuery,
             variables: getVariables(),
         });
         await expect(promise).resolves.toMatchObject(getExpected());
@@ -110,14 +111,14 @@ describe("getUserAppToken", () => {
         const result = testGQLClient({
             user: testAppOwner,
         }).query({
-            query: getUserAppTokenQuery,
+            query: getUserAppTokenBySubscriberQuery,
             variables: getVariables(),
         });
         await expect(simplifyGraphQLPromiseRejection(result)).rejects.toMatchObject([
             {
                 code: "PERMISSION_DENIED",
                 message: "You do not have permission to perform this action.",
-                path: "getUserAppToken",
+                path: "getUserAppTokenBySubscriber",
             },
         ]);
     });
@@ -126,12 +127,12 @@ describe("getUserAppToken", () => {
         const promise = testGQLClient({
             user: testSubscriber,
         }).query({
-            query: getUserAppTokenQuery,
+            query: getUserAppTokenBySubscriberQuery,
             variables: getVariables(),
         });
         await expect(promise).resolves.toMatchObject({
             data: {
-                getUserAppToken: {
+                getUserAppTokenBySubscriber: {
                     __typename: "UserAppToken",
                     token: null,
                 },

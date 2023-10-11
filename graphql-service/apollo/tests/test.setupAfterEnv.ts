@@ -29,6 +29,10 @@ jest.spyOn(ApolloServer.prototype as any, "logStartupError").mockImplementation(
     the lambdaHandler.ts  */
 });
 
+afterEach(() => {
+    jest.clearAllMocks();
+});
+
 if (process.env.TRACE_CONSOLE === "1") {
     setUpTraceConsole();
 }

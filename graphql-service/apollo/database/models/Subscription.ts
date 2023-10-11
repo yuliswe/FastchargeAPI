@@ -23,6 +23,10 @@ export const SubscriptionTableSchema = new dynamoose.Schema(
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
 
+/**
+ * Represends a user's subscription to an app.
+ * @deletable true
+ */
 export class Subscription extends Item {
     subscriber: PK;
     app: PK;

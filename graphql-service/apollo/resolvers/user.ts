@@ -1,5 +1,5 @@
 import { AccountActivity } from "@/database/models/AccountActivity";
-import { App } from "@/database/models/App";
+import { App, AppTableIndex } from "@/database/models/App";
 import { Subscription } from "@/database/models/Subscription";
 import { User, UserModel, UserTableIndex } from "@/database/models/User";
 import type { GraphQLResolveInfoWithCacheControl } from "@apollo/cache-control-types";
@@ -7,7 +7,6 @@ import { Chalk } from "chalk";
 import { GraphQLResolveInfo } from "graphql";
 import { RequestContext } from "../RequestContext";
 import {
-    GQLAppIndex,
     GQLMutationCreateUserArgs,
     GQLQueryUserArgs,
     GQLResolvers,
@@ -15,7 +14,6 @@ import {
     GQLUserGetFastchargeApiIdTokenArgs,
     GQLUserResolvers,
     GQLUserUpdateUserArgs,
-    GQLUserUsageLogsArgs,
     GQLUserUsageSummariesArgs,
 } from "../__generated__/resolvers-types";
 import { BadInput, Denied } from "../errors";
@@ -62,7 +60,7 @@ export const UserResolvers: GQLResolvers & {
             const apps = await context.batched.App.many(
                 { owner: UserPK.stringify(parent) },
                 {
-                    using: GQLAppIndex.IndexByOwnerOnlyPk,
+                    using: AppTableIndex.Owner,
                 }
             );
             return apps;
@@ -139,30 +137,6 @@ export const UserResolvers: GQLResolvers & {
             );
         },
 
-        async usageLogs(parent: User, args: GQLUserUsageLogsArgs, context, info) {
-            if (!(await Can.viewUserPrivateAttributes(parent, context))) {
-                throw new Denied();
-            }
-            const { app, path, limit, dateRange } = args;
-            const usage = await context.batched.UsageLog.many(
-                {
-                    subscriber: UserPK.stringify(parent),
-                    app: app ?? undefined,
-                    path: path ?? undefined,
-                    createdAt: dateRange
-                        ? {
-                              le: dateRange.end ?? undefined,
-                              ge: dateRange.start ?? undefined,
-                          }
-                        : undefined,
-                },
-                {
-                    limit: Math.min(limit || 1000, 1000),
-                }
-            );
-            return usage;
-        },
-
         async usageSummaries(parent: User, { limit, app, dateRange }: GQLUserUsageSummariesArgs, context, info) {
             if (!(await Can.viewUserPrivateAttributes(parent, context))) {
                 throw new Denied();
@@ -231,7 +205,7 @@ export const UserResolvers: GQLResolvers & {
                 if (!process.env.UNSAFE_BILLING) {
                     console.error(
                         chalk.red(
-                            `updateBalance must be called from the graphql-service-billing-queue.fifo Queue, and use the user pk as the MessageGroupId. If you are not running in production, you can set the UNSAFE_BILLING=1 environment variable to bypass this check.`
+                            "updateBalance must be called from the graphql-service-billing-queue.fifo Queue, and use the user pk as the MessageGroupId. If you are not running in production, you can set the UNSAFE_BILLING=1 environment variable to bypass this check."
                         )
                     );
                     console.error(chalk.red("Current context:"));

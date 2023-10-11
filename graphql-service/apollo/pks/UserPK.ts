@@ -17,6 +17,15 @@ export class UserPK {
         return "user_" + item.uid;
     }
 
+    static guard(pk: PK): PK {
+        try {
+            UserPK.parse(pk);
+            return pk;
+        } catch {
+            throw new Error(`Invalid User PK: ${pk}`);
+        }
+    }
+
     static isAdmin(user: User): boolean {
         return user.email === "fastchargeapi@gmail.com" || user.email === "devfastchargeapi@gmail.com";
     }

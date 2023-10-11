@@ -3,7 +3,7 @@ import { Item } from "dynamoose/dist/Item";
 import { PK, String_Required_NotEmpty, tableConfigs } from "../utils";
 
 export enum AppTagTableIndex {
-    indexByTagAppOnlyPK = "indexByTag_app__onlyPK",
+    TagApp = "indexByTag_app__onlyPK",
 }
 
 export const AppTagTableSchema = new dynamoose.Schema(
@@ -18,7 +18,7 @@ export const AppTagTableSchema = new dynamoose.Schema(
             ...String_Required_NotEmpty("tag"),
             index: {
                 type: "global",
-                name: AppTagTableIndex.indexByTagAppOnlyPK,
+                name: AppTagTableIndex.TagApp,
                 project: ["tag", "app"],
             },
         },

@@ -4,7 +4,7 @@ import { AccountActivityReason, AccountActivityStatus, AccountActivityType } fro
 import { NULL, PK, String_Required_NotEmpty, defaultCreatedAt, tableConfigs, validateStringDecimal } from "../utils";
 
 export enum AccountActivityTableIndex {
-    indexByStatusSettleAtOnlyPK = "indexByStatus_settleAt__onlyPK",
+    StatusSettleAt = "indexByStatus_settleAt__onlyPK",
 }
 
 export const AccountActivityTableSchema = new dynamoose.Schema(
@@ -28,7 +28,7 @@ export const AccountActivityTableSchema = new dynamoose.Schema(
         status: {
             type: String,
             index: {
-                name: AccountActivityTableIndex.indexByStatusSettleAtOnlyPK,
+                name: AccountActivityTableIndex.StatusSettleAt,
                 rangeKey: "settleAt",
                 type: "global",
                 project: ["settleAt", "status"],

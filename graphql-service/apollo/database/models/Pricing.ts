@@ -39,6 +39,10 @@ export const PricingTableSchema = new dynamoose.Schema(
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
 
+/**
+ * Represents a pricing plan for an app.
+ * @deletable false
+ */
 export class Pricing extends Item {
     app: PK;
     createdAt: number;

@@ -5,6 +5,7 @@ import { Pricing } from "@/database/models/Pricing";
 import { User } from "@/database/models/User";
 import { UserAppToken } from "@/database/models/UserAppToken";
 import { createUserAppToken } from "@/functions/token";
+import { Can } from "@/permissions";
 import { AppPK } from "@/pks/AppPK";
 import { PricingPK } from "@/pks/PricingPK";
 import { UserAppTokenPK } from "@/pks/UserAppToken";
@@ -87,6 +88,7 @@ describe("createUserAppToken", () => {
     });
 
     test("User can only delete their own token but not someone else's", async () => {
+        jest.spyOn(Can, "getUserAppToken").mockImplementation(() => Promise.resolve(true));
         const result = testGQLClient({
             user: testAppOwner,
         }).mutate({

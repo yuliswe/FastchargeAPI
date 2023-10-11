@@ -12,6 +12,7 @@ import { AccountHistoryResolvers } from "./resolvers/AccountHistory";
 import { AppResolvers } from "./resolvers/App";
 import { AppTagResolvers } from "./resolvers/AppTag";
 import { EndpointResolvers } from "./resolvers/Endpoint";
+import { GatewayResolvers } from "./resolvers/Gateway";
 import { PricingResolvers } from "./resolvers/Pricing";
 import { SecretResolvers } from "./resolvers/Secret";
 import { SiteMetaDataResolvers } from "./resolvers/SiteMetaData";
@@ -22,7 +23,6 @@ import { UsageLogResolvers } from "./resolvers/UsageLog";
 import { UsageSummaryResolvers } from "./resolvers/UsageSummary";
 import { UserResolvers } from "./resolvers/User";
 import { UserAppTokenResolvers } from "./resolvers/UserAppToken";
-import { GatewayResolvers } from "./resolvers/gateway";
 import AppGraphQLSchema from "./schema/Public.graphql";
 import customScalars from "./schema/scalars";
 

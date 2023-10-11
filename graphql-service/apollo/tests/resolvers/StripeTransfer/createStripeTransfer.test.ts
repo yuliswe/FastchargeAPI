@@ -13,14 +13,10 @@ import {
 } from "@/tests/test-utils";
 import { testGQLClient } from "@/tests/testGQLClient";
 import { graphql } from "@/typed-graphql";
-import { afterEach, beforeEach, describe, expect, jest, test } from "@jest/globals";
+import { beforeEach, describe, expect, jest, test } from "@jest/globals";
 import * as uuid from "uuid";
 
 const _settleStripeTransferFromSQS = jest.spyOn(StripeTransferResolvers.StripeTransfer, "_settleStripeTransferFromSQS");
-
-afterEach(() => {
-    jest.clearAllMocks();
-});
 
 describe("createStripeTransfer", () => {
     let testOwnerUser: User;

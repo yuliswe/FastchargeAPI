@@ -32,10 +32,20 @@ type Query {
     getSubscriptionByAppSubscriber(subscriber: ID!, app: ID!): Subscribe!
 
     ### User App Token
-    getUserAppToken(pk: ID, subscriber: ID, app: ID): UserAppToken!
+    getUserAppToken(pk: ID!): UserAppToken!
+    getUserAppTokenBySubscriber(subscriber: ID!, app: ID): UserAppToken!
+
+    ### Usage Log
+    listUsageLogsBySubscriber(
+        subscriber: ID!
+        app: ID
+        path: String
+        limit: Int
+        dateRange: DateRangeInput
+    ): [UsageLog!]!
 
     ### Usage Summary
-    listUsageSummaries(
+    listUsageSummariesByAppSubscriber(
         subscriber: ID!
         app: ID!
         limit: Int = 1000 # Support maximum of 1000
@@ -44,7 +54,7 @@ type Query {
 
     ### Pricing
     getPricing(pk: ID): Pricing!
-    listPricings(app: ID!): [Pricing!]!
+    listPricingsByApp(app: ID!): [Pricing!]!
 
     ### Account Activity
     getAccountActivity(pk: ID!): AccountActivity!
@@ -201,25 +211,23 @@ type User {
     stripeConnectAccountId: String
     apps: [App!]!
 
-    usageLogs(app: ID, path: String, limit: Int = 5, dateRange: DateRangeInput): [UsageLog!]!
-
     updateUser(author: String, stripeCustomerId: String, stripeConnectAccountId: String): User
 
     usageSummaries(
         app: ID!
         limit: Int = 1000 # Support maximum of 1000
         dateRange: DateRangeInput
-    ): [UsageSummary!]!
+    ): [UsageSummary!]! @deprecated(reason: "Use listUsageSummariesByAppSubscriber() instead")
 
     accountActivities(
         limit: Int = 1000 # Support maximum of 1000
         dateRange: DateRangeInput
-    ): [AccountActivity!]!
+    ): [AccountActivity!]! @deprecated(reason: "Use listAccountActivitiesByUser() instead")
 
     accountHistories(
         limit: Int = 1000 # Support maximum of 1000
         dateRange: DateRangeInput
-    ): [AccountHistory!]!
+    ): [AccountHistory!]! @deprecated(reason: "Use listAccountHistoryByUser() instead")
 
     # Trigger a workflow where it goes through all user's activities, and settle
     # those that are due. This should only be called from the billing queue.
@@ -271,10 +279,6 @@ type App {
     ): App!
 
     deleteApp: App!
-}
-
-enum AppIndex {
-    indexByOwner__onlyPK
 }
 
 enum AppVisibility {
@@ -353,6 +357,8 @@ type UsageLog {
     pk: ID!
     subscriber: User!
     app: App!
+    path: String!
+    pricing: Pricing!
     endpoint: Endpoint!
     volume: Int!
     createdAt: Timestamp!
@@ -433,14 +439,11 @@ type StripeTransfer {
     _settleStripeTransferFromSQS: StripeTransfer!
 }
 
-enum StripeTransferIndex {
-    indexByStatus_transferAt__onlyPK
-}
-
 enum AccountActivityType {
     credit
     debit
 }
+
 enum AccountActivityReason {
     payout
     payout_fee
@@ -451,14 +454,13 @@ enum AccountActivityReason {
     fastchargeapi_per_request_service_fee
     refund_api_min_monthly_charge
 }
+
 enum AccountActivityStatus {
     pending
     settled
     failed_due_to_insufficient_balance
 }
-enum AccountActivityIndex {
-    indexByStatus_settleAt__onlyPK
-}
+
 type AccountActivity {
     pk: ID!
     user: User!

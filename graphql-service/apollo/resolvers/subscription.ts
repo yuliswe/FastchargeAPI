@@ -1,7 +1,7 @@
 import { Subscription } from "@/database/models/Subscription";
 import { AppPK } from "@/pks/AppPK";
 import { RequestContext } from "../RequestContext";
-import { PricingAvailability } from "../__generated__/gql/graphql";
+import { AppVisibility, PricingAvailability } from "../__generated__/gql/graphql";
 import {
     GQLMutationCreateSubscriptionArgs,
     GQLQueryGetSubscriptionArgs,
@@ -34,24 +34,10 @@ export const SubscriptionResolvers: GQLResolvers = {
         pk: makePrivate((parent) => SubscriptionPK.stringify(parent)),
         updatedAt: makePrivate((parent) => parent.updatedAt),
         createdAt: makePrivate((parent) => parent.createdAt),
-        async pricing(parent: Subscription, args: {}, context: RequestContext) {
-            if (!(await Can.viewSubscriptionPrivateAttributes(parent, context))) {
-                throw new Denied();
-            }
-            return await context.batched.Pricing.get(PricingPK.parse(parent.pricing));
-        },
-        async subscriber(parent, args, context: RequestContext, info) {
-            if (!(await Can.viewSubscriptionPrivateAttributes(parent, context))) {
-                throw new Denied();
-            }
-            return await context.batched.User.get(UserPK.parse(parent.subscriber));
-        },
-        async app(parent, args, context: RequestContext, info) {
-            if (!(await Can.viewSubscriptionPrivateAttributes(parent, context))) {
-                throw new Denied();
-            }
-            return await context.batched.App.get(AppPK.parse(parent.app));
-        },
+        pricing: makePrivate((parent, _, context) => context.batched.Pricing.get(PricingPK.parse(parent.pricing))),
+        subscriber: makePrivate((parent, _, context) => context.batched.User.get(UserPK.parse(parent.subscriber))),
+        app: makePrivate((parent, _, context) => context.batched.App.get(AppPK.parse(parent.app))),
+
         async deleteSubscription(parent: Subscription, args: {}, context) {
             if (!(await Can.deleteSubscription(parent, args, context))) {
                 throw new Denied();
@@ -80,6 +66,7 @@ export const SubscriptionResolvers: GQLResolvers = {
             }
             return subscription;
         },
+
         async getSubscriptionByAppSubscriber(
             parent: {},
             { subscriber, app }: GQLQueryGetSubscriptionByAppSubscriberArgs,
@@ -96,22 +83,22 @@ export const SubscriptionResolvers: GQLResolvers = {
         },
     },
     Mutation: {
-        async createSubscription(
-            parent: {},
-            { pricing: pricingPK, subscriber }: GQLMutationCreateSubscriptionArgs,
-            context
-        ) {
-            const pricing = await context.batched.Pricing.getOrNull(PricingPK.parse(pricingPK)); // Checks if the pricing plan exists
-            if (!pricing || pricing.availability !== PricingAvailability.Public) {
+        async createSubscription(parent: {}, { pricing, subscriber }: GQLMutationCreateSubscriptionArgs, context) {
+            const pricingObj = await context.batched.Pricing.getOrNull(PricingPK.parse(pricing)); // Checks if the pricing plan exists
+            if (!pricingObj || pricingObj.availability !== PricingAvailability.Public) {
                 // Pricing was deleted
                 throw new Denied("This pricing plan is not available for purchase.");
             }
-            if (!(await Can.createSubscription({ pricing: pricingPK, subscriber }, context))) {
+            const appObj = await context.batched.App.get(AppPK.parse(pricingObj.app));
+            if (appObj.visibility !== AppVisibility.Public) {
+                throw new Denied("This app is not available for purchase.");
+            }
+            if (!(await Can.createSubscription({ pricing: pricing, subscriber }, context))) {
                 throw new Denied();
             }
             return await context.batched.Subscription.create({
-                app: pricing.app,
-                pricing: pricingPK,
+                app: pricingObj.app,
+                pricing: pricing,
                 subscriber,
             });
         },

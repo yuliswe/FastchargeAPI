@@ -31,16 +31,7 @@ export const SubscriptionPermissions = {
         { pricing, subscriber }: GQLMutationCreateSubscriptionArgs,
         context: RequestContext
     ): Promise<boolean> {
-        if (context.isServiceRequest || context.isAdminUser) {
-            return true;
-        }
-        if (!context.currentUser) {
-            return false;
-        }
-        if (subscriber === UserPK.stringify(context.currentUser)) {
-            return true;
-        }
-        return Promise.resolve(false);
+        return Promise.resolve(isAdminOrServiceUser(context) || isCurrentUserPK(subscriber, context));
     },
 
     async updateSubscription(

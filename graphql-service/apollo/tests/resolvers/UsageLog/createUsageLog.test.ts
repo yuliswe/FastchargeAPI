@@ -14,15 +14,15 @@ import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
 
-describe("createSubscription", () => {
+describe("createUsageLog", () => {
     let testApp: App;
-    let testPricing: Pricing;
-    let testSubscriber: User;
     let testAppOwner: User;
+    let testUsageLogOwner: User;
+    let testPricing: Pricing;
 
     beforeEach(async () => {
-        testSubscriber = await getOrCreateTestUser(context);
         testAppOwner = await getOrCreateTestUser(context);
+        testUsageLogOwner = await getOrCreateTestUser(context);
         testApp = await context.batched.App.create({
             name: `testapp-${uuid.v4()}`,
             owner: UserPK.stringify(testAppOwner),
@@ -45,80 +45,78 @@ describe("createSubscription", () => {
         });
     });
 
-    const createSubscriptionMutation = graphql(`
-        mutation TestCreateSubscription($subscriber: ID!, $pricing: ID!) {
-            createSubscription(pricing: $pricing, subscriber: $subscriber) {
+    const createUsageLogMutation = graphql(`
+        mutation TestCreateUsageLog($app: ID!, $path: String!, $subscriber: ID!, $volume: Int!, $pricing: ID!) {
+            createUsageLog(app: $app, path: $path, subscriber: $subscriber, volume: $volume, pricing: $pricing) {
                 pk
+                app {
+                    pk
+                }
+                path
+                subscriber {
+                    pk
+                }
+                volume
+                pricing {
+                    pk
+                }
             }
         }
     `);
 
     function getVariables() {
         return {
+            app: AppPK.stringify(testApp),
+            path: "test-path",
+            subscriber: UserPK.stringify(testUsageLogOwner),
+            volume: 1,
             pricing: PricingPK.stringify(testPricing),
-            subscriber: UserPK.stringify(testSubscriber),
         };
     }
 
-    test("A user can subscribe to a public app", async () => {
-        const promise = testGQLClient({ user: testSubscriber }).mutate({
-            mutation: createSubscriptionMutation,
-            variables: getVariables(),
-        });
-        await expect(promise).resolves.toMatchObject({
+    function getExpected() {
+        return {
             data: {
-                createSubscription: {
-                    __typename: "Subscribe",
+                createUsageLog: {
+                    __typename: "UsageLog",
+                    app: {
+                        __typename: "App",
+                        pk: AppPK.stringify(testApp),
+                    },
+                    path: "test-path",
                     pk: expect.any(String),
+                    pricing: {
+                        __typename: "Pricing",
+                        pk: PricingPK.stringify(testPricing),
+                    },
+                    subscriber: {
+                        __typename: "User",
+                        pk: UserPK.stringify(testUsageLogOwner),
+                    },
+                    volume: 1,
                 },
             },
-        });
-    });
+        };
+    }
 
-    test("A user cannot subscribe to a private app", async () => {
-        await context.batched.App.update(testApp, {
-            visibility: AppVisibility.Private,
-        });
-        const promise = testGQLClient({ user: testSubscriber }).mutate({
-            mutation: createSubscriptionMutation,
+    test("Service can create usage log", async () => {
+        const promise = testGQLClient({ isServiceRequest: true }).mutate({
+            mutation: createUsageLogMutation,
             variables: getVariables(),
         });
-        await expect(simplifyGraphQLPromiseRejection(promise)).rejects.toMatchObject([
-            {
-                code: "PERMISSION_DENIED",
-                message: "This app is not available for purchase.",
-                path: "createSubscription",
-            },
-        ]);
+        await expect(promise).resolves.toMatchObject(getExpected());
     });
 
-    test("A user cannot subscribe to a private pricing plan", async () => {
-        await context.batched.Pricing.update(testPricing, {
-            availability: PricingAvailability.ExistingSubscribers,
-        });
-        const promise = testGQLClient({ user: testSubscriber }).mutate({
-            mutation: createSubscriptionMutation,
-            variables: getVariables(),
-        });
-        await expect(simplifyGraphQLPromiseRejection(promise)).rejects.toMatchObject([
-            {
-                code: "PERMISSION_DENIED",
-                message: "This pricing plan is not available for purchase.",
-                path: "createSubscription",
-            },
-        ]);
-    });
-
-    test("A user cannot subscribe someone else to a pricing plan", async () => {
+    test("Only service can create usage log", async () => {
         const promise = testGQLClient({ user: testAppOwner }).mutate({
-            mutation: createSubscriptionMutation,
+            mutation: createUsageLogMutation,
             variables: getVariables(),
         });
         await expect(simplifyGraphQLPromiseRejection(promise)).rejects.toMatchObject([
             {
                 code: "PERMISSION_DENIED",
                 message: "You do not have permission to perform this action.",
-                path: "createSubscription",
+                path: "createUsageLog",
             },
         ]);
     });

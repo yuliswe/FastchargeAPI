@@ -3,6 +3,7 @@ import { RequestContext } from "../RequestContext";
 import { Endpoint } from "@/database/models/Endpoint";
 import { AppPK } from "../pks/AppPK";
 import { UserPK } from "../pks/UserPK";
+import { isAdminOrServiceUser } from "./utils";
 
 export const OtherPermissions = {
     // async listUsers(context: RequestContext): Promise<boolean> {
@@ -31,7 +32,7 @@ export const OtherPermissions = {
         return await Promise.resolve(app.owner === UserPK.stringify(context.currentUser));
     },
     async flushAppSearchIndex(context: RequestContext): Promise<boolean> {
-        return Promise.resolve(context.isServiceRequest || context.isAdminUser || false);
+        return Promise.resolve(isAdminOrServiceUser(context));
     },
     // async *viewAppIter<App extends { owner: string }>(
     //     arr: App[],

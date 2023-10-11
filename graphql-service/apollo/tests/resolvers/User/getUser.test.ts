@@ -43,7 +43,6 @@ const userPrivateFieldNames = [
     "stripeConnectAccountId",
     "accountActivities",
     "accountHistories",
-    "usageLogs",
     // "usageSummaries",
 ].sort((a, b) => a.localeCompare(b));
 
@@ -65,9 +64,6 @@ const queryUserByPK = graphql(`
                 pk
             }
             accountHistories {
-                pk
-            }
-            usageLogs {
                 pk
             }
             author
@@ -173,9 +169,6 @@ describe("Query User", () => {
                             pk
                         }
                         accountHistories {
-                            pk
-                        }
-                        usageLogs {
                             pk
                         }
                     }

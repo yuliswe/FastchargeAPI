@@ -1,6 +1,7 @@
 import type { UsageLog } from "@/database/models/UsageLog";
 import { AppPK } from "@/pks/AppPK";
-import { GraphQLResolveInfo } from "graphql";
+import { EndpointPK } from "@/pks/EndpointPK";
+import { PricingPK } from "@/pks/PricingPK";
 import { RequestContext } from "../RequestContext";
 import { GQLMutationCreateUsageLogArgs, GQLResolvers, GQLUsageLogResolvers } from "../__generated__/resolvers-types";
 import { Denied } from "../errors";
@@ -26,45 +27,52 @@ export const UsageLogResolvers: GQLResolvers & {
     UsageLog: Required<GQLUsageLogResolvers>;
 } = {
     UsageLog: {
-        __isTypeOf: (parent: UsageLog, context) => parent instanceof context.batched.UsageLog.model,
-        pk: makePrivate((parent: UsageLog) => UsageLogPK.stringify(parent)),
-        status: makePrivate((parent: UsageLog) => parent.status),
-        collectedAt: makePrivate((parent: UsageLog) => parent.collectedAt),
-        volume: makePrivate((parent: UsageLog) => parent.volume),
-        createdAt: makePrivate((parent: UsageLog) => parent.createdAt),
-
-        async app(parent: UsageLog, args, context, info) {
-            if (!(await Can.viewUsageLogPrivateAttributes(parent, context))) {
+        __isTypeOf: (parent, context) => parent instanceof context.batched.UsageLog.model,
+        pk: makePrivate((parent) => UsageLogPK.stringify(parent)),
+        status: makePrivate((parent) => parent.status),
+        collectedAt: makePrivate((parent) => parent.collectedAt),
+        volume: makePrivate((parent) => parent.volume),
+        createdAt: makePrivate((parent) => parent.createdAt),
+        app: makePrivate((parent, _, context) => context.batched.App.get(AppPK.parse(parent.app))),
+        subscriber: makePrivate((parent, _, context) => context.batched.User.get(UserPK.parse(parent.subscriber))),
+        endpoint: makePrivate((parent, _, context) =>
+            context.batched.Endpoint.get(EndpointPK.parse(parent.subscriber))
+        ),
+        pricing: makePrivate((parent, _, context) => context.batched.Pricing.get(PricingPK.parse(parent.pricing))),
+        path: makePrivate((parent) => parent.path),
+    },
+    Query: {
+        async listUsageLogsBySubscriber(
+            parent,
+            { subscriber, app, path, limit, dateRange },
+            context
+        ): Promise<UsageLog[]> {
+            if (!(await Can.listUsageLogsByAppSubscriber({ subscriber }, context))) {
                 throw new Denied();
             }
-            const app = await context.batched.App.get(AppPK.parse(parent.app));
-            return app;
-        },
-        async subscriber(parent: UsageLog, args, context, info) {
-            if (!(await Can.viewUsageLogPrivateAttributes(parent, context))) {
-                throw new Denied();
-            }
-            const subscriber = await context.batched.User.get(UserPK.parse(parent.subscriber));
-            return subscriber;
-        },
-        async endpoint(parent: UsageLog, args, context, info) {
-            if (!(await Can.viewUsageLogPrivateAttributes(parent, context))) {
-                throw new Denied();
-            }
-            const endpoint = await context.batched.Endpoint.get({
-                app: parent.app,
-                path: parent.path,
-            });
-            return endpoint;
+            return await context.batched.UsageLog.many(
+                {
+                    subscriber: UserPK.guard(subscriber),
+                    path: path ?? undefined,
+                    app: app ? AppPK.guard(app) : undefined,
+                    createdAt: dateRange
+                        ? {
+                              le: dateRange.end ?? undefined,
+                              ge: dateRange.start ?? undefined,
+                          }
+                        : undefined,
+                },
+                {
+                    limit: Math.min(limit || 1000, 1000),
+                }
+            );
         },
     },
-    Query: {},
     Mutation: {
         async createUsageLog(
             parent: {},
             { app, path, subscriber, volume, pricing }: GQLMutationCreateUsageLogArgs,
-            context: RequestContext,
-            info: GraphQLResolveInfo
+            context: RequestContext
         ) {
             if (!(await Can.createUsageLog(context))) {
                 throw new Denied();

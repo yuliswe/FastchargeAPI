@@ -3,11 +3,10 @@ import { AppPK } from "@/pks/AppPK";
 import { RequestContext } from "../RequestContext";
 import {
     GQLMutationCreateUserAppTokenArgs,
-    GQLQueryGetUserAppTokenArgs,
     GQLResolvers,
     GQLUserAppTokenResolvers,
 } from "../__generated__/resolvers-types";
-import { Denied, NotFound, RequirementNotSatisfied, TooManyResources } from "../errors";
+import { Denied, RequirementNotSatisfied, TooManyResources } from "../errors";
 import { createUserAppToken } from "../functions/token";
 import { Can } from "../permissions";
 import { UserAppTokenPK } from "../pks/UserAppToken";
@@ -49,20 +48,21 @@ export const UserAppTokenResolvers: GQLResolvers & {
         },
     },
     Query: {
-        async getUserAppToken(parent, args: GQLQueryGetUserAppTokenArgs, context: RequestContext) {
-            if (!(await Can.queryUserAppToken(context))) {
+        async getUserAppToken(parent, { pk }, context) {
+            const token = await context.batched.UserAppToken.get(UserAppTokenPK.parse(pk));
+            if (!(await Can.getUserAppToken(token, context))) {
                 throw new Denied();
             }
-            if (args.subscriber && args.app) {
-                return await context.batched.UserAppToken.get({
-                    subscriber: args.subscriber,
-                    app: args.app,
-                });
+            return token;
+        },
+        async getUserAppTokenBySubscriber(parent, { subscriber, app }, context) {
+            if (!(await Can.getUserAppTokenBySubscriber({ subscriber: UserPK.guard(subscriber) }, context))) {
+                throw new Denied();
             }
-            if (args.pk) {
-                return await context.batched.UserAppToken.get(UserAppTokenPK.parse(args.pk));
-            }
-            throw new NotFound("UserAppToken", args);
+            return await context.batched.UserAppToken.get({
+                subscriber: UserPK.guard(subscriber),
+                app: app ? AppPK.guard(app) : undefined,
+            });
         },
     },
     Mutation: {

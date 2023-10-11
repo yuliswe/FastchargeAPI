@@ -6,7 +6,7 @@ import { User } from "@/database/models/User";
 import { AppPK } from "@/pks/AppPK";
 import { PricingPK } from "@/pks/PricingPK";
 import { UserPK } from "@/pks/UserPK";
-import { GatewayResolvers } from "@/resolvers/gateway";
+import { GatewayResolvers } from "@/resolvers/Gateway";
 import { describe, expect, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
 import { addMoneyForUser, getOrCreateTestUser } from "../test-utils";

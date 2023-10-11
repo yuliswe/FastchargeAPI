@@ -2,8 +2,9 @@ import { EventBridgeEvent, EventBridgeHandler } from "aws-lambda";
 import { Chalk } from "chalk";
 import { createDefaultContextBatched } from "../RequestContext";
 
+import { AccountActivityTableIndex } from "@/database/models/AccountActivity";
 import { graphql } from "@/typed-graphql";
-import { AccountActivityStatus, GQLAccountActivityIndex } from "../__generated__/resolvers-types";
+import { AccountActivityStatus } from "../__generated__/resolvers-types";
 import { SQSQueueName, sqsGQLClient } from "../sqsClient";
 
 const chalk = new Chalk({ level: 3 });
@@ -18,7 +19,7 @@ async function handle(event: EventBridgeEvent<string, {}>, context: never, callb
     const batched = createDefaultContextBatched();
     const activities = await batched.AccountActivity.many(
         { status: AccountActivityStatus.Pending, settleAt: { le: Date.now() } },
-        { using: GQLAccountActivityIndex.IndexByStatusSettleAtOnlyPk }
+        { using: AccountActivityTableIndex.StatusSettleAt }
     );
 
     const users = new Set(activities.map((a) => a.user));

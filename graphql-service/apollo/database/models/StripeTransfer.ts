@@ -5,7 +5,7 @@ import { StripeTransferStatus } from "../../__generated__/resolvers-types";
 import { PK, String_Required_NotEmpty, defaultCreatedAt, tableConfigs, validateStringDecimal } from "../utils";
 
 export enum StripeTransferTableIndex {
-    indexByStatusTransferAtOnlyPK = "indexByStatus_transferAt__onlyPK",
+    StatusTransferAt = "indexByStatus_transferAt__onlyPK",
 }
 
 export const StripeTransferTableSchema = new dynamoose.Schema(
@@ -38,7 +38,7 @@ export const StripeTransferTableSchema = new dynamoose.Schema(
         status: {
             type: String,
             index: {
-                name: StripeTransferTableIndex.indexByStatusTransferAtOnlyPK,
+                name: StripeTransferTableIndex.StatusTransferAt,
                 rangeKey: "transferAt",
                 type: "global",
                 project: ["transferAt", "status"],

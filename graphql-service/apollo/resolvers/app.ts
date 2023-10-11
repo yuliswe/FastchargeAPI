@@ -46,7 +46,7 @@ export const AppResolvers: GQLResolvers & {
             return user;
         },
         async pricingPlans(parent: App, args: {}, context: RequestContext, info: GraphQLResolveInfoWithCacheControl) {
-            const listPricings = PricingResolvers.Query!.listPricings!;
+            const listPricings = PricingResolvers.Query!.listPricingsByApp!;
             return listPricings(
                 {},
                 {
@@ -148,7 +148,7 @@ export const AppResolvers: GQLResolvers & {
                 { tag },
                 {
                     limit,
-                    using: AppTagTableIndex.indexByTagAppOnlyPK,
+                    using: AppTagTableIndex.TagApp,
                 }
             );
             const apps = await Promise.all(appTags.map((tag) => context.batched.App.get(AppPK.parse(tag.app))));

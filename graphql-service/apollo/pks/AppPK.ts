@@ -18,4 +18,13 @@ export class AppPK {
     static extract(item: AppPKContent): AppPKContent {
         return { name: item.name };
     }
+
+    static guard(pk: string): PK {
+        try {
+            AppPK.parse(pk);
+            return pk;
+        } catch {
+            throw new Error(`Invalid AppPK: ${pk}`);
+        }
+    }
 }

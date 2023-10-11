@@ -3,7 +3,7 @@ import { AppPK } from "@/pks/AppPK";
 import { RequestContext } from "../RequestContext";
 import {
     GQLMutationTriggerBillingArgs,
-    GQLQueryListUsageSummariesArgs,
+    GQLQueryListUsageSummariesByAppSubscriberArgs,
     GQLResolvers,
     GQLUsageSummaryResolvers,
 } from "../__generated__/resolvers-types";
@@ -68,12 +68,12 @@ export const UsageSummaryResolvers: GQLResolvers & {
         },
     },
     Query: {
-        async listUsageSummaries(
+        async listUsageSummariesByAppSubscriber(
             parent: {},
-            { subscriber, app, limit, dateRange }: GQLQueryListUsageSummariesArgs,
+            { subscriber, app, limit, dateRange }: GQLQueryListUsageSummariesByAppSubscriberArgs,
             context: RequestContext
         ) {
-            if (!(await Can.listUsageSummaries({ subscriber }, context))) {
+            if (!(await Can.listUsageSummariesByAppSubscriber({ subscriber }, context))) {
                 throw new Denied();
             }
             const usageSummaries = await context.batched.UsageSummary.many(
