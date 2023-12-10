@@ -1,7 +1,7 @@
 import { StripePaymentAcceptStatus } from "@/__generated__/gql/graphql";
 import { StripePaymentAccept } from "@/database/models/StripePaymentAccept";
 import { User } from "@/database/models/User";
-import { getDedupIdForSettleStripePaymentAcceptSQS } from "@/functions/payment";
+import { getSQSDedupIdForSettleStripePaymentAccept } from "@/functions/payment";
 import { StripePaymentAcceptPK } from "@/pks/StripePaymentAccept";
 import { UserPK } from "@/pks/UserPK";
 import { SQSQueueName } from "@/sqsClient";
@@ -11,16 +11,16 @@ import {
     getUserBalanceNoCache,
     simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils";
-import { testGQLClient, testGQLClientForSQS } from "@/tests/testGQLClient";
+import { getSQSSQLClientForDirectCall, getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
 
-describe("_settleStripePaymentAcceptFromSQS", () => {
+describe("_sqsSettleStripePaymentAccept", () => {
     const settlePaymentMutation = graphql(`
         mutation TestSettleStripePaymentAccept($pk: ID!) {
             getStripePaymentAccept(pk: $pk) {
-                _settleStripePaymentAcceptFromSQS {
+                _sqsSettleStripePaymentAccept {
                     pk
                     status
                     amount
@@ -48,7 +48,7 @@ describe("_settleStripePaymentAcceptFromSQS", () => {
         return {
             data: {
                 getStripePaymentAccept: {
-                    _settleStripePaymentAcceptFromSQS: {
+                    _sqsSettleStripePaymentAccept: {
                         __typename: "StripePaymentAccept",
                         pk: StripePaymentAcceptPK.stringify(testStripePaymentAccept),
                         status: StripePaymentAcceptStatus.Settled,
@@ -60,10 +60,10 @@ describe("_settleStripePaymentAcceptFromSQS", () => {
     }
 
     test("Completes settleStripePaymentAccept succesfully", async () => {
-        const promise = testGQLClientForSQS({
+        const promise = getSQSSQLClientForDirectCall({
             queueName: SQSQueueName.BillingQueue,
             groupId: UserPK.stringify(testOwnerUser),
-            dedupId: getDedupIdForSettleStripePaymentAcceptSQS(testStripePaymentAccept),
+            dedupId: getSQSDedupIdForSettleStripePaymentAccept(testStripePaymentAccept),
         }).mutate({
             mutation: settlePaymentMutation,
             variables: {
@@ -74,7 +74,7 @@ describe("_settleStripePaymentAcceptFromSQS", () => {
     });
 
     test("Must be called on SQS", async () => {
-        const promise = testGQLClient({ isServiceRequest: true }).mutate({
+        const promise = getTestGQLClient({ isServiceRequest: true }).mutate({
             mutation: settlePaymentMutation,
             variables: {
                 pk: StripePaymentAcceptPK.stringify(testStripePaymentAccept),
@@ -84,7 +84,7 @@ describe("_settleStripePaymentAcceptFromSQS", () => {
             {
                 code: "NOT_ACCEPTED",
                 message: "Must be called from SQS",
-                path: "getStripePaymentAccept._settleStripePaymentAcceptFromSQS",
+                path: "getStripePaymentAccept._sqsSettleStripePaymentAccept",
             },
         ]);
     });
@@ -92,10 +92,10 @@ describe("_settleStripePaymentAcceptFromSQS", () => {
     test("Should update user account balance", async () => {
         const oldBalance = await getUserBalanceNoCache(context, testOwnerUser);
         expect(oldBalance).toBe("0");
-        const promise = testGQLClientForSQS({
+        const promise = getSQSSQLClientForDirectCall({
             queueName: SQSQueueName.BillingQueue,
             groupId: UserPK.stringify(testOwnerUser),
-            dedupId: getDedupIdForSettleStripePaymentAcceptSQS(testStripePaymentAccept),
+            dedupId: getSQSDedupIdForSettleStripePaymentAccept(testStripePaymentAccept),
         }).mutate({
             mutation: settlePaymentMutation,
             variables: {
@@ -108,10 +108,10 @@ describe("_settleStripePaymentAcceptFromSQS", () => {
     });
 
     test("Must be called on the Billing Queue", async () => {
-        const promise = testGQLClientForSQS({
+        const promise = getSQSSQLClientForDirectCall({
             queueName: SQSQueueName.UsageLogQueue,
             groupId: UserPK.stringify(testOwnerUser),
-            dedupId: getDedupIdForSettleStripePaymentAcceptSQS(testStripePaymentAccept),
+            dedupId: getSQSDedupIdForSettleStripePaymentAccept(testStripePaymentAccept),
         }).mutate({
             mutation: settlePaymentMutation,
             variables: {
@@ -122,15 +122,15 @@ describe("_settleStripePaymentAcceptFromSQS", () => {
             {
                 code: "NOT_ACCEPTED",
                 message: expect.stringContaining("Must be called on SQS with QueueUrl = "),
-                path: "getStripePaymentAccept._settleStripePaymentAcceptFromSQS",
+                path: "getStripePaymentAccept._sqsSettleStripePaymentAccept",
             },
         ]);
     });
 
     test("SQS group ID is required", async () => {
-        const promise = testGQLClientForSQS({
+        const promise = getSQSSQLClientForDirectCall({
             queueName: SQSQueueName.BillingQueue,
-            dedupId: getDedupIdForSettleStripePaymentAcceptSQS(testStripePaymentAccept),
+            dedupId: getSQSDedupIdForSettleStripePaymentAccept(testStripePaymentAccept),
         }).mutate({
             mutation: settlePaymentMutation,
             variables: {
@@ -141,13 +141,13 @@ describe("_settleStripePaymentAcceptFromSQS", () => {
             {
                 code: "NOT_ACCEPTED",
                 message: expect.stringContaining("Must be called on SQS with MessageGroupId = "),
-                path: "getStripePaymentAccept._settleStripePaymentAcceptFromSQS",
+                path: "getStripePaymentAccept._sqsSettleStripePaymentAccept",
             },
         ]);
     });
 
     test("Dedup ID is required", async () => {
-        const promise = testGQLClientForSQS({
+        const promise = getSQSSQLClientForDirectCall({
             queueName: SQSQueueName.BillingQueue,
             groupId: UserPK.stringify(testOwnerUser),
         }).mutate({
@@ -160,16 +160,16 @@ describe("_settleStripePaymentAcceptFromSQS", () => {
             {
                 code: "NOT_ACCEPTED",
                 message: expect.stringContaining("Must be called on SQS with MessageDeduplicationId = "),
-                path: "getStripePaymentAccept._settleStripePaymentAcceptFromSQS",
+                path: "getStripePaymentAccept._sqsSettleStripePaymentAccept",
             },
         ]);
     });
 
     test("Using a wrong SQS group ID should fail", async () => {
-        const promise = testGQLClientForSQS({
+        const promise = getSQSSQLClientForDirectCall({
             queueName: SQSQueueName.BillingQueue,
             groupId: "XXXX",
-            dedupId: getDedupIdForSettleStripePaymentAcceptSQS(testStripePaymentAccept),
+            dedupId: getSQSDedupIdForSettleStripePaymentAccept(testStripePaymentAccept),
         }).mutate({
             mutation: settlePaymentMutation,
             variables: {
@@ -180,13 +180,13 @@ describe("_settleStripePaymentAcceptFromSQS", () => {
             {
                 code: "NOT_ACCEPTED",
                 message: expect.stringContaining("Must be called on SQS with MessageGroupId = "),
-                path: "getStripePaymentAccept._settleStripePaymentAcceptFromSQS",
+                path: "getStripePaymentAccept._sqsSettleStripePaymentAccept",
             },
         ]);
     });
 
     test("Using a wrong dedup ID should fail", async () => {
-        const promise = testGQLClientForSQS({
+        const promise = getSQSSQLClientForDirectCall({
             queueName: SQSQueueName.BillingQueue,
             groupId: UserPK.stringify(testOwnerUser),
             dedupId: "XXX",
@@ -200,7 +200,7 @@ describe("_settleStripePaymentAcceptFromSQS", () => {
             {
                 code: "NOT_ACCEPTED",
                 message: expect.stringContaining("Must be called on SQS with MessageDeduplicationId = "),
-                path: "getStripePaymentAccept._settleStripePaymentAcceptFromSQS",
+                path: "getStripePaymentAccept._sqsSettleStripePaymentAccept",
             },
         ]);
     });

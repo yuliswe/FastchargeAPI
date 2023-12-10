@@ -1,5 +1,8 @@
 import { UsageSummary, UsageSummaryModel } from "@/database/models/UsageSummary";
+import { enforceCalledFromSQS } from "@/functions/aws";
 import { AppPK } from "@/pks/AppPK";
+import { SQSQueueName, sqsGQLClient } from "@/sqsClient";
+import { graphql } from "@/typed-graphql";
 import { RequestContext } from "../RequestContext";
 import {
     GQLMutationTriggerBillingArgs,
@@ -8,7 +11,7 @@ import {
     GQLUsageSummaryResolvers,
 } from "../__generated__/resolvers-types";
 import { Denied } from "../errors";
-import { triggerBilling } from "../functions/billing";
+import { sqsTriggerBilling } from "../functions/billing";
 import { Can } from "../permissions";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
@@ -99,12 +102,41 @@ export const UsageSummaryResolvers: GQLResolvers & {
         /**
          * Used by the billing lambda to trigger billing.
          */
-        async triggerBilling(parent, { user, app, path }: GQLMutationTriggerBillingArgs, context) {
+        async _sqsTriggerBilling(parent, args: GQLMutationTriggerBillingArgs, context) {
+            const { user, app } = args;
+
+            enforceCalledFromSQS(context, {
+                queueName: SQSQueueName.UsageLogQueue,
+                groupId: user,
+            });
+
+            if (!(await Can._sqsTriggerBilling(context))) {
+                throw new Denied();
+            }
+
+            const result = await sqsTriggerBilling(context, { user, app });
+            return result.affectedUsageSummaries;
+        },
+
+        async triggerBilling(parent, args: GQLMutationTriggerBillingArgs, context) {
+            const { user, app } = args;
+
             if (!(await Can.triggerBilling(context))) {
                 throw new Denied();
             }
-            const result = await triggerBilling(context, { user, app, path });
-            return result.affectedUsageSummaries;
+
+            await sqsGQLClient({ queueName: SQSQueueName.UsageLogQueue, groupId: user }).mutate({
+                mutation: graphql(`
+                    mutation CallSQSTriggerBilling($user: ID!, $app: ID!) {
+                        _sqsTriggerBilling(user: $user, app: $app) {
+                            pk
+                        }
+                    }
+                `),
+                variables: { user, app },
+            });
+
+            return true;
         },
     },
 };

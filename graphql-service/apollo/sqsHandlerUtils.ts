@@ -1,7 +1,6 @@
-import { HTTPGraphQLResponse, HeaderMap } from "@apollo/server";
+import { ApolloServer, HTTPGraphQLResponse, HeaderMap } from "@apollo/server";
 import { LambdaHandler, startServerAndCreateLambdaHandler } from "@as-integrations/aws-lambda";
 import { RequestHandler } from "@as-integrations/aws-lambda/dist/request-handlers/_create";
-import { SendMessageCommandInput } from "@aws-sdk/client-sqs";
 import { Callback as LambdaCallback, Context as LambdaContext, SQSRecord } from "aws-lambda";
 import chalk from "chalk";
 import { RequestContext, RequestService, createDefaultContextBatched } from "./RequestContext";
@@ -16,16 +15,20 @@ function getSQSQueueNameFromArn(eventSourceARN: string): SQSQueueName {
     }
     throw new Error(`Unknown SQSQueueName: ${name}. Parsed from: ${eventSourceARN}`);
 }
-let handlerInstance: LambdaHandler<RequestHandler<SQSRecord, LambdaResult>> | undefined;
 
-export function callOrCreateSQSHandler(
+let handlerInstance: LambdaHandler<RequestHandler<SQSRecord, LambdaResult>> | undefined;
+let serverInstance: ApolloServer<RequestContext> | undefined;
+export async function callOrCreateSQSHandler(
     event: SQSRecord,
     context: LambdaContext,
-    callback: LambdaCallback
+    callback: LambdaCallback,
+    options?: { stopServer?: boolean }
 ): Promise<LambdaResult> {
+    const { stopServer } = options ?? {};
     if (!handlerInstance) {
+        serverInstance = getServer();
         handlerInstance = startServerAndCreateLambdaHandler<RequestHandler<SQSRecord, LambdaResult>, RequestContext>(
-            getServer(),
+            serverInstance,
             {
                 fromEvent(record) {
                     const headers = new HeaderMap();
@@ -100,34 +103,13 @@ export function callOrCreateSQSHandler(
             }
         );
     }
-    const result = handlerInstance(event, context, callback);
-    return result as Exclude<typeof result, void>;
-}
-export async function handSendMessageCommandData(command: SendMessageCommandInput): Promise<LambdaResult> {
-    return await callOrCreateSQSHandler(
-        {
-            body: command.MessageBody ?? "",
-            messageId: "0",
-            receiptHandle: "",
-            attributes: {
-                ApproximateReceiveCount: "0",
-                SentTimestamp: "0",
-                SenderId: "",
-                ApproximateFirstReceiveTimestamp: "0",
-                SequenceNumber: undefined,
-                MessageGroupId: command.MessageGroupId,
-                MessageDeduplicationId: command.MessageDeduplicationId,
-                DeadLetterQueueSourceArn: undefined,
-            },
-            messageAttributes: {},
-            md5OfBody: "",
-            eventSource: "",
-            eventSourceARN: `arn:aws:sqs:${command?.QueueUrl?.split("/").at(-1) ?? ""}`,
-            awsRegion: "",
-        },
-        {} as LambdaContext,
-        (err, result) => {
-            // nothing
+    try {
+        return (await handlerInstance(event, context, callback)) as LambdaResult;
+    } finally {
+        if (stopServer) {
+            await serverInstance?.stop();
+            handlerInstance = undefined;
+            serverInstance = undefined;
         }
-    );
+    }
 }

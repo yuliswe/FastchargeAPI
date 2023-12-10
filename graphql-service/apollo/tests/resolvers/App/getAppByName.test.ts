@@ -4,7 +4,7 @@ import { User } from "@/database/models/User";
 import { AppPK } from "@/pks/AppPK";
 import { UserPK } from "@/pks/UserPK";
 import { baseRequestContext, getOrCreateTestUser } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeAll, describe, expect, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
@@ -45,7 +45,7 @@ describe("getAppByName", () => {
     `);
 
     test("Can get a public app by name", async () => {
-        const promise = testGQLClient({ user: testOtherOwner }).query({
+        const promise = getTestGQLClient({ user: testOtherOwner }).query({
             query: queryGetAppByName,
             variables: {
                 name: testApp.name,

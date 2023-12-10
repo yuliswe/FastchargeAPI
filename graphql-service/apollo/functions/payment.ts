@@ -20,7 +20,7 @@ export async function generateAccountActivityForStripePayment(
     const activity = await context.batched.AccountActivity.create({
         user: stripePaymentAccept.user,
         amount: stripePaymentAccept.amount,
-        type: AccountActivityType.Debit,
+        type: AccountActivityType.Incoming,
         reason: AccountActivityReason.Topup,
         settleAt: Date.now(),
         description: "Account top-up by you",
@@ -37,6 +37,6 @@ export async function generateAccountActivityForStripePayment(
     };
 }
 
-export function getDedupIdForSettleStripePaymentAcceptSQS(stripePaymentAccept: StripePaymentAccept) {
+export function getSQSDedupIdForSettleStripePaymentAccept(stripePaymentAccept: StripePaymentAccept) {
     return ("settleStripePaymentAccept-" + StripePaymentAcceptPK.stringify(stripePaymentAccept)).slice(0, 128);
 }

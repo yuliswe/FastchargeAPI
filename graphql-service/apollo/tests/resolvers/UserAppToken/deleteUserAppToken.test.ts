@@ -11,7 +11,7 @@ import { PricingPK } from "@/pks/PricingPK";
 import { UserAppTokenPK } from "@/pks/UserAppToken";
 import { UserPK } from "@/pks/UserPK";
 import { getOrCreateTestUser, simplifyGraphQLPromiseRejection } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
@@ -70,7 +70,7 @@ describe("createUserAppToken", () => {
     });
 
     test("User can delete a token", async () => {
-        const result = await testGQLClient({
+        const result = await getTestGQLClient({
             user: testSubscriber,
         }).mutate({
             mutation: deleteUserAppTokenMutation,
@@ -89,7 +89,7 @@ describe("createUserAppToken", () => {
 
     test("User can only delete their own token but not someone else's", async () => {
         jest.spyOn(Can, "getUserAppToken").mockImplementation(() => Promise.resolve(true));
-        const result = testGQLClient({
+        const result = getTestGQLClient({
             user: testAppOwner,
         }).mutate({
             mutation: deleteUserAppTokenMutation,

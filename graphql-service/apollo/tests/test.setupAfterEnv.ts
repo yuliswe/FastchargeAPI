@@ -1,36 +1,47 @@
 import * as sqsClientModule from "@/sqsClient";
-import { handSendMessageCommandData } from "@/sqsHandlerUtils";
 import { mockSQS } from "@/tests/MockSQS";
 import { ApolloClient, InMemoryCache } from "@apollo/client";
 import { HttpLink } from "@apollo/client/link/http";
 import { ApolloServer } from "@apollo/server";
-import { afterEach, beforeAll, jest } from "@jest/globals";
+import { afterEach, jest } from "@jest/globals";
 import { RequestInit, Response } from "node-fetch";
 import * as uuid from "uuid";
 import { setUpTraceConsole } from "../console";
+import { extendJest } from "./jest-extend";
+import { handSendMessageCommandData } from "./testGQLClients";
+
+extendJest();
 
 const logLevel = Number.parseInt(process.env.LOG || "0");
 
-if (logLevel == 0 || logLevel > 1) {
-    jest.spyOn(global.console, "log").mockImplementation(() => jest.fn());
-}
+function muteConsoleDuringTests() {
+    const mute = (object: object, prop: string) => {
+        Object.assign(object, { [prop]: () => ({}) });
+    };
 
-if (logLevel == 0 || logLevel > 2) {
-    jest.spyOn(global.console, "warn").mockImplementation(() => jest.fn());
-}
+    if (logLevel == 0 || logLevel > 1) {
+        mute(global.console, "log");
+    }
 
-if (logLevel == 0 || logLevel > 3) {
-    jest.spyOn(global.console, "error").mockImplementation(() => jest.fn());
-}
+    if (logLevel == 0 || logLevel > 2) {
+        mute(global.console, "warn");
+        mute(process, "emitWarning");
+    }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-jest.spyOn(ApolloServer.prototype as any, "logStartupError").mockImplementation(() => {
+    if (logLevel == 0 || logLevel > 3) {
+        mute(global.console, "error");
+    }
+
     /* Removed error log. It is fine because the lambda server has started in
-    the lambdaHandler.ts  */
-});
+the lambdaHandler.ts  */
+    mute(ApolloServer.prototype, "logStartupError");
+}
+
+muteConsoleDuringTests();
 
 afterEach(() => {
     jest.clearAllMocks();
+    jest.restoreAllMocks();
 });
 
 if (process.env.TRACE_CONSOLE === "1") {
@@ -44,7 +55,7 @@ if (process.env.LOCAL_SQS === "1") {
         mockSQS.reset();
     });
 
-    beforeAll(() => {
+    beforeEach(() => {
         jest.spyOn(sqsClientModule, "sqsGQLClient").mockImplementation(({ queueName, dedupId, groupId }) => {
             const errorWithCorrectStackTrace = new Error("Error in sqsGQLClient");
             return new ApolloClient({
@@ -62,7 +73,7 @@ if (process.env.LOCAL_SQS === "1") {
                     },
                 },
                 link: new HttpLink({
-                    fetch: (uri: string, { body }: RequestInit): Promise<Response> => {
+                    fetch: async (uri: string, { body }: RequestInit): Promise<Response> => {
                         try {
                             mockSQS.enqueue({
                                 input: {
@@ -82,6 +93,11 @@ if (process.env.LOCAL_SQS === "1") {
                                 throw error;
                             }
                         }
+
+                        /* The request may trigger a SQS message. Wait for it to
+                        be handled before returning to the test case. */
+                        await mockSQS.waitForQueuesToEmpty();
+
                         return Promise.resolve(
                             new Response(
                                 JSON.stringify({

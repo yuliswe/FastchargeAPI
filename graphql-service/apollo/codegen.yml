@@ -76,6 +76,7 @@ projects:
                 StripePaymentAcceptStatus: ../__generated__/gql/graphql#StripePaymentAcceptStatus
                 Currency: ../__generated__/gql/graphql#Currency
                 AppVisibility: ../__generated__/gql/graphql#AppVisibility
+                GatewayDecisionResponseReason: ../__generated__/gql/graphql#GatewayDecisionResponseReason
               scalars:
                 Email: string
                 Timestamp: number

@@ -10,7 +10,7 @@ import {
     getOrCreateTestUser,
     simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
@@ -49,7 +49,7 @@ describe("deleteAppTag", () => {
     });
 
     test("App ower can delete app tag", async () => {
-        const promise = testGQLClient({ user: testAppOwner }).mutate({
+        const promise = getTestGQLClient({ user: testAppOwner }).mutate({
             mutation: deleteAppTagMutation,
             variables: { pk: AppTagPK.stringify(testAppTag) },
         });
@@ -71,7 +71,7 @@ describe("deleteAppTag", () => {
     });
 
     test("Admin can delete app tag", async () => {
-        const promise = testGQLClient({ user: await getAdminUser(context) }).mutate({
+        const promise = getTestGQLClient({ user: await getAdminUser(context) }).mutate({
             mutation: deleteAppTagMutation,
             variables: { pk: AppTagPK.stringify(testAppTag) },
         });
@@ -93,7 +93,7 @@ describe("deleteAppTag", () => {
     });
 
     test("Non-owner cannot update app tag", async () => {
-        const promise = testGQLClient({ user: testOtherUser }).mutate({
+        const promise = getTestGQLClient({ user: testOtherUser }).mutate({
             mutation: deleteAppTagMutation,
             variables: { pk: AppTagPK.stringify(testAppTag) },
         });

@@ -11,7 +11,7 @@ import {
     getOrCreateTestUser,
     simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
 
@@ -65,7 +65,7 @@ describe("deletePricing", () => {
     `);
 
     test("App owner can delete pricing", async () => {
-        const result = await testGQLClient({ user: testAppOwner }).mutate({
+        const result = await getTestGQLClient({ user: testAppOwner }).mutate({
             mutation: deletePricingMutation,
             variables: {
                 pk: PricingPK.stringify(testPricing),
@@ -87,7 +87,7 @@ describe("deletePricing", () => {
     });
 
     test("Other owners cannot delete pricing they don't own.", async () => {
-        const promise = testGQLClient({ user: testOtherUser }).mutate({
+        const promise = getTestGQLClient({ user: testOtherUser }).mutate({
             context,
             mutation: deletePricingMutation,
             variables: {

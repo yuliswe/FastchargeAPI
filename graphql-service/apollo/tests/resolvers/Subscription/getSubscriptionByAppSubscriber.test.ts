@@ -11,7 +11,7 @@ import {
     getOrCreateTestUser,
     simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import * as uuid from "uuid";
 
@@ -81,7 +81,7 @@ describe("getSubscriptionByAppSubscriber", () => {
     }
 
     test("Owner can get subscription", async () => {
-        const promise = testGQLClient({ user: testSubscriberUser }).query({
+        const promise = getTestGQLClient({ user: testSubscriberUser }).query({
             query: getSubscriptionByAppSubscriberQuery,
             variables: getVariables(),
         });
@@ -89,7 +89,7 @@ describe("getSubscriptionByAppSubscriber", () => {
     });
 
     test("Other user cannot get subscription", async () => {
-        const promise = testGQLClient({ user: testOtherUser }).query({
+        const promise = getTestGQLClient({ user: testOtherUser }).query({
             query: getSubscriptionByAppSubscriberQuery,
             variables: getVariables(),
         });
@@ -103,7 +103,7 @@ describe("getSubscriptionByAppSubscriber", () => {
     });
 
     test("App owner can get subscription", async () => {
-        const promise = testGQLClient({ user: testAppOwnerUser }).query({
+        const promise = getTestGQLClient({ user: testAppOwnerUser }).query({
             query: getSubscriptionByAppSubscriberQuery,
             variables: getVariables(),
         });

@@ -5,7 +5,7 @@ import * as appFunctions from "@/functions/app";
 import { AppPK } from "@/pks/AppPK";
 import { UserPK } from "@/pks/UserPK";
 import { baseRequestContext, getOrCreateTestUser, simplifyGraphQLPromiseRejection } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, jest, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
@@ -86,7 +86,7 @@ describe("updateApp", () => {
     };
 
     test("App owner can update their app", async () => {
-        const promise = testGQLClient({ user: testOwner }).mutate({
+        const promise = getTestGQLClient({ user: testOwner }).mutate({
             mutation: updateAppMutation,
             variables: {
                 appPK: AppPK.stringify(testApp),
@@ -109,7 +109,7 @@ describe("updateApp", () => {
 
     test("When updating an app, the search index is updated.", async () => {
         const updateAppSearchIndexSpy = jest.spyOn(appFunctions, "updateAppSearchIndex");
-        await testGQLClient({ user: testOwner }).mutate({
+        await getTestGQLClient({ user: testOwner }).mutate({
             mutation: updateAppMutation,
             variables: {
                 appPK: AppPK.stringify(testApp),
@@ -123,7 +123,7 @@ describe("updateApp", () => {
     });
 
     test("Other users cannot update an app that they don't own.", async () => {
-        const promise = testGQLClient({ user: testOtherUser }).mutate({
+        const promise = getTestGQLClient({ user: testOtherUser }).mutate({
             mutation: updateAppMutation,
             variables: {
                 appPK: AppPK.stringify(testApp),

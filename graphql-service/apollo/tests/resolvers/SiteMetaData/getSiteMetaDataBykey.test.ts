@@ -2,7 +2,7 @@ import { SiteMetaDataKey } from "@/__generated__/gql/graphql";
 import { SiteMetaData } from "@/database/models/SiteMetaData";
 import { User } from "@/database/models/User";
 import { baseRequestContext as context, getOrCreateTestUser } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
@@ -30,7 +30,7 @@ describe("getSiteMetaDataByKeyByKey", () => {
     });
 
     test("Anyone can get site meta data", async () => {
-        const promise = testGQLClient({ user: testOtherUser }).query({
+        const promise = getTestGQLClient({ user: testOtherUser }).query({
             query: getSiteMetaDataQuery,
             variables: { key: testSiteMetaData.key },
         });

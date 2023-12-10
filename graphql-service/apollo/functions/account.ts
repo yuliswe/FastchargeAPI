@@ -7,19 +7,15 @@ import { graphql } from "../__generated__/gql";
 import { AccountActivityStatus, AccountActivityType } from "../__generated__/resolvers-types";
 import { AccountHistoryPK } from "../pks/AccountHistoryPK";
 import { SQSQueueName, sqsGQLClient } from "../sqsClient";
-import { enforceCalledFromQueue } from "./aws";
+import { enforceCalledFromSQS } from "./aws";
 import { settlePromisesInBatches } from "./promise";
 
-export async function settleAccountActivitiesOnSQS(context: RequestContext, accountUser: string) {
+export async function settleAccountActivitiesOnSQS(accountUser: string) {
     const client = sqsGQLClient({ queueName: SQSQueueName.BillingQueue, dedupId: accountUser, groupId: accountUser });
-    const result = await client.query({
-        query: graphql(`
-            query SettleAccountActivitiesOnSQS($user: ID!) {
-                getUser(pk: $user) {
-                    settleAccountActivities {
-                        pk
-                    }
-                }
+    const result = await client.mutate({
+        mutation: graphql(`
+            mutation SettleAccountActivitiesOnSQS($user: ID!) {
+                _sqsSettleAccountActivitiesForUser(user: $user)
             }
         `),
         variables: {
@@ -28,6 +24,8 @@ export async function settleAccountActivitiesOnSQS(context: RequestContext, acco
     });
     return result;
 }
+
+export function getSQSDedupIdForSettleAccountActivities() {}
 
 /**
  * Collect any account activities that are in the pending status, and have the
@@ -45,7 +43,7 @@ export async function settleAccountActivitiesOnSQS(context: RequestContext, acco
  * @workerSafe No - When called from multiple processes, it can cause the same
  * AccountActivity to be processed multiple times.
  */
-export async function settleAccountActivities(
+export async function settleAccountActivitiesFromSQS(
     context: RequestContext,
     accountUser: string,
     options?: {
@@ -56,7 +54,10 @@ export async function settleAccountActivities(
     previousAccountHistory: AccountHistory | null;
     affectedAccountActivities: AccountActivity[];
 } | null> {
-    enforceCalledFromQueue(context, accountUser);
+    enforceCalledFromSQS(context, {
+        groupId: accountUser,
+        queueName: SQSQueueName.BillingQueue,
+    });
     const closingTime = Date.now();
     const activities = await context.batched.AccountActivity.many(
         {
@@ -68,6 +69,7 @@ export async function settleAccountActivities(
             consistent: options?.consistentReadAccountActivities,
         }
     );
+
     if (activities.length === 0) {
         return null;
     }
@@ -82,7 +84,7 @@ export async function settleAccountActivities(
         }
     );
 
-    const accountHistory = await context.batched.AccountHistory.create({
+    let accountHistory = await context.batched.AccountHistory.create({
         user: accountUser,
         startingBalance: previous == null ? "0" : previous.closingBalance,
         closingBalance: previous == null ? "0" : previous.closingBalance,
@@ -101,9 +103,9 @@ export async function settleAccountActivities(
                 accountHistory: AccountHistoryPK.stringify(accountHistory),
             }).then((activity) => {
                 // Only update the balance when successfully settled.
-                if (activity.type === AccountActivityType.Credit) {
+                if (activity.type === AccountActivityType.Outgoing) {
                     balance = balance.sub(activity.amount);
-                } else if (activity.type === AccountActivityType.Debit) {
+                } else if (activity.type === AccountActivityType.Incoming) {
                     balance = balance.add(activity.amount);
                 }
                 return activity;
@@ -111,7 +113,9 @@ export async function settleAccountActivities(
         { batchSize: 10 }
     );
 
-    await context.batched.AccountHistory.update(accountHistory, { closingBalance: balance.toString() });
+    accountHistory = await context.batched.AccountHistory.update(accountHistory, {
+        closingBalance: balance.toString(),
+    });
 
     return {
         previousAccountHistory: previous,

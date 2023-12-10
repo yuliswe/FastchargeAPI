@@ -1,12 +1,16 @@
+import { RequestContext } from "@/RequestContext";
 import { AccountActivity, AccountActivityModel } from "@/database/models/AccountActivity";
+import { StripeTransfer } from "@/database/models/StripeTransfer";
+import { UsageSummary } from "@/database/models/UsageSummary";
 import { User } from "@/database/models/User";
+import { settleAccountActivitiesFromSQS as sqsSettleAccountActivities } from "@/functions/account";
 import { AppPK } from "@/pks/AppPK";
 import { GraphQLResolveInfo } from "graphql";
-import { RequestContext } from "../RequestContext";
 import {
     GQLAccountActivityResolvers,
     GQLMutationCreateAccountActivityArgs,
-    GQLQueryGetAccountActivityArgs,
+    GQLMutationGetAccountActivityArgs,
+    GQLMutation_SqsSettleAccountActivitiesForUserArgs,
     GQLResolvers,
 } from "../__generated__/resolvers-types";
 import { Denied } from "../errors";
@@ -19,7 +23,7 @@ import { UserPK } from "../pks/UserPK";
 function makeOwnerReadable<T>(
     getter: (parent: AccountActivity, args: {}, context: RequestContext) => T
 ): (parent: AccountActivity, args: {}, context: RequestContext, info: GraphQLResolveInfo) => Promise<T> {
-    return async (parent: AccountActivity, args: {}, context: RequestContext, info: GraphQLResolveInfo): Promise<T> => {
+    return async (parent, args: {}, context, info): Promise<T> => {
         if (!(await Can.viewAccountActivityPrivateAttributes(parent, context))) {
             throw new Denied();
         }
@@ -46,13 +50,13 @@ export const AccountActivityResolvers: GQLResolvers & {
         status: makeOwnerReadable((parent) => parent.status),
         settleAt: makeOwnerReadable((parent) => parent.settleAt),
         consumedFreeQuota: makeOwnerReadable((parent) => parent.consumedFreeQuota),
-        async user(parent, args: {}, context: RequestContext): Promise<User> {
+        async user(parent: AccountActivity, args: {}, context: RequestContext): Promise<User> {
             if (!(await Can.viewAccountActivityPrivateAttributes(parent, context))) {
                 throw new Denied();
             }
             return await context.batched.User.get(UserPK.parse(parent.user));
         },
-        async billedApp(parent: AccountActivity, args: {}, context, info) {
+        async billedApp(parent: AccountActivity, args: {}, context: RequestContext) {
             if (!(await Can.viewAccountActivityPrivateAttributes(parent, context))) {
                 throw new Denied();
             }
@@ -62,7 +66,7 @@ export const AccountActivityResolvers: GQLResolvers & {
                 return null;
             }
         },
-        async usageSummary(parent, args, context, info) {
+        async usageSummary(parent: AccountActivity, args: {}, context: RequestContext): Promise<UsageSummary | null> {
             if (!(await Can.viewAccountActivityPrivateAttributes(parent, context))) {
                 throw new Denied();
             }
@@ -73,7 +77,11 @@ export const AccountActivityResolvers: GQLResolvers & {
                 return null;
             }
         },
-        async stripeTransfer(parent, args, context, info) {
+        async stripeTransfer(
+            parent: AccountActivity,
+            args: {},
+            context: RequestContext
+        ): Promise<StripeTransfer | null> {
             if (!(await Can.viewAccountActivityPrivateAttributes(parent, context))) {
                 throw new Denied();
             }
@@ -90,15 +98,16 @@ export const AccountActivityResolvers: GQLResolvers & {
          *****************************************************/
     },
     Query: {
-        // async accountActivities(parent: {}, { status, using }: GQLQueryAccountActivitiesArgs, context: RequestContext) {
+        // async accountActivities(parent: {}, { status, using }: GQLQueryAccountActivitiesArgs, context) {
         //     let activities = await context.batched.AccountActivity.many({ status }, { using });
         //     return activities;
         // },
         async getAccountActivity(
             parent: {},
-            { pk }: GQLQueryGetAccountActivityArgs,
+            args: GQLMutationGetAccountActivityArgs,
             context: RequestContext
         ): Promise<AccountActivity> {
+            const { pk } = args;
             const item = await context.batched.AccountActivity.get(AccountActivityPK.parse(pk));
             if (!(await Can.queryAccountActivity(item, context))) {
                 throw new Denied();
@@ -109,9 +118,10 @@ export const AccountActivityResolvers: GQLResolvers & {
     Mutation: {
         async createAccountActivity(
             parent: {},
-            { user, amount, description, reason, settleAt, type }: GQLMutationCreateAccountActivityArgs,
+            args: GQLMutationCreateAccountActivityArgs,
             context: RequestContext
-        ) {
+        ): Promise<AccountActivity> {
+            const { user, amount, description, reason, settleAt, type } = args;
             if (!(await Can.createAccountActivity(context))) {
                 throw new Denied();
             }
@@ -123,6 +133,16 @@ export const AccountActivityResolvers: GQLResolvers & {
                 settleAt: settleAt ?? Date.now(),
                 type,
             });
+        },
+
+        async _sqsSettleAccountActivitiesForUser(
+            parent: {},
+            args: GQLMutation_SqsSettleAccountActivitiesForUserArgs,
+            context: RequestContext
+        ) {
+            const { user } = args;
+            await sqsSettleAccountActivities(context, user);
+            return true;
         },
     },
 };

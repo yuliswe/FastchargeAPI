@@ -6,7 +6,7 @@ import { Pricing } from "@/database/models/Pricing";
 import { User, UserTableIndex } from "@/database/models/User";
 import { PK } from "@/database/utils";
 import { getUserBalance } from "@/functions/account";
-import { getDedupIdForSettleStripePaymentAcceptSQS } from "@/functions/payment";
+import { getSQSDedupIdForSettleStripePaymentAccept } from "@/functions/payment";
 import { StripePaymentAcceptPK } from "@/pks/StripePaymentAccept";
 import { UserPK } from "@/pks/UserPK";
 import { SQSQueueName } from "@/sqsClient";
@@ -16,7 +16,7 @@ import { v4 as uuid4 } from "uuid";
 import { RequestContext } from "../RequestContext";
 import { createUserWithEmail } from "../functions/user";
 import { AppPK } from "../pks/AppPK";
-import { testGQLClientForSQS } from "./testGQLClient";
+import { getSQSSQLClientForDirectCall } from "./testGQLClients";
 
 export const baseRequestContext: RequestContext = {
     batched: createDefaultContextBatched(),
@@ -26,15 +26,16 @@ export const baseRequestContext: RequestContext = {
     isAdminUser: false,
 };
 
-export async function addMoneyForUser({
-    user,
-    amount,
-    context,
-}: {
-    user: string;
-    amount: string;
-    context: RequestContext;
-}): Promise<void> {
+export async function addMoneyForUser(
+    context: RequestContext,
+    {
+        user,
+        amount,
+    }: {
+        user: string;
+        amount: string;
+    }
+): Promise<void> {
     const stripeSessionId = uuid4();
     const stripePaymentAccept = await context.batched.StripePaymentAccept.create({
         user: user,
@@ -46,15 +47,15 @@ export async function addMoneyForUser({
         stripeSessionObject: {},
     });
 
-    await testGQLClientForSQS({
+    await getSQSSQLClientForDirectCall({
         queueName: SQSQueueName.BillingQueue,
-        dedupId: getDedupIdForSettleStripePaymentAcceptSQS(stripePaymentAccept),
+        dedupId: getSQSDedupIdForSettleStripePaymentAccept(stripePaymentAccept),
         groupId: user,
     }).mutate({
         mutation: graphql(`
             mutation GetAndSettleStripePaymentAccept($pk: ID!) {
                 getStripePaymentAccept(pk: $pk) {
-                    _settleStripePaymentAcceptFromSQS {
+                    _sqsSettleStripePaymentAccept {
                         status
                     }
                 }

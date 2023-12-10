@@ -561,17 +561,24 @@ export class Batched<I extends Item, CreateProps extends Partial<I>> {
     // primary key is needed, the client should delete the old object and create
     // a new one.
     async update(lookup: Partial<I>, newVals: UpdateQuery<I>): Promise<I> {
-        newVals = stripNullKeys(newVals, {
+        const stripped = stripNullKeys(newVals, {
             deep: true,
             returnUndefinedIfNothingLeft: true,
-        })!;
-        return this.updateWithNull(lookup, newVals);
+        });
+        if (stripped === undefined) {
+            return await this.get(lookup);
+        }
+        return this.updateWithNull(lookup, stripped);
     }
 
     async updateWithNull(lookup: Partial<I>, newVals: UpdateQuery<I>): Promise<I> {
         // Extract keys to ingore extra properties
         const query = extractKeysFromItems(this.model, lookup);
-
+        /* Need to manually check if the item exists. */
+        const item = await this.get(query);
+        if (Object.keys(newVals).length == 0) {
+            return item;
+        }
         const hashKeyName = this.model.table().hashKey;
         if (newVals && hashKeyName in newVals) {
             throw new UpdateContainsPrimaryKey(this.model.name, hashKeyName, newVals);
@@ -586,18 +593,10 @@ export class Batched<I extends Item, CreateProps extends Partial<I>> {
         if (rangeKeyName && !(rangeKeyName in query)) {
             throw new Error(`Query must contain range key ${rangeKeyName}`);
         }
-
         if (newVals === undefined) {
-            return await this.get(query);
+            return item;
         }
-
-        let result: I;
-        try {
-            result = await this.model.update(query as unknown as Partial<I>, newVals as unknown as Partial<I>);
-        } catch (e) {
-            await this.get(query); // Check if the item exists, throws NotFound if not
-            throw e;
-        }
+        const result = await this.model.update(query as unknown as Partial<I>, newVals as unknown as Partial<I>);
         this.clearCache();
         return result;
     }

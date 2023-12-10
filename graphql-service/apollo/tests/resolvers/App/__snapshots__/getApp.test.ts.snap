@@ -1,0 +1,31 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getApp Anyone can get a public app 1`] = `
+{
+  "data": {
+    "getApp": {
+      "__typename": "App",
+      "createdAt": Any<Number>,
+      "description": "Test App Description",
+      "endpoints": [],
+      "gatewayMode": "proxy",
+      "homepage": "https://fastchargeapi.com",
+      "name": Any<String>,
+      "owner": {
+        "__typename": "User",
+        "author": Any<String>,
+      },
+      "pk": Any<String>,
+      "pricingPlans": [],
+      "readme": "readme",
+      "repository": "https://github/myrepo",
+      "tags": [],
+      "title": "Test App",
+      "updatedAt": Any<Number>,
+      "visibility": "public",
+    },
+  },
+  "loading": false,
+  "networkStatus": 7,
+}
+`;

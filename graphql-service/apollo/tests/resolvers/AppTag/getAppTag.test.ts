@@ -5,7 +5,7 @@ import { AppPK } from "@/pks/AppPK";
 import { AppTagPK } from "@/pks/AppTagPK";
 import { UserPK } from "@/pks/UserPK";
 import { baseRequestContext as context, getOrCreateTestUser } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeAll, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
@@ -45,7 +45,7 @@ describe("getAppTag", () => {
 
     test("Anyone can get app tag", async () => {
         const variables = { app: AppPK.stringify(testApp), tag: AppTagPK.stringify(testAppTag) };
-        const promise = testGQLClient({ user: testOtherUser }).query({
+        const promise = getTestGQLClient({ user: testOtherUser }).query({
             query: getAppTagQuery,
             variables,
         });

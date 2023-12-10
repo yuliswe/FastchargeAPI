@@ -1,4 +1,3 @@
-import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
 import { App } from "@/database/models/App";
 import { Pricing } from "@/database/models/Pricing";
 import { User } from "@/database/models/User";
@@ -6,7 +5,7 @@ import { UserPK } from "@/pks/UserPK";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 
 import { graphql } from "@/__generated__/gql";
-import { PricingAvailability, TestBillingTriggerBillingMutationVariables } from "@/__generated__/gql/graphql";
+import { PricingAvailability, TestSqsTriggerBillingMutationVariables } from "@/__generated__/gql/graphql";
 import { AccountActivityPK } from "@/pks/AccountActivityPK";
 import { AppPK } from "@/pks/AppPK";
 import { PricingPK } from "@/pks/PricingPK";
@@ -15,47 +14,21 @@ import { UsageSummaryPK } from "@/pks/UsageSummaryPK";
 import { SQSQueueName, sqsGQLClient } from "@/sqsClient";
 import { mockSQS } from "@/tests/MockSQS";
 import { v4 as uuidv4 } from "uuid";
-import { getOrCreateTestUser } from "../test-utils";
-
-const context: RequestContext = {
-    batched: createDefaultContextBatched(),
-    isServiceRequest: false,
-    isSQSMessage: false,
-    isAdminUser: false,
-    isAnonymousUser: false,
-};
+import { baseRequestContext as context, getOrCreateTestUser } from "../../test-utils";
 
 let testAppOwner: User;
 let testSubscriber: User;
 let testApp: App;
 let testPricing: Pricing;
 
-beforeEach(async () => {
-    const testAppName = `testapp-${uuidv4()}`;
-    const testAppOwnerEmail = `testuser_${uuidv4()}@gmail_mock.com`;
-    const testSubscriberEmail = `testuser_${uuidv4()}@gmail_mock.com`;
-    testAppOwner = await getOrCreateTestUser(context, { email: testAppOwnerEmail });
-    testSubscriber = await getOrCreateTestUser(context, { email: testSubscriberEmail });
-    testApp = await context.batched.App.createOverwrite({ name: testAppName, owner: UserPK.stringify(testAppOwner) });
-    testPricing = await context.batched.Pricing.create({
-        name: "test-pricing",
-        app: AppPK.stringify(testApp),
-        availability: PricingAvailability.Public,
-        minMonthlyCharge: "10",
-        chargePerRequest: "0.001",
-        freeQuota: 0,
-        callToAction: "test-call-to-action",
-    });
-});
-
-async function triggerBilling(variables: TestBillingTriggerBillingMutationVariables) {
+async function _sqsTriggerBilling(variables: TestSqsTriggerBillingMutationVariables) {
     await sqsGQLClient({
-        queueName: SQSQueueName.BillingQueue,
+        queueName: SQSQueueName.UsageLogQueue,
         groupId: UserPK.stringify(testSubscriber),
     }).mutate({
         mutation: graphql(`
-            mutation TestBillingTriggerBilling($app: ID!, $user: ID!, $path: String!) {
-                triggerBilling(app: $app, user: $user, path: $path) {
+            mutation TestSQSTriggerBilling($app: ID!, $user: ID!) {
+                _sqsTriggerBilling(app: $app, user: $user) {
                     app {
                         pk
                     }
@@ -67,7 +40,28 @@ async function triggerBilling(variables: TestBillingTriggerBillingMutationVariab
     await mockSQS.waitForQueuesToEmpty();
 }
 
-describe("triggerBilling", () => {
+describe("_sqsTriggerBilling", () => {
+    beforeEach(async () => {
+        const testAppName = `testapp-${uuidv4()}`;
+        const testAppOwnerEmail = `testuser_${uuidv4()}@gmail_mock.com`;
+        const testSubscriberEmail = `testuser_${uuidv4()}@gmail_mock.com`;
+        testAppOwner = await getOrCreateTestUser(context, { email: testAppOwnerEmail });
+        testSubscriber = await getOrCreateTestUser(context, { email: testSubscriberEmail });
+        testApp = await context.batched.App.createOverwrite({
+            name: testAppName,
+            owner: UserPK.stringify(testAppOwner),
+        });
+        testPricing = await context.batched.Pricing.create({
+            name: "test-pricing",
+            app: AppPK.stringify(testApp),
+            availability: PricingAvailability.Public,
+            minMonthlyCharge: "10",
+            chargePerRequest: "0.001",
+            freeQuota: 0,
+            callToAction: "test-call-to-action",
+        });
+    });
+
     test("Call triggerBilling on an app, charges are calculated correctly.", async () => {
         let usageLog = await context.batched.UsageLog.create({
             app: AppPK.stringify(testApp),
@@ -75,10 +69,9 @@ describe("triggerBilling", () => {
             path: "/",
             pricing: PricingPK.stringify(testPricing),
         });
-        await triggerBilling({
+        await _sqsTriggerBilling({
             app: AppPK.stringify(testApp),
             user: UserPK.stringify(testSubscriber),
-            path: "/",
         });
         usageLog = await context.batched.UsageLog.get(UsageLogPK.extract(usageLog));
         expect(usageLog).toMatchObject({
@@ -109,7 +102,7 @@ describe("triggerBilling", () => {
         expect(billingRequestChargeAccountActivity).toMatchObject({
             user: UserPK.stringify(testSubscriber),
             createdAt: expect.any(Number),
-            type: "credit",
+            type: "outgoing",
             reason: "api_per_request_charge",
             status: "settled",
             settleAt: expect.any(Number),
@@ -124,7 +117,7 @@ describe("triggerBilling", () => {
         expect(appOwnerRequestChargeAccountActivity).toMatchObject({
             user: UserPK.stringify(testAppOwner),
             createdAt: expect.any(Number),
-            type: "debit",
+            type: "incoming",
             reason: "api_per_request_charge",
             status: "settled",
             settleAt: expect.any(Number),
@@ -139,7 +132,7 @@ describe("triggerBilling", () => {
         expect(billingMonthlyChargeAccountActivity).toMatchObject({
             user: UserPK.stringify(testSubscriber),
             createdAt: expect.any(Number),
-            type: "credit",
+            type: "outgoing",
             reason: "api_min_monthly_charge",
             status: "settled",
             settleAt: expect.any(Number),
@@ -153,7 +146,7 @@ describe("triggerBilling", () => {
         expect(appOwnerServiceFeeAccountActivity).toMatchObject({
             user: UserPK.stringify(testAppOwner),
             createdAt: expect.any(Number),
-            type: "credit",
+            type: "outgoing",
             reason: "fastchargeapi_per_request_service_fee",
             status: "settled",
             settleAt: expect.any(Number),
@@ -173,10 +166,9 @@ describe("triggerBilling", () => {
             path: "/",
             pricing: PricingPK.stringify(testPricing),
         });
-        await triggerBilling({
+        await _sqsTriggerBilling({
             app: AppPK.stringify(testApp),
             user: UserPK.stringify(testSubscriber),
-            path: "/",
         });
         usageLog = await context.batched.UsageLog.get(UsageLogPK.extract(usageLog));
         const usageSummary = await context.batched.UsageSummary.get(UsageSummaryPK.parse(usageLog.usageSummary!));
@@ -194,7 +186,7 @@ describe("triggerBilling", () => {
             reason: "api_per_request_charge",
             settleAt: expect.any(Number),
             status: "settled",
-            type: "credit",
+            type: "outgoing",
             updatedAt: expect.any(Number),
             usageSummary: UsageSummaryPK.stringify(usageSummary),
             user: UserPK.stringify(testSubscriber),
@@ -211,7 +203,7 @@ describe("triggerBilling", () => {
             reason: "api_per_request_charge",
             settleAt: expect.any(Number),
             status: "settled",
-            type: "debit",
+            type: "incoming",
             updatedAt: expect.any(Number),
             usageSummary: UsageSummaryPK.stringify(usageSummary),
             user: UserPK.stringify(testAppOwner),
@@ -222,7 +214,7 @@ describe("triggerBilling", () => {
         expect(appOwnerServiceFeeAccountActivity).toMatchObject({
             user: UserPK.stringify(testAppOwner),
             createdAt: expect.any(Number),
-            type: "credit",
+            type: "outgoing",
             reason: "fastchargeapi_per_request_service_fee",
             status: "settled",
             settleAt: expect.any(Number),

@@ -1,21 +1,15 @@
 import { App } from "@/database/models/App";
-import { User } from "@/database/models/User";
 import { describe, expect, test } from "@jest/globals";
-import { v4 as uuidv4 } from "uuid";
-import { RequestContext, createDefaultContextBatched } from "../RequestContext";
+/** We want to test the actual aws handler */
+// eslint-disable-next-line no-restricted-imports
+import { User } from "@/database/models/User";
 import { lambdaHandler } from "../lambdaHandler";
 import { LambdaEvent } from "../lambdaHandlerUtils";
 import { AppPK } from "../pks/AppPK";
 import { UserPK } from "../pks/UserPK";
-import { getOrCreateTestUser } from "./test-utils";
-
-const context: RequestContext = {
-    batched: createDefaultContextBatched(),
-    isServiceRequest: true,
-    isSQSMessage: true,
-    isAnonymousUser: false,
-    isAdminUser: false,
-};
+import { createTestApp } from "./examples/App";
+import { createTestUser } from "./examples/User";
+import { baseRequestContext as context } from "./test-utils";
 
 const lambdaEvent: LambdaEvent = {
     resource: "/",
@@ -112,14 +106,12 @@ const lambdaEvent: LambdaEvent = {
 } as unknown as LambdaEvent;
 
 describe("Test a request from the gateway", () => {
-    const testUserEmail = `testuser_${uuidv4()}@gmail_mock.com`;
-    const testAppName = `testapp-${uuidv4()}`;
-    let testUser: User;
     let testApp: App;
+    let testUser: User;
 
-    test("Prepare: Create test user and test app", async () => {
-        testUser = await getOrCreateTestUser(context, { email: testUserEmail });
-        testApp = await context.batched.App.createOverwrite({ name: testAppName, owner: UserPK.stringify(testUser) });
+    beforeEach(async () => {
+        testApp = await createTestApp(context);
+        testUser = await createTestUser(context);
     });
 
     test("Replay a request to https://myapp.fastchargeapi.com/google", async () => {

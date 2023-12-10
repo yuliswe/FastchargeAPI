@@ -3,6 +3,7 @@ import { FreeQuotaUsage } from "@/database/models/FreeQuotaUsage";
 import { Pricing } from "@/database/models/Pricing";
 import { UsageSummary } from "@/database/models/UsageSummary";
 import { PK } from "@/database/utils";
+import { SQSQueueName } from "@/sqsClient";
 import Decimal from "decimal.js-light";
 import { RequestContext } from "../RequestContext";
 import {
@@ -16,7 +17,8 @@ import { AppPK } from "../pks/AppPK";
 import { PricingPK } from "../pks/PricingPK";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
 import { settleAccountActivitiesOnSQS } from "./account";
-import { enforceCalledFromQueue } from "./aws";
+import { enforceCalledFromSQS } from "./aws";
+import { getAllSettledOrFail, settlePromisesInBatches } from "./promise";
 import { collectUsageLogs } from "./usage";
 
 export const fastchargeRequestServiceFee = "0.0001";
@@ -106,7 +108,7 @@ export async function generateAccountActivities(
 
         const subscriberPerRequestActivityPromise = context.batched.AccountActivity.create({
             user: subscriber,
-            type: AccountActivityType.Credit,
+            type: AccountActivityType.Outgoing,
             reason: AccountActivityReason.ApiPerRequestCharge,
             status: AccountActivityStatus.Pending,
             settleAt: Date.now(),
@@ -124,7 +126,7 @@ export async function generateAccountActivities(
 
         const appAuthorPerRequestActivityPromise = context.batched.AccountActivity.create({
             user: appAuthor,
-            type: AccountActivityType.Debit,
+            type: AccountActivityType.Incoming,
             reason: AccountActivityReason.ApiPerRequestCharge,
             status: AccountActivityStatus.Pending,
             settleAt: Date.now(),
@@ -141,7 +143,7 @@ export async function generateAccountActivities(
 
         const appAuthorServiceFeePerRequestActivityPromise = context.batched.AccountActivity.create({
             user: appAuthor,
-            type: AccountActivityType.Credit,
+            type: AccountActivityType.Outgoing,
             reason: AccountActivityReason.FastchargeapiPerRequestServiceFee,
             status: AccountActivityStatus.Pending,
             settleAt: Date.now(),
@@ -176,7 +178,7 @@ export async function generateAccountActivities(
         if (forceMonthlyCharge || (!disableMonthlyCharge && shouldBillMonthly)) {
             const subscriberMonthlyActivityPromise = context.batched.AccountActivity.create({
                 user: subscriber,
-                type: AccountActivityType.Credit,
+                type: AccountActivityType.Outgoing,
                 reason: isUpgrade
                     ? AccountActivityReason.ApiMinMonthlyChargeUpgrade
                     : AccountActivityReason.ApiMinMonthlyCharge,
@@ -194,7 +196,7 @@ export async function generateAccountActivities(
 
             const appAuthorMonthlyActivityPromise = context.batched.AccountActivity.create({
                 user: appAuthor,
-                type: AccountActivityType.Debit,
+                type: AccountActivityType.Incoming,
                 reason: isUpgrade
                     ? AccountActivityReason.ApiMinMonthlyChargeUpgrade
                     : AccountActivityReason.ApiMinMonthlyCharge,
@@ -258,7 +260,7 @@ export async function shouldCollectMonthlyCharge(
     const allBillsThisMonth = await context.batched.AccountActivity.many({
         user: subscriber,
         billedApp: app,
-        type: AccountActivityType.Credit,
+        type: AccountActivityType.Outgoing,
         reason: AccountActivityReason.ApiMinMonthlyCharge,
         settleAt: { ge: Date.now() - 1000 * collectionPeriodInSeconds }, // get the last bill in 30 days
     });
@@ -332,12 +334,16 @@ export async function computeBillableVolume(
  * @idempotent Yes
  * @workerSafe No - Only can be called on a single worker queue.
  */
-export async function triggerBilling(
+export async function sqsTriggerBilling(
     context: RequestContext,
-    { user, app, path }: { user: PK; app: PK; path: string }
+    args: { user: PK; app: PK }
 ): Promise<{ affectedUsageSummaries: UsageSummary[] }> {
-    enforceCalledFromQueue(context, user);
-    await collectUsageLogs(context, { user, app, path });
+    const { user, app } = args;
+    enforceCalledFromSQS(context, {
+        queueName: SQSQueueName.UsageLogQueue,
+        groupId: user,
+    });
+    await collectUsageLogs(context, { user, app });
     const uncollectedUsageSummaries = await context.batched.UsageSummary.many({
         subscriber: user,
         app,
@@ -346,20 +352,21 @@ export async function triggerBilling(
 
     const appItem = await context.batched.App.get(AppPK.parse(app));
 
-    const promises = [];
-    for (const usageSummary of uncollectedUsageSummaries) {
-        promises.push(
-            generateAccountActivities(context, {
-                usageSummary,
-                subscriber: user,
-                appAuthor: appItem.owner,
-            })
-        );
-    }
-    await Promise.allSettled(promises);
-
-    await settleAccountActivitiesOnSQS(context, user);
-    await settleAccountActivitiesOnSQS(context, appItem.owner);
+    getAllSettledOrFail(
+        await settlePromisesInBatches(
+            uncollectedUsageSummaries,
+            (usageSummary) =>
+                generateAccountActivities(context, {
+                    usageSummary,
+                    subscriber: user,
+                    appAuthor: appItem.owner,
+                }),
+            {
+                batchSize: 10,
+            }
+        )
+    );
+    await Promise.all([settleAccountActivitiesOnSQS(user), settleAccountActivitiesOnSQS(appItem.owner)]);
     return {
         affectedUsageSummaries: uncollectedUsageSummaries,
     };

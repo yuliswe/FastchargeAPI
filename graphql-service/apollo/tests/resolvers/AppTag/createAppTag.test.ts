@@ -8,7 +8,7 @@ import {
     getOrCreateTestUser,
     simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeAll, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
@@ -39,7 +39,7 @@ describe("createAppTag", () => {
 
     test("Admin user can create app tag", async () => {
         const variables = { app: AppPK.stringify(testApp), tag: "testtag" + uuid.v4() };
-        const promise = testGQLClient({ user: await getAdminUser(context) }).mutate({
+        const promise = getTestGQLClient({ user: await getAdminUser(context) }).mutate({
             mutation: createAppTagMutation,
             variables,
         });
@@ -59,7 +59,7 @@ describe("createAppTag", () => {
     });
 
     test("Other user cannot create app tag", async () => {
-        const promise = testGQLClient({ user: testAppOwner }).mutate({
+        const promise = getTestGQLClient({ user: testAppOwner }).mutate({
             mutation: createAppTagMutation,
             variables: { app: AppPK.stringify(testApp), tag: "testtag" + uuid.v4() },
         });

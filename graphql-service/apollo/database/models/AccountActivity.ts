@@ -73,16 +73,47 @@ export class AccountActivity extends Item {
     type: AccountActivityType;
     reason: AccountActivityReason;
     status: AccountActivityStatus;
-    settleAt: number; // Unix timestamp when the activity is settled. Can be in the future.
+
+    /**
+     * Unix timestamp when the activity is settled. Can be in the future.
+     */
+    settleAt: number;
+
     amount: string;
-    usageSummary: PK | null; // ID of the UsageSummary item or null if not related to usage
-    accountHistory: PK | null; // ID of the AccountHistory item or null if not related to account history
+
+    /**
+     * ID of the UsageSummary item or null if not related to usage
+     */
+    usageSummary: PK | null;
+
+    /**
+     * ID of the AccountHistory item or null if not related to account history
+     */
+    accountHistory: PK | null;
+
     createdAt: number;
     description: string;
-    stripeTransfer: PK | null; // ID of the StripeTransfer item or null if not related to Stripe
-    stripePaymentAccept: PK | null; // ID of the StripePaymentAccept item or null if not related to Stripe
-    billedApp: PK | null; // ID of the App item if the activity is related to billing an app. This is the same as usageSummary.app
-    consumedFreeQuota: number | null; // Number of free quota consumed by the subscriber when the activity is related to API usage. Usually this is the same as usageSummary.volume
+
+    /**
+     * ID of the StripeTransfer item or null if not related to Stripe
+     */
+    stripeTransfer: PK | null;
+
+    /**
+     * ID of the StripePaymentAccept item or null if not related to Stripe
+     */
+    stripePaymentAccept: PK | null;
+
+    /**
+     * ID of the App item if the activity is related to billing an app. This is the same as usageSummary.app
+     */
+    billedApp: PK | null;
+
+    /**
+     * Number of free quota consumed by the subscriber when the activity is
+     * related to API usage. Usually this is the same as usageSummary.volume
+     */
+    consumedFreeQuota: number | null;
 }
 
 export type AccountActivityCreateProps = {

@@ -7,7 +7,7 @@ import {
     getOrCreateTestUser,
     simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
@@ -36,7 +36,7 @@ describe("deleteSiteMetaData", () => {
     });
 
     test("Admin can update site meta data", async () => {
-        const promise = testGQLClient({ user: await getAdminUser(context) }).mutate({
+        const promise = getTestGQLClient({ user: await getAdminUser(context) }).mutate({
             mutation: deleteSiteMetaDataMutation,
             variables: { key: testSiteMetaData.key },
         });
@@ -54,7 +54,7 @@ describe("deleteSiteMetaData", () => {
     });
 
     test("Other users cannot update site meta data", async () => {
-        const promise = testGQLClient({ user: testOtherUser }).mutate({
+        const promise = getTestGQLClient({ user: testOtherUser }).mutate({
             mutation: deleteSiteMetaDataMutation,
             variables: { key: testSiteMetaData.key },
         });

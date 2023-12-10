@@ -6,7 +6,7 @@ import { Can } from "@/permissions";
 import { AppPK } from "@/pks/AppPK";
 import { UserPK } from "@/pks/UserPK";
 import { getOrCreateTestUser, simplifyGraphQLPromiseRejection } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeAll, describe, expect, jest, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
@@ -48,7 +48,7 @@ beforeAll(async () => {
 
 describe("udpate User", () => {
     test("User can update author name", async () => {
-        const result = await testGQLClient({ user: testMainUser }).mutate({
+        const result = await getTestGQLClient({ user: testMainUser }).mutate({
             mutation: graphql(`
                 query UpdateUserAuthorName($user: ID!, $newAuthorName: String!) {
                     getUser(pk: $user) {
@@ -74,7 +74,7 @@ describe("udpate User", () => {
     test("User can only update their own name", async () => {
         // Assuming the user can query the user.
         jest.spyOn(Can, "queryUser").mockImplementationOnce((user, context) => Promise.resolve(true));
-        const promise = testGQLClient({ user: testOtherUser }).mutate({
+        const promise = getTestGQLClient({ user: testOtherUser }).mutate({
             mutation: graphql(`
                 query UpdateUserAuthorName($user: ID!, $newAuthorName: String!) {
                     getUser(pk: $user) {
@@ -101,7 +101,7 @@ describe("udpate User", () => {
     describe("Only service can update these fields:", () => {
         for (const field of ["stripeCustomerId", "stripeConnectAccountId"]) {
             test(`${field}`, async () => {
-                const promise = testGQLClient({ user: testMainUser }).query({
+                const promise = getTestGQLClient({ user: testMainUser }).query({
                     query: graphql(`
                         query UpdateUser_ServiceOnly(
                             $user: ID!

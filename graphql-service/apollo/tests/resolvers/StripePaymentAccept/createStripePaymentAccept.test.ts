@@ -1,15 +1,18 @@
 import { User } from "@/database/models/User";
 import { UserPK } from "@/pks/UserPK";
-import { SQSQueueName } from "@/sqsClient";
+import { StripePaymentAcceptResolvers } from "@/resolvers/StripePaymentAccept";
 import {
     baseRequestContext as context,
     getOrCreateTestUser,
     simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils";
-import { testGQLClient, testGQLClientForSQS } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
+
+const _sqsSettleStripePaymentAcceptSpy = () =>
+    jest.spyOn(StripePaymentAcceptResolvers.StripePaymentAccept, "_sqsSettleStripePaymentAccept");
 
 describe("createStripePaymentAccept", () => {
     const createStripePaymentAcceptMutation = graphql(`
@@ -50,8 +53,8 @@ describe("createStripePaymentAccept", () => {
         testOwnerUser = await getOrCreateTestUser(context, { email: "testuser" });
     });
 
-    test("Service user can create StripePaymentAccept", async () => {
-        const variables = {
+    function getVariables() {
+        return {
             user: UserPK.stringify(testOwnerUser),
             amount: "1",
             stripePaymentStatus: "stripePaymentStatus",
@@ -59,11 +62,11 @@ describe("createStripePaymentAccept", () => {
             stripeSessionId: "stripeSessionId-" + uuid.v4(),
             stripeSessionObject: "{}",
         };
-        const promise = testGQLClientForSQS({ queueName: SQSQueueName.BillingQueue }).mutate({
-            mutation: createStripePaymentAcceptMutation,
-            variables,
-        });
-        await expect(promise).resolves.toMatchObject({
+    }
+
+    function getExpected(overwrite?: { stripeSessionId: string }) {
+        const { stripeSessionId } = overwrite ?? {};
+        return {
             data: {
                 createStripePaymentAccept: {
                     pk: expect.any(String),
@@ -73,27 +76,30 @@ describe("createStripePaymentAccept", () => {
                     amount: "1",
                     currency: "usd",
                     stripePaymentStatus: "stripePaymentStatus",
-                    stripeSessionId: variables.stripeSessionId,
+                    stripeSessionId: stripeSessionId ?? expect.stringContaining("stripeSessionId-"),
                     stripePaymentIntent: "stripePaymentIntent",
                     stripeSessionObject: "{}",
                     createdAt: expect.any(Number),
                     updatedAt: expect.any(Number),
                 },
             },
+        };
+    }
+
+    test("Service user can create StripePaymentAccept", async () => {
+        const variables = getVariables();
+        const { stripeSessionId } = variables;
+        const promise = getTestGQLClient({ isServiceRequest: true }).mutate({
+            mutation: createStripePaymentAcceptMutation,
+            variables,
         });
+        await expect(promise).resolves.toMatchObject(getExpected({ stripeSessionId }));
     });
 
     test("Other user cannot create StripePaymentAccept", async () => {
-        const promise = testGQLClient({ user: testOwnerUser }).mutate({
+        const promise = getTestGQLClient({ user: testOwnerUser }).mutate({
             mutation: createStripePaymentAcceptMutation,
-            variables: {
-                user: UserPK.stringify(testOwnerUser),
-                amount: "1",
-                stripePaymentStatus: "stripePaymentStatus",
-                stripePaymentIntent: "stripePaymentIntent",
-                stripeSessionId: "stripeSessionId-" + uuid.v4(),
-                stripeSessionObject: "{}",
-            },
+            variables: getVariables(),
         });
         await expect(simplifyGraphQLPromiseRejection(promise)).rejects.toMatchObject([
             {
@@ -104,47 +110,31 @@ describe("createStripePaymentAccept", () => {
         ]);
     });
 
-    // test("Can only be called from payment-service", async () => {
-    //     const promise = testGQLClient({ isServiceRequest: true }).mutate({
-    //         mutation: createStripePaymentAcceptMutation,
-    //         variables: {
-    //             user: UserPK.stringify(testUser),
-    //             amount: "1",
-    //             stripePaymentStatus: "stripePaymentStatus",
-    //             stripePaymentIntent: "stripePaymentIntent",
-    //             stripeSessionId: "stripeSessionId-" + uuid.v4(),
-    //             stripeSessionObject: "{}",
-    //         },
-    //     });
-    //     await expect(simplifyGraphQLPromiseRejection(promise)).rejects.toMatchObject([
-    //         {
-    //             code: "NOT_ACCEPTED",
-    //             message: "createStripePaymentAccept can only be called from SQS.",
-    //             path: "createStripePaymentAccept",
-    //         },
-    //     ]);
-    // });
+    test("createStripePaymentAccept should call _sqsSettleStripePaymentAccept", async () => {
+        const _sqsSettleStripePaymentAccept = _sqsSettleStripePaymentAcceptSpy();
+        const variables = getVariables();
+        await getTestGQLClient({ isServiceRequest: true }).mutate({
+            mutation: createStripePaymentAcceptMutation,
+            variables,
+        });
+        expect(_sqsSettleStripePaymentAccept).toHaveBeenCalledTimes(1);
+    });
 
     test("Prevent duplication by stripeSessionId", async () => {
-        const stripeSessionId = "stripeSessionId-" + uuid.v4();
+        const variables = { ...getVariables(), stripeSessionId: "stripeSessionId-" + uuid.v4() };
+        // create first
         await context.batched.StripePaymentAccept.create({
             user: UserPK.stringify(testOwnerUser),
             amount: "1",
-            stripeSessionId,
+            stripeSessionId: variables.stripeSessionId, // same stripeSessionId
             stripeSessionObject: {},
             stripePaymentIntent: "stripePaymentIntent",
             stripePaymentStatus: "stripePaymentStatus",
         });
-        const promise = testGQLClientForSQS({ queueName: SQSQueueName.BillingQueue }).mutate({
+        // create duplicated
+        const promise = getTestGQLClient({ isServiceRequest: true }).mutate({
             mutation: createStripePaymentAcceptMutation,
-            variables: {
-                user: UserPK.stringify(testOwnerUser),
-                amount: "1",
-                stripePaymentStatus: "stripePaymentStatus",
-                stripePaymentIntent: "stripePaymentIntent",
-                stripeSessionId,
-                stripeSessionObject: "{}",
-            },
+            variables,
         });
         await expect(simplifyGraphQLPromiseRejection(promise)).rejects.toMatchObject([
             {

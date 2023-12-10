@@ -9,7 +9,6 @@
     "module": "ESNext",
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "types": ["node", "jest"],
     "noImplicitAny": true,
     "noImplicitThis": true,
     "alwaysStrict": true,
@@ -24,9 +23,12 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["*"]
-    }
+    },
+    "noEmit": true
   },
   "exclude": ["node_modules", "dist"],
+  "include": ["**/*"],
+  "files": ["global.d.ts", "node_modules/jest-extended/types/index.d.ts"],
   "ts-node": {
     "experimentalResolver": true,
     "require": ["tsconfig-paths/register"],

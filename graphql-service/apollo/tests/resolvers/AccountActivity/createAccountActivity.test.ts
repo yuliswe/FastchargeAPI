@@ -4,7 +4,7 @@ import { AccountActivityReason, AccountActivityType } from "@/__generated__/reso
 import { User } from "@/database/models/User";
 import { UserPK } from "@/pks/UserPK";
 import { getAdminUser, getOrCreateTestUser, simplifyGraphQLPromiseRejection } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
@@ -56,7 +56,7 @@ const createAccountActivityMutation = graphql(`
 function accountActivityProps() {
     return {
         user: UserPK.stringify(testUser),
-        type: AccountActivityType.Debit,
+        type: AccountActivityType.Incoming,
         reason: AccountActivityReason.ApiMinMonthlyCharge,
         amount: "0",
         description: "test description",
@@ -66,7 +66,7 @@ function accountActivityProps() {
 
 describe("createAccountActivity", () => {
     test("Admin user can create account activity", async () => {
-        const promise = testGQLClient({ user: await getAdminUser(context) }).mutate({
+        const promise = getTestGQLClient({ user: await getAdminUser(context) }).mutate({
             mutation: createAccountActivityMutation,
             variables: accountActivityProps(),
         });
@@ -79,7 +79,7 @@ describe("createAccountActivity", () => {
                     description: "test description",
                     reason: "api_min_monthly_charge",
                     settleAt: expect.any(Number),
-                    type: "debit",
+                    type: "incoming",
                     user: {
                         __typename: "User",
                         pk: UserPK.stringify(testUser),
@@ -90,7 +90,7 @@ describe("createAccountActivity", () => {
     });
 
     test("Only admin can create account activity", async () => {
-        const promise = testGQLClient({ user: testUser }).mutate({
+        const promise = getTestGQLClient({ user: testUser }).mutate({
             mutation: createAccountActivityMutation,
             variables: accountActivityProps(),
         });

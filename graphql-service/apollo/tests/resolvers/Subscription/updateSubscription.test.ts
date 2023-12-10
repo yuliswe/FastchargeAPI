@@ -11,7 +11,7 @@ import {
     getOrCreateTestUser,
     simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe } from "@jest/globals";
 import * as uuid from "uuid";
@@ -84,7 +84,7 @@ describe("createSubscription", () => {
     }
 
     test("Subscriber can update their subscription", async () => {
-        const promise = testGQLClient({ user: testSubscriber }).mutate({
+        const promise = getTestGQLClient({ user: testSubscriber }).mutate({
             mutation: updateSubscriptionMutation,
             variables: getVariables(),
         });
@@ -106,7 +106,7 @@ describe("createSubscription", () => {
     });
 
     test("User cannot update someone else's subscription", async () => {
-        const promise = testGQLClient({ user: testAppOwner }).mutate({
+        const promise = getTestGQLClient({ user: testAppOwner }).mutate({
             mutation: updateSubscriptionMutation,
             variables: getVariables(),
         });

@@ -11,7 +11,7 @@ import {
     simplifyGraphQLPromiseRejection,
     sortGraphQLErrors,
 } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, jest, test } from "@jest/globals";
 import * as uuid from "uuid";
@@ -79,7 +79,7 @@ describe("getStripePaymentAccept", () => {
     }
 
     test("Admin user can get StripePaymentAccept", async () => {
-        const promise = testGQLClient({ user: await getAdminUser(context) }).query({
+        const promise = getTestGQLClient({ user: await getAdminUser(context) }).query({
             query: getStripePaymentAcceptQuery,
             variables: {
                 pk: StripePaymentAcceptPK.stringify(testStripePaymentAccept),
@@ -89,7 +89,7 @@ describe("getStripePaymentAccept", () => {
     });
 
     test("Service user can get StripePaymentAccept", async () => {
-        const promise = testGQLClient({ isServiceRequest: true }).query({
+        const promise = getTestGQLClient({ isServiceRequest: true }).query({
             query: getStripePaymentAcceptQuery,
             variables: {
                 pk: StripePaymentAcceptPK.stringify(testStripePaymentAccept),
@@ -99,7 +99,7 @@ describe("getStripePaymentAccept", () => {
     });
 
     test("Owner user can get StripePaymentAccept", async () => {
-        const promise = testGQLClient({ user: testOwnerUser }).query({
+        const promise = getTestGQLClient({ user: testOwnerUser }).query({
             query: getStripePaymentAcceptQuery,
             variables: {
                 pk: StripePaymentAcceptPK.stringify(testStripePaymentAccept),
@@ -109,7 +109,7 @@ describe("getStripePaymentAccept", () => {
     });
 
     test("Other user cannot get StripePaymentAccept", async () => {
-        const promise = testGQLClient({ user: testOtherUser }).query({
+        const promise = getTestGQLClient({ user: testOtherUser }).query({
             query: getStripePaymentAcceptQuery,
             variables: {
                 pk: StripePaymentAcceptPK.stringify(testStripePaymentAccept),
@@ -126,7 +126,7 @@ describe("getStripePaymentAccept", () => {
 
     test("Other user cannot read properties of StripePaymentAccept", async () => {
         jest.spyOn(Can, "getStripePaymentAccept").mockImplementation(() => Promise.resolve(true));
-        const promise = testGQLClient({ user: testOtherUser }).query({
+        const promise = getTestGQLClient({ user: testOtherUser }).query({
             query: getStripePaymentAcceptQuery,
             variables: {
                 pk: StripePaymentAcceptPK.stringify(testStripePaymentAccept),

@@ -1,4 +1,4 @@
-import { HeaderMap } from "@apollo/server";
+import { ApolloServer, HeaderMap } from "@apollo/server";
 import { LambdaHandler, startServerAndCreateLambdaHandler } from "@as-integrations/aws-lambda";
 import { RequestHandler, createRequestHandler } from "@as-integrations/aws-lambda/dist/request-handlers/_create";
 import {
@@ -125,12 +125,14 @@ export async function getOrCreateUserFromEmail(batched: DefaultContextBatched, e
     }
     return currentUser;
 }
+
 export type AuthorizerContext = {
     userEmail: string | undefined;
     userPK: string | undefined;
     isAdminUser: string | undefined;
 };
-export type LambdaEvent = APIGatewayProxyEventBase<AuthorizerContext> & { _disableLogRequest?: boolean };
+
+export type LambdaEvent = APIGatewayProxyEventBase<AuthorizerContext>;
 export type LambdaResult = APIGatewayProxyResult;
 export function addCors(event: APIGatewayProxyEvent, result: APIGatewayProxyResult): void {
     const origin = event.headers["Origin"] || event.headers["origin"];
@@ -152,15 +154,21 @@ export function addCors(event: APIGatewayProxyEvent, result: APIGatewayProxyResu
         };
     }
 }
+
 let handlerInstance: LambdaHandler<RequestHandler<LambdaEvent, LambdaResult>> | undefined;
-export function callOrCreateHandler(
+let serverInstance: ApolloServer<RequestContext> | undefined;
+
+export async function callOrCreateHandler(
     event: LambdaEvent,
     context: LambdaContext,
-    callback: LambdaCallback
+    callback: LambdaCallback,
+    options?: { stopServer?: boolean }
 ): Promise<LambdaResult> {
+    const { stopServer } = options ?? {};
     if (!handlerInstance) {
+        serverInstance = getServer();
         handlerInstance = startServerAndCreateLambdaHandler<RequestHandler<LambdaEvent, LambdaResult>, RequestContext>(
-            getServer(),
+            serverInstance,
             createRequestHandler(
                 {
                     parseHttpMethod(event) {
@@ -179,9 +187,7 @@ export function callOrCreateHandler(
                             const parsedBody = event.isBase64Encoded
                                 ? Buffer.from(event.body, "base64").toString("utf8")
                                 : event.body;
-                            if (!event._disableLogRequest) {
-                                console.log(chalk.blue("Received: " + parsedBody));
-                            }
+                            console.log(chalk.blue("Received: " + parsedBody));
                             if (contentType?.startsWith("application/json")) {
                                 return JSON.parse(parsedBody) as string; // upstream might have wrong type for this
                             }
@@ -245,6 +251,13 @@ export function callOrCreateHandler(
             }
         );
     }
-    const result = handlerInstance(event, context, callback);
-    return result as Exclude<typeof result, void>;
+    try {
+        return (await handlerInstance(event, context, callback)) as LambdaResult;
+    } finally {
+        if (stopServer) {
+            await serverInstance?.stop();
+            handlerInstance = undefined;
+            serverInstance = undefined;
+        }
+    }
 }

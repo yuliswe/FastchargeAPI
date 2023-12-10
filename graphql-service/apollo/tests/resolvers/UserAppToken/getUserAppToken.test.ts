@@ -13,7 +13,7 @@ import {
     getOrCreateTestUser,
     simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
@@ -97,7 +97,7 @@ describe("getUserAppToken", () => {
     }
 
     test("Subscriber can get their own token.", async () => {
-        const promise = testGQLClient({
+        const promise = getTestGQLClient({
             user: testSubscriber,
         }).query({
             query: getUserAppTokenQuery,
@@ -107,7 +107,7 @@ describe("getUserAppToken", () => {
     });
 
     test("Subscriber cannot query another user's token.", async () => {
-        const result = testGQLClient({
+        const result = getTestGQLClient({
             user: testAppOwner,
         }).query({
             query: getUserAppTokenQuery,
@@ -123,7 +123,7 @@ describe("getUserAppToken", () => {
     });
 
     test("token must be null becuase it can only be viewed once when created.", async () => {
-        const promise = testGQLClient({
+        const promise = getTestGQLClient({
             user: testSubscriber,
         }).query({
             query: getUserAppTokenQuery,

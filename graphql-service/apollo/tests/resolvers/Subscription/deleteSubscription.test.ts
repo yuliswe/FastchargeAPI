@@ -12,7 +12,7 @@ import {
     getOrCreateTestUser,
     simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import * as uuid from "uuid";
 
@@ -85,7 +85,7 @@ describe("deleteSubscription", () => {
     }
 
     test("Owner can delete subscription", async () => {
-        const promise = testGQLClient({ user: testSubscriberUser }).mutate({
+        const promise = getTestGQLClient({ user: testSubscriberUser }).mutate({
             mutation: deleteSubscriptionMutation,
             variables: getVariables(),
         });
@@ -94,7 +94,7 @@ describe("deleteSubscription", () => {
 
     test("Other user cannot delete subscription", async () => {
         jest.spyOn(Can, "getSubscription").mockImplementation(() => Promise.resolve(true));
-        const promise = testGQLClient({ user: testOtherUser }).mutate({
+        const promise = getTestGQLClient({ user: testOtherUser }).mutate({
             mutation: deleteSubscriptionMutation,
             variables: getVariables(),
         });

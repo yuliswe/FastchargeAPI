@@ -96,8 +96,8 @@ type Query {
     checkUserIsAllowedForGatewayRequest(
         user: ID!
         app: ID!
-        forceBalanceCheck: Boolean = false
-        forceAwait: Boolean = false
+        _forceBalanceCheck: Boolean = false
+        _forceAwait: Boolean = false
     ): GatewayDecisionResponse!
 
     # Deprecated
@@ -149,7 +149,8 @@ type Mutation {
         stripeSessionObject: String!
     ): StripePaymentAccept!
     # Used by the gateway to trigger the billing flow
-    triggerBilling(user: ID!, app: ID!, path: String!): [UsageSummary!]!
+    triggerBilling(user: ID!, app: ID!): Boolean!
+    _sqsTriggerBilling(user: ID!, app: ID!): [UsageSummary!]!
     createSecret(key: String!, value: String!, description: String, expireAt: Timestamp): Secret!
     createAccountActivity( # For testing CLI only
         user: ID!
@@ -164,6 +165,7 @@ type Mutation {
     createSiteMetaData(key: String!, value: Any!): SiteMetaData!
     ping: Boolean!
     createUserAppToken(subscriber: ID!, app: ID!): UserAppToken!
+    _sqsSettleAccountActivitiesForUser(user: ID!): Boolean!
 }
 
 enum AppFullTextSearchOrderBy {
@@ -229,11 +231,6 @@ type User {
         dateRange: DateRangeInput
     ): [AccountHistory!]! @deprecated(reason: "Use listAccountHistoryByUser() instead")
 
-    # Trigger a workflow where it goes through all user's activities, and settle
-    # those that are due. This should only be called from the billing queue.
-    settleAccountActivities: [AccountActivity!]!
-    # stripePaymentAccept(stripeSessionId: String): StripePaymentAccept!
-    updateBalance: User!
     getFastchargeAPIIdToken(expireInSeconds: Int = 3600): String!
 }
 
@@ -397,9 +394,7 @@ type StripePaymentAccept {
     createdAt: Timestamp!
     updatedAt: Timestamp!
 
-    # updateStripePaymentAccept(stripePaymentStatus: String, stripeSessionObject: String): StripePaymentAccept!
-
-    _settleStripePaymentAcceptFromSQS(
+    _sqsSettleStripePaymentAccept(
         stripePaymentStatus: String
         stripeSessionObject: String
         stripePaymentIntent: String
@@ -436,12 +431,12 @@ type StripeTransfer {
     transferAt: Timestamp!
     status: StripeTransferStatus
 
-    _settleStripeTransferFromSQS: StripeTransfer!
+    _sqsSettleStripeTransfer: StripeTransfer!
 }
 
 enum AccountActivityType {
-    credit
-    debit
+    outgoing
+    incoming
 }
 
 enum AccountActivityReason {

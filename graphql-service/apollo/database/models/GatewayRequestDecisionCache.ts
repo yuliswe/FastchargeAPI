@@ -6,8 +6,7 @@ export const GatewayRequestDecisionCacheTableSchema = new dynamoose.Schema(
     {
         requester: { hashKey: true, type: String, required: true },
         app: { rangeKey: true, type: String, required: true },
-        pricing: { type: String, required: false },
-        useGlobalCounter: { type: Boolean, default: false },
+        pricing: { type: String, required: true },
         nextForcedBalanceCheckRequestCount: { type: Number, required: true },
         nextForcedBalanceCheckTime: { type: Number, required: true },
     },
@@ -19,8 +18,7 @@ export const GatewayRequestDecisionCacheTableSchema = new dynamoose.Schema(
 export class GatewayRequestDecisionCache extends Item {
     requester: PK;
     app: PK | null;
-    pricing: PK | null;
-    useGlobalCounter: boolean;
+    pricing: PK;
     nextForcedBalanceCheckRequestCount: number;
     nextForcedBalanceCheckTime: number;
 }
@@ -28,6 +26,7 @@ export class GatewayRequestDecisionCache extends Item {
 export type GatewayRequestDecisionCacheCreateProps = {
     requester: PK;
     app: PK;
+    pricing: PK;
     nextForcedBalanceCheckRequestCount: number;
     nextForcedBalanceCheckTime: number;
 } & Partial<GatewayRequestDecisionCache>;

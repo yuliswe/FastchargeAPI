@@ -1,14 +1,13 @@
 import { AccountActivity } from "@/database/models/AccountActivity";
 import { StripeTransfer } from "@/database/models/StripeTransfer";
+import { SQSQueueName } from "@/sqsClient";
 import Decimal from "decimal.js-light";
 import { RequestContext } from "../RequestContext";
 import { AccountActivityReason, AccountActivityType } from "../__generated__/resolvers-types";
 import { BadInput } from "../errors";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { StripeTransferPK } from "../pks/StripeTransferPK";
-import { enforceCalledFromQueue } from "./aws";
-import { getRecivableAmountForWithdrawal } from "./fees";
-import { PK } from "@/database/utils";
+import { enforceCalledFromSQS } from "./aws";
 
 /**
  * Takes a StripeTransfer, and create AccountActivities for the transfer,
@@ -31,7 +30,10 @@ export async function createAccountActivitiesForTransfer(
     accountActivity: AccountActivity;
     feeActivity: AccountActivity;
 }> {
-    enforceCalledFromQueue(context, userPK);
+    enforceCalledFromSQS(context, {
+        queueName: SQSQueueName.BillingQueue,
+        groupId: userPK,
+    });
     const transferFee = new Decimal(transfer.withdrawAmount).sub(transfer.receiveAmount);
     if (transferFee.lessThan(0)) {
         throw new BadInput("The receive amount cannot be greater than the withdraw amount.");
@@ -40,7 +42,7 @@ export async function createAccountActivitiesForTransfer(
     const payoutActivity = await context.batched.AccountActivity.create({
         user: userPK,
         amount: transfer.receiveAmount,
-        type: AccountActivityType.Credit,
+        type: AccountActivityType.Outgoing,
         reason: AccountActivityReason.Payout,
         settleAt: settleAt - 1, // set in the past so it's settled immediately
         description: `Payment to your Stripe account`,
@@ -49,7 +51,7 @@ export async function createAccountActivitiesForTransfer(
     const feeActivity = await context.batched.AccountActivity.create({
         user: userPK,
         amount: transferFee.toString(),
-        type: AccountActivityType.Credit,
+        type: AccountActivityType.Outgoing,
         reason: AccountActivityReason.PayoutFee,
         settleAt: settleAt - 2, // Set in the past so it's settled immediately. Use a different time
         // because settleAt is a range key and must be unique.
@@ -67,16 +69,4 @@ export async function createAccountActivitiesForTransfer(
 
 export function getSQSDedupIdForSettleStripeTransfer(stripeTransfer: StripeTransfer) {
     return ("settleStripeTransfer-" + StripeTransferPK.stringify(stripeTransfer)).slice(0, 128);
-}
-
-export function createStripeTransferAndSettleOnSQS({
-    receiver,
-    withdrawalAmount,
-    context,
-}: {
-    receiver: PK;
-    withdrawalAmount: Decimal;
-    context: RequestContext;
-}) {
-    const receivableAmount = getRecivableAmountForWithdrawal(withdrawalAmount, context);
 }

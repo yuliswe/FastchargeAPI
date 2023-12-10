@@ -1,4 +1,3 @@
-import { AccountActivity } from "@/database/models/AccountActivity";
 import { App, AppTableIndex } from "@/database/models/App";
 import { Subscription } from "@/database/models/Subscription";
 import { User, UserModel, UserTableIndex } from "@/database/models/User";
@@ -17,7 +16,7 @@ import {
     GQLUserUsageSummariesArgs,
 } from "../__generated__/resolvers-types";
 import { BadInput, Denied } from "../errors";
-import { getUserBalance, settleAccountActivities } from "../functions/account";
+import { getUserBalance } from "../functions/account";
 import { createUserWithEmail, makeFastchargeAPIIdTokenForUser } from "../functions/user";
 import { Can } from "../permissions";
 import { UserPK } from "../pks/UserPK";
@@ -175,50 +174,6 @@ export const UserResolvers: GQLResolvers & {
                 stripeConnectAccountId,
             });
             return user;
-        },
-
-        /**
-         * settleAccountActivities should only be called from the billing queue.
-         */
-        async settleAccountActivities(parent: User, args: {}, context: RequestContext): Promise<AccountActivity[]> {
-            if (!(await Can.settleUserAccountActivities(context))) {
-                throw new Denied();
-            }
-            const result = await settleAccountActivities(context, UserPK.stringify(parent));
-            if (result === null) {
-                return [];
-            }
-            return result.affectedAccountActivities;
-        },
-
-        /**
-         * Collect any account activities that are in the pending status, and have the
-         * settleAt property in the past. Create a new account AccountHistory for the
-         * collected activities, effectively updating the user's balance.
-         */
-        async updateBalance(parent: User, args: {}, context: RequestContext) {
-            if (
-                !context.isSQSMessage ||
-                context.sqsQueueName !== "graphql-service-billing-queue.fifo" ||
-                context.sqsMessageGroupId !== UserPK.stringify(parent)
-            ) {
-                if (!process.env.UNSAFE_BILLING) {
-                    console.error(
-                        chalk.red(
-                            "updateBalance must be called from the graphql-service-billing-queue.fifo Queue, and use the user pk as the MessageGroupId. If you are not running in production, you can set the UNSAFE_BILLING=1 environment variable to bypass this check."
-                        )
-                    );
-                    console.error(chalk.red("Current context:"));
-                    console.error(chalk.red(`isSQSMessage: ${context.isSQSMessage.toString()}`));
-                    console.error(chalk.red(`sqsQueueName: ${context.sqsQueueName || "undefined"}`));
-                    console.error(chalk.red(`sqsMessageGroupId: ${context.sqsMessageGroupId || "undefined"}`));
-                    throw new Error("updateBalance must be called from an SQS message");
-                }
-            }
-            await settleAccountActivities(context, UserPK.stringify(parent), {
-                consistentReadAccountActivities: true,
-            });
-            return parent;
         },
 
         async getFastchargeAPIIdToken(

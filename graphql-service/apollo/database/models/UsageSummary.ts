@@ -14,16 +14,27 @@ import { PK, String_Required_NotEmpty, defaultCreatedAt, tableConfigs } from "..
 export class UsageSummary extends Item {
     app: PK;
     subscriber: PK;
+    /**
+     * Used as a multiplier for charging different amount on an API call.
+     * @default: 1
+     */
     volume: number;
     createdAt: number;
-    status: UsageSummaryStatus; // billed when account activities have been created
+    /** billed when account activities have been created */
+    status: UsageSummaryStatus;
     billedAt: number | null;
-    numberOfLogs: number; // Number of usage logs in the queue when collected
-    billingRequestChargeAccountActivity: PK | null; // ID of the AccountActivity item or null if not yet billed
-    billingMonthlyChargeAccountActivity: PK | null; // ID of the AccountActivity item or null if not yet billed
-    appOwnerServiceFeeAccountActivity: PK | null; // ID of the AccountActivity item or null if not yet billed
-    appOwnerRequestChargeAccountActivity: PK | null; // ID of the AccountActivity item or null if not yet billed
-    appOwnerMonthlyChargeAccountActivity: PK | null; // ID of the AccountActivity item or null if not yet billed
+    /** Number of usage logs in the queue when collected */
+    numberOfLogs: number;
+    /** ID of the AccountActivity item or null if not yet billed */
+    billingRequestChargeAccountActivity: PK | null;
+    /** ID of the AccountActivity item or null if not yet billed */
+    billingMonthlyChargeAccountActivity: PK | null;
+    /** ID of the AccountActivity item or null if not yet billed */
+    appOwnerServiceFeeAccountActivity: PK | null;
+    /** ID of the AccountActivity item or null if not yet billed */
+    appOwnerRequestChargeAccountActivity: PK | null;
+    /** ID of the AccountActivity item or null if not yet billed */
+    appOwnerMonthlyChargeAccountActivity: PK | null;
     pricing: PK;
 }
 
@@ -31,7 +42,6 @@ export type UsageSummaryCreateProps = {
     subscriber: PK;
     app: PK;
     pricing: PK;
-    path: string;
     numberOfLogs: number;
 } & Partial<UsageSummary>;
 

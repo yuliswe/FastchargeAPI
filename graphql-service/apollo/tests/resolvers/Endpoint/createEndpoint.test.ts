@@ -8,7 +8,7 @@ import {
     getOrCreateTestUser,
     simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
@@ -66,7 +66,7 @@ describe("createEndpoint", () => {
             destination: "https://example.com",
             description: "Test endpoint description",
         };
-        const promise = testGQLClient({ user: testAppOwner }).mutate({
+        const promise = getTestGQLClient({ user: testAppOwner }).mutate({
             mutation: createEndpointMutation,
             variables,
         });
@@ -92,7 +92,7 @@ describe("createEndpoint", () => {
     });
 
     test("A user cannot create endpoint for an app that doesn't belong to them", async () => {
-        const promise = testGQLClient({ user: testOtherUser }).mutate({
+        const promise = getTestGQLClient({ user: testOtherUser }).mutate({
             mutation: createEndpointMutation,
             variables: {
                 app: AppPK.stringify(testApp),

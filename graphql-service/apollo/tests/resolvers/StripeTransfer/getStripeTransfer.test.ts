@@ -11,7 +11,7 @@ import {
     simplifyGraphQLPromiseRejection,
     sortGraphQLErrors,
 } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeAll, describe, expect, jest, test } from "@jest/globals";
 import * as uuid from "uuid";
@@ -77,7 +77,7 @@ describe("getStripeTransfer", () => {
     }
 
     test("Owner can get StripeTransfer", async () => {
-        const promise = testGQLClient({ user: testOwnerUser }).query({
+        const promise = getTestGQLClient({ user: testOwnerUser }).query({
             query: getStripeTransferQuery,
             variables: {
                 pk: StripeTransferPK.stringify(testStripeTransfer),
@@ -88,7 +88,7 @@ describe("getStripeTransfer", () => {
     });
 
     test("Admin can get StripeTransfer", async () => {
-        const promise = testGQLClient({ user: await getAdminUser(context) }).query({
+        const promise = getTestGQLClient({ user: await getAdminUser(context) }).query({
             query: getStripeTransferQuery,
             variables: {
                 pk: StripeTransferPK.stringify(testStripeTransfer),
@@ -99,7 +99,7 @@ describe("getStripeTransfer", () => {
     });
 
     test("Non-owner cannot get StripeTransfer", async () => {
-        const promise = testGQLClient({ user: testOtherUser }).query({
+        const promise = getTestGQLClient({ user: testOtherUser }).query({
             query: getStripeTransferQuery,
             variables: {
                 pk: StripeTransferPK.stringify(testStripeTransfer),
@@ -118,7 +118,7 @@ describe("getStripeTransfer", () => {
     test("Non-owner cannot get StripeTransfer private fields", async () => {
         jest.spyOn(Can, "getStripeTransfer").mockImplementation(() => Promise.resolve(true));
 
-        const promise = testGQLClient({ user: testOtherUser }).query({
+        const promise = getTestGQLClient({ user: testOtherUser }).query({
             query: getStripeTransferQuery,
             variables: {
                 pk: StripeTransferPK.stringify(testStripeTransfer),

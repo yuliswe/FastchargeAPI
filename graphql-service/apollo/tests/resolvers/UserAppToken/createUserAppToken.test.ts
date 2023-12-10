@@ -7,7 +7,7 @@ import { AppPK } from "@/pks/AppPK";
 import { PricingPK } from "@/pks/PricingPK";
 import { UserPK } from "@/pks/UserPK";
 import { getOrCreateTestUser, simplifyGraphQLPromiseRejection } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
@@ -65,7 +65,7 @@ describe("createUserAppToken", () => {
             pricing: PricingPK.stringify(testPricing),
         });
 
-        const result = await testGQLClient({
+        const result = await getTestGQLClient({
             user: testSubscriber,
         }).mutate({
             mutation: createUserAppTokenMutation,
@@ -102,7 +102,7 @@ describe("createUserAppToken", () => {
             pricing: PricingPK.stringify(testPricing),
         });
 
-        const result = await testGQLClient({
+        const result = await getTestGQLClient({
             user: testSubscriber,
         }).mutate({
             mutation: createUserAppTokenMutation,
@@ -122,7 +122,7 @@ describe("createUserAppToken", () => {
     });
 
     test("Subscriber cannot create a token for an app they are not subscribed to", async () => {
-        const result = testGQLClient({
+        const result = getTestGQLClient({
             user: testSubscriber,
         }).mutate({
             mutation: createUserAppTokenMutation,
@@ -147,7 +147,7 @@ describe("createUserAppToken", () => {
             pricing: PricingPK.stringify(testPricing),
         });
 
-        const result = testGQLClient({
+        const result = getTestGQLClient({
             user: testAppOwner,
         }).mutate({
             mutation: createUserAppTokenMutation,
@@ -172,7 +172,7 @@ describe("createUserAppToken", () => {
             pricing: PricingPK.stringify(testPricing),
         });
 
-        await testGQLClient({
+        await getTestGQLClient({
             user: testSubscriber,
         }).mutate({
             mutation: createUserAppTokenMutation,
@@ -182,7 +182,7 @@ describe("createUserAppToken", () => {
             },
         });
 
-        const result = testGQLClient({
+        const result = getTestGQLClient({
             user: testSubscriber,
         }).mutate({
             mutation: createUserAppTokenMutation,

@@ -10,7 +10,7 @@ import {
     getOrCreateTestUser,
     simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
@@ -58,7 +58,7 @@ describe("getEndpoint", () => {
     });
 
     test("App owner can delete endpoint", async () => {
-        const promise = testGQLClient({ user: testAppOwner }).mutate({
+        const promise = getTestGQLClient({ user: testAppOwner }).mutate({
             mutation: deleteEndpointMutation,
             variables: {
                 pk: EndpointPK.stringify(testEndpoint),
@@ -78,7 +78,7 @@ describe("getEndpoint", () => {
     });
 
     test("Other user cannot delete endpoint", async () => {
-        const promise = testGQLClient({ user: testOtherUser }).mutate({
+        const promise = getTestGQLClient({ user: testOtherUser }).mutate({
             mutation: deleteEndpointMutation,
             variables: {
                 pk: EndpointPK.stringify(testEndpoint),

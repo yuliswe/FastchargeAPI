@@ -9,7 +9,7 @@ import {
     getOrCreateTestUser,
     simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
 
@@ -58,7 +58,7 @@ describe("createPricing", () => {
     `);
 
     test("App owner can create pricing", async () => {
-        const result = await testGQLClient({ user: testAppOwner }).mutate({
+        const result = await getTestGQLClient({ user: testAppOwner }).mutate({
             mutation: createPricingMutation,
             variables: {
                 name: "Premium",
@@ -74,7 +74,7 @@ describe("createPricing", () => {
     });
 
     test("Other user can't create pricing for app they don't own.", async () => {
-        const promise = testGQLClient({ user: testOtherUser }).mutate({
+        const promise = getTestGQLClient({ user: testOtherUser }).mutate({
             mutation: createPricingMutation,
             variables: {
                 name: "Premium",
@@ -96,7 +96,7 @@ describe("createPricing", () => {
     test("Create too many pricing", async () => {
         const promise = async (): Promise<void> => {
             for (let i = 0; i <= 201; i++) {
-                await testGQLClient({ user: testAppOwner }).mutate({
+                await getTestGQLClient({ user: testAppOwner }).mutate({
                     mutation: createPricingMutation,
                     variables: {
                         name: "Premium",

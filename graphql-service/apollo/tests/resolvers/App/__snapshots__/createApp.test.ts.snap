@@ -1,0 +1,23 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`createApp Anyone can create an app 1`] = `
+{
+  "data": {
+    "createApp": {
+      "__typename": "App",
+      "description": "TestApp Description",
+      "gatewayMode": "proxy",
+      "homepage": "https://fastchargeapi.com",
+      "name": Any<String>,
+      "owner": {
+        "__typename": "User",
+        "pk": Any<String>,
+      },
+      "pk": Any<String>,
+      "repository": "https://github/myrepo",
+      "title": "Test App",
+      "visibility": "public",
+    },
+  },
+}
+`;

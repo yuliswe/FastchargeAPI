@@ -11,20 +11,22 @@ import {
     getUserBalanceNoCache,
     simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, jest, test } from "@jest/globals";
 import * as uuid from "uuid";
 
-const _settleStripeTransferFromSQS = jest.spyOn(StripeTransferResolvers.StripeTransfer, "_settleStripeTransferFromSQS");
+const _sqsSettleStripeTransferSpy = () =>
+    jest.spyOn(StripeTransferResolvers.StripeTransfer, "_sqsSettleStripeTransfer");
 
 describe("createStripeTransfer", () => {
     let testOwnerUser: User;
     let testOtherUser: User;
+
     beforeEach(async () => {
         testOwnerUser = await getOrCreateTestUser(context, { email: "testuser" + uuid.v4() });
         testOtherUser = await getOrCreateTestUser(context, { email: "testuser" + uuid.v4() });
-        await addMoneyForUser({ context, user: UserPK.stringify(testOwnerUser), amount: "100" });
+        await addMoneyForUser(context, { user: UserPK.stringify(testOwnerUser), amount: "100" });
     });
 
     const createStripeTransferMutation = graphql(`
@@ -54,7 +56,7 @@ describe("createStripeTransfer", () => {
     }
 
     test("User can create StripeTransfer for themselves", async () => {
-        const promise = testGQLClient({ user: testOwnerUser }).mutate({
+        const promise = getTestGQLClient({ user: testOwnerUser }).mutate({
             mutation: createStripeTransferMutation,
             variables: getVariables(),
         });
@@ -63,7 +65,7 @@ describe("createStripeTransfer", () => {
     });
 
     test("A user can not create StripeTransfer for another user", async () => {
-        const promise = testGQLClient({ user: testOwnerUser }).mutate({
+        const promise = getTestGQLClient({ user: testOwnerUser }).mutate({
             mutation: createStripeTransferMutation,
             variables: { ...getVariables(), receiver: UserPK.stringify(testOtherUser) },
         });
@@ -79,7 +81,7 @@ describe("createStripeTransfer", () => {
 
     test("Withdrawal amount cannot be less than getMinWithdrawalAmount", async () => {
         const minAmount = await getMinWithdrawalAmount(context);
-        const promise = testGQLClient({ user: testOwnerUser }).mutate({
+        const promise = getTestGQLClient({ user: testOwnerUser }).mutate({
             mutation: createStripeTransferMutation,
             variables: { ...getVariables(), withdrawAmount: minAmount.minus(1).toString() },
         });
@@ -93,7 +95,9 @@ describe("createStripeTransfer", () => {
     });
 
     test("Withdrawal amount should be deducted from user balance.", async () => {
-        const promise = testGQLClient({ user: testOwnerUser }).mutate({
+        const _sqsSettleStripeTransfer = _sqsSettleStripeTransferSpy();
+
+        const promise = getTestGQLClient({ user: testOwnerUser }).mutate({
             mutation: createStripeTransferMutation,
             variables: getVariables(),
         });
@@ -101,8 +105,8 @@ describe("createStripeTransfer", () => {
         await expect(promise).resolves.toMatchObject(getExpectedStripeTransfer());
 
         await mockSQS.waitForQueuesToEmpty();
-        expect(_settleStripeTransferFromSQS).toHaveBeenCalledTimes(1);
-        await expect(_settleStripeTransferFromSQS.mock.results[0].value).resolves.toMatchObject({
+        expect(_sqsSettleStripeTransfer).toHaveBeenCalledTimes(1);
+        await expect(_sqsSettleStripeTransfer.mock.results[0].value).resolves.toMatchObject({
             status: StripeTransferStatus.PendingTransfer,
         });
         const newBalance = await getUserBalanceNoCache(context, testOwnerUser);
@@ -110,7 +114,7 @@ describe("createStripeTransfer", () => {
     });
 
     test("Cannot create a withdrawal more than the current balance", async () => {
-        const promise = testGQLClient({ user: testOwnerUser }).mutate({
+        const promise = getTestGQLClient({ user: testOwnerUser }).mutate({
             mutation: createStripeTransferMutation,
             variables: { ...getVariables(), withdrawAmount: "101" },
         });

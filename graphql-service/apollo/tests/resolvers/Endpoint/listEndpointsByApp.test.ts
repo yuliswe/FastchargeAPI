@@ -5,7 +5,7 @@ import { User } from "@/database/models/User";
 import { AppPK } from "@/pks/AppPK";
 import { EndpointPK } from "@/pks/EndpointPK";
 import { baseRequestContext as context, getOrCreateTestUser } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
@@ -44,7 +44,7 @@ describe("listEndpointsByApp", () => {
     });
 
     test("should return endpoints", async () => {
-        const promise = testGQLClient({ user: testAppOwner }).query({
+        const promise = getTestGQLClient({ user: testAppOwner }).query({
             query: listEndpointsByAppQuery,
             variables: {
                 app: AppPK.stringify(testApp),
@@ -67,7 +67,7 @@ describe("listEndpointsByApp", () => {
             deleted: true,
             deletedAt: Date.now(),
         });
-        const promise = testGQLClient({ user: testAppOwner }).query({
+        const promise = getTestGQLClient({ user: testAppOwner }).query({
             query: listEndpointsByAppQuery,
             variables: {
                 app: AppPK.stringify(testApp),

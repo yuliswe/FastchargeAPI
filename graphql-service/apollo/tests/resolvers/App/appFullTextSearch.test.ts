@@ -6,7 +6,7 @@ import { updateAppSearchIndex } from "@/functions/app";
 import { AppPK } from "@/pks/AppPK";
 import { UserPK } from "@/pks/UserPK";
 import { baseRequestContext, getOrCreateTestUser } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeAll, describe, expect, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
@@ -55,7 +55,7 @@ beforeAll(async () => {
 
 describe("appFullTextSearch", () => {
     test("Search by app name substring", async () => {
-        const promise = testGQLClient({ user: testOtherUser }).query({
+        const promise = getTestGQLClient({ user: testOtherUser }).query({
             query: queryAppFullTextSearch,
             variables: {
                 query: testApp.name.replace(/test-app/, "").slice(0, -3), // create a substring
@@ -80,7 +80,7 @@ describe("appFullTextSearch", () => {
     });
 
     test("Search by app name substring, constraint the search to the tag", async () => {
-        const promise = testGQLClient({ user: testOtherUser }).query({
+        const promise = getTestGQLClient({ user: testOtherUser }).query({
             query: queryAppFullTextSearch,
             variables: {
                 query: testApp.name.replace(/test-app/, ""), // create a substring

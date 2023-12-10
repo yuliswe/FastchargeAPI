@@ -1,21 +1,18 @@
 import { StripePaymentAccept, StripePaymentAcceptModel } from "@/database/models/StripePaymentAccept";
 import { enforceCalledFromSQS } from "@/functions/aws";
-import { getDedupIdForSettleStripePaymentAcceptSQS } from "@/functions/payment";
-import { SQSQueueName } from "@/sqsClient";
+import { getSQSDedupIdForSettleStripePaymentAccept } from "@/functions/payment";
+import { SQSQueueName, sqsGQLClient } from "@/sqsClient";
+import { graphql } from "@/typed-graphql";
 import { RequestContext } from "../RequestContext";
 import {
     AccountActivityReason,
     AccountActivityType,
-    GQLMutationCreateStripePaymentAcceptArgs,
-    GQLQueryGetStripePaymentAcceptArgs,
-    GQLQueryGetStripePaymentAcceptByStripeSessionIdArgs,
     GQLResolvers,
     GQLStripePaymentAcceptResolvers,
-    GQLStripePaymentAccept_SettleStripePaymentAcceptFromSqsArgs,
     StripePaymentAcceptStatus,
 } from "../__generated__/resolvers-types";
 import { AlreadyExists, Denied } from "../errors";
-import { settleAccountActivities } from "../functions/account";
+import { settleAccountActivitiesFromSQS } from "../functions/account";
 import { Can } from "../permissions";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { StripePaymentAcceptPK } from "../pks/StripePaymentAccept";
@@ -53,19 +50,11 @@ export const StripePaymentAcceptResolvers: GQLResolvers & {
          * Important: This method must be idempotent. It must be safe to call
          * this more than once without adding more money to the user's balance.
          */
-        async _settleStripePaymentAcceptFromSQS(
-            parent: StripePaymentAccept,
-            {
-                stripePaymentStatus,
-                stripeSessionObject,
-                stripePaymentIntent,
-            }: GQLStripePaymentAccept_SettleStripePaymentAcceptFromSqsArgs,
-            context: RequestContext
-        ) {
-            enforceCalledFromSQS({
-                context,
+        async _sqsSettleStripePaymentAccept(parent, args, context) {
+            const { stripePaymentStatus, stripeSessionObject, stripePaymentIntent } = args;
+            enforceCalledFromSQS(context, {
                 queueName: SQSQueueName.BillingQueue,
-                dedupId: getDedupIdForSettleStripePaymentAcceptSQS(parent),
+                dedupId: getSQSDedupIdForSettleStripePaymentAccept(parent),
                 groupId: parent.user,
             });
             if (!(await Can.settleUserAccountActivities(context))) {
@@ -74,13 +63,13 @@ export const StripePaymentAcceptResolvers: GQLResolvers & {
             const activity = await context.batched.AccountActivity.create({
                 user: parent.user,
                 amount: parent.amount,
-                type: AccountActivityType.Debit,
+                type: AccountActivityType.Incoming,
                 reason: AccountActivityReason.Topup,
                 settleAt: Date.now(),
                 description: "Account top-up by you",
                 stripePaymentAccept: StripePaymentAcceptPK.stringify(parent),
             });
-            await settleAccountActivities(context, parent.user, {
+            await settleAccountActivitiesFromSQS(context, parent.user, {
                 consistentReadAccountActivities: true,
             });
             parent = await context.batched.StripePaymentAccept.update(parent, {
@@ -94,11 +83,8 @@ export const StripePaymentAcceptResolvers: GQLResolvers & {
         },
     },
     Query: {
-        async getStripePaymentAccept(
-            parent: {},
-            { pk }: GQLQueryGetStripePaymentAcceptArgs,
-            context: RequestContext
-        ): Promise<StripePaymentAccept> {
+        async getStripePaymentAccept(parent: {}, args, context): Promise<StripePaymentAccept> {
+            const { pk } = args;
             const stripePaymentAccept = await context.batched.StripePaymentAccept.get(StripePaymentAcceptPK.parse(pk));
             if (!(await Can.getStripePaymentAccept(stripePaymentAccept, context))) {
                 throw new Denied();
@@ -106,11 +92,8 @@ export const StripePaymentAcceptResolvers: GQLResolvers & {
             return stripePaymentAccept;
         },
 
-        async getStripePaymentAcceptByStripeSessionId(
-            parent: {},
-            { user, stripeSessionId }: GQLQueryGetStripePaymentAcceptByStripeSessionIdArgs,
-            context: RequestContext
-        ): Promise<StripePaymentAccept> {
+        async getStripePaymentAcceptByStripeSessionId(parent: {}, args, context) {
+            const { user, stripeSessionId } = args;
             const stripePaymentAccept = await context.batched.StripePaymentAccept.get({
                 user: user,
                 stripeSessionId: stripeSessionId,
@@ -122,18 +105,9 @@ export const StripePaymentAcceptResolvers: GQLResolvers & {
         },
     },
     Mutation: {
-        async createStripePaymentAccept(
-            parent: {},
-            {
-                user,
-                amount,
-                stripeSessionId,
-                stripeSessionObject,
-                stripePaymentIntent,
-                stripePaymentStatus,
-            }: GQLMutationCreateStripePaymentAcceptArgs,
-            context: RequestContext
-        ): Promise<StripePaymentAccept> {
+        async createStripePaymentAccept(parent: {}, args, context) {
+            const { user, amount, stripeSessionId, stripeSessionObject, stripePaymentIntent, stripePaymentStatus } =
+                args;
             if (!(await Can.createStripePaymentAccept(context))) {
                 throw new Denied();
             }
@@ -144,7 +118,7 @@ export const StripePaymentAcceptResolvers: GQLResolvers & {
             if (existing) {
                 throw new AlreadyExists("StripePaymentAccept", { user, stripeSessionId });
             }
-            return await context.batched.StripePaymentAccept.create({
+            const stripePaymentAccept = await context.batched.StripePaymentAccept.create({
                 user,
                 amount,
                 stripeSessionId,
@@ -152,6 +126,37 @@ export const StripePaymentAcceptResolvers: GQLResolvers & {
                 stripePaymentIntent,
                 stripePaymentStatus: stripePaymentStatus,
             });
+            await sqsGQLClient({
+                queueName: SQSQueueName.BillingQueue,
+                dedupId: getSQSDedupIdForSettleStripePaymentAccept(stripePaymentAccept),
+                groupId: user,
+            }).mutate({
+                mutation: graphql(`
+                    mutation SettleStripePaymentAcceptFromSqs(
+                        $pk: ID!
+                        $stripePaymentStatus: String
+                        $stripeSessionObject: String
+                        $stripePaymentIntent: String
+                    ) {
+                        getStripePaymentAccept(pk: $pk) {
+                            _sqsSettleStripePaymentAccept(
+                                stripePaymentStatus: $stripePaymentStatus
+                                stripeSessionObject: $stripeSessionObject
+                                stripePaymentIntent: $stripePaymentIntent
+                            ) {
+                                pk
+                            }
+                        }
+                    }
+                `),
+                variables: {
+                    pk: StripePaymentAcceptPK.stringify(stripePaymentAccept),
+                    stripePaymentStatus,
+                    stripeSessionObject,
+                    stripePaymentIntent,
+                },
+            });
+            return stripePaymentAccept;
         },
     },
 };

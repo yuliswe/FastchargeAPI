@@ -12,7 +12,7 @@ import {
     StripeTransferStatus,
 } from "../__generated__/resolvers-types";
 import { BadInput, Denied } from "../errors";
-import { getUserBalance, settleAccountActivities } from "../functions/account";
+import { getUserBalance, settleAccountActivitiesFromSQS } from "../functions/account";
 import { enforceCalledFromSQS } from "../functions/aws";
 import { createAccountActivitiesForTransfer, getSQSDedupIdForSettleStripeTransfer } from "../functions/transfer";
 import { Can } from "../permissions";
@@ -54,13 +54,12 @@ export const StripeTransferResolvers: GQLResolvers & {
          * account. Calling this method creates an AccountActivity for the user,
          * substracting the withdrawl amount from their balance.
          */
-        async _settleStripeTransferFromSQS(
+        async _sqsSettleStripeTransfer(
             parent: StripeTransfer,
             args: {},
             context: RequestContext
         ): Promise<StripeTransfer> {
-            enforceCalledFromSQS({
-                context,
+            enforceCalledFromSQS(context, {
                 groupId: parent.receiver,
                 queueName: SQSQueueName.BillingQueue,
                 dedupId: getSQSDedupIdForSettleStripeTransfer(parent),
@@ -79,7 +78,7 @@ export const StripeTransferResolvers: GQLResolvers & {
                 transfer: parent,
                 userPK: UserPK.stringify(user),
             });
-            await settleAccountActivities(context, parent.receiver, {
+            await settleAccountActivitiesFromSQS(context, parent.receiver, {
                 consistentReadAccountActivities: true,
             });
             return await context.batched.StripeTransfer.update(parent, {
@@ -134,7 +133,7 @@ export const StripeTransferResolvers: GQLResolvers & {
                 mutation: graphql(`
                     mutation SettleStripeTransferFromSQS($pk: ID!) {
                         getStripeTransfer(pk: $pk) {
-                            _settleStripeTransferFromSQS {
+                            _sqsSettleStripeTransfer {
                                 pk
                                 status
                             }

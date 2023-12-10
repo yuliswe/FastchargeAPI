@@ -3,10 +3,11 @@ import { App } from "@/database/models/App";
 import { User } from "@/database/models/User";
 import { AppPK } from "@/pks/AppPK";
 import { UserPK } from "@/pks/UserPK";
-import { baseRequestContext, getOrCreateTestUser, simplifyGraphQLPromiseRejection } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { createTestUser } from "@/tests/examples/User";
+import { baseRequestContext, simplifyGraphQLPromiseRejection } from "@/tests/test-utils";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
-import { beforeAll, describe, expect, test } from "@jest/globals";
+import { describe, expect, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
 
 const context = baseRequestContext;
@@ -14,14 +15,10 @@ const context = baseRequestContext;
 let testAppOwner: User;
 let testOtherOwner: User;
 let testApp: App;
-beforeAll(async () => {
-    testAppOwner = await getOrCreateTestUser(context, {
-        email: `testAppOwner_${uuidv4()}@gmail_mock.com`,
-    });
-    testOtherOwner = await getOrCreateTestUser(context, {
-        email: `testOtherOwner_${uuidv4()}@gmail_mock.com`,
-    });
-    testApp = await context.batched.App.createOverwrite({
+beforeEach(async () => {
+    testAppOwner = await createTestUser(context);
+    testOtherOwner = await createTestUser(context);
+    testApp = await context.batched.App.create({
         name: `testapp-${uuidv4()}`,
         owner: UserPK.stringify(testAppOwner),
         title: "Test App",
@@ -66,34 +63,22 @@ describe("getApp", () => {
     `);
 
     test("Anyone can get a public app", async () => {
-        const promise = testGQLClient({ user: testOtherOwner }).query({
+        const promise = getTestGQLClient({ user: testOtherOwner }).query({
             query: queryGetAppByPK,
             variables: {
                 pk: AppPK.stringify(testApp),
             },
         });
-        await expect(promise).resolves.toMatchObject({
+        await expect(promise).resolves.toMatchSnapshotExceptForProps({
             data: {
                 getApp: {
-                    __typename: "App",
-                    pk: AppPK.stringify(testApp),
+                    pk: expect.any(String),
                     name: testApp.name,
-                    title: testApp.title,
-                    description: testApp.description,
+                    createdAt: expect.any(Number),
+                    updatedAt: expect.any(Number),
                     owner: {
-                        __typename: "User",
                         author: testAppOwner.author,
                     },
-                    homepage: testApp.homepage,
-                    repository: testApp.repository,
-                    gatewayMode: testApp.gatewayMode,
-                    visibility: testApp.visibility,
-                    createdAt: testApp.createdAt,
-                    updatedAt: testApp.updatedAt,
-                    readme: testApp.readme,
-                    pricingPlans: [],
-                    endpoints: [],
-                    tags: [],
                 },
             },
         });
@@ -104,7 +89,7 @@ describe("getApp", () => {
             deleted: true,
             deletedAt: Date.now(),
         });
-        const promise = testGQLClient({ user: testOtherOwner }).query({
+        const promise = getTestGQLClient({ user: testOtherOwner }).query({
             query: queryGetAppByPK,
             variables: {
                 pk: AppPK.stringify(testApp),

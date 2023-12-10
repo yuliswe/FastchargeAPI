@@ -1,6 +1,6 @@
 import { User } from "@/database/models/User";
 import { baseRequestContext as context, getOrCreateTestUser } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeAll, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
@@ -20,7 +20,7 @@ describe("createSecret", () => {
             value: "test-secret-val" + uuid.v4(),
             expireAt: Date.now(),
         };
-        const promise = testGQLClient({ user: testUser }).query({
+        const promise = getTestGQLClient({ user: testUser }).query({
             query: graphql(`
                 mutation TestCreateSecret($key: String!, $value: String!, $expireAt: Timestamp) {
                     createSecret(key: $key, value: $value, expireAt: $expireAt) {

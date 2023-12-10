@@ -2,10 +2,11 @@ import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
 import { AppVisibility, GatewayMode } from "@/__generated__/gql/graphql";
 import { User } from "@/database/models/User";
 import { UserPK } from "@/pks/UserPK";
-import { getOrCreateTestUser, simplifyGraphQLPromiseRejection } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { createTestUser } from "@/tests/examples/User";
+import { simplifyGraphQLPromiseRejection } from "@/tests/test-utils";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
-import { beforeAll, describe, expect, test } from "@jest/globals";
+import { describe, expect, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
 
 const context: RequestContext = {
@@ -51,13 +52,12 @@ const createAppMutation = graphql(`
         }
     }
 `);
-// jest.retryTimes(2);
+
 describe("createApp", () => {
-    const testUserEmail = `testuser_${uuidv4()}@gmail_mock.com`;
     let testUser: User;
 
-    beforeAll(async () => {
-        testUser = await getOrCreateTestUser(context, { email: testUserEmail });
+    beforeEach(async () => {
+        testUser = await createTestUser(context);
     });
 
     function createAppMutationVariables() {
@@ -76,26 +76,18 @@ describe("createApp", () => {
 
     test("Anyone can create an app", async () => {
         const variables = createAppMutationVariables();
-        const promise = testGQLClient({ user: testUser }).mutate({
+        const promise = getTestGQLClient({ user: testUser }).mutate({
             mutation: createAppMutation,
             variables,
         });
-        await expect(promise).resolves.toMatchObject({
+        await expect(promise).resolves.toMatchSnapshotExceptForProps({
             data: {
                 createApp: {
-                    __typename: "App",
                     name: variables.name,
-                    description: "TestApp Description",
                     pk: expect.any(String),
-                    title: "Test App",
-                    visibility: AppVisibility.Public,
                     owner: {
-                        __typename: "User",
                         pk: UserPK.stringify(testUser),
                     },
-                    homepage: "https://fastchargeapi.com",
-                    repository: "https://github/myrepo",
-                    gatewayMode: GatewayMode.Proxy,
                 },
             },
         });
@@ -105,7 +97,7 @@ describe("createApp", () => {
         for (let i = 0; i < 10; i++) {
             await context.batched.App.create(createAppMutationVariables());
         }
-        const promise = testGQLClient({ user: testUser }).mutate({
+        const promise = getTestGQLClient({ user: testUser }).mutate({
             mutation: createAppMutation,
             variables: createAppMutationVariables(),
         });

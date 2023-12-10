@@ -1,46 +1,34 @@
-import { AppVisibility, GatewayMode } from "@/__generated__/gql/graphql";
 import { App } from "@/database/models/App";
 import { AppTag } from "@/database/models/AppTag";
 import { User } from "@/database/models/User";
 import { AppPK } from "@/pks/AppPK";
 import { UserPK } from "@/pks/UserPK";
-import { baseRequestContext, getOrCreateTestUser } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { createTestApp } from "@/tests/examples/App";
+import { createTestUser } from "@/tests/examples/User";
+import { baseRequestContext as context } from "@/tests/test-utils";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
-import { beforeAll, describe, expect, test } from "@jest/globals";
+import { describe, expect, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
 
-const context = baseRequestContext;
-
-let testAppOwner: User;
-let testOtherOwner: User;
-let testApp: App;
-let testAppTag: AppTag;
-beforeAll(async () => {
-    testAppOwner = await getOrCreateTestUser(context, {
-        email: `testAppOwner_${uuidv4()}@gmail_mock.com`,
-    });
-    testOtherOwner = await getOrCreateTestUser(context, {
-        email: `testOtherOwner_${uuidv4()}@gmail_mock.com`,
-    });
-    testApp = await context.batched.App.create({
-        name: `testapp-${uuidv4()}`,
-        owner: UserPK.stringify(testAppOwner),
-        title: "Test App",
-        description: "Test App Description",
-        homepage: "https://fastchargeapi.com",
-        repository: "https://github/myrepo",
-        gatewayMode: GatewayMode.Proxy,
-        visibility: AppVisibility.Public,
-        readme: "readme",
-    });
-    testAppTag = await context.batched.AppTag.create({
-        app: AppPK.stringify(testApp),
-        tag: `testtag-${uuidv4()}`,
-    });
-});
-
 describe("listAppsByTag", () => {
+    let testAppOwner: User;
+    let testOtherOwner: User;
+    let testApp: App;
+    let testAppTag: AppTag;
+
+    beforeEach(async () => {
+        testAppOwner = await createTestUser(context);
+        testOtherOwner = await createTestUser(context);
+        testApp = await createTestApp(context, {
+            owner: UserPK.stringify(testAppOwner),
+        });
+        testAppTag = await context.batched.AppTag.create({
+            app: AppPK.stringify(testApp),
+            tag: `testtag-${uuidv4()}`,
+        });
+    });
+
     const queryListAppsByTag = graphql(`
         query TestListAppsByTag($tag: String!) {
             listAppsByTag(tag: $tag) {
@@ -50,7 +38,7 @@ describe("listAppsByTag", () => {
     `);
 
     test("List apps by tag", async () => {
-        const promise = testGQLClient({ user: testOtherOwner }).query({
+        const promise = getTestGQLClient({ user: testOtherOwner }).query({
             query: queryListAppsByTag,
             variables: {
                 tag: testAppTag.tag,
@@ -73,7 +61,7 @@ describe("listAppsByTag", () => {
             deleted: true,
             deletedAt: Date.now(),
         });
-        const promise = testGQLClient({ user: testAppOwner }).query({
+        const promise = getTestGQLClient({ user: testAppOwner }).query({
             query: queryListAppsByTag,
             variables: {
                 tag: testAppTag.tag,

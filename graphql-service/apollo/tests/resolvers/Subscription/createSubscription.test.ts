@@ -9,7 +9,7 @@ import {
     getOrCreateTestUser,
     simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
@@ -61,7 +61,7 @@ describe("createSubscription", () => {
     }
 
     test("A user can subscribe to a public app", async () => {
-        const promise = testGQLClient({ user: testSubscriber }).mutate({
+        const promise = getTestGQLClient({ user: testSubscriber }).mutate({
             mutation: createSubscriptionMutation,
             variables: getVariables(),
         });
@@ -79,7 +79,7 @@ describe("createSubscription", () => {
         await context.batched.App.update(testApp, {
             visibility: AppVisibility.Private,
         });
-        const promise = testGQLClient({ user: testSubscriber }).mutate({
+        const promise = getTestGQLClient({ user: testSubscriber }).mutate({
             mutation: createSubscriptionMutation,
             variables: getVariables(),
         });
@@ -96,7 +96,7 @@ describe("createSubscription", () => {
         await context.batched.Pricing.update(testPricing, {
             availability: PricingAvailability.ExistingSubscribers,
         });
-        const promise = testGQLClient({ user: testSubscriber }).mutate({
+        const promise = getTestGQLClient({ user: testSubscriber }).mutate({
             mutation: createSubscriptionMutation,
             variables: getVariables(),
         });
@@ -110,7 +110,7 @@ describe("createSubscription", () => {
     });
 
     test("A user cannot subscribe someone else to a pricing plan", async () => {
-        const promise = testGQLClient({ user: testAppOwner }).mutate({
+        const promise = getTestGQLClient({ user: testAppOwner }).mutate({
             mutation: createSubscriptionMutation,
             variables: getVariables(),
         });

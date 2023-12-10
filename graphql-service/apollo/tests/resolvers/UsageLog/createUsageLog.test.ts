@@ -9,7 +9,7 @@ import {
     getOrCreateTestUser,
     simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
@@ -100,7 +100,7 @@ describe("createUsageLog", () => {
     }
 
     test("Service can create usage log", async () => {
-        const promise = testGQLClient({ isServiceRequest: true }).mutate({
+        const promise = getTestGQLClient({ isServiceRequest: true }).mutate({
             mutation: createUsageLogMutation,
             variables: getVariables(),
         });
@@ -108,7 +108,7 @@ describe("createUsageLog", () => {
     });
 
     test("Only service can create usage log", async () => {
-        const promise = testGQLClient({ user: testAppOwner }).mutate({
+        const promise = getTestGQLClient({ user: testAppOwner }).mutate({
             mutation: createUsageLogMutation,
             variables: getVariables(),
         });

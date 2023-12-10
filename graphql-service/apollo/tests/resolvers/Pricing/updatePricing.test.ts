@@ -11,7 +11,7 @@ import {
     getOrCreateTestUser,
     simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
 
@@ -81,7 +81,7 @@ describe("updatePricing", () => {
             callToAction: "new call to action",
             freeQuota: 0,
         };
-        const result = await testGQLClient({ user: testAppOwner }).mutate({
+        const result = await getTestGQLClient({ user: testAppOwner }).mutate({
             mutation: updatePricingMutation,
             variables,
         });
@@ -93,7 +93,7 @@ describe("updatePricing", () => {
             pk: PricingPK.stringify(testPricing),
             name: "new pricing",
         };
-        const promise = testGQLClient({ user: testOtherUser }).mutate({
+        const promise = getTestGQLClient({ user: testOtherUser }).mutate({
             mutation: updatePricingMutation,
             variables,
         });
@@ -105,7 +105,7 @@ describe("updatePricing", () => {
     });
 
     test("Cannot update pricing minMonthlyCharge", async () => {
-        const promise = testGQLClient({ user: testOtherUser }).mutate({
+        const promise = getTestGQLClient({ user: testOtherUser }).mutate({
             mutation: updatePricingMutation,
             variables: {
                 pk: PricingPK.stringify(testPricing),
@@ -120,7 +120,7 @@ describe("updatePricing", () => {
     });
 
     test("Cannot update pricing chargePerRequest", async () => {
-        const promise = testGQLClient({ user: testOtherUser }).mutate({
+        const promise = getTestGQLClient({ user: testOtherUser }).mutate({
             mutation: updatePricingMutation,
             variables: {
                 pk: PricingPK.stringify(testPricing),
@@ -135,7 +135,7 @@ describe("updatePricing", () => {
     });
 
     test("Cannot update pricing freeQuota", async () => {
-        const promise = testGQLClient({ user: testOtherUser }).mutate({
+        const promise = getTestGQLClient({ user: testOtherUser }).mutate({
             mutation: updatePricingMutation,
             variables: {
                 pk: PricingPK.stringify(testPricing),

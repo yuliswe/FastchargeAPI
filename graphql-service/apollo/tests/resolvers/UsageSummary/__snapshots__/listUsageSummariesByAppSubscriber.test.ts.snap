@@ -1,0 +1,209 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`listUsageSummariesByAppSubscriber A user cannot see the private fields of UsageSummaries on an object that they don't own 1`] = `
+[
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "listUsageSummariesByAppSubscriber.0.app",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "listUsageSummariesByAppSubscriber.0.billed",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "listUsageSummariesByAppSubscriber.0.billedAt",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "listUsageSummariesByAppSubscriber.0.billingRequestChargeAccountActivity",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "listUsageSummariesByAppSubscriber.0.pk",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "listUsageSummariesByAppSubscriber.0.status",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "listUsageSummariesByAppSubscriber.0.subscriber",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "listUsageSummariesByAppSubscriber.0.volume",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "listUsageSummariesByAppSubscriber.1.billedAt",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "listUsageSummariesByAppSubscriber.1.billingRequestChargeAccountActivity",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "listUsageSummariesByAppSubscriber.2.billedAt",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "listUsageSummariesByAppSubscriber.2.billingRequestChargeAccountActivity",
+  },
+]
+`;
+
+exports[`listUsageSummariesByAppSubscriber App ower cannot see any field of a subscriber's UsageSummary other than volume 1`] = `
+[
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "listUsageSummariesByAppSubscriber.0.app",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "listUsageSummariesByAppSubscriber.0.billed",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "listUsageSummariesByAppSubscriber.0.billedAt",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "listUsageSummariesByAppSubscriber.0.billingRequestChargeAccountActivity",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "listUsageSummariesByAppSubscriber.0.pk",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "listUsageSummariesByAppSubscriber.0.status",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "listUsageSummariesByAppSubscriber.0.subscriber",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "listUsageSummariesByAppSubscriber.1.billedAt",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "listUsageSummariesByAppSubscriber.1.billingRequestChargeAccountActivity",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "listUsageSummariesByAppSubscriber.2.billedAt",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "listUsageSummariesByAppSubscriber.2.billingRequestChargeAccountActivity",
+  },
+]
+`;
+
+exports[`listUsageSummariesByAppSubscriber App owner can see the volume field of a subscriber's UsageSummary 1`] = `
+{
+  "data": {
+    "listUsageSummariesByAppSubscriber": [
+      {
+        "__typename": "UsageSummary",
+        "volume": 1,
+      },
+      {
+        "__typename": "UsageSummary",
+        "volume": 1,
+      },
+      {
+        "__typename": "UsageSummary",
+        "volume": 1,
+      },
+    ],
+  },
+  "loading": false,
+  "networkStatus": 7,
+}
+`;
+
+exports[`listUsageSummariesByAppSubscriber UsageSummary owner (subscriber) can list UsageSummaries 1`] = `
+{
+  "__typename": "UsageSummary",
+  "app": {
+    "__typename": "App",
+    "pk": Any<String>,
+  },
+  "billed": false,
+  "billedAt": null,
+  "billingRequestChargeAccountActivity": null,
+  "pk": Any<String>,
+  "status": "pending",
+  "subscriber": {
+    "__typename": "User",
+    "pk": Any<String>,
+  },
+  "volume": 1,
+}
+`;
+
+exports[`listUsageSummariesByAppSubscriber UsageSummary owner (subscriber) can list UsageSummaries 2`] = `
+{
+  "__typename": "UsageSummary",
+  "app": {
+    "__typename": "App",
+    "pk": Any<String>,
+  },
+  "billed": false,
+  "billedAt": null,
+  "billingRequestChargeAccountActivity": null,
+  "pk": Any<String>,
+  "status": "pending",
+  "subscriber": {
+    "__typename": "User",
+    "pk": Any<String>,
+  },
+  "volume": 1,
+}
+`;
+
+exports[`listUsageSummariesByAppSubscriber UsageSummary owner (subscriber) can list UsageSummaries 3`] = `
+{
+  "__typename": "UsageSummary",
+  "app": {
+    "__typename": "App",
+    "pk": Any<String>,
+  },
+  "billed": false,
+  "billedAt": null,
+  "billingRequestChargeAccountActivity": null,
+  "pk": Any<String>,
+  "status": "pending",
+  "subscriber": {
+    "__typename": "User",
+    "pk": Any<String>,
+  },
+  "volume": 1,
+}
+`;

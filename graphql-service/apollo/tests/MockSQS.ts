@@ -107,9 +107,8 @@ export class SingleQueue {
         if (!this.isRunning) {
             this.isRunning = true;
             while (this.messages.length > 0) {
-                const message = this.messages[0];
+                const message = this.messages.shift()!;
                 await message.handler(message.input);
-                this.messages.shift();
             }
             this.props.onQueueEmpty(this.props.identifier);
             this.isRunning = false;

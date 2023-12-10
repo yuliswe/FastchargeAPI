@@ -5,7 +5,7 @@ import { Can } from "@/permissions";
 import { AppPK } from "@/pks/AppPK";
 import { UserPK } from "@/pks/UserPK";
 import { getOrCreateTestUser, simplifyGraphQLPromiseRejection } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeAll, describe, expect, jest, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
@@ -85,7 +85,7 @@ const queryUserByEmail = graphql(`
 
 describe("Query User", () => {
     test("by pk", async () => {
-        const result = await testGQLClient({ user: testMainUser }).query({
+        const result = await getTestGQLClient({ user: testMainUser }).query({
             query: queryUserByPK,
             variables: {
                 pk: UserPK.stringify(testMainUser),
@@ -99,7 +99,7 @@ describe("Query User", () => {
     });
 
     test("by email", async () => {
-        const result = await testGQLClient({ user: testMainUser }).query({
+        const result = await getTestGQLClient({ user: testMainUser }).query({
             query: queryUserByEmail,
             variables: {
                 email: testMainUser.email,
@@ -119,7 +119,7 @@ describe("Query User", () => {
                 }
             }
         `);
-        const promise = testGQLClient({ user: testOtherUser }).query({
+        const promise = getTestGQLClient({ user: testOtherUser }).query({
             query,
             variables: {},
         });
@@ -133,7 +133,7 @@ describe("Query User", () => {
     });
 
     test("A user cannot be queried by another user", async () => {
-        const promise = testGQLClient({ user: testOtherUser }).query({
+        const promise = getTestGQLClient({ user: testOtherUser }).query({
             query: queryUserByPK,
             variables: {
                 pk: UserPK.stringify(testMainUser),
@@ -150,7 +150,7 @@ describe("Query User", () => {
 
     test("User fields that are hidden from public", async () => {
         jest.spyOn(Can, "queryUser").mockImplementation(() => Promise.resolve(true));
-        const promise = testGQLClient({ user: testOtherUser }).query({
+        const promise = getTestGQLClient({ user: testOtherUser }).query({
             query: graphql(`
                 query TestUserHiddenFields($pk: ID!) {
                     getUser(pk: $pk) {
@@ -190,7 +190,7 @@ describe("Query User", () => {
 
     test("User fields that are visible to public", async () => {
         jest.spyOn(Can, "queryUser").mockImplementation(() => Promise.resolve(true));
-        const result = await testGQLClient({ user: testOtherUser }).query({
+        const result = await getTestGQLClient({ user: testOtherUser }).query({
             query: graphql(`
                 query TestUserPublicFields($pk: ID!) {
                     getUser(pk: $pk) {

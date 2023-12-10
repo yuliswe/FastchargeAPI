@@ -7,7 +7,7 @@ import { AppPK } from "@/pks/AppPK";
 import { PricingPK } from "@/pks/PricingPK";
 import { UserPK } from "@/pks/UserPK";
 import { baseRequestContext as context, getOrCreateTestUser } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
 
@@ -64,7 +64,7 @@ describe("listPricingsByApp", () => {
     }
 
     test("App owner can see pricing", async () => {
-        const promise = testGQLClient({ user: testAppOwner }).query({
+        const promise = getTestGQLClient({ user: testAppOwner }).query({
             query: listPricingsByAppQuery,
             variables: getVariables(),
         });
@@ -72,7 +72,7 @@ describe("listPricingsByApp", () => {
     });
 
     test("Any user can see public pricing", async () => {
-        const promise = testGQLClient({ user: testAppUser }).query({
+        const promise = getTestGQLClient({ user: testAppUser }).query({
             query: listPricingsByAppQuery,
             variables: getVariables(),
         });
@@ -83,7 +83,7 @@ describe("listPricingsByApp", () => {
         testPricing = await context.batched.Pricing.update(testPricing, {
             availability: PricingAvailability.ExistingSubscribers,
         });
-        const promise = testGQLClient({ user: testAppUser }).query({
+        const promise = getTestGQLClient({ user: testAppUser }).query({
             query: listPricingsByAppQuery,
             variables: getVariables(),
         });
@@ -103,7 +103,7 @@ describe("listPricingsByApp", () => {
             pricing: PricingPK.stringify(testPricing),
             subscriber: UserPK.stringify(testAppUser),
         });
-        const promise = testGQLClient({ user: testAppUser }).query({
+        const promise = getTestGQLClient({ user: testAppUser }).query({
             query: listPricingsByAppQuery,
             variables: getVariables(),
         });

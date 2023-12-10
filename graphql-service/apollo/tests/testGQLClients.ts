@@ -1,7 +1,7 @@
 import { User } from "@/database/models/User";
-import { callOrCreateHandler } from "@/lambdaHandlerUtils";
+import { LambdaResult, callOrCreateHandler } from "@/lambdaHandlerUtils";
 import { SQSQueueName, getUrlFromSQSQueueName } from "@/sqsClient";
-import { handSendMessageCommandData } from "@/sqsHandlerUtils";
+import { callOrCreateSQSHandler } from "@/sqsHandlerUtils";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient } from "@apollo/client/core";
 import { HttpLink } from "@apollo/client/link/http";
@@ -10,11 +10,12 @@ import { Context as LambdaContext } from "aws-lambda";
 import { RequestInit, Response } from "node-fetch";
 import { v4 as uuidv4 } from "uuid";
 import { UserPK } from "../pks/UserPK";
+import { mockSQS } from "./MockSQS";
 import { exampleLambdaEvent } from "./example-lambda-event";
 
 const cache = new InMemoryCache();
 
-export function testGQLClient({ user, isServiceRequest }: { user?: User; isServiceRequest?: boolean }) {
+export function getTestGQLClient({ user, isServiceRequest }: { user?: User; isServiceRequest?: boolean }) {
     return new ApolloClient({
         cache: cache,
         // Disabling cache will prevent error because we can't return a response
@@ -48,11 +49,18 @@ export function testGQLClient({ user, isServiceRequest }: { user?: User; isServi
                                 isAdminUser: user && UserPK.isAdmin(user) ? "true" : "false",
                             },
                         },
-                        _disableLogRequest: true,
                     },
                     {} as LambdaContext,
-                    () => undefined
+                    () => undefined,
+                    {
+                        stopServer: true,
+                    }
                 );
+
+                /* The request may trigger a SQS message. Wait for it to be
+                handled before returning to the test case. */
+                await mockSQS.waitForQueuesToEmpty();
+
                 return new Response(result.body, {
                     status: result.statusCode,
                     headers: Object.entries(result.headers ?? {}).map(([k, v]) => [k, v.toString()]),
@@ -69,7 +77,7 @@ export function testGQLClient({ user, isServiceRequest }: { user?: User; isServi
  * GraphQL response, for testing purposes. Note that in production, the SQS
  * handler will not return data.
  */
-export function testGQLClientForSQS({
+export function getSQSSQLClientForDirectCall({
     queueName,
     dedupId,
     groupId,
@@ -101,6 +109,11 @@ export function testGQLClientForSQS({
                     MessageDeduplicationId: dedupId || uuidv4(),
                 };
                 const result = await handSendMessageCommandData(input);
+
+                /* The request may trigger a SQS message. Wait for it to be
+                handled before returning to the test case. */
+                await mockSQS.waitForQueuesToEmpty();
+
                 return new Response(result.body, {
                     status: result.statusCode,
                     headers: Object.entries(result.headers ?? {}).map(([k, v]) => [k, v.toString()]),
@@ -108,4 +121,34 @@ export function testGQLClientForSQS({
             },
         }),
     });
+}
+
+export async function handSendMessageCommandData(command: SendMessageCommandInput): Promise<LambdaResult> {
+    return await callOrCreateSQSHandler(
+        {
+            body: command.MessageBody ?? "",
+            messageId: "0",
+            receiptHandle: "",
+            attributes: {
+                ApproximateReceiveCount: "0",
+                SentTimestamp: "0",
+                SenderId: "",
+                ApproximateFirstReceiveTimestamp: "0",
+                SequenceNumber: undefined,
+                MessageGroupId: command.MessageGroupId,
+                MessageDeduplicationId: command.MessageDeduplicationId,
+                DeadLetterQueueSourceArn: undefined,
+            },
+            messageAttributes: {},
+            md5OfBody: "",
+            eventSource: "",
+            eventSourceARN: `arn:aws:sqs:${command?.QueueUrl?.split("/").at(-1) ?? ""}`,
+            awsRegion: "",
+        },
+        {} as LambdaContext,
+        (err, result) => {
+            // nothing
+        },
+        { stopServer: true }
+    );
 }

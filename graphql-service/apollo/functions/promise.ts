@@ -1,5 +1,13 @@
-export async function settlePromisesInBatchesByIterator<Arg, PromiseValue>(
-    args: Iterator<Arg, Arg, Arg>,
+export function getAllSettledOrFail<T>(results: PromiseSettledResult<T>[]): T[] {
+    const errors = results.filter((r) => r.status === "rejected");
+    if (errors.length > 0) {
+        throw new Error(errors.join("\n"));
+    }
+    return results.map((r: PromiseFulfilledResult<T>) => r.value);
+}
+
+export async function safelySettlePromisesInBatchesByIterator<Arg, PromiseValue>(
+    args: Iterator<Arg>,
     handler: (args: Arg, index: number) => Promise<PromiseValue>,
     { batchSize }: { batchSize: number }
 ): Promise<PromiseSettledResult<PromiseValue>[]> {
@@ -11,15 +19,16 @@ export async function settlePromisesInBatchesByIterator<Arg, PromiseValue>(
     }
     return results;
 }
+
 export async function settlePromisesInBatches<Arg, PromiseValue>(
     args: Arg[],
     handler: (args: Arg, index: number) => Promise<PromiseValue>,
     { batchSize }: { batchSize: number }
 ): Promise<PromiseSettledResult<PromiseValue>[]> {
-    return settlePromisesInBatchesByIterator(args[Symbol.iterator](), handler, { batchSize });
+    return safelySettlePromisesInBatchesByIterator(args[Symbol.iterator](), handler, { batchSize });
 }
 
-function takeNextN<T>(n: number, iterator: Iterator<T, T, T>): T[] {
+function takeNextN<T>(n: number, iterator: Iterator<T>): T[] {
     if (n <= 0) {
         return [];
     }

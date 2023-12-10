@@ -10,7 +10,7 @@ import {
     getOrCreateTestUser,
     simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
@@ -78,7 +78,7 @@ describe("getEndpoint", () => {
             destination: "https://example.com/updated",
             description: "Test endpoint description updated",
         };
-        const promise = testGQLClient({ user: testAppOwner }).mutate({
+        const promise = getTestGQLClient({ user: testAppOwner }).mutate({
             mutation: updateEndpointMutation,
             variables,
         });
@@ -110,7 +110,7 @@ describe("getEndpoint", () => {
             destination: "https://example.com/updated",
             description: "Test endpoint description updated",
         };
-        const promise = testGQLClient({ user: testOtherUser }).mutate({
+        const promise = getTestGQLClient({ user: testOtherUser }).mutate({
             mutation: updateEndpointMutation,
             variables,
         });

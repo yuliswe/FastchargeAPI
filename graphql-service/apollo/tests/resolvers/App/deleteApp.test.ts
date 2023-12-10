@@ -5,7 +5,7 @@ import { User } from "@/database/models/User";
 import { AppPK } from "@/pks/AppPK";
 import { UserPK } from "@/pks/UserPK";
 import { baseRequestContext, getOrCreateTestUser, simplifyGraphQLPromiseRejection } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
@@ -47,7 +47,7 @@ describe("deleteApp", () => {
     });
 
     test("Owner can delete an app", async () => {
-        const promise = testGQLClient({ user: testOwner }).mutate({
+        const promise = getTestGQLClient({ user: testOwner }).mutate({
             mutation: deleteAppMutation,
             variables: {
                 pk: AppPK.stringify(testApp),
@@ -66,7 +66,7 @@ describe("deleteApp", () => {
     });
 
     test("Other users cannot delete an app that they don't own", async () => {
-        const promise = testGQLClient({ user: testOtherUser }).mutate({
+        const promise = getTestGQLClient({ user: testOtherUser }).mutate({
             mutation: deleteAppMutation,
             variables: {
                 pk: AppPK.stringify(testApp),

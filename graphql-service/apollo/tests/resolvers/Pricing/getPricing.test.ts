@@ -11,7 +11,7 @@ import {
     simplifyGraphQLPromiseRejection,
     sortGraphQLErrors,
 } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
@@ -79,7 +79,7 @@ describe("getPricing", () => {
     }
 
     test("App owner can read pricing", async () => {
-        const promise = testGQLClient({ user: testAppOwner }).query({
+        const promise = getTestGQLClient({ user: testAppOwner }).query({
             query: getPricingByPKQuery,
             variables: getVariables(),
         });
@@ -90,7 +90,7 @@ describe("getPricing", () => {
         await context.batched.Pricing.update(testPricing, {
             availability: PricingAvailability.ExistingSubscribers,
         });
-        const promise = testGQLClient({ user: testAppOwner }).query({
+        const promise = getTestGQLClient({ user: testAppOwner }).query({
             query: getPricingByPKQuery,
             variables: getVariables(),
         });
@@ -104,7 +104,7 @@ describe("getPricing", () => {
     });
 
     test("User can read public pricing properties.", async () => {
-        const promise = testGQLClient({ user: testOtherUser }).query({
+        const promise = getTestGQLClient({ user: testOtherUser }).query({
             query: getPricingByPKQuery,
             variables: getVariables(),
         });
@@ -115,7 +115,7 @@ describe("getPricing", () => {
         await context.batched.Pricing.update(testPricing, {
             availability: PricingAvailability.ExistingSubscribers,
         });
-        const promise = testGQLClient({ user: testOtherUser }).query({
+        const promise = getTestGQLClient({ user: testOtherUser }).query({
             query: getPricingByPKQuery,
             variables: getVariables(),
         });

@@ -32,18 +32,14 @@ async function handle(event: EventBridgeEvent<string, {}>, context: never, callb
 
     for (const user of users) {
         try {
-            await sqsClient.query({
-                query: graphql(`
-                    query TriggerSettleAccountActivitiesForUsers($email: Email!) {
-                        user(email: $email) {
-                            settleAccountActivities {
-                                pk
-                            }
-                        }
+            await sqsClient.mutate({
+                mutation: graphql(`
+                    mutation TriggerSettleAccountActivitiesForUsers($user: ID!) {
+                        _sqsSettleAccountActivitiesForUser(user: $user)
                     }
                 `),
                 variables: {
-                    email: user,
+                    user,
                 },
             });
         } catch (error) {

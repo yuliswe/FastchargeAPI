@@ -3,7 +3,7 @@ import { User } from "@/database/models/User";
 import { AccountHistoryPK } from "@/pks/AccountHistoryPK";
 import { UserPK } from "@/pks/UserPK";
 import { baseRequestContext, getOrCreateTestUser, simplifyGraphQLPromiseRejection } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeAll, describe, expect, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
@@ -47,7 +47,7 @@ const listAccountHistoryByUserQuery = graphql(`
 
 describe("listAccountHistoryByUser", () => {
     test("Anyone can list their own account history", async () => {
-        const promise = testGQLClient({ user: testOwnerUser }).query({
+        const promise = getTestGQLClient({ user: testOwnerUser }).query({
             query: listAccountHistoryByUserQuery,
             variables: {
                 user: UserPK.stringify(testOwnerUser),
@@ -73,7 +73,7 @@ describe("listAccountHistoryByUser", () => {
     });
 
     test("User can only list their own account history", async () => {
-        const promise = testGQLClient({ user: testOtherOwner }).query({
+        const promise = getTestGQLClient({ user: testOtherOwner }).query({
             query: listAccountHistoryByUserQuery,
             variables: {
                 user: UserPK.stringify(testOwnerUser),

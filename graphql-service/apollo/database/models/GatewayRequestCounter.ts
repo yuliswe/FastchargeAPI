@@ -20,7 +20,7 @@ export const GatewayRequestCounterTableSchema = new dynamoose.Schema(
 
 export class GatewayRequestCounter extends Item {
     requester: PK;
-    app: PK | null;
+    app: PK | null | "<global>";
     counter: number;
     counterSinceLastReset: number;
     lastResetTime: number;

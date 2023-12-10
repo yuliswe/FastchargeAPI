@@ -18,7 +18,7 @@ import {
     simplifyGraphQLPromiseRejection,
     sortGraphQLErrors,
 } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, jest, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
@@ -52,7 +52,6 @@ describe("query AccountActivity", () => {
             subscriber: UserPK.stringify(testAccountOwner),
             app: AppPK.stringify(testApp),
             pricing: PricingPK.stringify(testPricing),
-            path: "/test",
             numberOfLogs: 1,
         });
         testStripeTransfer = await context.batched.StripeTransfer.create({
@@ -64,7 +63,7 @@ describe("query AccountActivity", () => {
         });
         testAccountActivity = await context.batched.AccountActivity.create({
             user: UserPK.stringify(testAccountOwner),
-            type: AccountActivityType.Debit,
+            type: AccountActivityType.Incoming,
             reason: AccountActivityReason.ApiMinMonthlyCharge,
             settleAt: Date.now(),
             amount: "0",
@@ -104,7 +103,7 @@ describe("query AccountActivity", () => {
     `);
 
     test("Account owner can read account activity", async () => {
-        const result = await testGQLClient({ user: testAccountOwner }).query({
+        const result = await getTestGQLClient({ user: testAccountOwner }).query({
             query: getAccountActivityQuery,
             variables: {
                 pk: AccountActivityPK.stringify(testAccountActivity),
@@ -138,7 +137,7 @@ describe("query AccountActivity", () => {
     });
 
     test("Other user cannot query account activity", async () => {
-        const promise = testGQLClient({ user: testOtherUser }).query({
+        const promise = getTestGQLClient({ user: testOtherUser }).query({
             query: getAccountActivityQuery,
             variables: {
                 pk: AccountActivityPK.stringify(testAccountActivity),
@@ -154,7 +153,7 @@ describe("query AccountActivity", () => {
 
     test("Other user cannot read properties of account activity", async () => {
         jest.spyOn(Can, "queryAccountActivity").mockImplementation(() => Promise.resolve(true));
-        const promise = testGQLClient({ user: testOtherUser }).query({
+        const promise = getTestGQLClient({ user: testOtherUser }).query({
             query: getAccountActivityQuery,
             variables: {
                 pk: AccountActivityPK.stringify(testAccountActivity),
@@ -191,7 +190,7 @@ describe("query AccountActivity", () => {
             usageSummary: null,
             billedApp: null,
         });
-        const result = await testGQLClient({ user: testAccountOwner }).query({
+        const result = await getTestGQLClient({ user: testAccountOwner }).query({
             query: getAccountActivityQuery,
             variables: {
                 pk: AccountActivityPK.stringify(testAccountActivity),

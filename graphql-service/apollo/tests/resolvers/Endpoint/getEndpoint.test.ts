@@ -11,7 +11,7 @@ import {
     simplifyGraphQLPromiseRejection,
     sortGraphQLErrors,
 } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
@@ -64,7 +64,7 @@ describe("getEndpoint", () => {
     `);
 
     test("App owner can read all endpoint attributes", async () => {
-        const promise = testGQLClient({ user: testAppOwner }).query({
+        const promise = getTestGQLClient({ user: testAppOwner }).query({
             query: queryGetEndpointAllAttributes,
             variables: {
                 pk: EndpointPK.stringify(testEndpoint),
@@ -92,7 +92,7 @@ describe("getEndpoint", () => {
     });
 
     test("Other user cannot read Endpoint private attributes", async () => {
-        const promise = testGQLClient({ user: testOtherUser }).query({
+        const promise = getTestGQLClient({ user: testOtherUser }).query({
             query: queryGetEndpointAllAttributes,
             variables: {
                 pk: EndpointPK.stringify(testEndpoint),
@@ -121,7 +121,7 @@ describe("getEndpoint", () => {
     });
 
     test("Other user cannot read Endpoint public attributes", async () => {
-        const promise = testGQLClient({ user: testOtherUser }).query({
+        const promise = getTestGQLClient({ user: testOtherUser }).query({
             query: graphql(`
                 query TestGetEndpointPrivateAttributes($pk: ID!) {
                     getEndpoint(pk: $pk) {

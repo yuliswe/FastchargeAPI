@@ -1,10 +1,10 @@
 import { UsageLog } from "@/database/models/UsageLog";
 import { UsageSummary } from "@/database/models/UsageSummary";
 import { PK } from "@/database/utils";
-import { Item } from "dynamoose/dist/Item";
 import { RequestContext } from "../RequestContext";
 import { UsageLogStatus } from "../__generated__/resolvers-types";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
+import { getAllSettledOrFail, safelySettlePromisesInBatchesByIterator, settlePromisesInBatches } from "./promise";
 
 /**
  * Create a UsageSummary for the given user's usage logs that are not collected.
@@ -20,11 +20,9 @@ export async function collectUsageLogs(
     {
         user,
         app,
-        path,
     }: {
         user: PK;
         app: PK;
-        path: string;
     }
 ): Promise<{ affectedUsageSummaries: UsageSummary[] }> {
     const usageLogs = await context.batched.UsageLog.many({
@@ -50,29 +48,40 @@ export async function collectUsageLogs(
         logs.push(usage);
     }
 
-    const summaryPromises = [...usageLogsByPricing.entries()].map(async ([pricingPK, usageLogs]) => {
-        const summary = {
-            subscriber: user,
-            app: app,
-            numberOfLogs: usageLogs.length,
-            volume: 0,
-            pricing: pricingPK,
-            path,
-        };
-        for (const usage of usageLogs) {
-            summary.volume += usage.volume;
+    const affectedUsageSummaries = await safelySettlePromisesInBatchesByIterator(
+        usageLogsByPricing.entries(),
+        async ([pricingPK, usageLogs]) => {
+            const summary = {
+                subscriber: user,
+                app: app,
+                numberOfLogs: usageLogs.length,
+                volume: 0,
+                pricing: pricingPK,
+            };
+            for (const usage of usageLogs) {
+                summary.volume += usage.volume;
+            }
+            const usageSummary = await context.batched.UsageSummary.create(summary);
+            getAllSettledOrFail(
+                await settlePromisesInBatches(
+                    usageLogs,
+                    (usage) =>
+                        context.batched.UsageLog.update(usage, {
+                            status: UsageLogStatus.Collected,
+                            usageSummary: UsageSummaryPK.stringify(usageSummary),
+                            collectedAt: usageSummary.createdAt,
+                        }),
+                    {
+                        batchSize: 10,
+                    }
+                )
+            );
+            return usageSummary;
+        },
+        {
+            batchSize: 10,
         }
-        const usageSummary = await context.batched.UsageSummary.create(summary);
-        const promises: Promise<Item>[] = [];
-        for (const usage of usageLogs) {
-            usage.usageSummary = UsageSummaryPK.stringify(usageSummary);
-            usage.status = UsageLogStatus.Collected;
-            usage.collectedAt = usageSummary.createdAt;
-            promises.push(usage.save());
-        }
-        await Promise.all(promises);
-        return usageSummary;
-    });
-    const affectedUsageSummaries = await Promise.all(summaryPromises);
-    return { affectedUsageSummaries };
+    );
+
+    return { affectedUsageSummaries: getAllSettledOrFail(affectedUsageSummaries) };
 }

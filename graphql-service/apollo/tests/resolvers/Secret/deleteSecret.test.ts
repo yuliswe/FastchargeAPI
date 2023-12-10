@@ -2,7 +2,7 @@ import { Secret } from "@/database/models/Secret";
 import { User } from "@/database/models/User";
 import { SecretPK } from "@/pks/SecretPK";
 import { baseRequestContext as context, getOrCreateTestUser } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeAll, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
@@ -23,7 +23,7 @@ describe("deleteSecret", () => {
     });
 
     test("Anyone can delete a secret", async () => {
-        const promise = testGQLClient({ user: testUser }).query({
+        const promise = getTestGQLClient({ user: testUser }).query({
             query: graphql(`
                 mutation TestDeleteSecret($key: String!) {
                     getSecret(key: $key) {

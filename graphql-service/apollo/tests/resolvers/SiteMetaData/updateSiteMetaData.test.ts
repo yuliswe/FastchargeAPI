@@ -7,7 +7,7 @@ import {
     getOrCreateTestUser,
     simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
@@ -42,7 +42,7 @@ describe("updateSiteMetaData", () => {
 
     test("Admin can update site meta data", async () => {
         const variables = getVariables();
-        const promise = testGQLClient({ user: await getAdminUser(context) }).mutate({
+        const promise = getTestGQLClient({ user: await getAdminUser(context) }).mutate({
             mutation: updateSiteMetaDataMutation,
             variables,
         });
@@ -62,7 +62,7 @@ describe("updateSiteMetaData", () => {
     });
 
     test("Other users cannot update site meta data", async () => {
-        const promise = testGQLClient({ user: testOtherUser }).mutate({
+        const promise = getTestGQLClient({ user: testOtherUser }).mutate({
             mutation: updateSiteMetaDataMutation,
             variables: getVariables(),
         });

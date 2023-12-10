@@ -1,5 +1,4 @@
 import { graphql } from "@/__generated__/gql";
-import { PricingAvailability } from "@/__generated__/gql/graphql";
 import { App } from "@/database/models/App";
 import { Pricing } from "@/database/models/Pricing";
 import { UsageSummary } from "@/database/models/UsageSummary";
@@ -8,20 +7,18 @@ import { Can } from "@/permissions";
 import { AppPK } from "@/pks/AppPK";
 import { PricingPK } from "@/pks/PricingPK";
 import { UserPK } from "@/pks/UserPK";
-import {
-    baseRequestContext as context,
-    getOrCreateTestUser,
-    simplifyGraphQLPromiseRejection,
-    sortGraphQLErrors,
-} from "@/tests/test-utils";
-import { testGQLClient } from "@/tests/testGQLClient";
+import { createTestApp } from "@/tests/examples/App";
+import { createTestPricing } from "@/tests/examples/Pricing";
+import { createTestUsageSummary } from "@/tests/examples/UsageSummary";
+import { createTestUser } from "@/tests/examples/User";
+import { baseRequestContext as context, simplifyGraphQLPromiseRejection } from "@/tests/test-utils";
+import { getTestGQLClient } from "@/tests/testGQLClients";
 import { beforeEach, describe, expect, jest, test } from "@jest/globals";
-import { v4 as uuidv4 } from "uuid";
 
 describe("listUsageSummariesByAppSubscriber", () => {
-    let testAppOwner: User;
     let testSubscriber: User;
     let testOtherUser: User;
+    let testAppOwner: User;
     let testApp: App;
     let testPricing: Pricing;
     const testUsageSummaries: UsageSummary[] = [];
@@ -30,7 +27,6 @@ describe("listUsageSummariesByAppSubscriber", () => {
         query TestListUsageSummary($subscriber: ID!, $app: ID!) {
             listUsageSummariesByAppSubscriber(subscriber: $subscriber, app: $app) {
                 pk
-                createdAt
                 status
                 billedAt
                 billed
@@ -48,77 +44,51 @@ describe("listUsageSummariesByAppSubscriber", () => {
         }
     `);
 
-    const privateUsageSummaryFields = [
-        "pk",
-        "createdAt",
-        "status",
-        "billedAt",
-        "billed",
-        "volume",
-        "app",
-        "subscriber",
-        "billingRequestChargeAccountActivity",
-    ].sort((a, b) => a.localeCompare(b));
-
     beforeEach(async () => {
-        const testAppName = `testapp-${uuidv4()}`;
-        const testAppOwnerEmail = `testuser_appowner_${uuidv4()}@gmail_mock.com`;
-        const testSubscriberEmail = `testuser_subscriber_${uuidv4()}@gmail_mock.com`;
-        testOtherUser = await getOrCreateTestUser(context, { email: `testuser_${uuidv4()}@gmail_mock.com` });
-        testAppOwner = await getOrCreateTestUser(context, { email: testAppOwnerEmail });
-        testSubscriber = await getOrCreateTestUser(context, { email: testSubscriberEmail });
-        testApp = await context.batched.App.createOverwrite({
-            name: testAppName,
+        testOtherUser = await createTestUser(context);
+        testSubscriber = await createTestUser(context);
+        testAppOwner = await createTestUser(context);
+        testApp = await createTestApp(context, {
             owner: UserPK.stringify(testAppOwner),
         });
-        testPricing = await context.batched.Pricing.create({
-            name: "test-pricing",
+        testPricing = await createTestPricing(context, {
             app: AppPK.stringify(testApp),
-            availability: PricingAvailability.Public,
-            minMonthlyCharge: "0",
-            chargePerRequest: "0",
-            freeQuota: 0,
-            callToAction: "test-call-to-action",
         });
-        for (let i = 0; i < 1; i++) {
-            const usageSummary = await context.batched.UsageSummary.create({
+        for (let i = 0; i < 3; i++) {
+            const usageSummary = await createTestUsageSummary(context, {
                 app: AppPK.stringify(testApp),
                 subscriber: UserPK.stringify(testSubscriber),
                 volume: 1,
                 numberOfLogs: 1,
                 pricing: PricingPK.stringify(testPricing),
-                path: "/",
             });
             testUsageSummaries.push(usageSummary);
         }
     });
 
     test("UsageSummary owner (subscriber) can list UsageSummaries", async () => {
-        const result = await testGQLClient({ user: testSubscriber }).query({
+        const result = await getTestGQLClient({ user: testSubscriber }).query({
             query: listUsageSummariesByAppSubscriberQuery,
             variables: {
                 subscriber: UserPK.stringify(testSubscriber),
                 app: AppPK.stringify(testApp),
             },
         });
-        expect(result.data.listUsageSummariesByAppSubscriber).toMatchObject(
-            testUsageSummaries.map((x) => ({
-                subscriber: {
-                    pk: UserPK.stringify(testSubscriber),
-                },
+        for (const usageSummary of result.data.listUsageSummariesByAppSubscriber) {
+            expect(usageSummary).toMatchSnapshotExceptForProps({
+                pk: expect.any(String),
                 app: {
                     pk: AppPK.stringify(testApp),
                 },
-                createdAt: expect.any(Number),
-                billed: false,
-                status: "pending",
-                volume: 1,
-            }))
-        );
+                subscriber: {
+                    pk: UserPK.stringify(testSubscriber),
+                },
+            });
+        }
     });
 
     test("A user cannot list UsageSummaries that they don't own", async () => {
-        const result = testGQLClient({ user: testAppOwner }).query({
+        const result = getTestGQLClient({ user: testAppOwner }).query({
             query: listUsageSummariesByAppSubscriberQuery,
             variables: {
                 subscriber: UserPK.stringify(testSubscriber),
@@ -138,53 +108,35 @@ describe("listUsageSummariesByAppSubscriber", () => {
         // Forces the listUsageSummariesByAppSubscriber to pass so that we can test the private
         // fields.
         jest.spyOn(Can, "listUsageSummariesByAppSubscriber").mockImplementation(() => Promise.resolve(true));
-        const result = testGQLClient({ user: testOtherUser }).query({
+        const result = getTestGQLClient({ user: testOtherUser }).query({
             query: listUsageSummariesByAppSubscriberQuery,
             variables: {
                 subscriber: UserPK.stringify(testSubscriber),
                 app: AppPK.stringify(testApp),
             },
         });
-        await expect(simplifyGraphQLPromiseRejection(result)).rejects.toMatchObject(
-            sortGraphQLErrors(
-                privateUsageSummaryFields.map((f) => ({
-                    code: "PERMISSION_DENIED",
-                    message: "You do not have permission to perform this action.",
-                    path: `listUsageSummariesByAppSubscriber.0.${f}`,
-                }))
-            )
-        );
+        await expect(simplifyGraphQLPromiseRejection(result)).rejects.toMatchSnapshot();
     });
 
     test("App ower cannot see any field of a subscriber's UsageSummary other than volume", async () => {
         // Forces the listUsageSummariesByAppSubscriber to pass so that we can test the private
         // fields.
         jest.spyOn(Can, "listUsageSummariesByAppSubscriber").mockImplementation(() => Promise.resolve(true));
-        const result = testGQLClient({ user: testAppOwner }).query({
+        const result = getTestGQLClient({ user: testAppOwner }).query({
             query: listUsageSummariesByAppSubscriberQuery,
             variables: {
                 subscriber: UserPK.stringify(testSubscriber),
                 app: AppPK.stringify(testApp),
             },
         });
-        await expect(simplifyGraphQLPromiseRejection(result)).rejects.toMatchObject(
-            sortGraphQLErrors(
-                privateUsageSummaryFields
-                    .filter((f) => f != "volume")
-                    .map((f) => ({
-                        code: "PERMISSION_DENIED",
-                        message: "You do not have permission to perform this action.",
-                        path: `listUsageSummariesByAppSubscriber.0.${f}`,
-                    }))
-            )
-        );
+        await expect(simplifyGraphQLPromiseRejection(result)).rejects.toMatchSnapshot();
     });
 
     test("App owner can see the volume field of a subscriber's UsageSummary", async () => {
         // Forces the listUsageSummariesByAppSubscriber to pass so that we can test the private
         // fields.
         jest.spyOn(Can, "listUsageSummariesByAppSubscriber").mockImplementation(() => Promise.resolve(true));
-        const result = testGQLClient({ user: testAppOwner }).query({
+        const result = getTestGQLClient({ user: testAppOwner }).query({
             query: graphql(`
                 query TestAppOwnerCanReadVolume($subscriber: ID!, $app: ID!) {
                     listUsageSummariesByAppSubscriber(subscriber: $subscriber, app: $app) {
@@ -197,6 +149,6 @@ describe("listUsageSummariesByAppSubscriber", () => {
                 app: AppPK.stringify(testApp),
             },
         });
-        await expect(result).resolves.toMatchObject({ data: { listUsageSummariesByAppSubscriber: [{ volume: 1 }] } });
+        await expect(result).resolves.toMatchSnapshot();
     });
 });
