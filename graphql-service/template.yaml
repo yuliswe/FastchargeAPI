@@ -352,23 +352,3 @@ Resources:
       Tags:
         - Key: service-name
           Value: graphql-service
-
-  SettleAccountActivitiesCronJob:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub ${AWS::StackName}-SettleAccountActivitiesCronJob
-      CodeUri: ./dist/cron-jobs
-      Handler: settleAccountActivities.lambdaHandler
-      Runtime: nodejs18.x
-      Architectures:
-        - arm64
-      Role: !GetAtt LambdaFunctionRole.Arn
-      Timeout: 300
-      Events:
-        ScheduledTrigger:
-          ScheduleEvent:
-          Type: ScheduleV2
-          Properties:
-            ScheduleExpression: "rate(6 hours)"
-    Metadata: # Manage esbuild properties
-      SkipBuild: True

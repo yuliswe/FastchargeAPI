@@ -1,6 +1,6 @@
 import { collectUsageLogs } from "@/functions/usage";
-import { createTestUsageLog } from "../examples/UsageLog";
-import { baseRequestContext as context } from "../test-utils";
+import { createTestUsageLog } from "../test-utils/models/UsageLog";
+import { baseRequestContext as context } from "../test-utils/test-utils";
 
 describe("collectUsageLogs", () => {
     test("With one usage log", async () => {

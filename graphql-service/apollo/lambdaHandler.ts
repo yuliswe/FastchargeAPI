@@ -14,11 +14,10 @@ export const lambdaHandler = async (
     try {
         response = await callOrCreateHandler(event, context, callback)!;
     } catch (error) {
-        try {
-            console.error(chalk.red(JSON.stringify(error)));
-        } catch (jsonError) {
-            // ignore
-        }
+        console.error(
+            chalk.red(chalk.bold("Error uncaught by GraphQL handler")),
+            chalk.red(JSON.stringify(error, null, 2))
+        );
         response = {
             statusCode: 500,
             body: "Internal Server Error",

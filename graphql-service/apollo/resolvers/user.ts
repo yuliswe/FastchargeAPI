@@ -3,7 +3,6 @@ import { Subscription } from "@/database/models/Subscription";
 import { User, UserModel, UserTableIndex } from "@/database/models/User";
 import type { GraphQLResolveInfoWithCacheControl } from "@apollo/cache-control-types";
 import { Chalk } from "chalk";
-import { GraphQLResolveInfo } from "graphql";
 import { RequestContext } from "../RequestContext";
 import {
     GQLMutationCreateUserArgs,
@@ -163,7 +162,6 @@ export const UserResolvers: GQLResolvers & {
             parent: User,
             { author, stripeCustomerId, stripeConnectAccountId }: GQLUserUpdateUserArgs,
             context: RequestContext,
-            info: GraphQLResolveInfo
         ): Promise<User> {
             if (!(await Can.updateUser(parent, { author, stripeCustomerId, stripeConnectAccountId }, context))) {
                 throw new Denied();
@@ -226,7 +224,6 @@ export const UserResolvers: GQLResolvers & {
             parent: {},
             { email }: GQLMutationCreateUserArgs,
             context: RequestContext,
-            info: GraphQLResolveInfo
         ): Promise<User> {
             if (!(await Can.createUser(context))) {
                 throw new Denied();

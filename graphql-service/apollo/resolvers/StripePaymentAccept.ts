@@ -1,7 +1,7 @@
 import { StripePaymentAccept, StripePaymentAcceptModel } from "@/database/models/StripePaymentAccept";
 import { enforceCalledFromSQS } from "@/functions/aws";
 import { getSQSDedupIdForSettleStripePaymentAccept } from "@/functions/payment";
-import { SQSQueueName, sqsGQLClient } from "@/sqsClient";
+import { SQSQueueName, getSQSClient } from "@/sqsClient";
 import { graphql } from "@/typed-graphql";
 import { RequestContext } from "../RequestContext";
 import {
@@ -106,8 +106,15 @@ export const StripePaymentAcceptResolvers: GQLResolvers & {
     },
     Mutation: {
         async createStripePaymentAccept(parent: {}, args, context) {
-            const { user, amount, stripeSessionId, stripeSessionObject, stripePaymentIntent, stripePaymentStatus } =
-                args;
+            const {
+                user,
+                amount,
+                stripeSessionId,
+                stripeSessionObject,
+                stripePaymentIntent,
+                stripePaymentStatus,
+                settleImmediately,
+            } = args;
             if (!(await Can.createStripePaymentAccept(context))) {
                 throw new Denied();
             }
@@ -126,36 +133,38 @@ export const StripePaymentAcceptResolvers: GQLResolvers & {
                 stripePaymentIntent,
                 stripePaymentStatus: stripePaymentStatus,
             });
-            await sqsGQLClient({
-                queueName: SQSQueueName.BillingQueue,
-                dedupId: getSQSDedupIdForSettleStripePaymentAccept(stripePaymentAccept),
-                groupId: user,
-            }).mutate({
-                mutation: graphql(`
-                    mutation SettleStripePaymentAcceptFromSqs(
-                        $pk: ID!
-                        $stripePaymentStatus: String
-                        $stripeSessionObject: String
-                        $stripePaymentIntent: String
-                    ) {
-                        getStripePaymentAccept(pk: $pk) {
-                            _sqsSettleStripePaymentAccept(
-                                stripePaymentStatus: $stripePaymentStatus
-                                stripeSessionObject: $stripeSessionObject
-                                stripePaymentIntent: $stripePaymentIntent
-                            ) {
-                                pk
+            if (settleImmediately) {
+                await getSQSClient({
+                    queueName: SQSQueueName.BillingQueue,
+                    dedupId: getSQSDedupIdForSettleStripePaymentAccept(stripePaymentAccept),
+                    groupId: user,
+                }).mutate({
+                    mutation: graphql(`
+                        mutation SettleStripePaymentAccept(
+                            $pk: ID!
+                            $stripePaymentStatus: String
+                            $stripeSessionObject: String
+                            $stripePaymentIntent: String
+                        ) {
+                            getStripePaymentAccept(pk: $pk) {
+                                _sqsSettleStripePaymentAccept(
+                                    stripePaymentStatus: $stripePaymentStatus
+                                    stripeSessionObject: $stripeSessionObject
+                                    stripePaymentIntent: $stripePaymentIntent
+                                ) {
+                                    pk
+                                }
                             }
                         }
-                    }
-                `),
-                variables: {
-                    pk: StripePaymentAcceptPK.stringify(stripePaymentAccept),
-                    stripePaymentStatus,
-                    stripeSessionObject,
-                    stripePaymentIntent,
-                },
-            });
+                    `),
+                    variables: {
+                        pk: StripePaymentAcceptPK.stringify(stripePaymentAccept),
+                        stripePaymentStatus,
+                        stripeSessionObject,
+                        stripePaymentIntent,
+                    },
+                });
+            }
             return stripePaymentAccept;
         },
     },

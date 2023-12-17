@@ -11,10 +11,10 @@ import { AppPK } from "@/pks/AppPK";
 import { PricingPK } from "@/pks/PricingPK";
 import { UsageLogPK } from "@/pks/UsageLogPK";
 import { UsageSummaryPK } from "@/pks/UsageSummaryPK";
-import { SQSQueueName, sqsGQLClient } from "@/sqsClient";
-import { mockSQS } from "@/tests/MockSQS";
+import { SQSQueueName, getSQSClient } from "@/sqsClient";
+import { mockSQS } from "@/tests/test-utils/MockSQS";
 import { v4 as uuidv4 } from "uuid";
-import { baseRequestContext as context, getOrCreateTestUser } from "../../test-utils";
+import { baseRequestContext as context, getOrCreateTestUser } from "../../test-utils/test-utils";
 
 let testAppOwner: User;
 let testSubscriber: User;
@@ -22,7 +22,7 @@ let testApp: App;
 let testPricing: Pricing;
 
 async function _sqsTriggerBilling(variables: TestSqsTriggerBillingMutationVariables) {
-    await sqsGQLClient({
+    await getSQSClient({
         queueName: SQSQueueName.UsageLogQueue,
         groupId: UserPK.stringify(testSubscriber),
     }).mutate({

@@ -147,6 +147,7 @@ type Mutation {
         stripePaymentIntent: String!
         stripeSessionId: String!
         stripeSessionObject: String!
+        settleImmediately: Boolean!
     ): StripePaymentAccept!
     # Used by the gateway to trigger the billing flow
     triggerBilling(user: ID!, app: ID!): Boolean!

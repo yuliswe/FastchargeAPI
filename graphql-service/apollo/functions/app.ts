@@ -1,5 +1,5 @@
 import { App } from "@/database/models/App";
-import { ValidationError } from "@/database/utils";
+import { ValidationError } from "@/errors";
 import { BatchExecuteStatementCommand, ExecuteStatementCommand } from "@aws-sdk/client-rds-data";
 import { RequestContext } from "../RequestContext";
 import { GQLAppFullTextSearchOrderBy } from "../__generated__/resolvers-types";

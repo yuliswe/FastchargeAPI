@@ -2,10 +2,7 @@ import { unwrapResolverError } from "@apollo/server/errors";
 import DynamooseError from "dynamoose-utils/dist/Error";
 import { GraphQLFormattedError } from "graphql";
 
-import { Chalk } from "chalk";
 import { GraphQLError } from "graphql";
-import { ValidationError } from "./database/utils";
-const chalk = new Chalk({ level: 3 });
 
 export enum GQLErrorCode {
     NOT_FOUND = "NOT_FOUND",
@@ -129,9 +126,20 @@ export class UpdateContainsPrimaryKey extends GraphQLError {
     }
 }
 
+export class ValidationError extends GraphQLError {
+    constructor(public field: string, public message: string, public current: unknown) {
+        super(`Validation faild on "${field}": ${message}.\nGot: ${JSON.stringify(current)}`, {
+            extensions: {
+                code: GQLErrorCode.BAD_USER_INPUT,
+                field,
+            },
+        });
+    }
+}
+
 export function handleError(formattedError: GraphQLFormattedError, error: unknown): GraphQLFormattedError {
-    const silencedErrorCodes = process.env.SILENCE_ERRORS?.split(",").map((x) => x.trim()) ?? [];
-    const originalError = unwrapResolverError(error);
+    // const silencedErrorCodes = process.env.SILENCE_ERRORS?.split(",").map((x) => x.trim()) ?? [];
+    const originalError = unwrapResolverError(error); // The error thrown by the resolver
     if (
         originalError instanceof DynamooseError.TypeMismatch ||
         originalError instanceof DynamooseError.ValidationError
@@ -144,21 +152,22 @@ export function handleError(formattedError: GraphQLFormattedError, error: unknow
             },
             message: originalError.message,
         };
-    } else if (originalError instanceof ValidationError) {
-        formattedError = {
-            extensions: {
-                code: GQLErrorCode.BAD_USER_INPUT,
-                field: originalError.field,
-            },
-            message: originalError.toString(),
-        };
     }
-    if (!silencedErrorCodes.includes(formattedError.extensions?.code as string)) {
-        try {
-            console.error(chalk.red("Response: " + JSON.stringify(formattedError, null, 2)) + " <~", originalError);
-        } catch {
-            console.error("Response:", formattedError, "<~", originalError);
-        }
-    }
+    // else if (originalError instanceof ValidationError) {
+    //     formattedError = {
+    //         extensions: {
+    //             code: GQLErrorCode.BAD_USER_INPUT,
+    //             field: originalError.field,
+    //         },
+    //         message: originalError.toString(),
+    //     };
+    // }
+    // if (!silencedErrorCodes.includes(formattedError.extensions?.code as string)) {
+    //     try {
+    //         console.error(chalk.red("Response: " + JSON.stringify(formattedError, null, 2)) + " <~", originalError);
+    //     } catch {
+    //         console.error("Response:", formattedError, "<~", originalError);
+    //     }
+    // }
     return formattedError;
 }

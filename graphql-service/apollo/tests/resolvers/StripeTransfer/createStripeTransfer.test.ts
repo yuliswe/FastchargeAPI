@@ -3,15 +3,15 @@ import { User } from "@/database/models/User";
 import { getMinWithdrawalAmount } from "@/functions/fees";
 import { UserPK } from "@/pks/UserPK";
 import { StripeTransferResolvers } from "@/resolvers/StripeTransfer";
-import { mockSQS } from "@/tests/MockSQS";
+import { mockSQS } from "@/tests/test-utils/MockSQS";
 import {
     addMoneyForUser,
     baseRequestContext as context,
     getOrCreateTestUser,
     getUserBalanceNoCache,
     simplifyGraphQLPromiseRejection,
-} from "@/tests/test-utils";
-import { getTestGQLClient } from "@/tests/testGQLClients";
+} from "@/tests/test-utils/test-utils";
+import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, jest, test } from "@jest/globals";
 import * as uuid from "uuid";

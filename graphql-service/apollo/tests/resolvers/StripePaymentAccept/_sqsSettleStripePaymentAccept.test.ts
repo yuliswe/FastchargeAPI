@@ -10,8 +10,8 @@ import {
     getOrCreateTestUser,
     getUserBalanceNoCache,
     simplifyGraphQLPromiseRejection,
-} from "@/tests/test-utils";
-import { getSQSSQLClientForDirectCall, getTestGQLClient } from "@/tests/testGQLClients";
+} from "@/tests/test-utils/test-utils";
+import { getClientForDirectSQSCall, getTestGQLClient } from "@/tests/test-utils/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
@@ -60,7 +60,7 @@ describe("_sqsSettleStripePaymentAccept", () => {
     }
 
     test("Completes settleStripePaymentAccept succesfully", async () => {
-        const promise = getSQSSQLClientForDirectCall({
+        const promise = getClientForDirectSQSCall({
             queueName: SQSQueueName.BillingQueue,
             groupId: UserPK.stringify(testOwnerUser),
             dedupId: getSQSDedupIdForSettleStripePaymentAccept(testStripePaymentAccept),
@@ -92,7 +92,7 @@ describe("_sqsSettleStripePaymentAccept", () => {
     test("Should update user account balance", async () => {
         const oldBalance = await getUserBalanceNoCache(context, testOwnerUser);
         expect(oldBalance).toBe("0");
-        const promise = getSQSSQLClientForDirectCall({
+        const promise = getClientForDirectSQSCall({
             queueName: SQSQueueName.BillingQueue,
             groupId: UserPK.stringify(testOwnerUser),
             dedupId: getSQSDedupIdForSettleStripePaymentAccept(testStripePaymentAccept),
@@ -108,7 +108,7 @@ describe("_sqsSettleStripePaymentAccept", () => {
     });
 
     test("Must be called on the Billing Queue", async () => {
-        const promise = getSQSSQLClientForDirectCall({
+        const promise = getClientForDirectSQSCall({
             queueName: SQSQueueName.UsageLogQueue,
             groupId: UserPK.stringify(testOwnerUser),
             dedupId: getSQSDedupIdForSettleStripePaymentAccept(testStripePaymentAccept),
@@ -128,7 +128,7 @@ describe("_sqsSettleStripePaymentAccept", () => {
     });
 
     test("SQS group ID is required", async () => {
-        const promise = getSQSSQLClientForDirectCall({
+        const promise = getClientForDirectSQSCall({
             queueName: SQSQueueName.BillingQueue,
             dedupId: getSQSDedupIdForSettleStripePaymentAccept(testStripePaymentAccept),
         }).mutate({
@@ -147,7 +147,7 @@ describe("_sqsSettleStripePaymentAccept", () => {
     });
 
     test("Dedup ID is required", async () => {
-        const promise = getSQSSQLClientForDirectCall({
+        const promise = getClientForDirectSQSCall({
             queueName: SQSQueueName.BillingQueue,
             groupId: UserPK.stringify(testOwnerUser),
         }).mutate({
@@ -166,7 +166,7 @@ describe("_sqsSettleStripePaymentAccept", () => {
     });
 
     test("Using a wrong SQS group ID should fail", async () => {
-        const promise = getSQSSQLClientForDirectCall({
+        const promise = getClientForDirectSQSCall({
             queueName: SQSQueueName.BillingQueue,
             groupId: "XXXX",
             dedupId: getSQSDedupIdForSettleStripePaymentAccept(testStripePaymentAccept),
@@ -186,7 +186,7 @@ describe("_sqsSettleStripePaymentAccept", () => {
     });
 
     test("Using a wrong dedup ID should fail", async () => {
-        const promise = getSQSSQLClientForDirectCall({
+        const promise = getClientForDirectSQSCall({
             queueName: SQSQueueName.BillingQueue,
             groupId: UserPK.stringify(testOwnerUser),
             dedupId: "XXX",

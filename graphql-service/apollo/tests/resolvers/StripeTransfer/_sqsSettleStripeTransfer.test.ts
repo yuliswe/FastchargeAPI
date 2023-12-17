@@ -11,8 +11,8 @@ import {
     getOrCreateTestUser,
     getUserBalanceNoCache,
     simplifyGraphQLPromiseRejection,
-} from "@/tests/test-utils";
-import { getSQSSQLClientForDirectCall, getTestGQLClient } from "@/tests/testGQLClients";
+} from "@/tests/test-utils/test-utils";
+import { getClientForDirectSQSCall, getTestGQLClient } from "@/tests/test-utils/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, expect } from "@jest/globals";
 import * as uuid from "uuid";
@@ -50,7 +50,7 @@ describe("_sqsSettleStripeTransfer", () => {
     }
 
     test("Can be called from SQS", async () => {
-        const promise = getSQSSQLClientForDirectCall({
+        const promise = getClientForDirectSQSCall({
             queueName: SQSQueueName.BillingQueue,
             groupId: UserPK.stringify(testOwnerUser),
             dedupId: getSQSDedupIdForSettleStripeTransfer(testStripeTransfer),
@@ -78,7 +78,7 @@ describe("_sqsSettleStripeTransfer", () => {
             receiveAmount: "1000000",
         });
         const oldBalance = await getUserBalanceNoCache(context, testOwnerUser);
-        const promise = getSQSSQLClientForDirectCall({
+        const promise = getClientForDirectSQSCall({
             queueName: SQSQueueName.BillingQueue,
             groupId: UserPK.stringify(testOwnerUser),
             dedupId: getSQSDedupIdForSettleStripeTransfer(testStripeTransfer),
@@ -117,7 +117,7 @@ describe("_sqsSettleStripeTransfer", () => {
     });
 
     test("Should reject is not called on the billing queue", async () => {
-        const promise = getSQSSQLClientForDirectCall({
+        const promise = getClientForDirectSQSCall({
             queueName: SQSQueueName.UsageLogQueue,
             groupId: UserPK.stringify(testOwnerUser),
             dedupId: getSQSDedupIdForSettleStripeTransfer(testStripeTransfer),
@@ -136,7 +136,7 @@ describe("_sqsSettleStripeTransfer", () => {
     });
 
     test("Should reject if group id is not user pk", async () => {
-        const promise = getSQSSQLClientForDirectCall({
+        const promise = getClientForDirectSQSCall({
             queueName: SQSQueueName.BillingQueue,
             groupId: "xxx",
             dedupId: getSQSDedupIdForSettleStripeTransfer(testStripeTransfer),
@@ -154,7 +154,7 @@ describe("_sqsSettleStripeTransfer", () => {
     });
 
     test("Should reject if dedup id is incorrect", async () => {
-        const promise = getSQSSQLClientForDirectCall({
+        const promise = getClientForDirectSQSCall({
             queueName: SQSQueueName.BillingQueue,
             groupId: UserPK.stringify(testOwnerUser),
             dedupId: "XXX",

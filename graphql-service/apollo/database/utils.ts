@@ -1,3 +1,4 @@
+import { ValidationError } from "@/errors";
 import dynamoose from "dynamoose";
 import { ModelType } from "dynamoose/dist/General";
 import { Item } from "dynamoose/dist/Item";
@@ -41,12 +42,6 @@ export const tableConfigs = {
     tags: {},
     tableClass: TableClass.standard,
 };
-
-export class ValidationError extends Error {
-    constructor(public field: string, public message: string, public current: unknown) {
-        super(`Validation faild on "${field}": ${message}.\nGot: ${JSON.stringify(current)}`);
-    }
-}
 
 export const defaultCreatedAt = (async () => {
     await new Promise((resolve) => setTimeout(resolve, 1));

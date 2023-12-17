@@ -1,22 +1,18 @@
 import { createDefaultContextBatched } from "@/RequestContext";
-import { Currency } from "@/__generated__/resolvers-types";
 import { App } from "@/database/models/App";
 import { FreeQuotaUsage } from "@/database/models/FreeQuotaUsage";
 import { Pricing } from "@/database/models/Pricing";
 import { User, UserTableIndex } from "@/database/models/User";
 import { PK } from "@/database/utils";
 import { getUserBalance } from "@/functions/account";
-import { getSQSDedupIdForSettleStripePaymentAccept } from "@/functions/payment";
-import { StripePaymentAcceptPK } from "@/pks/StripePaymentAccept";
 import { UserPK } from "@/pks/UserPK";
-import { SQSQueueName } from "@/sqsClient";
-import { graphql } from "@/typed-graphql";
 import { ApolloError } from "@apollo/client";
+import { GraphQLErrors } from "@apollo/client/errors";
+import Decimal from "decimal.js-light";
 import { v4 as uuid4 } from "uuid";
-import { RequestContext } from "../RequestContext";
-import { createUserWithEmail } from "../functions/user";
-import { AppPK } from "../pks/AppPK";
-import { getSQSSQLClientForDirectCall } from "./testGQLClients";
+import { RequestContext } from "../../RequestContext";
+import { createUserWithEmail } from "../../functions/user";
+import { AppPK } from "../../pks/AppPK";
 
 export const baseRequestContext: RequestContext = {
     batched: createDefaultContextBatched(),
@@ -28,46 +24,28 @@ export const baseRequestContext: RequestContext = {
 
 export async function addMoneyForUser(
     context: RequestContext,
-    {
-        user,
-        amount,
-    }: {
+    args: {
         user: string;
         amount: string;
     }
 ): Promise<void> {
-    const stripeSessionId = uuid4();
-    const stripePaymentAccept = await context.batched.StripePaymentAccept.create({
-        user: user,
-        amount: amount,
-        currency: Currency.Usd,
-        stripePaymentStatus: "paid",
-        stripeSessionId,
-        stripePaymentIntent: "test",
-        stripeSessionObject: {},
-    });
-
-    await getSQSSQLClientForDirectCall({
-        queueName: SQSQueueName.BillingQueue,
-        dedupId: getSQSDedupIdForSettleStripePaymentAccept(stripePaymentAccept),
-        groupId: user,
-    }).mutate({
-        mutation: graphql(`
-            mutation GetAndSettleStripePaymentAccept($pk: ID!) {
-                getStripePaymentAccept(pk: $pk) {
-                    _sqsSettleStripePaymentAccept {
-                        status
-                    }
-                }
-            }
-        `),
-        variables: {
-            pk: StripePaymentAcceptPK.stringify(stripePaymentAccept),
-        },
+    const { user, amount } = args;
+    const prevAccountHistory = (
+        await context.batched.AccountHistory.many({ user }, { limit: 1, sort: "descending" })
+    ).at(0);
+    await context.batched.AccountHistory.create({
+        user,
+        startingTime: prevAccountHistory?.closingTime ?? 0,
+        closingTime: Date.now(),
+        sequentialId: 1 + (prevAccountHistory?.sequentialId ?? 0),
+        startingBalance: prevAccountHistory?.closingBalance ?? "0",
+        closingBalance: new Decimal(prevAccountHistory?.closingBalance ?? "0").plus(amount).toString(),
     });
 }
 
 /**
+ * @deprecated Use createTestUser instead.
+ *
  * Create a user with the given email for testing purposes.
  * @returns Created user object.
  */
@@ -149,26 +127,26 @@ export function sortGraphQLErrors<T extends Partial<SimplifiedGraphQLError>>(err
     return sortedErrors;
 }
 
-export function simplifyGraphQLError(error: unknown) {
-    if (!(error instanceof ApolloError)) {
-        return error;
-    }
+export function simplifyGraphQLError(errors: GraphQLErrors) {
     const simpleErrors: SimplifiedGraphQLError[] = [];
-    for (const e of error.graphQLErrors) {
+    for (const e of errors) {
         simpleErrors.push({
             message: e.message,
-            code: e.extensions.code as string,
+            code: e.extensions?.code as string,
             path: e.path?.map((x) => x.toString()).join(".") ?? "",
         });
     }
     return sortGraphQLErrors(simpleErrors);
 }
 
-export async function simplifyGraphQLPromiseRejection(errorPromise: Promise<unknown>): Promise<unknown> {
+export async function simplifyGraphQLPromiseRejection(response: Promise<unknown>): Promise<unknown> {
     try {
-        return await errorPromise;
+        return await response;
     } catch (error) {
-        throw simplifyGraphQLError(error);
+        if (error instanceof ApolloError) {
+            throw simplifyGraphQLError(error.graphQLErrors);
+        }
+        throw error;
     }
 }
 

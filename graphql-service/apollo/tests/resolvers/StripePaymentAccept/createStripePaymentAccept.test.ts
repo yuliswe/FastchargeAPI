@@ -5,8 +5,8 @@ import {
     baseRequestContext as context,
     getOrCreateTestUser,
     simplifyGraphQLPromiseRejection,
-} from "@/tests/test-utils";
-import { getTestGQLClient } from "@/tests/testGQLClients";
+} from "@/tests/test-utils/test-utils";
+import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
@@ -23,6 +23,7 @@ describe("createStripePaymentAccept", () => {
             $stripePaymentIntent: String!
             $stripeSessionId: String!
             $stripeSessionObject: String!
+            $settleImmediately: Boolean!
         ) {
             createStripePaymentAccept(
                 user: $user
@@ -31,6 +32,7 @@ describe("createStripePaymentAccept", () => {
                 stripePaymentIntent: $stripePaymentIntent
                 stripeSessionId: $stripeSessionId
                 stripeSessionObject: $stripeSessionObject
+                settleImmediately: $settleImmediately
             ) {
                 pk
                 user {
@@ -61,6 +63,7 @@ describe("createStripePaymentAccept", () => {
             stripePaymentIntent: "stripePaymentIntent",
             stripeSessionId: "stripeSessionId-" + uuid.v4(),
             stripeSessionObject: "{}",
+            settleImmediately: true,
         };
     }
 
@@ -110,14 +113,28 @@ describe("createStripePaymentAccept", () => {
         ]);
     });
 
-    test("createStripePaymentAccept should call _sqsSettleStripePaymentAccept", async () => {
+    test("createStripePaymentAccept with settleImmediately = true should call _sqsSettleStripePaymentAccept", async () => {
         const _sqsSettleStripePaymentAccept = _sqsSettleStripePaymentAcceptSpy();
-        const variables = getVariables();
         await getTestGQLClient({ isServiceRequest: true }).mutate({
             mutation: createStripePaymentAcceptMutation,
-            variables,
+            variables: {
+                ...getVariables(),
+                settleImmediately: true,
+            },
         });
         expect(_sqsSettleStripePaymentAccept).toHaveBeenCalledTimes(1);
+    });
+
+    test("createStripePaymentAccept with settleImmediately = false should not call _sqsSettleStripePaymentAccept", async () => {
+        const _sqsSettleStripePaymentAccept = _sqsSettleStripePaymentAcceptSpy();
+        await getTestGQLClient({ isServiceRequest: true }).mutate({
+            mutation: createStripePaymentAcceptMutation,
+            variables: {
+                ...getVariables(),
+                settleImmediately: false,
+            },
+        });
+        expect(_sqsSettleStripePaymentAccept).toHaveBeenCalledTimes(0);
     });
 
     test("Prevent duplication by stripeSessionId", async () => {

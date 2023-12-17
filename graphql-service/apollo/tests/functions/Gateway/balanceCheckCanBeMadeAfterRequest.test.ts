@@ -5,7 +5,7 @@ import { balanceCheckCanBeMadeAfterRequest } from "@/functions/gateway";
 import { AppPK } from "@/pks/AppPK";
 import { PricingPK } from "@/pks/PricingPK";
 import { UserPK } from "@/pks/UserPK";
-import { baseRequestContext as context, getOrCreateTestUser } from "@/tests/test-utils";
+import { baseRequestContext as context, getOrCreateTestUser } from "@/tests/test-utils/test-utils";
 import * as uuid from "uuid";
 
 describe("balanceCheckCanBeMadeAfterRequest", () => {

@@ -8,8 +8,7 @@ import { HttpLink } from "@apollo/client/link/http";
 import { SendMessageCommandInput } from "@aws-sdk/client-sqs";
 import { Context as LambdaContext } from "aws-lambda";
 import { RequestInit, Response } from "node-fetch";
-import { v4 as uuidv4 } from "uuid";
-import { UserPK } from "../pks/UserPK";
+import { UserPK } from "../../pks/UserPK";
 import { mockSQS } from "./MockSQS";
 import { exampleLambdaEvent } from "./example-lambda-event";
 
@@ -77,7 +76,7 @@ export function getTestGQLClient({ user, isServiceRequest }: { user?: User; isSe
  * GraphQL response, for testing purposes. Note that in production, the SQS
  * handler will not return data.
  */
-export function getSQSSQLClientForDirectCall({
+export function getClientForDirectSQSCall({
     queueName,
     dedupId,
     groupId,
@@ -106,13 +105,15 @@ export function getSQSSQLClientForDirectCall({
                     MessageBody: body?.toString(),
                     MessageGroupId: groupId,
                     QueueUrl: getUrlFromSQSQueueName(queueName),
-                    MessageDeduplicationId: dedupId || uuidv4(),
+                    MessageDeduplicationId: dedupId,
                 };
                 const result = await handSendMessageCommandData(input);
 
                 /* The request may trigger a SQS message. Wait for it to be
                 handled before returning to the test case. */
-                await mockSQS.waitForQueuesToEmpty();
+                if (mockSQS.shouldAutoWaitForQueuesToEmptyForSQSTestClient) {
+                    await mockSQS.waitForQueuesToEmpty();
+                }
 
                 return new Response(result.body, {
                     status: result.statusCode,
@@ -124,7 +125,7 @@ export function getSQSSQLClientForDirectCall({
 }
 
 export async function handSendMessageCommandData(command: SendMessageCommandInput): Promise<LambdaResult> {
-    return await callOrCreateSQSHandler(
+    const response = await callOrCreateSQSHandler(
         {
             body: command.MessageBody ?? "",
             messageId: "0",
@@ -151,4 +152,6 @@ export async function handSendMessageCommandData(command: SendMessageCommandInpu
         },
         { stopServer: true }
     );
+
+    return response;
 }

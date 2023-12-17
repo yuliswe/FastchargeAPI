@@ -1,5 +1,15 @@
+import { readFileSync } from "fs";
+import * as json5 from "json5";
 import { JestConfigWithTsJest, pathsToModuleNameMapper } from "ts-jest";
-import { compilerOptions } from "./tsconfig.json";
+import { CompilerOptions } from "typescript";
+
+const tsconfig = json5.parse<{ compilerOptions: CompilerOptions }>(
+    readFileSync("./tsconfig.json", {
+        encoding: "utf8",
+    })
+);
+
+const { compilerOptions } = tsconfig;
 
 const jestConfig: JestConfigWithTsJest = {
     preset: "ts-jest/presets/js-with-ts-esm", // or other ESM presets
@@ -17,7 +27,7 @@ const jestConfig: JestConfigWithTsJest = {
         "^.+\\.hbs$": ["@glen/jest-raw-loader", {}],
     },
     roots: ["<rootDir>"],
-    modulePaths: [...compilerOptions.baseUrl],
+    modulePaths: [compilerOptions.baseUrl ?? "./"],
     moduleNameMapper: pathsToModuleNameMapper({
         ...compilerOptions.paths,
         "@/*": ["*"],

@@ -8,14 +8,14 @@ import { AppPK } from "@/pks/AppPK";
 import { PricingPK } from "@/pks/PricingPK";
 import { UserPK } from "@/pks/UserPK";
 import { GatewayDecisionResponse } from "@/resolvers/Gateway";
-import { createTestGatewayRequestCounter } from "@/tests/examples/GatewayRequestCounter";
-import { createTestGatewayRequestDecisionCache } from "@/tests/examples/GatewayRequestDecisionCache";
+import { createTestGatewayRequestCounter } from "@/tests/test-utils/models/GatewayRequestCounter";
+import { createTestGatewayRequestDecisionCache } from "@/tests/test-utils/models/GatewayRequestDecisionCache";
 import {
     baseRequestContext as context,
     getOrCreateTestUser,
     simplifyGraphQLPromiseRejection,
-} from "@/tests/test-utils";
-import { getTestGQLClient } from "@/tests/testGQLClients";
+} from "@/tests/test-utils/test-utils";
+import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import * as uuid from "uuid";
 
@@ -53,10 +53,6 @@ describe("checkUserIsAllowedForGatewayRequest", () => {
             subscriber: UserPK.stringify(testSubscriber),
             pricing: PricingPK.stringify(testPricing),
         });
-    });
-
-    afterEach(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 100));
     });
 
     const queryCheckUserIsAllowedForGatewayRequest = graphql(`

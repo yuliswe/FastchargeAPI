@@ -2,8 +2,12 @@ import { AccountHistory } from "@/database/models/AccountHistory";
 import { User } from "@/database/models/User";
 import { AccountHistoryPK } from "@/pks/AccountHistoryPK";
 import { UserPK } from "@/pks/UserPK";
-import { baseRequestContext, getOrCreateTestUser, simplifyGraphQLPromiseRejection } from "@/tests/test-utils";
-import { getTestGQLClient } from "@/tests/testGQLClients";
+import {
+    baseRequestContext,
+    getOrCreateTestUser,
+    simplifyGraphQLPromiseRejection,
+} from "@/tests/test-utils/test-utils";
+import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeAll, describe, expect, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";

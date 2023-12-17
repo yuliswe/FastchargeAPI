@@ -17,14 +17,15 @@ export const handler = async (
     const batchItemFailures: SQSBatchItemFailure[] = [];
     for (const record of event.Records) {
         try {
-            await callOrCreateSQSHandler(record, context, callback);
-        } catch (error) {
-            try {
-                console.error(chalk.red(JSON.stringify(error, null, 2)));
-            } catch (jsonError) {
-                console.error(error);
-                console.error(jsonError);
+            const response = await callOrCreateSQSHandler(record, context, callback);
+            if (response.statusCode !== 200) {
+                batchItemFailures.push({ itemIdentifier: record.messageId });
             }
+        } catch (error) {
+            console.error(
+                chalk.red(chalk.bold("Error uncaught by SQSHandler")),
+                chalk.red(JSON.stringify(error, null, 2))
+            );
             batchItemFailures.push({ itemIdentifier: record.messageId });
         }
     }

@@ -6,8 +6,8 @@ import { User } from "@/database/models/User";
 import { AppPK } from "@/pks/AppPK";
 import { PricingPK } from "@/pks/PricingPK";
 import { UserPK } from "@/pks/UserPK";
-import { baseRequestContext as context, getOrCreateTestUser } from "@/tests/test-utils";
-import { getTestGQLClient } from "@/tests/testGQLClients";
+import { baseRequestContext as context, getOrCreateTestUser } from "@/tests/test-utils/test-utils";
+import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
 import { beforeEach, describe, expect, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";
 

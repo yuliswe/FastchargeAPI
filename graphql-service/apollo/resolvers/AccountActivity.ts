@@ -5,7 +5,7 @@ import { UsageSummary } from "@/database/models/UsageSummary";
 import { User } from "@/database/models/User";
 import { settleAccountActivitiesFromSQS as sqsSettleAccountActivities } from "@/functions/account";
 import { AppPK } from "@/pks/AppPK";
-import { GraphQLResolveInfo } from "graphql";
+import { GraphQLResolveInfoWithCacheControl } from "@apollo/cache-control-types";
 import {
     GQLAccountActivityResolvers,
     GQLMutationCreateAccountActivityArgs,
@@ -22,7 +22,7 @@ import { UserPK } from "../pks/UserPK";
 
 function makeOwnerReadable<T>(
     getter: (parent: AccountActivity, args: {}, context: RequestContext) => T
-): (parent: AccountActivity, args: {}, context: RequestContext, info: GraphQLResolveInfo) => Promise<T> {
+): (parent: AccountActivity, args: {}, context: RequestContext, info: GraphQLResolveInfoWithCacheControl) => Promise<T> {
     return async (parent, args: {}, context, info): Promise<T> => {
         if (!(await Can.viewAccountActivityPrivateAttributes(parent, context))) {
             throw new Denied();

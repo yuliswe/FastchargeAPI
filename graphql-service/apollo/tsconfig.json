@@ -9,12 +9,7 @@
     "module": "ESNext",
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "noImplicitAny": true,
-    "noImplicitThis": true,
-    "alwaysStrict": true,
-    "strictBindCallApply": true,
-    "strictNullChecks": true,
-    "useUnknownInCatchVariables": true,
+    "strict": true,
     "strictFunctionTypes": false,
     "strictPropertyInitialization": false,
     "allowJs": true,
@@ -35,7 +30,8 @@
     "experimentalSpecifierResolution": "node",
     "compilerOptions": {
       "paths": {
-        "@/*": ["*"]
+        "@/*": ["*"],
+        "graphql/(.*)": ["node_modules/graphql/src/$1.ts"]
       }
     }
   }

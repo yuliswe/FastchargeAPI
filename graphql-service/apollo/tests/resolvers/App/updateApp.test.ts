@@ -4,8 +4,12 @@ import { User } from "@/database/models/User";
 import * as appFunctions from "@/functions/app";
 import { AppPK } from "@/pks/AppPK";
 import { UserPK } from "@/pks/UserPK";
-import { baseRequestContext, getOrCreateTestUser, simplifyGraphQLPromiseRejection } from "@/tests/test-utils";
-import { getTestGQLClient } from "@/tests/testGQLClients";
+import {
+    baseRequestContext,
+    getOrCreateTestUser,
+    simplifyGraphQLPromiseRejection,
+} from "@/tests/test-utils/test-utils";
+import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { beforeEach, describe, expect, jest, test } from "@jest/globals";
 import { v4 as uuidv4 } from "uuid";

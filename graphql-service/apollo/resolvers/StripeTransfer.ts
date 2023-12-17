@@ -1,6 +1,6 @@
 import { StripeTransfer, StripeTransferModel } from "@/database/models/StripeTransfer";
 import { getMinWithdrawalAmount, getRecivableAmountForWithdrawal } from "@/functions/fees";
-import { SQSQueueName, sqsGQLClient } from "@/sqsClient";
+import { SQSQueueName, getSQSClient } from "@/sqsClient";
 import { graphql } from "@/typed-graphql";
 import Decimal from "decimal.js-light";
 import { RequestContext } from "../RequestContext";
@@ -125,7 +125,7 @@ export const StripeTransferResolvers: GQLResolvers & {
                 transferAt: Date.now() + 1000 * 60 * 60 * 24, // Transfer after 24 hours
                 status: StripeTransferStatus.Created,
             });
-            await sqsGQLClient({
+            await getSQSClient({
                 queueName: SQSQueueName.BillingQueue,
                 groupId: receiver,
                 dedupId: getSQSDedupIdForSettleStripeTransfer(stripeTransfer),

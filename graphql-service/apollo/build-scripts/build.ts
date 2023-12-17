@@ -1,7 +1,7 @@
 import * as esbuild from "esbuild";
 
 esbuild.buildSync({
-    entryPoints: ["./lambdaHandler.ts", "./sqsHandler.ts", "./cron-jobs/settleAccountActivities.ts", "devserver.ts"],
+    entryPoints: ["./lambdaHandler.ts", "./sqsHandler.ts", "devserver.ts"],
     bundle: true,
     outdir: "./dist",
     platform: "node",

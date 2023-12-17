@@ -11,8 +11,8 @@ import {
     baseRequestContext as context,
     getOrCreateTestUser,
     simplifyGraphQLPromiseRejection,
-} from "@/tests/test-utils";
-import { getTestGQLClient } from "@/tests/testGQLClients";
+} from "@/tests/test-utils/test-utils";
+import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import * as uuid from "uuid";
 

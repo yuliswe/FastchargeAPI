@@ -1,15 +1,15 @@
 import { App } from "@/database/models/App";
+import { User } from "@/database/models/User";
 import { describe, expect, test } from "@jest/globals";
 /** We want to test the actual aws handler */
 // eslint-disable-next-line no-restricted-imports
-import { User } from "@/database/models/User";
-import { lambdaHandler } from "../lambdaHandler";
-import { LambdaEvent } from "../lambdaHandlerUtils";
-import { AppPK } from "../pks/AppPK";
-import { UserPK } from "../pks/UserPK";
-import { createTestApp } from "./examples/App";
-import { createTestUser } from "./examples/User";
-import { baseRequestContext as context } from "./test-utils";
+import { lambdaHandler } from "../../lambdaHandler";
+import { LambdaEvent } from "../../lambdaHandlerUtils";
+import { AppPK } from "../../pks/AppPK";
+import { UserPK } from "../../pks/UserPK";
+import { createTestApp } from "../test-utils/models/App";
+import { createTestUser } from "../test-utils/models/User";
+import { baseRequestContext as context } from "../test-utils/test-utils";
 
 const lambdaEvent: LambdaEvent = {
     resource: "/",

@@ -19,7 +19,7 @@ export function getUrlFromSQSQueueName(queueName: SQSQueueName): string {
 
 const sqsClient = new SQSClient({ region: "us-east-1" });
 
-export function sqsGQLClient({
+export function getSQSClient({
     queueName,
     dedupId,
     groupId,

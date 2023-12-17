@@ -44,6 +44,7 @@ export const AccountHistoryTableSchema = new dynamoose.Schema(
         timestamps: true,
     }
 );
+
 export const AccountHistoryModel = dynamoose.model<AccountHistory>("AccountHistory", AccountHistoryTableSchema, {
     ...tableConfigs,
 });

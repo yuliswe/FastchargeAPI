@@ -1,18 +1,18 @@
 {
-    "name": "graphql-service",
+    "name": "graphql-service-apollo",
     "version": "1.0.0",
     "description": "",
     "main": "index.ts",
     "type": "module",
     "module": "node",
     "scripts": {
-        "build:build-scripts": "esbuild --platform=node --outdir='./dist' --format=cjs --out-extension:.js=.cjs --bundle --external:esbuild --external:graphql ./build-scripts/*.ts",
-        "gen:schema": "(npm run build:build-scripts) && node ./dist/genSchema.cjs",
+        "run-ts": "node -r esbuild-register --loader esbuild-register/loader",
+        "gen:schema": "npm run run-ts ./build-scripts/genSchema.ts",
         "gen": "(npm run gen:schema) && graphql-codegen --config codegen.yml --project resolvers && graphql-codegen --config codegen.yml --project operations",
         "typecheck": "(npm run gen) && tsc --noEmit",
-        "build": "(npm run typecheck) && node ./dist/build.cjs",
+        "build": "(npm run typecheck) && npm run run-ts ./build-scripts/build.ts",
         "start": "(npm run build) && (TRUST_X_USER_PK_HEADER=1 TRUST_X_USER_EMAIL_HEADER=1 TRUST_X_IS_SERVICE_REQUEST_HEADER=1 node --enable-source-maps ./dist/devserver.cjs) || exit 1",
-        "watch": "npx nodemon --config ./.nodemon.config.json -x \"npm run start\"",
+        "watch": "npx nodemon --config ./nodemon.config.json -x \"npm run start\"",
         "test": "npx jest",
         "coverage": "npx jest --coverage",
         "coverage:incremental": "./build-scripts/runINcrementalCoverage.bash",
@@ -20,10 +20,10 @@
         "coverage:reset": "./build-scripts/resetCoverageForFile.bash",
         "sam": "cd ../ && make watch",
         "fix": "eslint --fix ./",
-        "start:sqs": "npx ts-node-esm --experimentalSpecifierResolution=node ./dev-sqs-server.ts",
-        "watch:sqs": "npx nodemon --config ./.nodemon.config.json -x \"npm run start:sqs\"",
+        "start:sqs": "npm run run-ts ./dev-sqs-server.ts",
+        "watch:sqs": "npx nodemon --config ./nodemon.config.json -x \"npm run start:sqs\"",
         "crossecheck:type": "LOCAL_GRAPHQL=1 && (npm run typecheck) & (cd $WS_DIR/payment-service && npm run typecheck) & (cd $WS_DIR/auth-service && npm run typecheck) & (cd $WS_DIR/fastchargeapi-cli && npm run typecheck) & (cd $WS_DIR/gateway-service && npm run typecheck) && wait && echo All good!",
-        "crossecheck:type:watch": "npx nodemon --config ./.nodemon.config.json -x \"npm run crosstypecheck\"",
+        "crossecheck:type:watch": "npx nodemon --config ./nodemon.config.json -x \"npm run crosstypecheck\"",
         "crosscheck": "LOCAL_GRAPHQL=1 && (npm run typecheck) && (cd $WS_DIR/payment-service && npm run test) && (cd $WS_DIR/auth-service && npm run test) && (cd $WS_DIR/fastchargeapi-cli && npm run test) && (cd $WS_DIR/gateway-service && npm run test) && echo All good!"
     },
     "author": "",
@@ -72,8 +72,8 @@
         "eslint-plugin-jest-extended": "^2.0.0",
         "jest": "^29.4.3",
         "jest-extended": "^4.0.2",
+        "json5": "^2.2.3",
         "ts-jest": "^29.0.5",
-        "ts-node": "^10.9.1",
         "typescript": "^4.9.5"
     }
 }

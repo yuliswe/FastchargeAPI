@@ -3,14 +3,14 @@ import { User } from "@/database/models/User";
 import { AccountActivityPK } from "@/pks/AccountActivityPK";
 import { UserPK } from "@/pks/UserPK";
 import { SQSQueueName } from "@/sqsClient";
-import { createTestAccountActivity } from "@/tests/examples/AccountActivity";
-import { createTestUser } from "@/tests/examples/User";
+import { createTestAccountActivity } from "@/tests/test-utils/models/AccountActivity";
+import { createTestUser } from "@/tests/test-utils/models/User";
 import {
     baseRequestContext as context,
     getUserBalanceNoCache,
     simplifyGraphQLPromiseRejection,
-} from "@/tests/test-utils";
-import { getSQSSQLClientForDirectCall, getTestGQLClient } from "@/tests/testGQLClients";
+} from "@/tests/test-utils/test-utils";
+import { getClientForDirectSQSCall, getTestGQLClient } from "@/tests/test-utils/testGQLClients";
 import { graphql } from "@/typed-graphql";
 
 let testUser: User;
@@ -45,7 +45,7 @@ describe("_sqsSettleAccountActivitiesForUser", () => {
     });
 
     test("Must be called with a correct group id", async () => {
-        const promise = getSQSSQLClientForDirectCall({
+        const promise = getClientForDirectSQSCall({
             queueName: SQSQueueName.BillingQueue,
         }).mutate({
             mutation: settleAccountActivitiesForUserMutation,
@@ -67,7 +67,7 @@ describe("_sqsSettleAccountActivitiesForUser", () => {
             user: UserPK.stringify(testUser),
             status: AccountActivityStatus.Pending,
         });
-        await getSQSSQLClientForDirectCall({
+        await getClientForDirectSQSCall({
             queueName: SQSQueueName.BillingQueue,
             groupId: UserPK.stringify(testUser),
         }).mutate({
@@ -97,7 +97,7 @@ describe("_sqsSettleAccountActivitiesForUser", () => {
         expect(accounthistory).toBeNull();
         let userBalance = await getUserBalanceNoCache(context, testUser);
         expect(userBalance).toEqual("0");
-        await getSQSSQLClientForDirectCall({
+        await getClientForDirectSQSCall({
             queueName: SQSQueueName.BillingQueue,
             groupId: UserPK.stringify(testUser),
         }).mutate({
@@ -136,7 +136,7 @@ describe("_sqsSettleAccountActivitiesForUser", () => {
         expect(accounthistory).toBeNull();
         let userBalance = await getUserBalanceNoCache(context, testUser);
         expect(userBalance).toEqual("0");
-        await getSQSSQLClientForDirectCall({
+        await getClientForDirectSQSCall({
             queueName: SQSQueueName.BillingQueue,
             groupId: UserPK.stringify(testUser),
         }).mutate({
@@ -182,7 +182,7 @@ describe("_sqsSettleAccountActivitiesForUser", () => {
         expect(accounthistory).toBeNull();
         let userBalance = await getUserBalanceNoCache(context, testUser);
         expect(userBalance).toEqual("0");
-        await getSQSSQLClientForDirectCall({
+        await getClientForDirectSQSCall({
             queueName: SQSQueueName.BillingQueue,
             groupId: UserPK.stringify(testUser),
         }).mutate({

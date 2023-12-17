@@ -25,6 +25,11 @@ function identifyQueue({ input: { QueueUrl, MessageGroupId } }: Message): QueueI
 class MockSQS {
     queues = new Map<string, SingleQueue>();
     errors: any[] = [];
+    shouldAutoWaitForQueuesToEmptyForSQSTestClient = true;
+
+    setAutoWaitForQueuesToEmpty(value: boolean) {
+        this.shouldAutoWaitForQueuesToEmptyForSQSTestClient = value;
+    }
 
     enqueue(message: Message) {
         this.throwIfErrors();
@@ -54,7 +59,7 @@ class MockSQS {
 
     private throwIfErrors() {
         if (this.errors.length > 0) {
-            throw this.errors[0];
+            throw new Error(this.errors.join("\n\n") + "\n\n");
         }
     }
 
@@ -80,7 +85,6 @@ type SingleQueueProps = {
 export class SingleQueue {
     constructor(public props: SingleQueueProps) {}
 
-    isRunning = false;
     messages: Message[] = [];
     messageDedupIds = new Set<string>();
 
@@ -100,25 +104,21 @@ export class SingleQueue {
             this.wakeQueue().catch((error) => {
                 this.props.onQueueError(this.props.identifier, error);
             });
-        }, 5000); // simulate a delay
+        }, 5000); // Simulate a delay to allow more messages to be enqueued
     }
 
     async wakeQueue() {
-        if (!this.isRunning) {
-            this.isRunning = true;
-            while (this.messages.length > 0) {
-                const message = this.messages.shift()!;
-                await message.handler(message.input);
-            }
-            this.props.onQueueEmpty(this.props.identifier);
-            this.isRunning = false;
+        while (this.messages.length > 0) {
+            const message = this.messages.shift()!;
+            await message.handler(message.input);
         }
+        this.props.onQueueEmpty(this.props.identifier);
     }
 
     async waitForEmpty() {
         await this.wakeQueue();
-        while (this.messages.length > 0) {
-            await new Promise((resolve) => setTimeout(resolve, 100));
+        if (this.messages.length !== 0) {
+            throw new Error(`Expected queue to be empty but it still has ${this.messages.length} messages.`);
         }
     }
 }

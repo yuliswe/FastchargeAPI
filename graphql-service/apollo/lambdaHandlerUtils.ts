@@ -1,4 +1,4 @@
-import { ApolloServer, HeaderMap } from "@apollo/server";
+import { ApolloServer, HTTPGraphQLResponse, HeaderMap } from "@apollo/server";
 import { LambdaHandler, startServerAndCreateLambdaHandler } from "@as-integrations/aws-lambda";
 import { RequestHandler, createRequestHandler } from "@as-integrations/aws-lambda/dist/request-handlers/_create";
 import {
@@ -182,20 +182,18 @@ export async function callOrCreateHandler(
                         return headerMap;
                     },
                     parseBody(event, headers) {
-                        if (event.body) {
-                            const contentType = headers.get("content-type");
-                            const parsedBody = event.isBase64Encoded
-                                ? Buffer.from(event.body, "base64").toString("utf8")
-                                : event.body;
-                            console.log(chalk.blue("Received: " + parsedBody));
-                            if (contentType?.startsWith("application/json")) {
-                                return JSON.parse(parsedBody) as string; // upstream might have wrong type for this
-                            }
-                            if (contentType?.startsWith("text/plain")) {
-                                return parsedBody;
-                            }
+                        const { body } = event;
+                        if (!body) {
+                            return {} as never;
                         }
-                        return "";
+                        const bodyObj = JSON.parse(body) as unknown;
+                        console.log(
+                            chalk.blue(chalk.bold("GraphQL handler recieved LambdaEvent:")),
+                            chalk.blue(JSON.stringify({ ...event, body: `<${typeof body}>` }, null, 2)),
+                            chalk.blue(chalk.bold("\nPretty print body (JSON.parsed):")),
+                            chalk.blue(JSON.stringify(bodyObj, null, 2))
+                        );
+                        return bodyObj as never; // Upstream expects wrong type
                     },
                     parseQueryParams(event) {
                         const params = new URLSearchParams();
@@ -208,9 +206,27 @@ export async function callOrCreateHandler(
                     },
                 },
                 {
-                    success({ body, headers, status }) {
+                    success(response: HTTPGraphQLResponse) {
+                        const { status, body, headers } = response;
                         if (body.kind !== "complete") {
-                            throw new Error("Only complete body type supported");
+                            throw new Error("body.kind !== 'complete' is not implemented");
+                        }
+                        const bodyObj = JSON.parse(body.string) as { errors?: unknown };
+                        const { errors } = bodyObj;
+                        if (errors) {
+                            console.error(
+                                chalk.red(chalk.bold("GraphQL handler responds with errors:")),
+                                chalk.red(JSON.stringify({ ...response, body: `<${typeof body}>` }, null, 2)),
+                                chalk.red(chalk.bold("\nPretty print body:")),
+                                chalk.red(JSON.stringify({ body: bodyObj }, null, 2))
+                            );
+                        } else {
+                            console.log(
+                                chalk.green(chalk.bold("GraphQL handler responds with data:")),
+                                chalk.green(JSON.stringify({ ...response, body: `<${typeof body}>` }, null, 2)),
+                                chalk.green(chalk.bold("\nPretty print body:")),
+                                chalk.green(JSON.stringify({ body: bodyObj }, null, 2))
+                            );
                         }
                         return {
                             statusCode: status ?? 200,
@@ -222,10 +238,8 @@ export async function callOrCreateHandler(
                         };
                     },
                     error(error: Error) {
-                        return {
-                            statusCode: 400,
-                            body: error.message,
-                        };
+                        /* Non resolver error */
+                        throw error;
                     },
                 }
             ),

@@ -1,4 +1,4 @@
-import { LambdaEvent } from "../lambdaHandlerUtils";
+import { LambdaEvent } from "../../lambdaHandlerUtils";
 
 export const exampleLambdaEvent: LambdaEvent = {
     resource: "/",

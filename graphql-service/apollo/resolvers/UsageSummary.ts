@@ -1,7 +1,7 @@
 import { UsageSummary, UsageSummaryModel } from "@/database/models/UsageSummary";
 import { enforceCalledFromSQS } from "@/functions/aws";
 import { AppPK } from "@/pks/AppPK";
-import { SQSQueueName, sqsGQLClient } from "@/sqsClient";
+import { SQSQueueName, getSQSClient } from "@/sqsClient";
 import { graphql } from "@/typed-graphql";
 import { RequestContext } from "../RequestContext";
 import {
@@ -125,7 +125,7 @@ export const UsageSummaryResolvers: GQLResolvers & {
                 throw new Denied();
             }
 
-            await sqsGQLClient({ queueName: SQSQueueName.UsageLogQueue, groupId: user }).mutate({
+            await getSQSClient({ queueName: SQSQueueName.UsageLogQueue, groupId: user }).mutate({
                 mutation: graphql(`
                     mutation CallSQSTriggerBilling($user: ID!, $app: ID!) {
                         _sqsTriggerBilling(user: $user, app: $app) {

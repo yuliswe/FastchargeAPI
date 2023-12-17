@@ -1,6 +1,6 @@
+import { RequestHandler, createRequestHandler } from "@/re-exports-aws-lambda";
 import { ApolloServer, HTTPGraphQLResponse, HeaderMap } from "@apollo/server";
 import { LambdaHandler, startServerAndCreateLambdaHandler } from "@as-integrations/aws-lambda";
-import { RequestHandler } from "@as-integrations/aws-lambda/dist/request-handlers/_create";
 import { Callback as LambdaCallback, Context as LambdaContext, SQSRecord } from "aws-lambda";
 import chalk from "chalk";
 import { RequestContext, RequestService, createDefaultContextBatched } from "./RequestContext";
@@ -29,59 +29,69 @@ export async function callOrCreateSQSHandler(
         serverInstance = getServer();
         handlerInstance = startServerAndCreateLambdaHandler<RequestHandler<SQSRecord, LambdaResult>, RequestContext>(
             serverInstance,
-            {
-                fromEvent(record) {
-                    const headers = new HeaderMap();
-                    headers.set("Content-Type", "application/json");
-                    try {
+            createRequestHandler(
+                {
+                    parseHttpMethod(record) {
+                        return "POST";
+                    },
+                    parseHeaders(record) {
+                        const headers = new HeaderMap();
+                        headers.set("Content-Type", "application/json");
+                        return headers;
+                    },
+                    parseBody(record) {
+                        const { body } = record;
+                        const bodyObj = JSON.parse(body) as unknown;
                         console.log(
-                            chalk.blue("Recieved SQSRecord: " + JSON.stringify(JSON.parse(record.body), null, 2))
+                            chalk.blue(chalk.bold("SQSHandler Recieved SQSRecord:")),
+                            chalk.blue(JSON.stringify({ ...record, body: `<${typeof body}>` }, null, 2)),
+                            chalk.blue(chalk.bold("\nPretty print body (JSON.parsed):")),
+                            chalk.blue(JSON.stringify(bodyObj, null, 2))
                         );
-                    } catch (jsonError) {
-                        console.error(jsonError);
-                        console.log(record.body);
-                    }
-                    return {
-                        method: "POST",
-                        headers,
-                        search: "",
-                        body: JSON.parse(record.body),
-                    };
+                        return bodyObj as never;
+                    },
+                    parseQueryParams(record) {
+                        return "";
+                    },
                 },
-                toSuccessResult(response: HTTPGraphQLResponse) {
-                    const { status, body, headers } = response;
-                    if (body.kind !== "complete") {
-                        throw new Error("body.kind !== 'complete' is not implemented");
-                    }
-                    const { errors } = JSON.parse(body.string) as { errors?: unknown };
-                    if (errors) {
-                        console.error(
-                            chalk.red(
-                                "Found graphqlErrors in the response to SQSGraphQLClient:\n" +
-                                    JSON.stringify(errors, null, 2)
-                            )
-                        );
-                    } else {
-                        console.log(
-                            chalk.green("Response (not visible to client): " + JSON.stringify(response, null, 2))
-                        );
-                    }
-                    return {
-                        statusCode: status ?? 200,
-                        headers: {
-                            ...Object.fromEntries(headers),
-                            "content-length": Buffer.byteLength(body.string).toString(),
-                        },
-                        body: body.string,
-                    };
-                },
-                toErrorResult(error: Error) {
-                    return {
-                        statusCode: 400,
-                        body: error.message,
-                    };
-                },
-            },
+                {
+                    success(response: HTTPGraphQLResponse) {
+                        const { status, body, headers } = response;
+                        if (body.kind !== "complete") {
+                            throw new Error("body.kind !== 'complete' is not implemented");
+                        }
+                        const bodyObj = JSON.parse(body.string) as { errors?: unknown };
+                        const { errors } = bodyObj;
+                        if (errors) {
+                            console.error(
+                                chalk.red(chalk.bold("SQSHandler responds with errors:")),
+                                chalk.red(JSON.stringify({ ...response, body: `<${typeof body}>` }, null, 2)),
+                                chalk.red(chalk.bold("\nPretty print body:")),
+                                chalk.red(JSON.stringify({ body: bodyObj }, null, 2))
+                            );
+                        } else {
+                            console.log(
+                                chalk.green(chalk.bold("SQSHandler responds with data:")),
+                                chalk.green(JSON.stringify({ ...response, body: `<${typeof body}>` }, null, 2)),
+                                chalk.green(chalk.bold("\nPretty print body:")),
+                                chalk.green(JSON.stringify({ body: bodyObj }, null, 2))
+                            );
+                        }
+                        return {
+                            statusCode: status ?? 200,
+                            headers: {
+                                ...Object.fromEntries(headers),
+                                "content-length": Buffer.byteLength(body.string).toString(),
+                            },
+                            body: body.string,
+                        };
+                    },
+                    error(error: Error) {
+                        /* Non resolver error */
+                        throw error;
+                    },
+                }
+            ),
             {
                 context({ event }: { event: SQSRecord }): Promise<RequestContext> {
                     const userEmail: string | undefined = undefined;

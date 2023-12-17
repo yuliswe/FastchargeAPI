@@ -7,12 +7,12 @@ import { Can } from "@/permissions";
 import { AppPK } from "@/pks/AppPK";
 import { PricingPK } from "@/pks/PricingPK";
 import { UserPK } from "@/pks/UserPK";
-import { createTestApp } from "@/tests/examples/App";
-import { createTestPricing } from "@/tests/examples/Pricing";
-import { createTestUsageSummary } from "@/tests/examples/UsageSummary";
-import { createTestUser } from "@/tests/examples/User";
-import { baseRequestContext as context, simplifyGraphQLPromiseRejection } from "@/tests/test-utils";
-import { getTestGQLClient } from "@/tests/testGQLClients";
+import { createTestApp } from "@/tests/test-utils/models/App";
+import { createTestPricing } from "@/tests/test-utils/models/Pricing";
+import { createTestUsageSummary } from "@/tests/test-utils/models/UsageSummary";
+import { createTestUser } from "@/tests/test-utils/models/User";
+import { baseRequestContext as context, simplifyGraphQLPromiseRejection } from "@/tests/test-utils/test-utils";
+import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
 import { beforeEach, describe, expect, jest, test } from "@jest/globals";
 
 describe("listUsageSummariesByAppSubscriber", () => {

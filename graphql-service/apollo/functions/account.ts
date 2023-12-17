@@ -6,12 +6,16 @@ import { AccountHistory } from "@/database/models/AccountHistory";
 import { graphql } from "../__generated__/gql";
 import { AccountActivityStatus, AccountActivityType } from "../__generated__/resolvers-types";
 import { AccountHistoryPK } from "../pks/AccountHistoryPK";
-import { SQSQueueName, sqsGQLClient } from "../sqsClient";
+import { SQSQueueName, getSQSClient } from "../sqsClient";
 import { enforceCalledFromSQS } from "./aws";
 import { settlePromisesInBatches } from "./promise";
 
 export async function settleAccountActivitiesOnSQS(accountUser: string) {
-    const client = sqsGQLClient({ queueName: SQSQueueName.BillingQueue, dedupId: accountUser, groupId: accountUser });
+    const client = getSQSClient({
+        queueName: SQSQueueName.BillingQueue,
+        dedupId: accountUser,
+        groupId: accountUser,
+    });
     const result = await client.mutate({
         mutation: graphql(`
             mutation SettleAccountActivitiesOnSQS($user: ID!) {
