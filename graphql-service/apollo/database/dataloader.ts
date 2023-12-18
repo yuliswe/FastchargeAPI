@@ -27,9 +27,11 @@ type ConditionQuery<V> = {
   in?: V[];
   between?: [V, V];
 };
+
 type Query<T> = {
   [K in keyof T & string]?: T[K] | ConditionQuery<T[K]>;
 };
+
 type UpdateQuery<T> = Partial<T> | AdvancedUpdateQuery<T>;
 type AdvancedUpdateQuery<T> = {
   $SET?: Partial<T>;
@@ -114,12 +116,14 @@ async function assignDefaults<I extends Item>(item: I): Promise<I> {
   return item;
 }
 
+type Cursor = { lastKey: KeyObject };
 type BatchQueryOptions = {
   limit?: number | null;
   sort?: "ascending" | "descending" | null;
   using?: string | null; // Index name
   consistent?: boolean; // Use consistent read
   batchSize?: number; // Number of items to get per batch
+  cursor?: Cursor;
 };
 type BatchKey<I extends Item> = {
   query: Query<I>;
@@ -131,6 +135,7 @@ type BatchScanOptions = {
   consistent?: boolean; // Use consistent read
   batchSize?: number; // Number of items to get per batch
 };
+type DataLoaderResult<I> = { items: I[]; cursor?: Cursor; total: number };
 
 /**
  * Used by DataLoader, this function takes a list of primary keys and returns a
@@ -183,19 +188,18 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
     return false;
   }
 
-  return async (bkArray: BatchKey<I>[]): Promise<I[][]> => {
-    if (bkArray.length > 100) {
-      throw new Error("Cannot batch get more than 100 items at a time");
-    }
+  return async (bkArray: BatchKey<I>[]): Promise<DataLoaderResult<I>[]> => {
     type BatchableItem = { batchable: boolean; ko: KeyObject; index: number };
     type UnbatchableItem = { batchable: boolean; bk: BatchKey<I>; index: number };
     const batchable: BatchableItem[][] = [];
     const unbatchable: UnbatchableItem[] = [];
-    const results = Array<I[]>(bkArray.length).fill([]);
+    const results = new Array<DataLoaderResult<I>>(bkArray.length).fill({ items: [], total: 0 });
 
+    /* Split the keys into batchable and unbatchable. Batchable keys are grouped
+    into 100 keys mini batches. */
     for (const [index, bk] of bkArray.entries()) {
       if (isBatchable(model, bk)) {
-        if (batchable.length === 0 || batchable.at(-1)!.keys.length === 100) {
+        if (batchable.length === 0 || batchable.at(-1)!.length >= 100) {
           batchable.push([]);
         }
         batchable.at(-1)!.push({ ko: bk.query as KeyObject, index, batchable: true });
@@ -204,34 +208,52 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
       }
     }
 
-    async function queryUnbatchable(bk: BatchKey<I>): Promise<I[]> {
+    async function queryUnbatchable(bk: BatchKey<I>): Promise<DataLoaderResult<I>> {
       if (process.env.LOG_DATALOADER === "1") {
         console.log("Query unbatchable", bk);
       }
       let query: DynamogooseQuery<I> = model.query(bk.query).using({ auto: false });
+      const { lastKey: prevLastKey } = bk.options?.cursor ?? {};
+      if (prevLastKey) {
+        query = query.startAt(prevLastKey);
+      }
       if (bk.options != undefined) {
         query = applyBatchOptionsToQuery(query, bk.options);
       }
-      return await query.exec();
+      const execResult = await query.exec();
+      const { count, lastKey } = execResult;
+      return {
+        items: await Promise.all(execResult.map(assignDefaults)),
+        cursor: lastKey ? { lastKey } : undefined,
+        total: count,
+      };
     }
 
     if (process.env.LOG_DATALOADER === "1") {
-      console.log("Query batchable", JSON.stringify(batchable));
-      console.log("Query unbatchable", JSON.stringify(unbatchable));
+      console.log("Query batchable", batchable);
+      console.log("Query unbatchable", unbatchable);
     }
 
+    /* We can batch mini-batchables and unbatchables all together. */
     await settlePromisesInBatches<BatchableItem[] | UnbatchableItem, void>(
       [...batchable, ...unbatchable],
       async (arg) => {
         if (arg instanceof Array) {
+          // arg is 100 keys mini batch
           const keys = arg.map((b) => b.ko);
+          if (process.env.LOG_DATALOADER === "1") {
+            console.log("BatchGet", keys);
+          }
           const batchResult = await model.batchGet(keys);
+          const { unprocessedKeys } = batchResult;
+          if (unprocessedKeys.length > 0) {
+            throw new Error(`Unprocessed keys: ${JSON.stringify(unprocessedKeys)}`);
+          }
           for (const [index, item] of batchResult.entries()) {
-            results[arg[index].index] = [await assignDefaults(item)];
+            results[arg[index].index] = { items: [await assignDefaults(item)], total: 1 };
           }
         } else {
-          const queryResults = await queryUnbatchable(arg.bk);
-          results[arg.index] = await Promise.all(queryResults.map((item) => assignDefaults(item)));
+          results[arg.index] = await queryUnbatchable(arg.bk);
         }
       },
       {
@@ -247,36 +269,35 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
 }
 
 type WithNullKeysRemoved<T> = { [K in keyof T]: T[K] extends null | undefined ? never : T[K] };
-function _stripNullKeys<T extends object>(
-  object: unknown,
-  options?: { returnUndefinedIfNothingLeft?: boolean; deep?: boolean }
-): unknown {
-  if (object === null || typeof object !== "object") {
-    return object;
-  }
-  if (Array.isArray(object)) {
-    return object.map((item) => _stripNullKeys(item, options)) as T;
-  }
-  const data: Partial<T> = {};
-  // eslint-disable-next-line prefer-const
-  for (let [key, val] of Object.entries(object) as [keyof T, any][]) {
-    if (options?.deep) {
-      val = _stripNullKeys(val, options);
-    }
-    if (val !== undefined && val !== null) {
-      data[key] = val as T[keyof T];
-    }
-  }
-  if (options?.returnUndefinedIfNothingLeft && Object.keys(data).length == 0) {
-    return undefined;
-  }
-  return data;
-}
-
 function stripNullKeys<T>(
   object: T,
   options?: { returnUndefinedIfNothingLeft?: boolean; deep?: boolean }
 ): WithNullKeysRemoved<T> | undefined {
+  function _stripNullKeys<T extends object>(
+    object: unknown,
+    options?: { returnUndefinedIfNothingLeft?: boolean; deep?: boolean }
+  ): unknown {
+    if (object === null || typeof object !== "object") {
+      return object;
+    }
+    if (Array.isArray(object)) {
+      return object.map((item) => _stripNullKeys(item, options)) as T;
+    }
+    const data: Partial<T> = {};
+    // eslint-disable-next-line prefer-const
+    for (let [key, val] of Object.entries(object) as [keyof T, any][]) {
+      if (options?.deep) {
+        val = _stripNullKeys(val, options);
+      }
+      if (val !== undefined && val !== null) {
+        data[key] = val as T[keyof T];
+      }
+    }
+    if (options?.returnUndefinedIfNothingLeft && Object.keys(data).length == 0) {
+      return undefined;
+    }
+    return data;
+  }
   return _stripNullKeys(object, options) as WithNullKeysRemoved<T> | undefined;
 }
 
@@ -311,7 +332,7 @@ export class Batched<I extends Item, CreateProps extends Partial<I>> {
    * Note: You must create an instance for every request. The cache is not
    * meant to be persistent.
    */
-  public loader: DataLoader<BatchKey<I>, I[]>;
+  public loader: DataLoader<BatchKey<I>, DataLoaderResult<I>>;
   constructor(public model: ModelType<I>) {
     this.loader = new DataLoader(createBatchGet(model), {
       // cacheMap: new Cache(),
@@ -379,6 +400,11 @@ export class Batched<I extends Item, CreateProps extends Partial<I>> {
     await this.get(key);
   }
 
+  async many(lookup: Query<I>, lookupOptions?: BatchQueryOptions): Promise<I[]> {
+    const { items } = await this.page(lookup, lookupOptions);
+    return items;
+  }
+
   /**
    * Gets one object with the lookup key. Returns an array of items found.
    *
@@ -397,9 +423,15 @@ export class Batched<I extends Item, CreateProps extends Partial<I>> {
    *          limit, DynamoDB looks at most @limit items BEFORE applying the
    *          query. This means that the returned number of items can be less
    *          than the actual number of items matching the query.
-   * @returns An array of objects of the model type.
+   * @returns
+   *   @items An array of objects of the model type.
+   *   @cursor A cursor to the next page of results. If there are no more
+   *   @total The total number of items matching the query.
    */
-  async many(lookup: Query<I>, lookupOptions?: BatchQueryOptions): Promise<I[]> {
+  async page(
+    lookup: Query<I>,
+    lookupOptions?: BatchQueryOptions
+  ): Promise<{ items: I[]; next: Cursor; total: number }> {
     const query = stripNullKeys(lookup, {
       deep: true,
       returnUndefinedIfNothingLeft: true,
@@ -418,21 +450,32 @@ export class Batched<I extends Item, CreateProps extends Partial<I>> {
     // do a second lookup with the primary keys.
     if (queryOptions?.using) {
       // The result only contains primary keys
-      const resultWithOnlyPKs = await this.loader.load({
+      const { items, cursor, total } = await this.loader.load({
         query,
         options: queryOptions,
       });
-      const primaryKeys = resultWithOnlyPKs.map((item) => extractKeysFromItems(this.model, item));
+      const primaryKeys = items.map((item) => extractKeysFromItems(this.model, item));
       // Options shouldn't be needed this time.
-      const promises = primaryKeys.map((pk) => this.loader.load({ query: pk }));
-      const results = await Promise.all(promises);
-      return results.flat();
+      const results = await Promise.all(primaryKeys.map((pk) => this.loader.load({ query: pk })));
+      const aggregatedResults = {
+        items: [] as I[],
+        next: cursor!,
+        total,
+      };
+      for (const result of results) {
+        aggregatedResults.items.push(...result.items);
+      }
+      return aggregatedResults;
     } else {
-      const result = await this.loader.load({
+      const { items, cursor, total } = await this.loader.load({
         query,
         options: queryOptions,
       });
-      return result;
+      return {
+        items,
+        total,
+        next: cursor!,
+      };
     }
   }
 
