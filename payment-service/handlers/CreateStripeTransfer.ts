@@ -2,31 +2,33 @@ import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
 import { Currency, SiteMetaDataKey } from "@/__generated__/resolvers-types";
 import { getUserBalance } from "@/functions/account";
 import { UserPK } from "@/pks/UserPK";
-import { SQSQueueName, sqsGQLClient } from "@/sqsClient";
+import { SQSQueueName, getSQSClient } from "@/sqsClient";
 import { gql } from "@apollo/client";
 import { APIGatewayProxyStructuredResultV2, Context as LambdaContext } from "aws-lambda";
 import { Chalk } from "chalk";
 import Decimal from "decimal.js-light";
 import {
-    LambdaCallbackV2,
-    LambdaEventV2,
-    LambdaHandlerV2,
-    LambdaResultV2,
-    getCurrentUserFromEvent,
+  LambdaCallbackV2,
+  LambdaEventV2,
+  LambdaHandlerV2,
+  LambdaResultV2,
+  getCurrentUserFromEvent,
 } from "../utils/LambdaContext";
 
 const chalk = new Chalk({ level: 3 });
 
 export const context: RequestContext = {
-    service: "payment",
-    isServiceRequest: true,
-    isSQSMessage: false,
-    batched: createDefaultContextBatched(),
-    isAnonymousUser: false,
-    isAdminUser: false,
+  service: "payment",
+  isServiceRequest: true,
+  isSQSMessage: false,
+  batched: createDefaultContextBatched(),
+  isAnonymousUser: false,
+  isAdminUser: false,
 };
 
 /**
+ * @deprecated Use graphql endpoint createStripeTransfer instead.
+ *
  * Stripe's payout API:
  *  https://stripe.com/docs/connect/add-and-pay-out-guide?integration=with-code#with-code-pay-out-to-user
  *
@@ -57,127 +59,128 @@ export const context: RequestContext = {
  *      substract the amount from the API publisher's FastchargeAPI account.
  */
 export async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredResultV2> {
-    const user = await getCurrentUserFromEvent(event);
-    const { bodyData, errorResponse } = parseBody(event);
-    if (errorResponse) {
-        return errorResponse;
-    }
-    const withdraw = bodyData!.withdraw;
-    const stripeFeePercentage = new Decimal(
-        (await context.batched.SiteMetaData.get({ key: SiteMetaDataKey.PricingStripePercentageFee })).value as string
-    );
-    const stripeFlatFee = new Decimal(
-        (await context.batched.SiteMetaData.get({ key: SiteMetaDataKey.PricingStripeFlatFee })).value as string
-    );
-    const totalStripe = stripeFlatFee.add(withdraw.mul(stripeFeePercentage));
-    const receivable = withdraw.minus(totalStripe);
-    if (receivable.lessThanOrEqualTo(0)) {
-        return {
-            statusCode: 400,
-            body: JSON.stringify({
-                message: `Minimum withdraw is $${totalStripe.toString()}.`,
-            }),
-        };
-    }
+  const user = await getCurrentUserFromEvent(event);
+  const { bodyData, errorResponse } = parseBody(event);
+  if (errorResponse) {
+    return errorResponse;
+  }
+  const withdraw = bodyData!.withdraw;
+  const stripeFeePercentage = new Decimal(
+    (await context.batched.SiteMetaData.get({ key: SiteMetaDataKey.StripePercentageFee })).value as string
+  );
+  const stripeFlatFee = new Decimal(
+    (await context.batched.SiteMetaData.get({ key: SiteMetaDataKey.StripeFlatFee })).value as string
+  );
+  const totalStripe = stripeFlatFee.add(withdraw.mul(stripeFeePercentage));
+  const receivable = withdraw.minus(totalStripe);
+  if (receivable.lessThanOrEqualTo(0)) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: `Minimum withdraw is $${totalStripe.toString()}.`,
+      }),
+    };
+  }
 
-    const userAccountBalance = new Decimal(await getUserBalance(context, UserPK.stringify(user)));
-    if (userAccountBalance.lessThan(withdraw)) {
-        return {
-            statusCode: 400,
-            body: JSON.stringify({
-                message: `Insufficient balance.`,
-            }),
-        };
-    }
+  const userAccountBalance = new Decimal(await getUserBalance(context, UserPK.stringify(user)));
+  if (userAccountBalance.lessThan(withdraw)) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({
+        message: `Insufficient balance.`,
+      }),
+    };
+  }
 
-    const billingQueueClient = sqsGQLClient({
-        queueName: SQSQueueName.BillingQueue,
-        groupId: UserPK.stringify(user),
-        dedupId: `createStripeTransfer-${UserPK.stringify(user)}-${event.requestContext.requestId}`,
-    });
-    await billingQueueClient.mutate({
-        mutation: gql(`
+  const billingQueueClient = getSQSClient({
+    queueName: SQSQueueName.BillingQueue,
+    groupId: UserPK.stringify(user),
+    dedupId: `createStripeTransfer-${UserPK.stringify(user)}-${event.requestContext.requestId}`,
+  });
+  await billingQueueClient.mutate({
+    mutation: gql(`
             mutation CreateStripeTransfer(
                 $user: ID!
                 $withdrawAmount: NonNegativeDecimal!
-                $receiveAmount: NonNegativeDecimal!
-                $currency: Currency!
             ) {
                 createStripeTransfer(
                     receiver: $user, 
                     withdrawAmount: $withdrawAmount,
-                    receiveAmount: $receiveAmount,
-                    currency: $currency,
                 ) {
-                    settleStripeTransfer {
+                    _sqsSettleStripeTransfer {
                         createdAt
                     }
                 }
             }
         `),
-        variables: {
-            user: UserPK.stringify(user),
-            withdrawAmount: withdraw.toString(),
-            receiveAmount: receivable.toString(),
-            currency: Currency.Usd,
-        },
-    });
+    variables: {
+      user: UserPK.stringify(user),
+      withdrawAmount: withdraw.toString(),
+      receiveAmount: receivable.toString(),
+      currency: Currency.Usd,
+    },
+  });
 
-    return {
-        statusCode: 200,
-        body: JSON.stringify({
-            message: "Transfer created.",
-        }),
-    };
+  return {
+    statusCode: 200,
+    body: JSON.stringify({
+      message: "Transfer created.",
+    }),
+  };
 }
 
-export const lambdaHandler: LambdaHandlerV2 = async (
-    event: LambdaEventV2,
-    context: LambdaContext,
-    callback: LambdaCallbackV2
+export const lambdaHandler: LambdaHandlerV2 = (
+  event: LambdaEventV2,
+  context: LambdaContext,
+  callback: LambdaCallbackV2
 ): Promise<APIGatewayProxyStructuredResultV2> => {
+  try {
+    console.log("event", chalk.blue(JSON.stringify(event)));
+    return Promise.resolve({
+      statusCode: 400,
+      body: JSON.stringify({
+        message: "This API is deprecated. Use graphql endpoint createStripeTransfer instead.",
+      }),
+    });
+  } catch (error) {
     try {
-        console.log("event", chalk.blue(JSON.stringify(event)));
-        return await handle(event);
-    } catch (error) {
-        try {
-            console.error(error);
-            console.error(chalk.red(JSON.stringify(error)));
-        } catch (jsonError) {
-            console.error(error);
-        }
-        return {
-            statusCode: 500,
-            body: "Internal Server Error",
-        };
+      console.error(error);
+      console.error(chalk.red(JSON.stringify(error)));
+    } catch (jsonError) {
+      console.error(error);
     }
+    return Promise.resolve({
+      statusCode: 500,
+      body: "Internal Server Error",
+    });
+  }
 };
 
 type BodyData = { withdraw: Decimal };
 function parseBody(event: LambdaEventV2): {
-    bodyData?: BodyData;
-    errorResponse?: LambdaResultV2;
+  bodyData?: BodyData;
+  errorResponse?: LambdaResultV2;
 } {
-    try {
-        const { withdraw: withdrawStr } = JSON.parse(event.body ?? "{}") as { withdraw: string };
-        if (!withdrawStr) {
-            return {
-                errorResponse: {
-                    statusCode: 400,
-                    body: JSON.stringify({
-                        message: "Required: { withdraw: string }",
-                    }),
-                },
-            };
-        }
-        const withdraw = new Decimal(withdrawStr);
-        return { bodyData: { withdraw } };
-    } catch (e) {
-        return {
-            errorResponse: {
-                statusCode: 400,
-                body: JSON.stringify(e),
-            },
-        };
+  try {
+    const { withdraw: withdrawStr } = JSON.parse(event.body ?? "{}") as { withdraw: string };
+    if (!withdrawStr) {
+      return {
+        errorResponse: {
+          statusCode: 400,
+          body: JSON.stringify({
+            message: "Required: { withdraw: string }",
+          }),
+        },
+      };
     }
+    const withdraw = new Decimal(withdrawStr);
+    return { bodyData: { withdraw } };
+  } catch (e) {
+    return {
+      errorResponse: {
+        statusCode: 400,
+        body: JSON.stringify(e),
+      },
+    };
+  }
 }
