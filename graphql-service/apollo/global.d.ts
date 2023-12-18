@@ -1,6 +1,6 @@
 /// <reference types="jest-extended" />
 
 declare module "*.graphql" {
-    const content: string;
-    export default content;
+  const content: string;
+  export default content;
 }

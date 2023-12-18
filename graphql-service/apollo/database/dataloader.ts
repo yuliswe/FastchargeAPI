@@ -13,62 +13,62 @@ import { AlreadyExists, NotFound, UpdateContainsPrimaryKey } from "../errors";
  */
 
 type ConditionQuery<V> = {
-    // where?: Optional<V>;
-    // filter?: Optional<V>;
-    // attribute?: Optional<V>;
-    eq?: V;
-    lt?: V;
-    le?: V;
-    gt?: V;
-    ge?: V;
-    beginsWith?: V;
-    contains?: V;
-    // exists?: () => Condition;
-    in?: V[];
-    between?: [V, V];
+  // where?: Optional<V>;
+  // filter?: Optional<V>;
+  // attribute?: Optional<V>;
+  eq?: V;
+  lt?: V;
+  le?: V;
+  gt?: V;
+  ge?: V;
+  beginsWith?: V;
+  contains?: V;
+  // exists?: () => Condition;
+  in?: V[];
+  between?: [V, V];
 };
 type Query<T> = {
-    [K in keyof T & string]?: T[K] | ConditionQuery<T[K]>;
+  [K in keyof T & string]?: T[K] | ConditionQuery<T[K]>;
 };
 type UpdateQuery<T> = Partial<T> | AdvancedUpdateQuery<T>;
 type AdvancedUpdateQuery<T> = {
-    $SET?: Partial<T>;
-    $REMOVE?: (keyof T)[];
-    $ADD?: Partial<T>;
-    $DELETE?: Partial<T>;
+  $SET?: Partial<T>;
+  $REMOVE?: (keyof T)[];
+  $ADD?: Partial<T>;
+  $DELETE?: Partial<T>;
 };
 
 function applyBatchOptionsToQuery<T>(query: DynamogooseQuery<T>, options: BatchQueryOptions): DynamogooseQuery<T> {
-    if (options) {
-        if (options.limit != null) {
-            query = query.limit(options.limit);
-        }
-        if (options.sort != null) {
-            query = query.sort(options.sort);
-        }
-        if (options.using != null) {
-            query = query.using(options.using);
-        }
-        if (options.consistent) {
-            query = query.consistent();
-        }
+  if (options) {
+    if (options.limit != null) {
+      query = query.limit(options.limit);
     }
-    return query;
+    if (options.sort != null) {
+      query = query.sort(options.sort);
+    }
+    if (options.using != null) {
+      query = query.using(options.using);
+    }
+    if (options.consistent) {
+      query = query.consistent();
+    }
+  }
+  return query;
 }
 
 function applyBatchOptionsToScan<T>(query: DynamogooseScan<T>, options: BatchQueryOptions): DynamogooseScan<T> {
-    if (options) {
-        if (options.limit != null) {
-            query = query.limit(options.limit);
-        }
-        if (options.using != null) {
-            query = query.using(options.using);
-        }
-        if (options.consistent) {
-            query = query.consistent();
-        }
+  if (options) {
+    if (options.limit != null) {
+      query = query.limit(options.limit);
     }
-    return query;
+    if (options.using != null) {
+      query = query.using(options.using);
+    }
+    if (options.consistent) {
+      query = query.consistent();
+    }
+  }
+  return query;
 }
 
 /**
@@ -78,18 +78,18 @@ function applyBatchOptionsToScan<T>(query: DynamogooseScan<T>, options: BatchQue
  * @returns An object { [hashKeyName]: hashKey, [rangeKeyName]?: rangeKey }
  */
 function extractKeysFromItems<I extends Item, Input extends Partial<I>>(
-    model: ModelType<I>,
-    item: Input
+  model: ModelType<I>,
+  item: Input
 ): Partial<Input> {
-    const hashKeyName = model.table().hashKey as keyof Input;
-    const rangeKeyName = model.table().rangeKey as keyof Input;
-    const query = {
-        [hashKeyName]: item[hashKeyName],
-    } as Partial<Input>;
-    if (rangeKeyName != undefined && item[rangeKeyName] != null) {
-        query[rangeKeyName] = item[rangeKeyName]!;
-    }
-    return query;
+  const hashKeyName = model.table().hashKey as keyof Input;
+  const rangeKeyName = model.table().rangeKey as keyof Input;
+  const query = {
+    [hashKeyName]: item[hashKeyName],
+  } as Partial<Input>;
+  if (rangeKeyName != undefined && item[rangeKeyName] != null) {
+    query[rangeKeyName] = item[rangeKeyName]!;
+  }
+  return query;
 }
 
 /**
@@ -98,38 +98,38 @@ function extractKeysFromItems<I extends Item, Input extends Partial<I>>(
  * a plain object.
  */
 async function assignDefaults<I extends Item>(item: I): Promise<I> {
-    // TODO: There is a bug with item.withDefaults(), in that in converts a Date
-    // type to a string. This may cause issues when the item is saved back to
-    // the DB, failing the validation because the DB expects a Date type.
-    const defaults = (await item.withDefaults()) as I;
-    for (const key of Object.keys(defaults) as (keyof I)[]) {
-        // This is a temporary fix, but if the item's date field is undefined
-        // (maybe an old object before a schema added a new date field), then
-        // the problem still exists. The workaround is to not ever use the Date
-        // type on the DB schema, and instead use a Number type.
-        if (item[key] == undefined) {
-            item[key] = defaults[key];
-        }
+  // TODO: There is a bug with item.withDefaults(), in that in converts a Date
+  // type to a string. This may cause issues when the item is saved back to
+  // the DB, failing the validation because the DB expects a Date type.
+  const defaults = (await item.withDefaults()) as I;
+  for (const key of Object.keys(defaults) as (keyof I)[]) {
+    // This is a temporary fix, but if the item's date field is undefined
+    // (maybe an old object before a schema added a new date field), then
+    // the problem still exists. The workaround is to not ever use the Date
+    // type on the DB schema, and instead use a Number type.
+    if (item[key] == undefined) {
+      item[key] = defaults[key];
     }
-    return item;
+  }
+  return item;
 }
 
 type BatchQueryOptions = {
-    limit?: number | null;
-    sort?: "ascending" | "descending" | null;
-    using?: string | null; // Index name
-    consistent?: boolean; // Use consistent read
-    batchSize?: number; // Number of items to get per batch
+  limit?: number | null;
+  sort?: "ascending" | "descending" | null;
+  using?: string | null; // Index name
+  consistent?: boolean; // Use consistent read
+  batchSize?: number; // Number of items to get per batch
 };
 type BatchKey<I extends Item> = {
-    query: Query<I>;
-    options?: BatchQueryOptions;
+  query: Query<I>;
+  options?: BatchQueryOptions;
 };
 type BatchScanOptions = {
-    limit?: number | null;
-    using?: string | null; // Index name
-    consistent?: boolean; // Use consistent read
-    batchSize?: number; // Number of items to get per batch
+  limit?: number | null;
+  using?: string | null; // Index name
+  consistent?: boolean; // Use consistent read
+  batchSize?: number; // Number of items to get per batch
 };
 
 /**
@@ -150,134 +150,134 @@ type BatchScanOptions = {
  * @returns
  */
 function createBatchGet<I extends Item>(model: ModelType<I>) {
-    function isBatchable(model: ModelType<Item>, batchKey: BatchKey<Item>): boolean {
-        if (batchKey.options) {
-            return false;
+  function isBatchable(model: ModelType<Item>, batchKey: BatchKey<Item>): boolean {
+    if (batchKey.options) {
+      return false;
+    }
+    const { query } = batchKey;
+    const { hashKey, rangeKey } = model.table();
+    if (!hashKey) {
+      throw new Error("Table must have a hashKey");
+    }
+    if (!(hashKey in query)) {
+      throw new Error("Query must contain hashKey");
+    }
+    // If hashkey query is not a string or number, it is not batchable
+    if (!["string", "number"].includes(typeof query[hashKey as keyof typeof query])) {
+      return false;
+    }
+    // If the primary key has only a hash key
+    if (Object.keys(query).length == 1 && hashKey in query && !rangeKey) {
+      return true;
+    }
+    // If only rangeKey and primaryKey are present
+    if (
+      rangeKey &&
+      Object.keys(query).length == 2 &&
+      hashKey in query &&
+      rangeKey in query &&
+      ["string", "number"].includes(typeof query[rangeKey as keyof typeof query])
+    ) {
+      return true;
+    }
+    return false;
+  }
+
+  return async (bkArray: BatchKey<I>[]): Promise<I[][]> => {
+    if (bkArray.length > 100) {
+      throw new Error("Cannot batch get more than 100 items at a time");
+    }
+    type BatchableItem = { batchable: boolean; ko: KeyObject; index: number };
+    type UnbatchableItem = { batchable: boolean; bk: BatchKey<I>; index: number };
+    const batchable: BatchableItem[][] = [];
+    const unbatchable: UnbatchableItem[] = [];
+    const results = Array<I[]>(bkArray.length).fill([]);
+
+    for (const [index, bk] of bkArray.entries()) {
+      if (isBatchable(model, bk)) {
+        if (batchable.length === 0 || batchable.at(-1)!.keys.length === 100) {
+          batchable.push([]);
         }
-        const { query } = batchKey;
-        const { hashKey, rangeKey } = model.table();
-        if (!hashKey) {
-            throw new Error("Table must have a hashKey");
-        }
-        if (!(hashKey in query)) {
-            throw new Error("Query must contain hashKey");
-        }
-        // If hashkey query is not a string or number, it is not batchable
-        if (!["string", "number"].includes(typeof query[hashKey as keyof typeof query])) {
-            return false;
-        }
-        // If the primary key has only a hash key
-        if (Object.keys(query).length == 1 && hashKey in query && !rangeKey) {
-            return true;
-        }
-        // If only rangeKey and primaryKey are present
-        if (
-            rangeKey &&
-            Object.keys(query).length == 2 &&
-            hashKey in query &&
-            rangeKey in query &&
-            ["string", "number"].includes(typeof query[rangeKey as keyof typeof query])
-        ) {
-            return true;
-        }
-        return false;
+        batchable.at(-1)!.push({ ko: bk.query as KeyObject, index, batchable: true });
+      } else {
+        unbatchable.push({ bk: bk, index, batchable: false });
+      }
     }
 
-    return async (bkArray: BatchKey<I>[]): Promise<I[][]> => {
-        if (bkArray.length > 100) {
-            throw new Error("Cannot batch get more than 100 items at a time");
-        }
-        type BatchableItem = { batchable: boolean; ko: KeyObject; index: number };
-        type UnbatchableItem = { batchable: boolean; bk: BatchKey<I>; index: number };
-        const batchable: BatchableItem[][] = [];
-        const unbatchable: UnbatchableItem[] = [];
-        const results = Array<I[]>(bkArray.length).fill([]);
+    async function queryUnbatchable(bk: BatchKey<I>): Promise<I[]> {
+      if (process.env.LOG_DATALOADER === "1") {
+        console.log("Query unbatchable", bk);
+      }
+      let query: DynamogooseQuery<I> = model.query(bk.query).using({ auto: false });
+      if (bk.options != undefined) {
+        query = applyBatchOptionsToQuery(query, bk.options);
+      }
+      return await query.exec();
+    }
 
-        for (const [index, bk] of bkArray.entries()) {
-            if (isBatchable(model, bk)) {
-                if (batchable.length === 0 || batchable.at(-1)!.keys.length === 100) {
-                    batchable.push([]);
-                }
-                batchable.at(-1)!.push({ ko: bk.query as KeyObject, index, batchable: true });
-            } else {
-                unbatchable.push({ bk: bk, index, batchable: false });
-            }
-        }
+    if (process.env.LOG_DATALOADER === "1") {
+      console.log("Query batchable", JSON.stringify(batchable));
+      console.log("Query unbatchable", JSON.stringify(unbatchable));
+    }
 
-        async function queryUnbatchable(bk: BatchKey<I>): Promise<I[]> {
-            if (process.env.LOG_DATALOADER === "1") {
-                console.log("Query unbatchable", bk);
-            }
-            let query: DynamogooseQuery<I> = model.query(bk.query).using({ auto: false });
-            if (bk.options != undefined) {
-                query = applyBatchOptionsToQuery(query, bk.options);
-            }
-            return await query.exec();
+    await settlePromisesInBatches<BatchableItem[] | UnbatchableItem, void>(
+      [...batchable, ...unbatchable],
+      async (arg) => {
+        if (arg instanceof Array) {
+          const keys = arg.map((b) => b.ko);
+          const batchResult = await model.batchGet(keys);
+          for (const [index, item] of batchResult.entries()) {
+            results[arg[index].index] = [await assignDefaults(item)];
+          }
+        } else {
+          const queryResults = await queryUnbatchable(arg.bk);
+          results[arg.index] = await Promise.all(queryResults.map((item) => assignDefaults(item)));
         }
+      },
+      {
+        batchSize: 10,
+      }
+    );
 
-        if (process.env.LOG_DATALOADER === "1") {
-            console.log("Query batchable", JSON.stringify(batchable));
-            console.log("Query unbatchable", JSON.stringify(unbatchable));
-        }
-
-        await settlePromisesInBatches<BatchableItem[] | UnbatchableItem, void>(
-            [...batchable, ...unbatchable],
-            async (arg) => {
-                if (arg instanceof Array) {
-                    const keys = arg.map((b) => b.ko);
-                    const batchResult = await model.batchGet(keys);
-                    for (const [index, item] of batchResult.entries()) {
-                        results[arg[index].index] = [await assignDefaults(item)];
-                    }
-                } else {
-                    const queryResults = await queryUnbatchable(arg.bk);
-                    results[arg.index] = await Promise.all(queryResults.map((item) => assignDefaults(item)));
-                }
-            },
-            {
-                batchSize: 10,
-            }
-        );
-
-        if (process.env.LOG_DATALOADER === "1") {
-            console.log("dataloader load results", results);
-        }
-        return results;
-    };
+    if (process.env.LOG_DATALOADER === "1") {
+      console.log("dataloader load results", results);
+    }
+    return results;
+  };
 }
 
 type WithNullKeysRemoved<T> = { [K in keyof T]: T[K] extends null | undefined ? never : T[K] };
 function _stripNullKeys<T extends object>(
-    object: unknown,
-    options?: { returnUndefinedIfNothingLeft?: boolean; deep?: boolean }
+  object: unknown,
+  options?: { returnUndefinedIfNothingLeft?: boolean; deep?: boolean }
 ): unknown {
-    if (object === null || typeof object !== "object") {
-        return object;
+  if (object === null || typeof object !== "object") {
+    return object;
+  }
+  if (Array.isArray(object)) {
+    return object.map((item) => _stripNullKeys(item, options)) as T;
+  }
+  const data: Partial<T> = {};
+  // eslint-disable-next-line prefer-const
+  for (let [key, val] of Object.entries(object) as [keyof T, any][]) {
+    if (options?.deep) {
+      val = _stripNullKeys(val, options);
     }
-    if (Array.isArray(object)) {
-        return object.map((item) => _stripNullKeys(item, options)) as T;
+    if (val !== undefined && val !== null) {
+      data[key] = val as T[keyof T];
     }
-    const data: Partial<T> = {};
-    // eslint-disable-next-line prefer-const
-    for (let [key, val] of Object.entries(object) as [keyof T, any][]) {
-        if (options?.deep) {
-            val = _stripNullKeys(val, options);
-        }
-        if (val !== undefined && val !== null) {
-            data[key] = val as T[keyof T];
-        }
-    }
-    if (options?.returnUndefinedIfNothingLeft && Object.keys(data).length == 0) {
-        return undefined;
-    }
-    return data;
+  }
+  if (options?.returnUndefinedIfNothingLeft && Object.keys(data).length == 0) {
+    return undefined;
+  }
+  return data;
 }
 
 function stripNullKeys<T>(
-    object: T,
-    options?: { returnUndefinedIfNothingLeft?: boolean; deep?: boolean }
+  object: T,
+  options?: { returnUndefinedIfNothingLeft?: boolean; deep?: boolean }
 ): WithNullKeysRemoved<T> | undefined {
-    return _stripNullKeys(object, options) as WithNullKeysRemoved<T> | undefined;
+  return _stripNullKeys(object, options) as WithNullKeysRemoved<T> | undefined;
 }
 
 // class Cache {
@@ -304,328 +304,328 @@ function stripNullKeys<T>(
 // }
 
 export class Batched<I extends Item, CreateProps extends Partial<I>> {
-    /**
-     * Wrapps the dataloader to provide a get method that throws a NotFound
-     * error if the item is not found.
-     *
-     * Note: You must create an instance for every request. The cache is not
-     * meant to be persistent.
-     */
-    public loader: DataLoader<BatchKey<I>, I[]>;
-    constructor(public model: ModelType<I>) {
-        this.loader = new DataLoader(createBatchGet(model), {
-            // cacheMap: new Cache(),
-            cacheKeyFn(bk: BatchKey<I>) {
-                if (typeof bk.query === "string" && bk.options === undefined) {
-                    return bk.query;
-                } else {
-                    return hash.MD5(bk);
-                }
-            },
-        });
-    }
-
-    /**
-     * Gets one object with the lookup key. If more than one object is found, it
-     * throws an error because it is likely a design error with the GraphQL
-     * schema. If no object is found, it throws a NotFound error to the client
-     * because it is likely a user error.
-     *
-     * If key is an object, all properties must be either a hash key, a range
-     * key, or an index. If anything else is passed in, it will be passed to
-     * DynamoDB and DynamoDB will raise an error.
-     *
-     * @param key Support the hash key, or an object that will be passed to
-     * dynamoose.Model.query().
-     * @returns An object of the model type.
-     */
-    async get(key: Query<I>, options?: BatchQueryOptions): Promise<I> {
-        const result = await this.many(key, options);
-        if (result.length === 0) {
-            throw new NotFound(this.model.name, key);
-        } else if (result.length > 1) {
-            throw new Error(`Found more than one ${this.model.name} with key ${JSON.stringify(key)}`);
+  /**
+   * Wrapps the dataloader to provide a get method that throws a NotFound
+   * error if the item is not found.
+   *
+   * Note: You must create an instance for every request. The cache is not
+   * meant to be persistent.
+   */
+  public loader: DataLoader<BatchKey<I>, I[]>;
+  constructor(public model: ModelType<I>) {
+    this.loader = new DataLoader(createBatchGet(model), {
+      // cacheMap: new Cache(),
+      cacheKeyFn(bk: BatchKey<I>) {
+        if (typeof bk.query === "string" && bk.options === undefined) {
+          return bk.query;
         } else {
-            return result[0];
+          return hash.MD5(bk);
         }
+      },
+    });
+  }
+
+  /**
+   * Gets one object with the lookup key. If more than one object is found, it
+   * throws an error because it is likely a design error with the GraphQL
+   * schema. If no object is found, it throws a NotFound error to the client
+   * because it is likely a user error.
+   *
+   * If key is an object, all properties must be either a hash key, a range
+   * key, or an index. If anything else is passed in, it will be passed to
+   * DynamoDB and DynamoDB will raise an error.
+   *
+   * @param key Support the hash key, or an object that will be passed to
+   * dynamoose.Model.query().
+   * @returns An object of the model type.
+   */
+  async get(key: Query<I>, options?: BatchQueryOptions): Promise<I> {
+    const result = await this.many(key, options);
+    if (result.length === 0) {
+      throw new NotFound(this.model.name, key);
+    } else if (result.length > 1) {
+      throw new Error(`Found more than one ${this.model.name} with key ${JSON.stringify(key)}`);
+    } else {
+      return result[0];
     }
+  }
 
-    async getOrNull(key: Query<I>, options?: BatchQueryOptions): Promise<I | null> {
-        const result = await this.many(key, options);
-        if (result.length === 0) {
-            return null;
-        } else if (result.length > 1) {
-            throw new Error(`Found more than one ${this.model.name} with key ${JSON.stringify(key)}`);
-        } else {
-            return result[0];
-        }
+  async getOrNull(key: Query<I>, options?: BatchQueryOptions): Promise<I | null> {
+    const result = await this.many(key, options);
+    if (result.length === 0) {
+      return null;
+    } else if (result.length > 1) {
+      throw new Error(`Found more than one ${this.model.name} with key ${JSON.stringify(key)}`);
+    } else {
+      return result[0];
     }
+  }
 
-    async createOverwrite(data: Partial<I>, options?: BatchQueryOptions): Promise<I> {
-        const lookupKeys = extractKeysFromItems(this.model, data);
-        const item = await this.getOrNull(lookupKeys, options);
-        if (item === null) {
-            return await this.create(data as CreateProps);
-        } else {
-            const nonPKData = { ...data };
-            for (const pkPart of Object.keys(lookupKeys)) {
-                delete nonPKData[pkPart as keyof I];
-            }
-            return await this.update(item, nonPKData);
-        }
+  async createOverwrite(data: Partial<I>, options?: BatchQueryOptions): Promise<I> {
+    const lookupKeys = extractKeysFromItems(this.model, data);
+    const item = await this.getOrNull(lookupKeys, options);
+    if (item === null) {
+      return await this.create(data as CreateProps);
+    } else {
+      const nonPKData = { ...data };
+      for (const pkPart of Object.keys(lookupKeys)) {
+        delete nonPKData[pkPart as keyof I];
+      }
+      return await this.update(item, nonPKData);
     }
+  }
 
-    async assertExists(key: Query<I>): Promise<void> {
-        await this.get(key);
+  async assertExists(key: Query<I>): Promise<void> {
+    await this.get(key);
+  }
+
+  /**
+   * Gets one object with the lookup key. Returns an array of items found.
+   *
+   * If key is an object, all properties must be either a hash key, a range
+   * key, or an index. If anything else is passed in, it will be passed to
+   * DynamoDB and DynamoDB will raise an error.
+   *
+   * @key Support the hash key, or an object that will be passed to
+   * dynamoose.Model.query().
+   * @options
+   *   @using Use an index to lookup the item, assuming the index contains
+   *          only the primary key. This will cause a second lookup to get the
+   *          actual objects with the primary keys.
+   *   @sort descending or ascending, sorted by the range key.
+   *   @limit The maximum number of items to query. Note that when setting the
+   *          limit, DynamoDB looks at most @limit items BEFORE applying the
+   *          query. This means that the returned number of items can be less
+   *          than the actual number of items matching the query.
+   * @returns An array of objects of the model type.
+   */
+  async many(lookup: Query<I>, lookupOptions?: BatchQueryOptions): Promise<I[]> {
+    const query = stripNullKeys(lookup, {
+      deep: true,
+      returnUndefinedIfNothingLeft: true,
+    });
+    if (query == undefined) {
+      throw new Error("All keys are null");
     }
-
-    /**
-     * Gets one object with the lookup key. Returns an array of items found.
-     *
-     * If key is an object, all properties must be either a hash key, a range
-     * key, or an index. If anything else is passed in, it will be passed to
-     * DynamoDB and DynamoDB will raise an error.
-     *
-     * @key Support the hash key, or an object that will be passed to
-     * dynamoose.Model.query().
-     * @options
-     *   @using Use an index to lookup the item, assuming the index contains
-     *          only the primary key. This will cause a second lookup to get the
-     *          actual objects with the primary keys.
-     *   @sort descending or ascending, sorted by the range key.
-     *   @limit The maximum number of items to query. Note that when setting the
-     *          limit, DynamoDB looks at most @limit items BEFORE applying the
-     *          query. This means that the returned number of items can be less
-     *          than the actual number of items matching the query.
-     * @returns An array of objects of the model type.
-     */
-    async many(lookup: Query<I>, lookupOptions?: BatchQueryOptions): Promise<I[]> {
-        const query = stripNullKeys(lookup, {
-            deep: true,
-            returnUndefinedIfNothingLeft: true,
-        });
-        if (query == undefined) {
-            throw new Error("All keys are null");
-        }
-        let queryOptions: WithNullKeysRemoved<BatchQueryOptions> | undefined = undefined;
-        if (lookupOptions != undefined) {
-            queryOptions = stripNullKeys(lookupOptions, {
-                deep: true,
-                returnUndefinedIfNothingLeft: true,
-            });
-        }
-        // If index is used, first use the index to get the primary keys, then
-        // do a second lookup with the primary keys.
-        if (queryOptions?.using) {
-            // The result only contains primary keys
-            const resultWithOnlyPKs = await this.loader.load({
-                query,
-                options: queryOptions,
-            });
-            const primaryKeys = resultWithOnlyPKs.map((item) => extractKeysFromItems(this.model, item));
-            // Options shouldn't be needed this time.
-            const promises = primaryKeys.map((pk) => this.loader.load({ query: pk }));
-            const results = await Promise.all(promises);
-            return results.flat();
-        } else {
-            const result = await this.loader.load({
-                query,
-                options: queryOptions,
-            });
-            return result;
-        }
+    let queryOptions: WithNullKeysRemoved<BatchQueryOptions> | undefined = undefined;
+    if (lookupOptions != undefined) {
+      queryOptions = stripNullKeys(lookupOptions, {
+        deep: true,
+        returnUndefinedIfNothingLeft: true,
+      });
     }
-
-    async count(lookup: Query<I>, options?: BatchQueryOptions): Promise<number> {
-        let query = this.model.query(stripNullKeys(lookup));
-        if (options != undefined) {
-            options = stripNullKeys(options, {
-                deep: true,
-                returnUndefinedIfNothingLeft: true,
-            });
-        }
-        if (options != undefined) {
-            query = applyBatchOptionsToQuery(query, options);
-        }
-        const result = await query.count().exec();
-        return result.count;
+    // If index is used, first use the index to get the primary keys, then
+    // do a second lookup with the primary keys.
+    if (queryOptions?.using) {
+      // The result only contains primary keys
+      const resultWithOnlyPKs = await this.loader.load({
+        query,
+        options: queryOptions,
+      });
+      const primaryKeys = resultWithOnlyPKs.map((item) => extractKeysFromItems(this.model, item));
+      // Options shouldn't be needed this time.
+      const promises = primaryKeys.map((pk) => this.loader.load({ query: pk }));
+      const results = await Promise.all(promises);
+      return results.flat();
+    } else {
+      const result = await this.loader.load({
+        query,
+        options: queryOptions,
+      });
+      return result;
     }
+  }
 
-    async exists(key: Query<I>, options?: BatchQueryOptions): Promise<boolean> {
-        const result = await this.many(key, options);
-        return result.length > 0;
+  async count(lookup: Query<I>, options?: BatchQueryOptions): Promise<number> {
+    let query = this.model.query(stripNullKeys(lookup));
+    if (options != undefined) {
+      options = stripNullKeys(options, {
+        deep: true,
+        returnUndefinedIfNothingLeft: true,
+      });
     }
-
-    async create(item: CreateProps): Promise<I> {
-        const stripped = stripNullKeys(item);
-        if (stripped == undefined) {
-            throw new Error("Object is empty.");
-        }
-        const maxAttempts = 10;
-        for (let retries = 0; retries < maxAttempts; retries++) {
-            try {
-                const result = await this.model.create(stripped as Partial<I>);
-                if (retries > 0) {
-                    console.warn(`Retried ${retries} times to create ${this.model.name} ${JSON.stringify(item)}`);
-                }
-                this.clearCache();
-                return result;
-            } catch (e) {
-                // We want to catch the case where the item already exists. DynamoDB
-                // in this case throws a ConditionalCheckFailedException. But it
-                // also throws this exception in other cases. So a check using the
-                // .exists() call is needed to confirm that the item already exists.
-                if (e instanceof ConditionalCheckFailedException) {
-                    const query = extractKeysFromItems(this.model, stripped as Partial<I>);
-                    if (await this.exists(query as Query<I>)) {
-                        throw new AlreadyExists(this.model.name, item);
-                    } else if (retries < maxAttempts - 1) {
-                        // The insert could fail when the item uses createdAt as
-                        // a range key. In this case we just retry the insert.
-                        await sleep(2 ** retries * Math.random());
-                        continue;
-                    } else {
-                        console.error(e);
-                        throw e;
-                    }
-                } else {
-                    console.error(e);
-                    throw e;
-                }
-            }
-        }
-        throw new Error("unreachable");
+    if (options != undefined) {
+      query = applyBatchOptionsToQuery(query, options);
     }
+    const result = await query.count().exec();
+    return result.count;
+  }
 
-    async delete(lookup: Partial<I>): Promise<I> {
-        const query = extractKeysFromItems(this.model, lookup);
-        const item = await this.get(query);
-        await item.delete();
-        this.clearCache();
-        return item;
+  async exists(key: Query<I>, options?: BatchQueryOptions): Promise<boolean> {
+    const result = await this.many(key, options);
+    return result.length > 0;
+  }
+
+  async create(item: CreateProps): Promise<I> {
+    const stripped = stripNullKeys(item);
+    if (stripped == undefined) {
+      throw new Error("Object is empty.");
     }
-
-    async deleteIfExists(keys: Partial<I>): Promise<I | null> {
-        try {
-            return await this.delete(keys);
-        } catch (e) {
-            if (e instanceof NotFound) {
-                return null;
-            }
-            throw e;
+    const maxAttempts = 10;
+    for (let retries = 0; retries < maxAttempts; retries++) {
+      try {
+        const result = await this.model.create(stripped as Partial<I>);
+        if (retries > 0) {
+          console.warn(`Retried ${retries} times to create ${this.model.name} ${JSON.stringify(item)}`);
         }
-    }
-
-    async deleteMany(query: Partial<I>, options?: BatchQueryOptions): Promise<I[]> {
-        const items = await this.many(query, options);
-        const deleteChunk = async (batch: I[]) => {
-            const pks = batch.map((x) => extractKeysFromItems(this.model, x));
-            await this.model.batchDelete(pks as KeyObject[]);
-        };
-
-        // Split the batch into chunks, and call batchGet100Max on each chunk
-        const promises: Promise<void>[] = [];
-        const batchSize = 25;
-        for (let i = 0; i < items.length; i += batchSize) {
-            const batch = items.slice(i, Math.min(i + batchSize, items.length));
-            promises.push(deleteChunk(batch));
-        }
-        await Promise.all(promises);
-        this.clearCache();
-        return items;
-    }
-
-    /**
-     * Look up the item with the given keys, and update the item with the given
-     * new values. The new values cannot contain the hash key or the range key.
-     * It is normal to use get() to look up the item, and then update the item
-     * by putting the item in the first argument.
-     *
-     * @param lookup A primary + range key (optional) to lookup the item. If extra
-     * keys are provided, they are ignored.
-     * @param newVals New values for the item. If the new values contain the
-     * range key, the range key is updated. Any value that is undefined or null
-     * is ignored.
-     * @returns The updated object.
-     */
-    // Why a separate keys object is needed: this is to differentiate between
-    // when the client wants to update a range key vs. when the client wants to
-    // use the range only for lookup.
-    //
-    // The hash key and the range key cannot be updated. This design is
-    // intentional, because we assumes that relational objects are referenced by
-    // each other by the primary key. If primary keys are allowed to be updated,
-    // then it is possible that the relational objects would refer to an object
-    // that no longer exists, or an wrong object. It is too easy to make
-    // mistakes. So we disallow updating the primary key. If updating the
-    // primary key is needed, the client should delete the old object and create
-    // a new one.
-    async update(lookup: Partial<I>, newVals: UpdateQuery<I>): Promise<I> {
-        const stripped = stripNullKeys(newVals, {
-            deep: true,
-            returnUndefinedIfNothingLeft: true,
-        });
-        if (stripped === undefined) {
-            return await this.get(lookup);
-        }
-        return this.updateWithNull(lookup, stripped);
-    }
-
-    async updateWithNull(lookup: Partial<I>, newVals: UpdateQuery<I>): Promise<I> {
-        // Extract keys to ingore extra properties
-        const query = extractKeysFromItems(this.model, lookup);
-        /* Need to manually check if the item exists. */
-        const item = await this.get(query);
-        if (Object.keys(newVals).length == 0) {
-            return item;
-        }
-        const hashKeyName = this.model.table().hashKey;
-        if (newVals && hashKeyName in newVals) {
-            throw new UpdateContainsPrimaryKey(this.model.name, hashKeyName, newVals);
-        }
-        if (!(hashKeyName in query)) {
-            throw new Error(`Query must contain hash key ${hashKeyName}`);
-        }
-        const rangeKeyName = this.model.table().rangeKey;
-        if (rangeKeyName && rangeKeyName in newVals) {
-            throw new UpdateContainsPrimaryKey(this.model.name, rangeKeyName, newVals);
-        }
-        if (rangeKeyName && !(rangeKeyName in query)) {
-            throw new Error(`Query must contain range key ${rangeKeyName}`);
-        }
-        if (newVals === undefined) {
-            return item;
-        }
-        const result = await this.model.update(query as unknown as Partial<I>, newVals as unknown as Partial<I>);
         this.clearCache();
         return result;
-    }
-
-    async *scan(
-        query: Query<I> = {},
-        { batchSize = 100, limit = Infinity, ...options }: BatchScanOptions = {}
-    ): AsyncIterable<I[]> {
-        const baseQuery = applyBatchOptionsToScan(this.model.scan(query), options);
-        let remaining = limit as number;
-        let response = await baseQuery.limit(Math.min(batchSize, remaining)).exec();
-        if (response.length > 0) {
-            remaining = Math.max(0, remaining - response.length);
-            yield response;
+      } catch (e) {
+        // We want to catch the case where the item already exists. DynamoDB
+        // in this case throws a ConditionalCheckFailedException. But it
+        // also throws this exception in other cases. So a check using the
+        // .exists() call is needed to confirm that the item already exists.
+        if (e instanceof ConditionalCheckFailedException) {
+          const query = extractKeysFromItems(this.model, stripped as Partial<I>);
+          if (await this.exists(query as Query<I>)) {
+            throw new AlreadyExists(this.model.name, item);
+          } else if (retries < maxAttempts - 1) {
+            // The insert could fail when the item uses createdAt as
+            // a range key. In this case we just retry the insert.
+            await sleep(2 ** retries * Math.random());
+            continue;
+          } else {
+            console.error(e);
+            throw e;
+          }
+        } else {
+          console.error(e);
+          throw e;
         }
-        while (response.lastKey && remaining > 0) {
-            response = await baseQuery.startAt(response.lastKey).limit(Math.min(batchSize, remaining)).exec();
-            if (response.length > 0) {
-                remaining = Math.max(0, remaining - response.length);
-                yield response;
-            }
-        }
+      }
     }
+    throw new Error("unreachable");
+  }
 
-    clearCache() {
-        this.loader.clearAll();
+  async delete(lookup: Partial<I>): Promise<I> {
+    const query = extractKeysFromItems(this.model, lookup);
+    const item = await this.get(query);
+    await item.delete();
+    this.clearCache();
+    return item;
+  }
+
+  async deleteIfExists(keys: Partial<I>): Promise<I | null> {
+    try {
+      return await this.delete(keys);
+    } catch (e) {
+      if (e instanceof NotFound) {
+        return null;
+      }
+      throw e;
     }
+  }
+
+  async deleteMany(query: Partial<I>, options?: BatchQueryOptions): Promise<I[]> {
+    const items = await this.many(query, options);
+    const deleteChunk = async (batch: I[]) => {
+      const pks = batch.map((x) => extractKeysFromItems(this.model, x));
+      await this.model.batchDelete(pks as KeyObject[]);
+    };
+
+    // Split the batch into chunks, and call batchGet100Max on each chunk
+    const promises: Promise<void>[] = [];
+    const batchSize = 25;
+    for (let i = 0; i < items.length; i += batchSize) {
+      const batch = items.slice(i, Math.min(i + batchSize, items.length));
+      promises.push(deleteChunk(batch));
+    }
+    await Promise.all(promises);
+    this.clearCache();
+    return items;
+  }
+
+  /**
+   * Look up the item with the given keys, and update the item with the given
+   * new values. The new values cannot contain the hash key or the range key.
+   * It is normal to use get() to look up the item, and then update the item
+   * by putting the item in the first argument.
+   *
+   * @param lookup A primary + range key (optional) to lookup the item. If extra
+   * keys are provided, they are ignored.
+   * @param newVals New values for the item. If the new values contain the
+   * range key, the range key is updated. Any value that is undefined or null
+   * is ignored.
+   * @returns The updated object.
+   */
+  // Why a separate keys object is needed: this is to differentiate between
+  // when the client wants to update a range key vs. when the client wants to
+  // use the range only for lookup.
+  //
+  // The hash key and the range key cannot be updated. This design is
+  // intentional, because we assumes that relational objects are referenced by
+  // each other by the primary key. If primary keys are allowed to be updated,
+  // then it is possible that the relational objects would refer to an object
+  // that no longer exists, or an wrong object. It is too easy to make
+  // mistakes. So we disallow updating the primary key. If updating the
+  // primary key is needed, the client should delete the old object and create
+  // a new one.
+  async update(lookup: Partial<I>, newVals: UpdateQuery<I>): Promise<I> {
+    const stripped = stripNullKeys(newVals, {
+      deep: true,
+      returnUndefinedIfNothingLeft: true,
+    });
+    if (stripped === undefined) {
+      return await this.get(lookup);
+    }
+    return this.updateWithNull(lookup, stripped);
+  }
+
+  async updateWithNull(lookup: Partial<I>, newVals: UpdateQuery<I>): Promise<I> {
+    // Extract keys to ingore extra properties
+    const query = extractKeysFromItems(this.model, lookup);
+    /* Need to manually check if the item exists. */
+    const item = await this.get(query);
+    if (Object.keys(newVals).length == 0) {
+      return item;
+    }
+    const hashKeyName = this.model.table().hashKey;
+    if (newVals && hashKeyName in newVals) {
+      throw new UpdateContainsPrimaryKey(this.model.name, hashKeyName, newVals);
+    }
+    if (!(hashKeyName in query)) {
+      throw new Error(`Query must contain hash key ${hashKeyName}`);
+    }
+    const rangeKeyName = this.model.table().rangeKey;
+    if (rangeKeyName && rangeKeyName in newVals) {
+      throw new UpdateContainsPrimaryKey(this.model.name, rangeKeyName, newVals);
+    }
+    if (rangeKeyName && !(rangeKeyName in query)) {
+      throw new Error(`Query must contain range key ${rangeKeyName}`);
+    }
+    if (newVals === undefined) {
+      return item;
+    }
+    const result = await this.model.update(query as unknown as Partial<I>, newVals as unknown as Partial<I>);
+    this.clearCache();
+    return result;
+  }
+
+  async *scan(
+    query: Query<I> = {},
+    { batchSize = 100, limit = Infinity, ...options }: BatchScanOptions = {}
+  ): AsyncIterable<I[]> {
+    const baseQuery = applyBatchOptionsToScan(this.model.scan(query), options);
+    let remaining = limit as number;
+    let response = await baseQuery.limit(Math.min(batchSize, remaining)).exec();
+    if (response.length > 0) {
+      remaining = Math.max(0, remaining - response.length);
+      yield response;
+    }
+    while (response.lastKey && remaining > 0) {
+      response = await baseQuery.startAt(response.lastKey).limit(Math.min(batchSize, remaining)).exec();
+      if (response.length > 0) {
+        remaining = Math.max(0, remaining - response.length);
+        yield response;
+      }
+    }
+  }
+
+  clearCache() {
+    this.loader.clearAll();
+  }
 }
 
 async function sleep(miliseconds: number) {
-    return new Promise((resolve) => setTimeout(resolve, miliseconds));
+  return new Promise((resolve) => setTimeout(resolve, miliseconds));
 }

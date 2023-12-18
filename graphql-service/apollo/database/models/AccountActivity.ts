@@ -4,57 +4,57 @@ import { AccountActivityReason, AccountActivityStatus, AccountActivityType } fro
 import { NULL, PK, String_Required_NotEmpty, defaultCreatedAt, tableConfigs, validateStringDecimal } from "../utils";
 
 export enum AccountActivityTableIndex {
-    StatusSettleAt = "indexByStatus_settleAt__onlyPK",
+  StatusSettleAt = "indexByStatus_settleAt__onlyPK",
 }
 
 export const AccountActivityTableSchema = new dynamoose.Schema(
-    {
-        user: { hashKey: true, ...String_Required_NotEmpty("user") },
-        createdAt: {
-            type: Number,
-            rangeKey: true,
-            default: defaultCreatedAt,
-        },
-        type: {
-            type: String,
-            required: true,
-            enum: Object.values(AccountActivityType),
-        },
-        reason: {
-            type: String,
-            required: true,
-            enum: Object.values(AccountActivityReason),
-        },
-        status: {
-            type: String,
-            index: {
-                name: AccountActivityTableIndex.StatusSettleAt,
-                rangeKey: "settleAt",
-                type: "global",
-                project: ["settleAt", "status"],
-            },
-            enum: Object.values(AccountActivityStatus),
-            required: true,
-            default: AccountActivityStatus.Pending,
-        },
-        settleAt: { type: Number, required: true },
-        amount: {
-            type: String,
-            required: true,
-            validate: validateStringDecimal("amount"),
-        },
-        usageSummary: { type: [String, NULL], required: false },
-        stripeTransfer: { type: [String, NULL], required: false },
-        stripePaymentAccept: { type: [String, NULL], required: false },
-        description: { type: String, default: "" },
-        billedApp: { type: [String, NULL], required: false },
-        consumedFreeQuota: { type: [Number, NULL], required: false },
+  {
+    user: { hashKey: true, ...String_Required_NotEmpty("user") },
+    createdAt: {
+      type: Number,
+      rangeKey: true,
+      default: defaultCreatedAt,
     },
-    {
-        timestamps: {
-            updatedAt: { updatedAt: { type: Number } },
-        },
-    }
+    type: {
+      type: String,
+      required: true,
+      enum: Object.values(AccountActivityType),
+    },
+    reason: {
+      type: String,
+      required: true,
+      enum: Object.values(AccountActivityReason),
+    },
+    status: {
+      type: String,
+      index: {
+        name: AccountActivityTableIndex.StatusSettleAt,
+        rangeKey: "settleAt",
+        type: "global",
+        project: ["settleAt", "status"],
+      },
+      enum: Object.values(AccountActivityStatus),
+      required: true,
+      default: AccountActivityStatus.Pending,
+    },
+    settleAt: { type: Number, required: true },
+    amount: {
+      type: String,
+      required: true,
+      validate: validateStringDecimal("amount"),
+    },
+    usageSummary: { type: [String, NULL], required: false },
+    stripeTransfer: { type: [String, NULL], required: false },
+    stripePaymentAccept: { type: [String, NULL], required: false },
+    description: { type: String, default: "" },
+    billedApp: { type: [String, NULL], required: false },
+    consumedFreeQuota: { type: [Number, NULL], required: false },
+  },
+  {
+    timestamps: {
+      updatedAt: { updatedAt: { type: Number } },
+    },
+  }
 );
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
@@ -69,61 +69,61 @@ export const AccountActivityTableSchema = new dynamoose.Schema(
  */
 
 export class AccountActivity extends Item {
-    user: PK; // User who's account is affected
-    type: AccountActivityType;
-    reason: AccountActivityReason;
-    status: AccountActivityStatus;
+  user: PK; // User who's account is affected
+  type: AccountActivityType;
+  reason: AccountActivityReason;
+  status: AccountActivityStatus;
 
-    /**
-     * Unix timestamp when the activity is settled. Can be in the future.
-     */
-    settleAt: number;
+  /**
+   * Unix timestamp when the activity is settled. Can be in the future.
+   */
+  settleAt: number;
 
-    amount: string;
+  amount: string;
 
-    /**
-     * ID of the UsageSummary item or null if not related to usage
-     */
-    usageSummary: PK | null;
+  /**
+   * ID of the UsageSummary item or null if not related to usage
+   */
+  usageSummary: PK | null;
 
-    /**
-     * ID of the AccountHistory item or null if not related to account history
-     */
-    accountHistory: PK | null;
+  /**
+   * ID of the AccountHistory item or null if not related to account history
+   */
+  accountHistory: PK | null;
 
-    createdAt: number;
-    description: string;
+  createdAt: number;
+  description: string;
 
-    /**
-     * ID of the StripeTransfer item or null if not related to Stripe
-     */
-    stripeTransfer: PK | null;
+  /**
+   * ID of the StripeTransfer item or null if not related to Stripe
+   */
+  stripeTransfer: PK | null;
 
-    /**
-     * ID of the StripePaymentAccept item or null if not related to Stripe
-     */
-    stripePaymentAccept: PK | null;
+  /**
+   * ID of the StripePaymentAccept item or null if not related to Stripe
+   */
+  stripePaymentAccept: PK | null;
 
-    /**
-     * ID of the App item if the activity is related to billing an app. This is the same as usageSummary.app
-     */
-    billedApp: PK | null;
+  /**
+   * ID of the App item if the activity is related to billing an app. This is the same as usageSummary.app
+   */
+  billedApp: PK | null;
 
-    /**
-     * Number of free quota consumed by the subscriber when the activity is
-     * related to API usage. Usually this is the same as usageSummary.volume
-     */
-    consumedFreeQuota: number | null;
+  /**
+   * Number of free quota consumed by the subscriber when the activity is
+   * related to API usage. Usually this is the same as usageSummary.volume
+   */
+  consumedFreeQuota: number | null;
 }
 
 export type AccountActivityCreateProps = {
-    user: PK;
-    type: AccountActivityType;
-    reason: AccountActivityReason;
-    amount: string;
-    settleAt: number;
+  user: PK;
+  type: AccountActivityType;
+  reason: AccountActivityReason;
+  amount: string;
+  settleAt: number;
 } & Partial<AccountActivity>;
 
 export const AccountActivityModel = dynamoose.model<AccountActivity>("AccountActivity", AccountActivityTableSchema, {
-    ...tableConfigs,
+  ...tableConfigs,
 });

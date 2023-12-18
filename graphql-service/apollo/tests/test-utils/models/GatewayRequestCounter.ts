@@ -4,14 +4,14 @@ import { UserPK } from "@/pks/UserPK";
 import { createTestUser } from "./User";
 
 export async function createTestGatewayRequestCounter(
-    context: RequestContext,
-    overwrites?: Partial<GatewayRequestCounterCreateProps>
+  context: RequestContext,
+  overwrites?: Partial<GatewayRequestCounterCreateProps>
 ) {
-    const { requester, app, counterSinceLastReset } = overwrites ?? {};
-    return context.batched.GatewayRequestCounter.create({
-        requester: requester ?? UserPK.stringify(await createTestUser(context)),
-        app: app ?? "<global>",
-        isGlobalCounter: true,
-        counterSinceLastReset: counterSinceLastReset ?? 0,
-    });
+  const { requester, app, counterSinceLastReset } = overwrites ?? {};
+  return context.batched.GatewayRequestCounter.create({
+    requester: requester ?? UserPK.stringify(await createTestUser(context)),
+    app: app ?? "<global>",
+    isGlobalCounter: true,
+    counterSinceLastReset: counterSinceLastReset ?? 0,
+  });
 }

@@ -2,125 +2,125 @@ import { SendMessageCommandInput } from "@aws-sdk/client-sqs";
 import assert from "assert";
 
 type QueueIdentifier = {
-    queueUrl: string;
-    groupId?: string;
+  queueUrl: string;
+  groupId?: string;
 };
 type Message = {
-    input: SendMessageCommandInput;
-    handler: (command: SendMessageCommandInput) => Promise<any>;
+  input: SendMessageCommandInput;
+  handler: (command: SendMessageCommandInput) => Promise<any>;
 };
 
 function getKey({ queueUrl, groupId }: QueueIdentifier): string {
-    return `${queueUrl}:${groupId ?? "undefined"}`;
+  return `${queueUrl}:${groupId ?? "undefined"}`;
 }
 
 function identifyQueue({ input: { QueueUrl, MessageGroupId } }: Message): QueueIdentifier {
-    assert(QueueUrl, "QueueUrl is required");
-    return {
-        queueUrl: QueueUrl,
-        groupId: MessageGroupId,
-    };
+  assert(QueueUrl, "QueueUrl is required");
+  return {
+    queueUrl: QueueUrl,
+    groupId: MessageGroupId,
+  };
 }
 
 class MockSQS {
-    queues = new Map<string, SingleQueue>();
-    errors: any[] = [];
-    shouldAutoWaitForQueuesToEmptyForSQSTestClient = true;
+  queues = new Map<string, SingleQueue>();
+  errors: any[] = [];
+  shouldAutoWaitForQueuesToEmptyForSQSTestClient = true;
 
-    setAutoWaitForQueuesToEmpty(value: boolean) {
-        this.shouldAutoWaitForQueuesToEmptyForSQSTestClient = value;
-    }
+  setAutoWaitForQueuesToEmpty(value: boolean) {
+    this.shouldAutoWaitForQueuesToEmptyForSQSTestClient = value;
+  }
 
-    enqueue(message: Message) {
-        this.throwIfErrors();
-        const queueId = identifyQueue(message);
-        const key = getKey(queueId);
-        if (!this.queues.has(key)) {
-            this.queues.set(
-                key,
-                new SingleQueue({
-                    identifier: queueId,
-                    onQueueEmpty: (queueId) => this.onQueueEmpty(queueId),
-                    onQueueError: (queueId, error) => this.onQueueError(queueId, error),
-                })
-            );
-        }
-        const queue = this.queues.get(key)!;
-        queue.enqueue(message);
+  enqueue(message: Message) {
+    this.throwIfErrors();
+    const queueId = identifyQueue(message);
+    const key = getKey(queueId);
+    if (!this.queues.has(key)) {
+      this.queues.set(
+        key,
+        new SingleQueue({
+          identifier: queueId,
+          onQueueEmpty: (queueId) => this.onQueueEmpty(queueId),
+          onQueueError: (queueId, error) => this.onQueueError(queueId, error),
+        })
+      );
     }
+    const queue = this.queues.get(key)!;
+    queue.enqueue(message);
+  }
 
-    private onQueueEmpty(queueId: QueueIdentifier) {
-        // do nothing
-    }
+  private onQueueEmpty(queueId: QueueIdentifier) {
+    // do nothing
+  }
 
-    private onQueueError(queueId: QueueIdentifier, error: any) {
-        this.errors.push(error);
-    }
+  private onQueueError(queueId: QueueIdentifier, error: any) {
+    this.errors.push(error);
+  }
 
-    private throwIfErrors() {
-        if (this.errors.length > 0) {
-            throw new Error(this.errors.join("\n\n") + "\n\n");
-        }
+  private throwIfErrors() {
+    if (this.errors.length > 0) {
+      throw new Error(this.errors.join("\n\n") + "\n\n");
     }
+  }
 
-    async waitForQueuesToEmpty() {
-        this.throwIfErrors();
-        for (const queue of this.queues.values()) {
-            await queue.waitForEmpty();
-            this.throwIfErrors();
-        }
+  async waitForQueuesToEmpty() {
+    this.throwIfErrors();
+    for (const queue of this.queues.values()) {
+      await queue.waitForEmpty();
+      this.throwIfErrors();
     }
+  }
 
-    reset() {
-        this.queues.clear();
-        this.errors = [];
-    }
+  reset() {
+    this.queues.clear();
+    this.errors = [];
+  }
 }
 
 type SingleQueueProps = {
-    onQueueEmpty: (queueId: QueueIdentifier) => void;
-    onQueueError: (queueId: QueueIdentifier, error: any) => void;
-    identifier: QueueIdentifier;
+  onQueueEmpty: (queueId: QueueIdentifier) => void;
+  onQueueError: (queueId: QueueIdentifier, error: any) => void;
+  identifier: QueueIdentifier;
 };
 export class SingleQueue {
-    constructor(public props: SingleQueueProps) {}
+  constructor(public props: SingleQueueProps) {}
 
-    messages: Message[] = [];
-    messageDedupIds = new Set<string>();
+  messages: Message[] = [];
+  messageDedupIds = new Set<string>();
 
-    enqueue(message: Message) {
-        const dedupId = message.input.MessageDeduplicationId;
-        const groupId = message.input.MessageGroupId;
-        assert((dedupId?.length ?? 0) < 128, "MessageDeduplicationId must be less than 128 characters");
-        assert((groupId?.length ?? 0) < 128, "MessageGroupId must be less than 128 characters");
-        if (dedupId && this.messageDedupIds.has(dedupId)) {
-            return;
-        }
-        if (dedupId) {
-            this.messageDedupIds.add(dedupId);
-        }
-        this.messages.push(message);
-        setTimeout(() => {
-            this.wakeQueue().catch((error) => {
-                this.props.onQueueError(this.props.identifier, error);
-            });
-        }, 5000); // Simulate a delay to allow more messages to be enqueued
+  enqueue(message: Message) {
+    const dedupId = message.input.MessageDeduplicationId;
+    const groupId = message.input.MessageGroupId;
+    assert((dedupId?.length ?? 0) < 128, "MessageDeduplicationId must be less than 128 characters");
+    assert((groupId?.length ?? 0) < 128, "MessageGroupId must be less than 128 characters");
+    if (dedupId && this.messageDedupIds.has(dedupId)) {
+      return;
     }
-
-    async wakeQueue() {
-        while (this.messages.length > 0) {
-            const message = this.messages.shift()!;
-            await message.handler(message.input);
-        }
-        this.props.onQueueEmpty(this.props.identifier);
+    if (dedupId) {
+      this.messageDedupIds.add(dedupId);
     }
+    this.messages.push(message);
+    setTimeout(() => {
+      this.wakeQueue().catch((error) => {
+        this.props.onQueueError(this.props.identifier, error);
+      });
+    }, 5000); // Simulate a delay to allow more messages to be enqueued
+  }
 
-    async waitForEmpty() {
-        await this.wakeQueue();
-        if (this.messages.length !== 0) {
-            throw new Error(`Expected queue to be empty but it still has ${this.messages.length} messages.`);
-        }
+  async wakeQueue() {
+    while (this.messages.length > 0) {
+      const message = this.messages.shift()!;
+      await message.handler(message.input);
     }
+    this.props.onQueueEmpty(this.props.identifier);
+  }
+
+  async waitForEmpty() {
+    await this.wakeQueue();
+    if (this.messages.length !== 0) {
+      throw new Error(`Expected queue to be empty but it still has ${this.messages.length} messages.`);
+    }
+  }
 }
 
 export const mockSQS = new MockSQS();

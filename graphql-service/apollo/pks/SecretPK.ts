@@ -1,21 +1,21 @@
 import { PK } from "@/database/utils";
 
 export type SecretPKContent = {
-    key: string;
+  key: string;
 };
 
 export class SecretPK {
-    static parse(pk: PK): SecretPKContent {
-        return {
-            key: pk,
-        };
-    }
+  static parse(pk: PK): SecretPKContent {
+    return {
+      key: pk,
+    };
+  }
 
-    static stringify({ key }: SecretPKContent): PK {
-        return key;
-    }
+  static stringify({ key }: SecretPKContent): PK {
+    return key;
+  }
 
-    static extract({ key }: SecretPKContent): SecretPKContent {
-        return { key };
-    }
+  static extract({ key }: SecretPKContent): SecretPKContent {
+    return { key };
+  }
 }

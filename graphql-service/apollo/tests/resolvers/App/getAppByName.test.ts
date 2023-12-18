@@ -15,50 +15,50 @@ let testAppOwner: User;
 let testOtherOwner: User;
 let testApp: App;
 beforeAll(async () => {
-    testAppOwner = await getOrCreateTestUser(context, {
-        email: `testAppOwner_${uuidv4()}@gmail_mock.com`,
-    });
-    testOtherOwner = await getOrCreateTestUser(context, {
-        email: `testOtherOwner_${uuidv4()}@gmail_mock.com`,
-    });
-    testApp = await context.batched.App.createOverwrite({
-        name: `testapp-${uuidv4()}`,
-        owner: UserPK.stringify(testAppOwner),
-        title: "Test App",
-        description: "Test App Description",
-        homepage: "https://fastchargeapi.com",
-        repository: "https://github/myrepo",
-        gatewayMode: GatewayMode.Proxy,
-        visibility: AppVisibility.Public,
-        readme: "readme",
-    });
+  testAppOwner = await getOrCreateTestUser(context, {
+    email: `testAppOwner_${uuidv4()}@gmail_mock.com`,
+  });
+  testOtherOwner = await getOrCreateTestUser(context, {
+    email: `testOtherOwner_${uuidv4()}@gmail_mock.com`,
+  });
+  testApp = await context.batched.App.createOverwrite({
+    name: `testapp-${uuidv4()}`,
+    owner: UserPK.stringify(testAppOwner),
+    title: "Test App",
+    description: "Test App Description",
+    homepage: "https://fastchargeapi.com",
+    repository: "https://github/myrepo",
+    gatewayMode: GatewayMode.Proxy,
+    visibility: AppVisibility.Public,
+    readme: "readme",
+  });
 });
 
 describe("getAppByName", () => {
-    const queryGetAppByName = graphql(`
-        query TestGetAppByName($name: String!) {
-            getAppByName(name: $name) {
-                pk
-                name
-            }
-        }
-    `);
+  const queryGetAppByName = graphql(`
+    query TestGetAppByName($name: String!) {
+      getAppByName(name: $name) {
+        pk
+        name
+      }
+    }
+  `);
 
-    test("Can get a public app by name", async () => {
-        const promise = getTestGQLClient({ user: testOtherOwner }).query({
-            query: queryGetAppByName,
-            variables: {
-                name: testApp.name,
-            },
-        });
-        await expect(promise).resolves.toMatchObject({
-            data: {
-                getAppByName: {
-                    __typename: "App",
-                    pk: AppPK.stringify(testApp),
-                    name: testApp.name,
-                },
-            },
-        });
+  test("Can get a public app by name", async () => {
+    const promise = getTestGQLClient({ user: testOtherOwner }).query({
+      query: queryGetAppByName,
+      variables: {
+        name: testApp.name,
+      },
     });
+    await expect(promise).resolves.toMatchObject({
+      data: {
+        getAppByName: {
+          __typename: "App",
+          pk: AppPK.stringify(testApp),
+          name: testApp.name,
+        },
+      },
+    });
+  });
 });

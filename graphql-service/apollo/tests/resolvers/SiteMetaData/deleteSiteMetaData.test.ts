@@ -2,10 +2,10 @@ import { SiteMetaDataKey } from "@/__generated__/resolvers-types";
 import { SiteMetaData } from "@/database/models/SiteMetaData";
 import { User } from "@/database/models/User";
 import {
-    baseRequestContext as context,
-    getAdminUser,
-    getOrCreateTestUser,
-    simplifyGraphQLPromiseRejection,
+  baseRequestContext as context,
+  getAdminUser,
+  getOrCreateTestUser,
+  simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
 import { graphql } from "@/typed-graphql";
@@ -13,57 +13,57 @@ import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
 
 describe("deleteSiteMetaData", () => {
-    let testOtherUser: User;
-    let testSiteMetaData: SiteMetaData;
+  let testOtherUser: User;
+  let testSiteMetaData: SiteMetaData;
 
-    const deleteSiteMetaDataMutation = graphql(`
-        mutation TestdeleteSiteMetaData($key: String!) {
-            getSiteMetaDataByKey(key: $key) {
-                deleteSiteMetaData {
-                    key
-                    value
-                }
-            }
+  const deleteSiteMetaDataMutation = graphql(`
+    mutation TestdeleteSiteMetaData($key: String!) {
+      getSiteMetaDataByKey(key: $key) {
+        deleteSiteMetaData {
+          key
+          value
         }
-    `);
+      }
+    }
+  `);
 
-    beforeEach(async () => {
-        testOtherUser = await getOrCreateTestUser(context, { email: "testuser" + uuid.v4() });
-        testSiteMetaData = await context.batched.SiteMetaData.createOverwrite({
-            key: ("testkey-" + uuid.v4()) as SiteMetaDataKey,
-            value: "testvalue" + uuid.v4(),
-        });
+  beforeEach(async () => {
+    testOtherUser = await getOrCreateTestUser(context, { email: "testuser" + uuid.v4() });
+    testSiteMetaData = await context.batched.SiteMetaData.createOverwrite({
+      key: ("testkey-" + uuid.v4()) as SiteMetaDataKey,
+      value: "testvalue" + uuid.v4(),
     });
+  });
 
-    test("Admin can update site meta data", async () => {
-        const promise = getTestGQLClient({ user: await getAdminUser(context) }).mutate({
-            mutation: deleteSiteMetaDataMutation,
-            variables: { key: testSiteMetaData.key },
-        });
-        await expect(promise).resolves.toMatchObject({
-            data: {
-                getSiteMetaDataByKey: {
-                    deleteSiteMetaData: {
-                        __typename: "SiteMetaData",
-                        key: testSiteMetaData.key,
-                        value: testSiteMetaData.value,
-                    },
-                },
-            },
-        });
+  test("Admin can update site meta data", async () => {
+    const promise = getTestGQLClient({ user: await getAdminUser(context) }).mutate({
+      mutation: deleteSiteMetaDataMutation,
+      variables: { key: testSiteMetaData.key },
     });
+    await expect(promise).resolves.toMatchObject({
+      data: {
+        getSiteMetaDataByKey: {
+          deleteSiteMetaData: {
+            __typename: "SiteMetaData",
+            key: testSiteMetaData.key,
+            value: testSiteMetaData.value,
+          },
+        },
+      },
+    });
+  });
 
-    test("Other users cannot update site meta data", async () => {
-        const promise = getTestGQLClient({ user: testOtherUser }).mutate({
-            mutation: deleteSiteMetaDataMutation,
-            variables: { key: testSiteMetaData.key },
-        });
-        await expect(simplifyGraphQLPromiseRejection(promise)).rejects.toMatchObject([
-            {
-                code: "PERMISSION_DENIED",
-                message: "You do not have permission to perform this action.",
-                path: "getSiteMetaDataByKey.deleteSiteMetaData",
-            },
-        ]);
+  test("Other users cannot update site meta data", async () => {
+    const promise = getTestGQLClient({ user: testOtherUser }).mutate({
+      mutation: deleteSiteMetaDataMutation,
+      variables: { key: testSiteMetaData.key },
     });
+    await expect(simplifyGraphQLPromiseRejection(promise)).rejects.toMatchObject([
+      {
+        code: "PERMISSION_DENIED",
+        message: "You do not have permission to perform this action.",
+        path: "getSiteMetaDataByKey.deleteSiteMetaData",
+      },
+    ]);
+  });
 });

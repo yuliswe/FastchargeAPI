@@ -6,9 +6,9 @@ import { AppPK } from "@/pks/AppPK";
 import { EndpointPK } from "@/pks/EndpointPK";
 import { UserPK } from "@/pks/UserPK";
 import {
-    baseRequestContext as context,
-    getOrCreateTestUser,
-    simplifyGraphQLPromiseRejection,
+  baseRequestContext as context,
+  getOrCreateTestUser,
+  simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
 import { graphql } from "@/typed-graphql";
@@ -16,105 +16,105 @@ import { beforeEach, describe, expect, test } from "@jest/globals";
 import * as uuid from "uuid";
 
 const updateEndpointMutation = graphql(`
-    mutation TestUpdateEndpointMutation(
-        $pk: ID!
-        $path: String
-        $method: HttpMethod
-        $destination: String
-        $description: String
-    ) {
-        getEndpoint(pk: $pk) {
-            updateEndpoint(path: $path, method: $method, destination: $destination, description: $description) {
-                pk
-                path
-                method
-                destination
-                description
-                createdAt
-                updatedAt
-                app {
-                    pk
-                }
-            }
+  mutation TestUpdateEndpointMutation(
+    $pk: ID!
+    $path: String
+    $method: HttpMethod
+    $destination: String
+    $description: String
+  ) {
+    getEndpoint(pk: $pk) {
+      updateEndpoint(path: $path, method: $method, destination: $destination, description: $description) {
+        pk
+        path
+        method
+        destination
+        description
+        createdAt
+        updatedAt
+        app {
+          pk
         }
+      }
     }
+  }
 `);
 
 describe("getEndpoint", () => {
-    let testApp: App;
-    let testAppOwner: User;
-    let testOtherUser: User;
-    let testEndpoint: Endpoint;
+  let testApp: App;
+  let testAppOwner: User;
+  let testOtherUser: User;
+  let testEndpoint: Endpoint;
 
-    beforeEach(async () => {
-        testAppOwner = await getOrCreateTestUser(context, {
-            email: "test-user" + uuid.v4(),
-        });
-        testOtherUser = await getOrCreateTestUser(context, {
-            email: "test-user" + uuid.v4(),
-        });
-        testApp = await context.batched.App.create({
-            name: "test-app" + uuid.v4(),
-            title: "Test App",
-            description: "Test app description",
-            homepage: "https://example.com",
-            owner: UserPK.stringify(testAppOwner),
-            repository: "",
-        });
-        testEndpoint = await context.batched.Endpoint.create({
-            app: AppPK.stringify(testApp),
-            description: "Test endpoint description",
-            path: "/test-endpoint",
-            method: HttpMethod.Get,
-            destination: "https://example.com",
-        });
+  beforeEach(async () => {
+    testAppOwner = await getOrCreateTestUser(context, {
+      email: "test-user" + uuid.v4(),
     });
+    testOtherUser = await getOrCreateTestUser(context, {
+      email: "test-user" + uuid.v4(),
+    });
+    testApp = await context.batched.App.create({
+      name: "test-app" + uuid.v4(),
+      title: "Test App",
+      description: "Test app description",
+      homepage: "https://example.com",
+      owner: UserPK.stringify(testAppOwner),
+      repository: "",
+    });
+    testEndpoint = await context.batched.Endpoint.create({
+      app: AppPK.stringify(testApp),
+      description: "Test endpoint description",
+      path: "/test-endpoint",
+      method: HttpMethod.Get,
+      destination: "https://example.com",
+    });
+  });
 
-    test("App owner can update endpoint", async () => {
-        const variables = {
+  test("App owner can update endpoint", async () => {
+    const variables = {
+      pk: EndpointPK.stringify(testEndpoint),
+      path: "/test-endpoint-updated",
+      method: HttpMethod.Post,
+      destination: "https://example.com/updated",
+      description: "Test endpoint description updated",
+    };
+    const promise = getTestGQLClient({ user: testAppOwner }).mutate({
+      mutation: updateEndpointMutation,
+      variables,
+    });
+    await expect(promise).resolves.toMatchObject({
+      data: {
+        getEndpoint: {
+          updateEndpoint: {
             pk: EndpointPK.stringify(testEndpoint),
-            path: "/test-endpoint-updated",
-            method: HttpMethod.Post,
-            destination: "https://example.com/updated",
-            description: "Test endpoint description updated",
-        };
-        const promise = getTestGQLClient({ user: testAppOwner }).mutate({
-            mutation: updateEndpointMutation,
-            variables,
-        });
-        await expect(promise).resolves.toMatchObject({
-            data: {
-                getEndpoint: {
-                    updateEndpoint: {
-                        pk: EndpointPK.stringify(testEndpoint),
-                        path: variables.path,
-                        method: variables.method,
-                        destination: variables.destination,
-                        description: variables.description,
-                        createdAt: expect.any(Number),
-                        updatedAt: expect.any(Number),
-                        app: {
-                            pk: AppPK.stringify(testApp),
-                        },
-                    },
-                },
+            path: variables.path,
+            method: variables.method,
+            destination: variables.destination,
+            description: variables.description,
+            createdAt: expect.any(Number),
+            updatedAt: expect.any(Number),
+            app: {
+              pk: AppPK.stringify(testApp),
             },
-        });
+          },
+        },
+      },
     });
+  });
 
-    test("Other users cannot update endpoint", async () => {
-        const variables = {
-            pk: EndpointPK.stringify(testEndpoint),
-            path: "/test-endpoint-updated",
-            method: HttpMethod.Post,
-            destination: "https://example.com/updated",
-            description: "Test endpoint description updated",
-        };
-        const promise = getTestGQLClient({ user: testOtherUser }).mutate({
-            mutation: updateEndpointMutation,
-            variables,
-        });
-        await expect(simplifyGraphQLPromiseRejection(promise)).rejects.toMatchInlineSnapshot(`
+  test("Other users cannot update endpoint", async () => {
+    const variables = {
+      pk: EndpointPK.stringify(testEndpoint),
+      path: "/test-endpoint-updated",
+      method: HttpMethod.Post,
+      destination: "https://example.com/updated",
+      description: "Test endpoint description updated",
+    };
+    const promise = getTestGQLClient({ user: testOtherUser }).mutate({
+      mutation: updateEndpointMutation,
+      variables,
+    });
+    await expect(simplifyGraphQLPromiseRejection(promise)).rejects.toMatchInlineSnapshot(`
             [
               {
                 "code": "PERMISSION_DENIED",
@@ -123,5 +123,5 @@ describe("getEndpoint", () => {
               },
             ]
         `);
-    });
+  });
 });

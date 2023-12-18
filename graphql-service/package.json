@@ -1,24 +1,24 @@
 {
-    "name": "graphql-service",
-    "version": "1.0.0",
-    "description": "This project contains source code and supporting files for a serverless application that you can deploy with the SAM CLI. It includes the following files and folders.",
-    "main": "index.js",
-    "scripts": {
-        "test": "cd apollo && npm run test",
-        "build": "(cd apollo && npm run build) && sam build",
-        "start": "npm run build && sam local start-api -p 4000",
-        "watch": "cd apollo && npm run watch",
-        "logs": "sam logs --tail",
-        "logs:live": "sam logs --config-env live --tail",
-        "deploy": "npm run build && sam deploy",
-        "deploy:db": "sam deploy --config-file samconfig-dynamodb.toml",
-        "deploy:live": "npm run build && sam deploy --config-env live",
-        "deploy:db:live": "sam deploy --config-file samconfig-dynamodb.toml --config-env live",
-        "typecheck": "(cd apollo && npm run typecheck) && (cd ../payment-service && npm run typecheck) && (cd ../auth-service && npm run typecheck) && (cd ../fastchargeapi-cli && npm run typecheck) && (cd ../gateway-service && npm run typecheck) && echo All good!",
-        "precrosscheck": "npm run typecheck",
-        "crosscheck": "(cd apollo && npm run test) && (cd ../payment-service && npm run test) && (cd ../auth-service && npm run test) && (cd ../cli && npm run test) && (cd ../gateway-service && npm run test) && echo All good!",
-        "fix": "cd apollo && eslint --fix ./"
-    },
-    "author": "",
-    "license": "ISC"
+  "name": "graphql-service",
+  "version": "1.0.0",
+  "description": "This project contains source code and supporting files for a serverless application that you can deploy with the SAM CLI. It includes the following files and folders.",
+  "main": "index.js",
+  "scripts": {
+    "test": "cd apollo && npm run test",
+    "build": "(cd apollo && npm run build) && sam build",
+    "start": "npm run build && sam local start-api -p 4000",
+    "watch": "cd apollo && npm run watch",
+    "logs": "sam logs --tail",
+    "logs:live": "sam logs --config-env live --tail",
+    "deploy": "npm run build && sam deploy",
+    "deploy:db": "sam deploy --config-file samconfig-dynamodb.toml",
+    "deploy:live": "npm run build && sam deploy --config-env live",
+    "deploy:db:live": "sam deploy --config-file samconfig-dynamodb.toml --config-env live",
+    "typecheck": "(cd apollo && npm run typecheck) && (cd ../payment-service && npm run typecheck) && (cd ../auth-service && npm run typecheck) && (cd ../fastchargeapi-cli && npm run typecheck) && (cd ../gateway-service && npm run typecheck) && echo All good!",
+    "precrosscheck": "npm run typecheck",
+    "crosscheck": "(cd apollo && npm run test) && (cd ../payment-service && npm run test) && (cd ../auth-service && npm run test) && (cd ../cli && npm run test) && (cd ../gateway-service && npm run test) && echo All good!",
+    "fix": "cd apollo && eslint --fix ./"
+  },
+  "author": "",
+  "license": "ISC"
 }

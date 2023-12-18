@@ -1,8 +1,5 @@
 {
-    "ext": "yml,ts,graphql,json",
-    "ignore": [
-        "__generated__/",
-        "dist/"
-    ],
-    "signal": "SIGINT"
+  "ext": "yml,ts,graphql,json",
+  "ignore": ["__generated__/", "dist/"],
+  "signal": "SIGINT"
 }

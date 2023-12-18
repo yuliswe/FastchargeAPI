@@ -9,14 +9,14 @@ import { createTestPricing } from "./Pricing";
 import { createTestUser } from "./User";
 
 export async function createTestUsageLog(context: RequestContext, overwrite?: Partial<UsageLogCreateProps>) {
-    const app = overwrite?.app ?? AppPK.stringify(await createTestApp(context));
-    return context.batched.UsageLog.create({
-        subscriber: overwrite?.subscriber ?? UserPK.stringify(await createTestUser(context)),
-        app,
-        path: "testpath",
-        volume: 1,
-        pricing: overwrite?.pricing ?? PricingPK.stringify(await createTestPricing(context, { app })),
-        status: UsageLogStatus.Pending,
-        ...overwrite,
-    });
+  const app = overwrite?.app ?? AppPK.stringify(await createTestApp(context));
+  return context.batched.UsageLog.create({
+    subscriber: overwrite?.subscriber ?? UserPK.stringify(await createTestUser(context)),
+    app,
+    path: "testpath",
+    volume: 1,
+    pricing: overwrite?.pricing ?? PricingPK.stringify(await createTestPricing(context, { app })),
+    status: UsageLogStatus.Pending,
+    ...overwrite,
+  });
 }

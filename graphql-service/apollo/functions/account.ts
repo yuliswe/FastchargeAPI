@@ -11,22 +11,22 @@ import { enforceCalledFromSQS } from "./aws";
 import { settlePromisesInBatches } from "./promise";
 
 export async function settleAccountActivitiesOnSQS(accountUser: string) {
-    const client = getSQSClient({
-        queueName: SQSQueueName.BillingQueue,
-        dedupId: accountUser,
-        groupId: accountUser,
-    });
-    const result = await client.mutate({
-        mutation: graphql(`
-            mutation SettleAccountActivitiesOnSQS($user: ID!) {
-                _sqsSettleAccountActivitiesForUser(user: $user)
-            }
-        `),
-        variables: {
-            user: accountUser,
-        },
-    });
-    return result;
+  const client = getSQSClient({
+    queueName: SQSQueueName.BillingQueue,
+    dedupId: accountUser,
+    groupId: accountUser,
+  });
+  const result = await client.mutate({
+    mutation: graphql(`
+      mutation SettleAccountActivitiesOnSQS($user: ID!) {
+        _sqsSettleAccountActivitiesForUser(user: $user)
+      }
+    `),
+    variables: {
+      user: accountUser,
+    },
+  });
+  return result;
 }
 
 export function getSQSDedupIdForSettleAccountActivities() {}
@@ -48,84 +48,84 @@ export function getSQSDedupIdForSettleAccountActivities() {}
  * AccountActivity to be processed multiple times.
  */
 export async function settleAccountActivitiesFromSQS(
-    context: RequestContext,
-    accountUser: string,
-    options?: {
-        consistentReadAccountActivities: boolean;
-    }
+  context: RequestContext,
+  accountUser: string,
+  options?: {
+    consistentReadAccountActivities: boolean;
+  }
 ): Promise<{
-    newAccountHistory: AccountHistory;
-    previousAccountHistory: AccountHistory | null;
-    affectedAccountActivities: AccountActivity[];
+  newAccountHistory: AccountHistory;
+  previousAccountHistory: AccountHistory | null;
+  affectedAccountActivities: AccountActivity[];
 } | null> {
-    enforceCalledFromSQS(context, {
-        groupId: accountUser,
-        queueName: SQSQueueName.BillingQueue,
-    });
-    const closingTime = Date.now();
-    const activities = await context.batched.AccountActivity.many(
-        {
-            user: accountUser,
-            status: AccountActivityStatus.Pending,
-            settleAt: { le: closingTime },
-        },
-        {
-            consistent: options?.consistentReadAccountActivities,
-        }
-    );
-
-    if (activities.length === 0) {
-        return null;
+  enforceCalledFromSQS(context, {
+    groupId: accountUser,
+    queueName: SQSQueueName.BillingQueue,
+  });
+  const closingTime = Date.now();
+  const activities = await context.batched.AccountActivity.many(
+    {
+      user: accountUser,
+      status: AccountActivityStatus.Pending,
+      settleAt: { le: closingTime },
+    },
+    {
+      consistent: options?.consistentReadAccountActivities,
     }
-    const previous = await context.batched.AccountHistory.getOrNull(
-        {
-            user: accountUser,
-        },
-        {
-            sort: "descending",
-            limit: 1,
-            consistent: true, // Must use consistently, otherwise we might not get a correct startingTime, or sequentialID
+  );
+
+  if (activities.length === 0) {
+    return null;
+  }
+  const previous = await context.batched.AccountHistory.getOrNull(
+    {
+      user: accountUser,
+    },
+    {
+      sort: "descending",
+      limit: 1,
+      consistent: true, // Must use consistently, otherwise we might not get a correct startingTime, or sequentialID
+    }
+  );
+
+  let accountHistory = await context.batched.AccountHistory.create({
+    user: accountUser,
+    startingBalance: previous == null ? "0" : previous.closingBalance,
+    closingBalance: previous == null ? "0" : previous.closingBalance,
+    startingTime: previous == null ? 0 : previous.closingTime,
+    closingTime,
+    sequentialId: previous == null ? 0 : previous.sequentialId + 1,
+  });
+
+  let balance = new Decimal(accountHistory.startingBalance);
+
+  await settlePromisesInBatches(
+    activities,
+    (activity) =>
+      context.batched.AccountActivity.update(activity, {
+        status: AccountActivityStatus.Settled,
+        accountHistory: AccountHistoryPK.stringify(accountHistory),
+      }).then((activity) => {
+        // Only update the balance when successfully settled.
+        if (activity.type === AccountActivityType.Outgoing) {
+          balance = balance.sub(activity.amount);
+        } else if (activity.type === AccountActivityType.Incoming) {
+          balance = balance.add(activity.amount);
         }
-    );
+        return activity;
+      }),
+    { batchSize: 10 }
+  );
 
-    let accountHistory = await context.batched.AccountHistory.create({
-        user: accountUser,
-        startingBalance: previous == null ? "0" : previous.closingBalance,
-        closingBalance: previous == null ? "0" : previous.closingBalance,
-        startingTime: previous == null ? 0 : previous.closingTime,
-        closingTime,
-        sequentialId: previous == null ? 0 : previous.sequentialId + 1,
-    });
+  accountHistory = await context.batched.AccountHistory.update(accountHistory, {
+    closingBalance: balance.toString(),
+  });
 
-    let balance = new Decimal(accountHistory.startingBalance);
-
-    await settlePromisesInBatches(
-        activities,
-        (activity) =>
-            context.batched.AccountActivity.update(activity, {
-                status: AccountActivityStatus.Settled,
-                accountHistory: AccountHistoryPK.stringify(accountHistory),
-            }).then((activity) => {
-                // Only update the balance when successfully settled.
-                if (activity.type === AccountActivityType.Outgoing) {
-                    balance = balance.sub(activity.amount);
-                } else if (activity.type === AccountActivityType.Incoming) {
-                    balance = balance.add(activity.amount);
-                }
-                return activity;
-            }),
-        { batchSize: 10 }
-    );
-
-    accountHistory = await context.batched.AccountHistory.update(accountHistory, {
-        closingBalance: balance.toString(),
-    });
-
-    return {
-        previousAccountHistory: previous,
-        newAccountHistory: accountHistory,
-        affectedAccountActivities: activities,
-    };
+  return {
+    previousAccountHistory: previous,
+    newAccountHistory: accountHistory,
+    affectedAccountActivities: activities,
+  };
 }
 
 /**
@@ -133,25 +133,25 @@ export async function settleAccountActivitiesFromSQS(
  * @param userPK
  */
 export async function getUserBalance(
-    context: RequestContext,
-    userPK: string,
-    { consistent }: { consistent?: boolean } = {}
+  context: RequestContext,
+  userPK: string,
+  { consistent }: { consistent?: boolean } = {}
 ): Promise<string> {
-    const accountHistory = await getUserAccountHistoryRepresentingBalance(context, userPK, { consistent });
-    if (accountHistory) {
-        return accountHistory.closingBalance;
-    } else {
-        return "0";
-    }
+  const accountHistory = await getUserAccountHistoryRepresentingBalance(context, userPK, { consistent });
+  if (accountHistory) {
+    return accountHistory.closingBalance;
+  } else {
+    return "0";
+  }
 }
 
 /**
  * Returns the most recent account history for the user.
  */
 export async function getUserAccountHistoryRepresentingBalance(
-    context: RequestContext,
-    userPK: string,
-    { consistent }: { consistent?: boolean } = {}
+  context: RequestContext,
+  userPK: string,
+  { consistent }: { consistent?: boolean } = {}
 ): Promise<AccountHistory | null> {
-    return context.batched.AccountHistory.getOrNull({ user: userPK }, { sort: "descending", limit: 1, consistent });
+  return context.batched.AccountHistory.getOrNull({ user: userPK }, { sort: "descending", limit: 1, consistent });
 }
