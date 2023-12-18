@@ -11,9 +11,9 @@ import { AppPK } from "@/pks/AppPK";
 import { PricingPK } from "@/pks/PricingPK";
 import { UserPK } from "@/pks/UserPK";
 import { GatewayDecisionResponse } from "@/resolvers/Gateway";
-import { createTestApp } from "@/tests/test-utils/models/App";
-import { createTestPricing } from "@/tests/test-utils/models/Pricing";
-import { createTestUser } from "@/tests/test-utils/models/User";
+import { createTestApp } from "@/tests/test-data/App";
+import { createTestPricing } from "@/tests/test-data/Pricing";
+import { createTestUser } from "@/tests/test-data/User";
 import { addMoneyForUser, baseRequestContext as context } from "@/tests/test-utils/test-utils";
 import Decimal from "decimal.js-light";
 

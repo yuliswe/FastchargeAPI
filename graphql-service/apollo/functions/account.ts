@@ -11,12 +11,11 @@ import { enforceCalledFromSQS } from "./aws";
 import { settlePromisesInBatches } from "./promise";
 
 export async function settleAccountActivitiesOnSQS(accountUser: string) {
-  const client = getSQSClient({
+  const result = await getSQSClient({
     queueName: SQSQueueName.BillingQueue,
-    dedupId: accountUser,
+    dedupId: "SettleAccountActivitiesOnSQS-" + accountUser,
     groupId: accountUser,
-  });
-  const result = await client.mutate({
+  }).mutate({
     mutation: graphql(`
       mutation SettleAccountActivitiesOnSQS($user: ID!) {
         _sqsSettleAccountActivitiesForUser(user: $user)
@@ -28,8 +27,6 @@ export async function settleAccountActivitiesOnSQS(accountUser: string) {
   });
   return result;
 }
-
-export function getSQSDedupIdForSettleAccountActivities() {}
 
 /**
  * Collect any account activities that are in the pending status, and have the
@@ -47,7 +44,7 @@ export function getSQSDedupIdForSettleAccountActivities() {}
  * @workerSafe No - When called from multiple processes, it can cause the same
  * AccountActivity to be processed multiple times.
  */
-export async function settleAccountActivitiesFromSQS(
+export async function sqsSettleAccountActivities(
   context: RequestContext,
   accountUser: string,
   options?: {

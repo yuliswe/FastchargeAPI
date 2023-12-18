@@ -32,6 +32,7 @@ describe("_sqsSettleStripeTransfer", () => {
     });
     await addMoneyForUser(context, { user: UserPK.stringify(testOwnerUser), amount: "100" });
   });
+
   const _sqsSettleStripeTransferMutation = graphql(`
     mutation Test_sqsSettleStripeTransfer($pk: ID!) {
       getStripeTransfer(pk: $pk) {

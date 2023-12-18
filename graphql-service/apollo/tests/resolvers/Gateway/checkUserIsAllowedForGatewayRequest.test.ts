@@ -8,8 +8,8 @@ import { AppPK } from "@/pks/AppPK";
 import { PricingPK } from "@/pks/PricingPK";
 import { UserPK } from "@/pks/UserPK";
 import { GatewayDecisionResponse } from "@/resolvers/Gateway";
-import { createTestGatewayRequestCounter } from "@/tests/test-utils/models/GatewayRequestCounter";
-import { createTestGatewayRequestDecisionCache } from "@/tests/test-utils/models/GatewayRequestDecisionCache";
+import { createTestGatewayRequestCounter } from "@/tests/test-data/GatewayRequestCounter";
+import { createTestGatewayRequestDecisionCache } from "@/tests/test-data/GatewayRequestDecisionCache";
 import {
   baseRequestContext as context,
   getOrCreateTestUser,

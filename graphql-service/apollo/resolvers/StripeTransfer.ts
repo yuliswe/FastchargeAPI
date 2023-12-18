@@ -12,7 +12,7 @@ import {
   StripeTransferStatus,
 } from "../__generated__/resolvers-types";
 import { BadInput, Denied } from "../errors";
-import { getUserBalance, settleAccountActivitiesFromSQS } from "../functions/account";
+import { getUserBalance, sqsSettleAccountActivities } from "../functions/account";
 import { enforceCalledFromSQS } from "../functions/aws";
 import { createAccountActivitiesForTransfer, getSQSDedupIdForSettleStripeTransfer } from "../functions/transfer";
 import { Can } from "../permissions";
@@ -74,7 +74,7 @@ export const StripeTransferResolvers: GQLResolvers & {
         transfer: parent,
         userPK: UserPK.stringify(user),
       });
-      await settleAccountActivitiesFromSQS(context, parent.receiver, {
+      await sqsSettleAccountActivities(context, parent.receiver, {
         consistentReadAccountActivities: true,
       });
       return await context.batched.StripeTransfer.update(parent, {

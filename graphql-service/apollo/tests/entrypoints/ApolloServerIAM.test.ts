@@ -7,8 +7,8 @@ import { lambdaHandler } from "../../lambdaHandler";
 import { LambdaEvent } from "../../lambdaHandlerUtils";
 import { AppPK } from "../../pks/AppPK";
 import { UserPK } from "../../pks/UserPK";
-import { createTestApp } from "../test-utils/models/App";
-import { createTestUser } from "../test-utils/models/User";
+import { createTestApp } from "../test-data/App";
+import { createTestUser } from "../test-data/User";
 import { baseRequestContext as context } from "../test-utils/test-utils";
 
 const lambdaEvent: LambdaEvent = {

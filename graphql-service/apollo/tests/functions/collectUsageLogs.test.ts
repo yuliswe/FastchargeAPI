@@ -1,5 +1,5 @@
 import { collectUsageLogs } from "@/functions/usage";
-import { createTestUsageLog } from "../test-utils/models/UsageLog";
+import { createTestUsageLog } from "../test-data/UsageLog";
 import { baseRequestContext as context } from "../test-utils/test-utils";
 
 describe("collectUsageLogs", () => {

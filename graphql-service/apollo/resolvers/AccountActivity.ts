@@ -3,7 +3,7 @@ import { AccountActivity, AccountActivityModel } from "@/database/models/Account
 import { StripeTransfer } from "@/database/models/StripeTransfer";
 import { UsageSummary } from "@/database/models/UsageSummary";
 import { User } from "@/database/models/User";
-import { settleAccountActivitiesFromSQS as sqsSettleAccountActivities } from "@/functions/account";
+import { sqsSettleAccountActivities } from "@/functions/account";
 import { AppPK } from "@/pks/AppPK";
 import { GraphQLResolveInfoWithCacheControl } from "@apollo/cache-control-types";
 import {

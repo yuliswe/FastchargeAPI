@@ -12,7 +12,7 @@ import {
   StripePaymentAcceptStatus,
 } from "../__generated__/resolvers-types";
 import { AlreadyExists, Denied } from "../errors";
-import { settleAccountActivitiesFromSQS } from "../functions/account";
+import { sqsSettleAccountActivities } from "../functions/account";
 import { Can } from "../permissions";
 import { AccountActivityPK } from "../pks/AccountActivityPK";
 import { StripePaymentAcceptPK } from "../pks/StripePaymentAccept";
@@ -69,7 +69,7 @@ export const StripePaymentAcceptResolvers: GQLResolvers & {
         description: "Account top-up by you",
         stripePaymentAccept: StripePaymentAcceptPK.stringify(parent),
       });
-      await settleAccountActivitiesFromSQS(context, parent.user, {
+      await sqsSettleAccountActivities(context, parent.user, {
         consistentReadAccountActivities: true,
       });
       parent = await context.batched.StripePaymentAccept.update(parent, {

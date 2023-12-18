@@ -3,8 +3,8 @@ import { User } from "@/database/models/User";
 import { AccountActivityPK } from "@/pks/AccountActivityPK";
 import { UserPK } from "@/pks/UserPK";
 import { SQSQueueName } from "@/sqsClient";
-import { createTestAccountActivity } from "@/tests/test-utils/models/AccountActivity";
-import { createTestUser } from "@/tests/test-utils/models/User";
+import { createTestAccountActivity } from "@/tests/test-data/AccountActivity";
+import { createTestUser } from "@/tests/test-data/User";
 import {
   baseRequestContext as context,
   getUserBalanceNoCache,

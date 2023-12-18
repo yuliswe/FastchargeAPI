@@ -3,7 +3,7 @@ import { App } from "@/database/models/App";
 import { User } from "@/database/models/User";
 import { AppPK } from "@/pks/AppPK";
 import { UserPK } from "@/pks/UserPK";
-import { createTestUser } from "@/tests/test-utils/models/User";
+import { createTestUser } from "@/tests/test-data/User";
 import { baseRequestContext, simplifyGraphQLPromiseRejection } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
 import { graphql } from "@/typed-graphql";
