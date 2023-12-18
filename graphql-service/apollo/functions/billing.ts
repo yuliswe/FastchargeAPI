@@ -3,6 +3,7 @@ import { FreeQuotaUsage } from "@/database/models/FreeQuotaUsage";
 import { Pricing } from "@/database/models/Pricing";
 import { UsageSummary } from "@/database/models/UsageSummary";
 import { PK } from "@/database/utils";
+import { settlePromisesInBatches } from "@/functions/promise";
 import { SQSQueueName } from "@/sqsClient";
 import Decimal from "decimal.js-light";
 import { RequestContext } from "../RequestContext";
@@ -18,7 +19,6 @@ import { PricingPK } from "../pks/PricingPK";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
 import { settleAccountActivitiesOnSQS } from "./account";
 import { enforceCalledFromSQS } from "./aws";
-import { getAllSettledOrFail, settlePromisesInBatches } from "./promise";
 import { collectUsageLogs } from "./usage";
 
 export const fastchargeRequestServiceFee = "0.0001";
@@ -352,20 +352,19 @@ export async function sqsTriggerBilling(
 
   const appItem = await context.batched.App.get(AppPK.parse(app));
 
-  getAllSettledOrFail(
-    await settlePromisesInBatches(
-      uncollectedUsageSummaries,
-      (usageSummary) =>
-        generateAccountActivities(context, {
-          usageSummary,
-          subscriber: user,
-          appAuthor: appItem.owner,
-        }),
-      {
-        batchSize: 10,
-      }
-    )
+  await settlePromisesInBatches(
+    uncollectedUsageSummaries,
+    (usageSummary) =>
+      generateAccountActivities(context, {
+        usageSummary,
+        subscriber: user,
+        appAuthor: appItem.owner,
+      }),
+    {
+      batchSize: 10,
+    }
   );
+
   await Promise.all([settleAccountActivitiesOnSQS(user), settleAccountActivitiesOnSQS(appItem.owner)]);
   return {
     affectedUsageSummaries: uncollectedUsageSummaries,

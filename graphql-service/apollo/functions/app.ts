@@ -5,7 +5,7 @@ import { RequestContext } from "../RequestContext";
 import { GQLAppFullTextSearchOrderBy } from "../__generated__/resolvers-types";
 import { auroraResourceArn, auroraSecretArn, rdsClient } from "../database/aurora";
 import { AppPK } from "../pks/AppPK";
-import { settlePromisesInBatches } from "./promise";
+import { safelySettlePromisesInBatches } from "./promise";
 
 export async function getAppByPK(context: RequestContext, pk: string): Promise<App> {
   return context.batched.App.get(AppPK.parse(pk));
@@ -142,7 +142,7 @@ export async function appFullTextSearch(
     requestTimeout: 60_000,
   });
   const results: App[] = [];
-  await settlePromisesInBatches(
+  await safelySettlePromisesInBatches(
     response.records ?? [],
     async (record) => {
       const app_name = record[0].stringValue;

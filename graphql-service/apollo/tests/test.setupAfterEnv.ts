@@ -84,12 +84,13 @@ if (process.env.LOCAL_SQS === "1") {
               },
               handler: async (message) => {
                 const response = await handSendMessageCommandData(message);
-                /* We want to explicitly fail the handler so
-                                that waitForQueuesToEmpty() can reject, and make
-                                the error visible during testing. The SQS
-                                GraphQL API is internal, and should never return
-                                non 400 code. When that happens there must be a
-                                bug. */
+                /* 
+                  We want to explicitly fail the handler so that
+                  waitForQueuesToEmpty() can reject, and make the error visible
+                  during testing. The SQS GraphQL API is internal, and should
+                  never return non 400 code. When that happens there must be a
+                  bug. 
+                */
                 const { statusCode, body } = response;
                 if (statusCode !== 200) {
                   throw new Error(`Response status code is ${statusCode}, expected 200. Response body: ${body}`);

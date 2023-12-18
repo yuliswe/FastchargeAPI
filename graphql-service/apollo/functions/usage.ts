@@ -62,19 +62,17 @@ export async function collectUsageLogs(
         summary.volume += usage.volume;
       }
       const usageSummary = await context.batched.UsageSummary.create(summary);
-      getAllSettledOrFail(
-        await settlePromisesInBatches(
-          usageLogs,
-          (usage) =>
-            context.batched.UsageLog.update(usage, {
-              status: UsageLogStatus.Collected,
-              usageSummary: UsageSummaryPK.stringify(usageSummary),
-              collectedAt: usageSummary.createdAt,
-            }),
-          {
-            batchSize: 10,
-          }
-        )
+      await settlePromisesInBatches(
+        usageLogs,
+        (usage) =>
+          context.batched.UsageLog.update(usage, {
+            status: UsageLogStatus.Collected,
+            usageSummary: UsageSummaryPK.stringify(usageSummary),
+            collectedAt: usageSummary.createdAt,
+          }),
+        {
+          batchSize: 10,
+        }
       );
       return usageSummary;
     },

@@ -3,7 +3,6 @@ import { ApolloClient } from "@apollo/client/core";
 import { HttpLink } from "@apollo/client/link/http";
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
 import { RequestInit, Response } from "node-fetch";
-import { v4 as uuidv4 } from "uuid";
 import { awsAccountId } from "./runtime-config";
 
 const cache = new InMemoryCache();
@@ -49,7 +48,7 @@ export function getSQSClient({
           MessageBody: body?.toString(),
           MessageGroupId: groupId,
           QueueUrl: getUrlFromSQSQueueName(queueName),
-          MessageDeduplicationId: dedupId || uuidv4(),
+          MessageDeduplicationId: dedupId,
         });
         await sqsClient.send(command);
         return new Response(

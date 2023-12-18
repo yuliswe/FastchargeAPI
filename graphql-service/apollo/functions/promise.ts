@@ -20,12 +20,34 @@ export async function safelySettlePromisesInBatchesByIterator<Arg, PromiseValue>
   return results;
 }
 
-export async function settlePromisesInBatches<Arg, PromiseValue>(
+export async function safelySettlePromisesInBatches<Arg, PromiseValue>(
   args: Arg[],
   handler: (args: Arg, index: number) => Promise<PromiseValue>,
   { batchSize }: { batchSize: number }
 ): Promise<PromiseSettledResult<PromiseValue>[]> {
   return safelySettlePromisesInBatchesByIterator(args[Symbol.iterator](), handler, { batchSize });
+}
+
+export async function settlePromisesInBatchesByIterator<Arg, PromiseValue>(
+  args: Iterator<Arg>,
+  handler: (args: Arg, index: number) => Promise<PromiseValue>,
+  { batchSize }: { batchSize: number }
+): Promise<PromiseValue[]> {
+  const results: PromiseValue[] = [];
+  let nextBatch = takeNextN(batchSize, args);
+  while (nextBatch.length > 0) {
+    results.push(...(await Promise.all(nextBatch.map(handler))));
+    nextBatch = takeNextN(batchSize, args);
+  }
+  return results;
+}
+
+export async function settlePromisesInBatches<Arg, PromiseValue>(
+  args: Arg[],
+  handler: (args: Arg, index: number) => Promise<PromiseValue>,
+  { batchSize }: { batchSize: number }
+): Promise<PromiseValue[]> {
+  return settlePromisesInBatchesByIterator(args[Symbol.iterator](), handler, { batchSize });
 }
 
 function takeNextN<T>(n: number, iterator: Iterator<T>): T[] {
