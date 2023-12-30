@@ -13,7 +13,6 @@ import {
 } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
 import { graphql } from "@/typed-graphql";
-import { beforeEach, describe } from "@jest/globals";
 import * as uuid from "uuid";
 
 describe("createSubscription", () => {

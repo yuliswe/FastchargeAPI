@@ -1,6 +1,5 @@
 import { App } from "@/database/models/App";
 import { User } from "@/database/models/User";
-import { describe, expect, test } from "@jest/globals";
 /** We want to test the actual aws handler */
 // eslint-disable-next-line no-restricted-imports
 import { lambdaHandler } from "../../lambdaHandler";

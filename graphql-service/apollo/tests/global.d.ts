@@ -1,7 +1,6 @@
-import "jest-extended";
-
-declare module "jest-snapshot" {
-  interface SnapshotMatchers<R extends void | Promise<void>> {
+declare namespace jest {
+  interface Matchers<R> {
     toMatchSnapshotExceptForProps(props: unknown): R;
+    toEqualStringArrayIgnoringOrder(props: unknown): R;
   }
 }

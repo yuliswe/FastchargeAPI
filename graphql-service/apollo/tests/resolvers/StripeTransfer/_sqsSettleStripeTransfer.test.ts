@@ -14,7 +14,6 @@ import {
 } from "@/tests/test-utils/test-utils";
 import { getClientForDirectSQSCall, getTestGQLClient } from "@/tests/test-utils/testGQLClients";
 import { graphql } from "@/typed-graphql";
-import { beforeEach, expect } from "@jest/globals";
 import * as uuid from "uuid";
 
 describe("_sqsSettleStripeTransfer", () => {

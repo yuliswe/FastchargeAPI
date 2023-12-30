@@ -6,7 +6,7 @@ import { ApolloServer } from "@apollo/server";
 import { afterEach, jest } from "@jest/globals";
 import { RequestInit, Response } from "node-fetch";
 import { setUpTraceConsole } from "../console";
-import { extendJest } from "./test-utils/jest-extend";
+import { extendJest } from "./jest-extend";
 import { handSendMessageCommandData } from "./test-utils/testGQLClients";
 
 extendJest();
