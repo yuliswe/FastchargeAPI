@@ -47,7 +47,7 @@ if (process.env.TRACE_CONSOLE === "1") {
   setUpTraceConsole();
 }
 
-if (process.env.LOCAL_SQS === "1") {
+if (process.env.NO_LOCAL_SQS !== "1") {
   afterEach(async () => {
     // Helps us catch all remaining errors in the sqs opeartions.
     await mockSQS.waitForQueuesToEmpty();
