@@ -32,7 +32,7 @@ const jestConfig: JestConfigWithTsJest = {
     ...compilerOptions.paths,
     "@/*": ["*"],
   }),
-  transformIgnorePatterns: ["/node_modules/(?!(chalk)/)"],
+  transformIgnorePatterns: [".*/node_modules/(?!(chalk)/)"],
   modulePathIgnorePatterns: ["dist"],
   testTimeout: 120_000,
   coverageDirectory: ".coverage",

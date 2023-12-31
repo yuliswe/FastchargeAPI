@@ -1,39 +1,14 @@
 {
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "experimentalDecorators": true,
-    "skipLibCheck": true,
-    "rootDirs": ["./"],
-    "outDir": "dist",
-    "lib": ["es2022"],
-    "target": "es2022",
-    "module": "ESNext",
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "strict": true,
-    "types": ["jest"],
     "strictFunctionTypes": false,
     "strictPropertyInitialization": false,
-    "allowJs": true,
-    "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["*"]
-    },
-    "noEmit": true
+    }
   },
   "exclude": ["node_modules", "dist"],
   "include": ["**/*"],
-  "files": ["global.d.ts", "tests/global.d.ts"],
-  "ts-node": {
-    "experimentalResolver": true,
-    "require": ["tsconfig-paths/register"],
-    "experimentalSpecifierResolution": "node",
-    "compilerOptions": {
-      "paths": {
-        "@/*": ["*"],
-        "graphql/(.*)": ["node_modules/graphql/src/$1.ts"]
-      }
-    }
-  }
+  "files": ["../../global.d.ts", "tests/global.d.ts"]
 }
