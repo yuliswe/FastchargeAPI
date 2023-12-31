@@ -1,17 +1,21 @@
 import { createDefaultContextBatched } from "@/RequestContext";
 import { StripeTransferStatus } from "@/__generated__/resolvers-types";
-import { StripeTransferPK } from "@/pks/StripeTransferPK";
+import { StripeTransfer, StripeTransferTableIndex } from "@/database/models/StripeTransfer";
+import { PK } from "@/database/utils";
+import { safelySettlePromisesInBatchesByIterator, settlePromisesInBatches } from "@/functions/promise";
 import { UserPK } from "@/pks/UserPK";
-import { EventBridgeEvent, EventBridgeHandler } from "aws-lambda";
+import { EventBridgeEvent } from "aws-lambda";
 import { Chalk } from "chalk";
 import { Decimal } from "decimal.js-light";
-import { GQLStripeTransferIndex } from "../__generated__/gql-operations";
-import { getStripeClient } from "../utils/stripe-client";
+import { getStripeClient } from "utils/stripe-client";
+
 const chalk = new Chalk({ level: 3 });
 
-type EventDetail = {
-    dryRun?: boolean;
+export type EventDetail = {
+  dryRun?: boolean;
 };
+export const detailType = "ExecuteDailyStripeTransferSettings";
+export type DetailType = typeof detailType;
 
 /**
  * Find all pending StripeTransfer that have transferAt set before 12am (or
@@ -22,106 +26,104 @@ type EventDetail = {
  * complete the transfer.
  * @returns
  */
-async function handle(event: EventBridgeEvent<string, EventDetail>, context: never, callback: never) {
-    const batched = createDefaultContextBatched();
-    let isDryRun = true;
-    let detail = event.detail;
-    if (typeof detail === "string") {
-        detail = JSON.parse(detail);
+async function handle(event: EventBridgeEvent<DetailType, EventDetail>) {
+  const batched = createDefaultContextBatched();
+  const { dryRun } = event.detail;
+
+  const due = new Date();
+  due.setHours(0, 0, 0, 0);
+
+  const pendingTransfers = batched.StripeTransfer.manyGenerator(
+    {
+      status: StripeTransferStatus.PendingTransfer,
+      transferAt: {
+        le: due.getTime(),
+      },
+    },
+    {
+      using: StripeTransferTableIndex.StatusTransferAt,
     }
-    isDryRun = detail?.dryRun ?? true;
-    const due = new Date();
-    due.setHours(0, 0, 0, 0);
-    const pendingTransfers = await batched.StripeTransfer.many(
-        {
-            status: StripeTransferStatus.Pending,
-            transferAt: { lt: due.getTime() },
-        },
-        {
-            using: GQLStripeTransferIndex.IndexByStatusTransferAtOnlyPk,
-        }
-    );
-    console.log(chalk.yellow(`Found ${pendingTransfers.length} pending transfers`));
-    let total = new Decimal(0);
-    let failureCount = 0;
-    const chunkSize = 10;
-    for (let i = 0; i < pendingTransfers.length; i += chunkSize) {
-        const chunk = pendingTransfers.slice(i, Math.min(pendingTransfers.length, i + chunkSize));
+  );
 
-        const promises = chunk.map(async (transfer) => {
-            const receiver = await batched.User.get(UserPK.parse(transfer.receiver));
-            if (!receiver.stripeConnectAccountId) {
-                // User did not connect their Stripe account yet
-                return;
-            }
-            if (isDryRun) {
-                console.log(chalk.yellow(`Dry run transfer to ${receiver.email} $${transfer.receiveAmount}`));
-                total = total.plus(transfer.receiveAmount);
-            } else {
-                console.log(chalk.yellow(`Transfer to ${receiver.email} $${transfer.receiveAmount}`));
+  const userToTransferDetail = new Map<PK, { total: Decimal; transfers: StripeTransfer[] }>();
+  for await (const transfer of pendingTransfers) {
+    const { receiver } = transfer;
+    const amount = new Decimal(transfer.receiveAmount);
+    const userTotal = userToTransferDetail.get(receiver) ?? { total: new Decimal(0), transfers: [] };
+    userTotal.total = userTotal.total.plus(amount);
+    userTotal.transfers.push(transfer);
+    userToTransferDetail.set(receiver, userTotal);
+  }
 
-                // Save status right away to make sure we don't double transfer
-                await batched.StripeTransfer.update(transfer, {
-                    status: StripeTransferStatus.Transferred,
-                });
-                try {
-                    const stripeClient = await getStripeClient();
-                    await stripeClient.transfers.create({
-                        amount: new Decimal(transfer.receiveAmount).mul(100).toInteger().toNumber(),
-                        currency: "usd",
-                        destination: receiver.stripeConnectAccountId,
-                        transfer_group: StripeTransferPK.stringify(transfer),
-                    });
-                    total = total.plus(transfer.receiveAmount);
-                } catch (error) {
-                    await batched.StripeTransfer.update(transfer, {
-                        status: StripeTransferStatus.Failed,
-                    });
-                    failureCount++;
-                    try {
-                        console.error(chalk.red(JSON.stringify(error)));
-                    } catch {
-                        // ignore json error
-                    }
-                }
-            }
-        });
-
-        await Promise.allSettled(promises);
+  if (dryRun ?? true) {
+    const logs = [chalk.yellow(`Total amount to be transferred:`)];
+    for (const [receiver, detail] of userToTransferDetail.entries()) {
+      const { transfers, total } = detail;
+      logs.push(chalk.yellow(`${receiver} $${total.toFixed(2)} (${transfers.length} transfers)`));
     }
-
-    if (isDryRun) {
-        console.log(chalk.yellow(`Total amount to be transferred: $${total.toString()}`));
-    } else {
-        console.log(chalk.yellow(`Total amount transferred: $${total.toString()}`));
-        if (failureCount > 0) {
-            console.log(chalk.red(`Failed to transfer ${failureCount} transfers. Please check the logs.`));
-        }
-    }
+    console.log(logs.join("\n"));
 
     return {
-        statusCode: 200,
-        body: "OK",
+      statusCode: 200,
+      body: "OK",
     };
+  }
+
+  const results = safelySettlePromisesInBatchesByIterator(
+    userToTransferDetail.entries(),
+    async ([receiver, detail]) => {
+      const { transfers, total } = detail;
+      const user = await batched.User.get(UserPK.parse(receiver));
+      const { stripeConnectAccountId } = user;
+      if (!stripeConnectAccountId) {
+        // User did not connect their Stripe account yet
+        throw `User ${receiver} has no stripeConnectAccountId`;
+      }
+      // Save status right away to make sure we don't double transfer
+      await settlePromisesInBatches(transfers, (transfer) =>
+        batched.StripeTransfer.update(transfer, {
+          status: StripeTransferStatus.Transferred,
+        })
+      );
+      try {
+        const stripeClient = await getStripeClient();
+        await stripeClient.transfers.create({
+          amount: new Decimal(total).mul(100).toInteger().toNumber(),
+          currency: "usd",
+          destination: stripeConnectAccountId,
+        });
+      } catch (error) {
+        // revert status
+        await settlePromisesInBatches(transfers, (transfer) =>
+          batched.StripeTransfer.update(transfer, {
+            status: StripeTransferStatus.PendingTransfer,
+          })
+        );
+        throw error;
+      }
+    }
+  );
+
+  for await (const result of results) {
+    if (result.status === "rejected") {
+      console.error(chalk.red(JSON.stringify(result.reason, null, 2)));
+    }
+  }
+  return {
+    statusCode: 200,
+    body: "OK",
+  };
 }
 
-export const lambdaHandler: EventBridgeHandler<string, {}, {}> = async (
-    event: EventBridgeEvent<string, EventDetail>,
-    context: never,
-    callback: never
-) => {
-    try {
-        console.log(chalk.blue(JSON.stringify(event)));
-        return await handle(event, context, callback);
-    } catch (error) {
-        try {
-            console.error(chalk.red(JSON.stringify(error)));
-        } catch (jsonError) {
-            // ignore
-        }
-        return {
-            statusCode: 500,
-            body: "Internal Server Error",
-        };
-    }
+export const lambdaHandler = async (event: EventBridgeEvent<DetailType, EventDetail>) => {
+  try {
+    console.log(chalk.blue(JSON.stringify(event, null, 2)));
+    return await handle(event);
+  } catch (error) {
+    console.error(chalk.red(JSON.stringify(error, null, 2)));
+    return {
+      statusCode: 500,
+      body: "Internal Server Error",
+    };
+  }
 };

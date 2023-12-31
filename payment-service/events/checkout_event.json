@@ -15,36 +15,16 @@
   "httpMethod": "POST",
   "isBase64Encoded": false,
   "multiValueHeaders": {
-    "Accept": [
-      "*/*"
-    ],
-    "Accept-Encoding": [
-      "gzip, deflate, br"
-    ],
-    "Connection": [
-      "keep-alive"
-    ],
-    "Content-Length": [
-      "172"
-    ],
-    "Content-Type": [
-      "multipart/form-data; boundary=--------------------------587252491932623318649686"
-    ],
-    "Host": [
-      "127.0.0.1:3000"
-    ],
-    "Postman-Token": [
-      "ac643255-f03a-42f3-a125-627b5c739a1a"
-    ],
-    "User-Agent": [
-      "PostmanRuntime/7.28.4"
-    ],
-    "X-Forwarded-Port": [
-      "3000"
-    ],
-    "X-Forwarded-Proto": [
-      "http"
-    ]
+    "Accept": ["*/*"],
+    "Accept-Encoding": ["gzip, deflate, br"],
+    "Connection": ["keep-alive"],
+    "Content-Length": ["172"],
+    "Content-Type": ["multipart/form-data; boundary=--------------------------587252491932623318649686"],
+    "Host": ["127.0.0.1:3000"],
+    "Postman-Token": ["ac643255-f03a-42f3-a125-627b5c739a1a"],
+    "User-Agent": ["PostmanRuntime/7.28.4"],
+    "X-Forwarded-Port": ["3000"],
+    "X-Forwarded-Proto": ["http"]
   },
   "multiValueQueryStringParameters": null,
   "path": "/checkout",

@@ -1,4 +1,4 @@
-import { settlePromisesInBatches } from "@/functions/promise";
+import { asyncGetAll, settlePromisesInBatches } from "@/functions/promise";
 import { ConditionalCheckFailedException } from "@aws-sdk/client-dynamodb";
 import DataLoader from "dataloader";
 import { KeyObject, ModelType } from "dynamoose/dist/General";
@@ -323,6 +323,7 @@ function stripNullKeys<T>(
 //         this._cache.clear();
 //     }
 // }
+type PageResult<I> = { items: I[]; next?: Cursor; total: number };
 
 export class Batched<I extends Item, CreateProps extends Partial<I>> {
   /**
@@ -479,6 +480,16 @@ export class Batched<I extends Item, CreateProps extends Partial<I>> {
     }
   }
 
+  async *manyGenerator(lookup: Query<I>, lookupOptions?: BatchQueryOptions): AsyncGenerator<I, void, undefined> {
+    let cursor: Cursor | undefined = undefined;
+    do {
+      const page: PageResult<I> = await this.page(lookup, { ...lookupOptions, cursor });
+      const { next, items } = page;
+      cursor = next;
+      yield* items;
+    } while (cursor);
+  }
+
   async count(lookup: Query<I>, options?: BatchQueryOptions): Promise<number> {
     let query = this.model.query(stripNullKeys(lookup));
     if (options != undefined) {
@@ -527,10 +538,9 @@ export class Batched<I extends Item, CreateProps extends Partial<I>> {
             // a range key. In this case we just retry the insert.
             await sleep(2 ** retries * Math.random());
             continue;
-          } else {
-            console.error(e);
-            throw e;
           }
+          console.error(e);
+          throw e;
         } else {
           console.error(e);
           throw e;

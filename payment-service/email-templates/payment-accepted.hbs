@@ -1,123 +1,48 @@
 <html>
 
-<head>
+  <head>
     <style>
-        body {
-            font-family: Ubuntu, Roboto, Arial, Helvetica, sans-serif;
-        }
-
-        h1,
-        h2,
-        h3 {
-            font-size: 1.2em;
-            line-height: 200%;
-            padding: 0;
-            margin: 0;
-        }
-
-        h4,
-        h5 {
-            font-size: 1em;
-            line-height: 200%;
-            padding: 0;
-            margin: 0;
-        }
-
-        h6 {
-            font-size: 0.9em;
-            line-height: 200%;
-            padding: 0;
-            margin: 0;
-        }
-
-        h1 {
-            font-weight: 700;
-        }
-
-        h2 {
-            font-weight: 500;
-        }
-
-        h3 {
-            font-weight: 400;
-        }
-
-        h4 {
-            font-weight: 700;
-        }
-
-        h5 {
-            font-weight: 500;
-        }
-
-        h6 {
-            font-weight: 700;
-        }
-
-        p {
-            font-size: 1em;
-            line-height: 200%;
-            padding: 0;
-            margin: 0;
-        }
-
-        p.small {
-            font-size: 0.8em;
-            color: #888;
-        }
-
-        section {
-            margin-top: 2em;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-        }
-
-        a.btn {
-            padding: 1em 1.25em;
-            background-color: #3772FF;
-            border-radius: 1.25em;
-            color: #fff;
-            text-decoration: none;
-            font-size: 0.9em;
-            font-weight: 500;
-        }
-
-        a:hover {
-            background-color: #2f66e7;
-        }
+      body { font-family: Ubuntu, Roboto, Arial, Helvetica, sans-serif; } h1, h2, h3 { font-size: 1.2em; line-height:
+      200%; padding: 0; margin: 0; } h4, h5 { font-size: 1em; line-height: 200%; padding: 0; margin: 0; } h6 {
+      font-size: 0.9em; line-height: 200%; padding: 0; margin: 0; } h1 { font-weight: 700; } h2 { font-weight: 500; } h3
+      { font-weight: 400; } h4 { font-weight: 700; } h5 { font-weight: 500; } h6 { font-weight: 700; } p { font-size:
+      1em; line-height: 200%; padding: 0; margin: 0; } p.small { font-size: 0.8em; color: #888; } section { margin-top:
+      2em; } .logo { display: flex; align-items: center; } a.btn { padding: 1em 1.25em; background-color: #3772FF;
+      border-radius: 1.25em; color: #fff; text-decoration: none; font-size: 0.9em; font-weight: 500; } a:hover {
+      background-color: #2f66e7; }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <article>
-        <p>Hi {{userName}},</p>
-        <section>
-            <p>A payment of ${{paymentAmount}} has been added to your account.</p>
-            <p>Thank you for using our service.</p>
-        </section>
+      <p>Hi {{userName}},</p>
+      <section>
+        <p>A payment of ${{paymentAmount}} has been added to your account.</p>
+        <p>Thank you for using our service.</p>
+      </section>
     </article>
     <section>
-        <p>Sign in to the dashboard to view your account.</p>
+      <p>Sign in to the dashboard to view your account.</p>
     </section>
     <section>
-        <a class="btn" href="{{loginLink}}" target="_blank">Sign in</a>
+      <a class="btn" href="{{loginLink}}" target="_blank">Sign in</a>
     </section>
     <br />
     <section>
-        <p>Best regards,</p>
-        <!-- <img src="https://api.files.devfastchargeapi.com/logo/logo_256.png" alt="FastchargeAPI logo"> -->
-        <div class="logo">
-            <div>
-                <img src="https://dev-site-files-bucket.s3.amazonaws.com/logo/logo_256.png" height="64"
-                    alt="FastchargeAPI logo">
-                <h5>FastchargeAPI Team</h5>
-            </div>
+      <p>Best regards,</p>
+      <!-- <img src="https://api.files.devfastchargeapi.com/logo/logo_256.png" alt="FastchargeAPI logo"> -->
+      <div class="logo">
+        <div>
+          <img
+            src="https://dev-site-files-bucket.s3.amazonaws.com/logo/logo_256.png"
+            height="64"
+            alt="FastchargeAPI logo"
+          />
+          <h5>FastchargeAPI Team</h5>
         </div>
-        <p class="small">API metering made simple.</p>
+      </div>
+      <p class="small">API metering made simple.</p>
     </section>
-</body>
+  </body>
 
 </html>

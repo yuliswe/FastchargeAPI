@@ -5,18 +5,11 @@
   "main": "index.js",
   "module": "node",
   "type": "module",
-  "directories": {
-    "test": "tests"
-  },
   "scripts": {
-    "symlink:linux": "mkdir -p .symlinks && ln -sFfT \"$(realpath ${PWD}/../graphql-service/apollo)\" .symlinks/graphql-service",
-    "symlink:mac": "mkdir -p .symlinks && ln -sFh \"$(realpath ${PWD}/../graphql-service/apollo)\" .symlinks/graphql-service",
-    "symlink": "(npm run symlink:mac) || (npm run symlink:linux)",
+    "run-ts": "node -r esbuild-register --loader esbuild-register/loader",
     "gen": "graphql-codegen --config codegen.yml && prettier -w ./__generated__",
-    "build:x86": "(npm run prebuild) && (sam build)",
-    "build:arm": "(npm run prebuild) && (sam build --parallel)",
     "prebuild": "(npm run gen) && (tsc --noEmit)",
-    "build": "(npx ts-node-esm --experimentalSpecifierResolution=node build.ts) && sam build",
+    "build": "(npm run run-ts build.ts) && sam build",
     "deploy": "npm run build && sam deploy",
     "deploy:live": "npm run build && sam deploy --config-env live",
     "stripe": "stripe listen --forward-to https://api.v2.payment.devfastchargeapi.com/accept-stripe-payment -e 'checkout.session.completed,checkout.session.expired,checkout.session.async_payment_succeeded,checkout.session.async_payment_failed' & stripe listen --forward-to https://api.v2.payment.devfastchargeapi.com/finish-stripe-onboard -e 'account.updated'",
@@ -24,8 +17,8 @@
     "logs:live": "sam logs --config-env live --tail",
     "prestart": "npm run build",
     "start": "sam local start-api -p 3000 --warm-containers lazy",
-    "watch": "nodemon -e ts,graphql,yml,yaml,json -i __generated__ --signal SIGINT -x 'npm run start'",
-    "test": "jest --runInBand",
+    "watch": "nodemon --config ./nodemon.config.json -x 'npm run start'",
+    "test": "npx jest --runInBand",
     "fix": "eslint --fix ./",
     "pretypecheck": "npm run gen",
     "typecheck": "tsc --noEmit"
@@ -53,6 +46,7 @@
     "dynamoose-utils": "^3.1.0",
     "graphql": "^16.6.0",
     "graphql-scalars": "^1.20.1",
+    "graphql-service-apollo": "file:../graphql-service/apollo",
     "handlebars": "^4.7.7",
     "jsonwebtoken": "^9.0.0",
     "object-hash": "^3.0.0",
@@ -69,16 +63,14 @@
     "@graphql-codegen/typescript": "^2.8.7",
     "@graphql-codegen/typescript-operations": "^3.0.0",
     "@graphql-codegen/typescript-resolvers": "^2.7.12",
-    "@jest/globals": "^29.4.3",
-    "@types/jest": "^29.4.0",
     "@types/jsonwebtoken": "^9.0.1",
     "@types/node": "^18.11.18",
     "@types/object-hash": "^3.0.2",
     "babel-jest": "^29.4.3",
     "jest": "^29.4.3",
+    "jest-extended": "^4.0.2",
+    "json5": "^2.2.3",
     "react": "^18.2.0",
-    "ts-jest": "^29.0.5",
-    "ts-node": "^10.9.1",
     "typescript": "^4.9.5"
   }
 }

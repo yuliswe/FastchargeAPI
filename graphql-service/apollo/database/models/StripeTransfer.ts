@@ -50,7 +50,7 @@ export const StripeTransferTableSchema = new dynamoose.Schema(
   {
     timestamps: {
       updatedAt: {
-        type: Number,
+        updatedAt: { type: Number },
       },
     },
   }
@@ -78,11 +78,12 @@ export class StripeTransfer extends Item {
   currency: Currency;
   stripeTransferObject: object | null;
   stripeTransferId: string | null;
-  createdAt: number;
   accountActivity: PK;
   feeActivity: PK;
   transferAt: number;
   status: StripeTransferStatus;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export type StripeTransferCreateProps = {

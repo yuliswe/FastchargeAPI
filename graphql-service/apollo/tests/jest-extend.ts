@@ -2,7 +2,6 @@ import { expect } from "@jest/globals";
 import { AsymmetricMatcher } from "expect";
 
 function isMatcher(value: unknown): value is AsymmetricMatcher<unknown> {
-  console.log("isMatcher", value, typeof value === "object" && value !== null && "asymmetricMatch" in value);
   return typeof value === "object" && value !== null && "asymmetricMatch" in value;
 }
 

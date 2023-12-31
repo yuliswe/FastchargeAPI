@@ -2,15 +2,10 @@
 # to generate types based on our schema.
 documents:
   - "./handlers/**/*.ts"
-  - "./utils/**/*.ts"
+  - "./cron-jobs/**/*.ts"
 schema: "../graphql-service/apollo/__generated__/Public.final.graphql"
 generates:
-  # Specify where our generated types should live.
-  ./__generated__/gql-operations.ts:
-    plugins:
-      - "typescript"
-      - "typescript-operations"
+  ./__generated__/gql/:
+    preset: client
     config:
-      typesPrefix: GQL
-      scalars:
-        Timestamp: number
+      # namingConvention: keep

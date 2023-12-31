@@ -39,6 +39,7 @@ the lambdaHandler.ts  */
 muteConsoleDuringTests();
 
 afterEach(() => {
+  jest.clearAllTimers();
   jest.clearAllMocks();
   jest.restoreAllMocks();
 });

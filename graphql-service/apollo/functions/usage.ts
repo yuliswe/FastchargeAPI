@@ -4,7 +4,7 @@ import { PK } from "@/database/utils";
 import { RequestContext } from "../RequestContext";
 import { UsageLogStatus } from "../__generated__/resolvers-types";
 import { UsageSummaryPK } from "../pks/UsageSummaryPK";
-import { getAllSettledOrFail, safelySettlePromisesInBatchesByIterator, settlePromisesInBatches } from "./promise";
+import { asyncGetAll, settlePromisesInBatches, settlePromisesInBatchesByIterator } from "./promise";
 
 /**
  * Create a UsageSummary for the given user's usage logs that are not collected.
@@ -48,9 +48,8 @@ export async function collectUsageLogs(
     logs.push(usage);
   }
 
-  const affectedUsageSummaries = await safelySettlePromisesInBatchesByIterator(
-    usageLogsByPricing.entries(),
-    async ([pricingPK, usageLogs]) => {
+  const affectedUsageSummaries = await asyncGetAll(
+    settlePromisesInBatchesByIterator(usageLogsByPricing.entries(), async ([pricingPK, usageLogs]) => {
       const summary = {
         subscriber: user,
         app: app,
@@ -75,11 +74,8 @@ export async function collectUsageLogs(
         }
       );
       return usageSummary;
-    },
-    {
-      batchSize: 10,
-    }
+    })
   );
 
-  return { affectedUsageSummaries: getAllSettledOrFail(affectedUsageSummaries) };
+  return { affectedUsageSummaries };
 }

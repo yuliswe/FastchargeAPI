@@ -1,0 +1,22 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ExecuteDailyStripeTransfer Transfers money 1`] = `
+{
+  "createdAt": Any<Number>,
+  "currency": "usd",
+  "receiveAmount": "100",
+  "receiver": Any<String>,
+  "status": Any<String>,
+  "transferAt": Any<Number>,
+  "updatedAt": Any<Number>,
+  "withdrawAmount": "100",
+}
+`;
+
+exports[`ExecuteDailyStripeTransfer Transfers money 2`] = `
+{
+  "amount": Any<Number>,
+  "currency": "usd",
+  "destination": Any<String>,
+}
+`;

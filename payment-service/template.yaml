@@ -19,7 +19,7 @@ Parameters:
     Type: String
     Default: "api.v2.payment."
 
-# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+# More info about Globals: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-specification-template-anatomy-globals.html
 Globals:
   Function:
     Tracing: Active
@@ -146,36 +146,6 @@ Resources:
                 Action: lambda:InvokeFunction
                 Resource: "*"
 
-  ExecuteDailyStripeTransferCronJob:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub ${AWS::StackName}-ExecuteDailyStripeTransferCronJob
-      CodeUri: ./dist
-      Handler: ExecuteDailyStripeTransfer.lambdaHandler
-      Runtime: nodejs18.x
-      Architectures:
-        - arm64
-      Role: !GetAtt LambdaFunctionRole.Arn
-      ReservedConcurrentExecutions: 1
-      Timeout: 300
-      Events:
-        ScheduledTrigger12AM:
-          ScheduleEvent:
-          Type: ScheduleV2
-          Properties:
-            ScheduleExpressionTimezone: America/Toronto
-            ScheduleExpression: "cron(0 0 * * ? *)"
-            Input: '{"dryRun": true}'
-        ScheduledTrigger8PM:
-          ScheduleEvent:
-          Type: ScheduleV2
-          Properties:
-            ScheduleExpressionTimezone: America/Toronto
-            ScheduleExpression: "cron(0 20 * * ? *)"
-            Input: '{"dryRun": false}'
-    Metadata: # Manage esbuild properties
-      SkipBuild: True
-
   SendStripeDashboardLink:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -297,5 +267,57 @@ Resources:
             ApiId: !Ref APIGatewayV2
             Path: /finish-stripe-onboard
             Method: post
+    Metadata: # Manage esbuild properties
+      SkipBuild: True
+
+  ##############################
+  ###       Cron Jobs        ###
+  ##############################
+
+  SettlePendingAccountActivitiesPastDueCronJob:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-SettlePendingAccountActivitiesPastDueCronJob
+      CodeUri: ./dist/cron-jobs
+      Handler: SettlePendingAccountActivitiesPastDue.lambdaHandler
+      Runtime: nodejs18.x
+      Architectures:
+        - arm64
+      Role: !GetAtt LambdaFunctionRole.Arn
+      Timeout: 300
+      Events:
+        ScheduledTrigger:
+          ScheduleEvent:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpression: "rate(6 hours)"
+    Metadata: # Manage esbuild properties
+      SkipBuild: True
+
+  ExecuteDailyStripeTransferCronJob:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${AWS::StackName}-ExecuteDailyStripeTransferCronJob
+      CodeUri: ./dist/cron-jobs
+      Handler: ExecuteDailyStripeTransfer.lambdaHandler
+      Runtime: nodejs18.x
+      Architectures:
+        - arm64
+      Role: !GetAtt LambdaFunctionRole.Arn
+      ReservedConcurrentExecutions: 1
+      Timeout: 300
+      Events:
+        ScheduledTrigger12AM:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpressionTimezone: America/Toronto
+            ScheduleExpression: "cron(0 0 * * ? *)" # Daily at 12AM EST
+            Input: '{"dryRun": true}'
+        ScheduledTrigger8PM:
+          Type: ScheduleV2
+          Properties:
+            ScheduleExpressionTimezone: America/Toronto
+            ScheduleExpression: "cron(0 20 * * ? *)" # Daily at 8PM EST
+            Input: '{"dryRun": false}'
     Metadata: # Manage esbuild properties
       SkipBuild: True

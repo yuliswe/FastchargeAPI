@@ -9,37 +9,37 @@ import { LambdaCallbackV2, LambdaEventV2, LambdaHandlerV2 } from "../utils/Lambd
 const chalk = new Chalk({ level: 3 });
 
 async function handle(event: LambdaEventV2): Promise<APIGatewayProxyStructuredResultV2> {
-    if (event.requestContext.http.method === "OPTIONS") {
-        return {
-            statusCode: 200,
-            body: JSON.stringify({}),
-        };
-    } else {
-        return Promise.resolve({
-            statusCode: 401,
-            body: JSON.stringify({}),
-        });
-    }
+  if (event.requestContext.http.method === "OPTIONS") {
+    return {
+      statusCode: 200,
+      body: JSON.stringify({}),
+    };
+  } else {
+    return Promise.resolve({
+      statusCode: 401,
+      body: JSON.stringify({}),
+    });
+  }
 }
 
 export const lambdaHandler: LambdaHandlerV2 = async (
-    event: LambdaEventV2,
-    context: LambdaContext,
-    callback: LambdaCallbackV2
+  event: LambdaEventV2,
+  context: LambdaContext,
+  callback: LambdaCallbackV2
 ): Promise<APIGatewayProxyStructuredResultV2> => {
+  try {
+    console.log("event", chalk.blue(JSON.stringify(event)));
+    return await handle(event);
+  } catch (error) {
     try {
-        console.log("event", chalk.blue(JSON.stringify(event)));
-        return await handle(event);
-    } catch (error) {
-        try {
-            console.error(error);
-            console.error(chalk.red(JSON.stringify(error)));
-        } catch (jsonError) {
-            console.error(error);
-        }
-        return {
-            statusCode: 500,
-            body: "Internal Server Error",
-        };
+      console.error(error);
+      console.error(chalk.red(JSON.stringify(error)));
+    } catch (jsonError) {
+      console.error(error);
     }
+    return {
+      statusCode: 500,
+      body: "Internal Server Error",
+    };
+  }
 };
