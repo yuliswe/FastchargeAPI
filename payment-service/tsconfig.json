@@ -1,31 +1,11 @@
 {
+  "extends": "../graphql-service/apollo/tsconfig.json",
   "compilerOptions": {
-    "experimentalDecorators": true,
-    "skipLibCheck": true,
-    "rootDirs": ["./"],
-    "outDir": "dist",
-    "lib": ["es2022"],
-    "target": "es2022",
-    "module": "ESNext",
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "typeRoots": ["./node_modules/@types", "../graphql-service/apollo/@types"],
-    "noImplicitAny": true,
-    "noImplicitThis": true,
-    "alwaysStrict": true,
-    "strictBindCallApply": true,
-    "strictNullChecks": true,
-    "useUnknownInCatchVariables": true,
-    "strictFunctionTypes": false,
-    "strictPropertyInitialization": false,
-    "allowJs": true,
-    "strict": true,
-    "noEmit": true,
-    "resolveJsonModule": true,
-    "baseUrl": "../",
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["graphql-service/apollo/*"]
+      "@/*": ["node_modules/graphql-service-apollo/*"]
     }
   },
+  "include": ["**/*"],
   "exclude": ["node_modules", "dist"]
 }
