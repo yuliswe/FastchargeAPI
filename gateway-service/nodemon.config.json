@@ -1,0 +1,8 @@
+{
+  "ext": "go,ts,graphql,yml,yaml,json",
+  "ignore": [
+    "__generated__/",
+    "dist/"
+  ],
+  "signal": "SIGINT"
+}

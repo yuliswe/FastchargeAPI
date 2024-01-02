@@ -1,32 +1,30 @@
 query GetAppRoutes($app: String) {
-    app(name: $app) {
-        name
-        gatewayMode
-        endpoints {
-            method
-            path
-            destination
-        }
+  app(name: $app) {
+    name
+    gatewayMode
+    endpoints {
+      method
+      path
+      destination
     }
+  }
 }
 
 mutation CreateUsageLogAndTriggerBilling($user: ID!, $app: ID!, $path: String!, $pricing: ID!) {
-    createUsageLog(subscriber: $user, app: $app, path: $path, pricing: $pricing) {
-        createdAt
-    }
+  createUsageLog(subscriber: $user, app: $app, path: $path, pricing: $pricing) {
+    createdAt
+  }
 }
 
-mutation TriggerBilling($user: ID!, $app: ID!, $path: String!) {
-    triggerBilling(user: $user, app: $app, path: $path) {
-        createdAt
-    }
+mutation TriggerBilling($user: ID!, $app: ID!) {
+  triggerBilling(user: $user, app: $app)
 }
 
 query CheckUserIsAllowedToCallEndpoint($user: ID!, $app: ID!) {
-    checkUserIsAllowedForGatewayRequest(user: $user, app: $app) {
-        allowed
-        reason
-        pricingPK
-        userPK
-    }
+  checkUserIsAllowedForGatewayRequest(user: $user, app: $app) {
+    allowed
+    reason
+    pricingPK
+    userPK
+  }
 }
