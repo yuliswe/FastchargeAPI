@@ -8,7 +8,6 @@
       "@/*": ["*"]
     }
   },
-  "exclude": ["node_modules", "dist"],
   "include": ["**/*"],
   "files": ["../../global.d.ts", "tests/global.d.ts"]
 }
