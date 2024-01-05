@@ -25,5 +25,6 @@ pathadd "$NPM_BIN"
 export AWS_PROFILE=dev_fastchargeapi
 export AMPLIFY_MONOREPO_APP_ROOT="$WS_DIR/react/fastchargeapi)"
 export DEV_DOMAIN=1
+export NODE_OPTIONS="--max-old-space-size=3008"
 
-alias ts-node="npx ts-node-esm --experimentalSpecifierResolution=node"
+alias run-ts="npx node -r esbuild-register --loader esbuild-register/loader"

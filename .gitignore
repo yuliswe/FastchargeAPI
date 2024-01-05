@@ -12,7 +12,7 @@ build
 **/.aws-sam/
 **/__pycache__/
 **/__generated__/
-.coverage
+**/.coverage/
 cov.xml
 .eslintcache
 .npm_cache/

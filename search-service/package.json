@@ -4,21 +4,22 @@
   "description": "This project contains source code and supporting files for a serverless application that you can deploy with the SAM CLI. It includes the following files and folders.",
   "main": "index.js",
   "module": "node",
-  "directories": {
-    "test": "tests"
-  },
   "scripts": {
-    "symlink": "mkdir -p .symlinks && ln -sFh \"$(realpath ${PWD}/../graphql-service/apollo)\" .symlinks/graphql-service",
+    "run-ts": "node -r esbuild-register --loader esbuild-register/loader",
     "gen": "graphql-codegen --config codegen.yml && prettier -w ./__generated__",
-    "build": "npm run symlink && npm run gen && tsc --noEmit && sam build --cached --parallel",
+    "prebuild": "npm run typecheck",
+    "build": "(npm run run-ts build.ts) && sam build",
     "deploy": "npm run build && sam deploy",
     "deploy:live": "npm run build && sam deploy --config-env live",
     "logs": "sam logs --tail",
     "logs:live": "sam logs --config-env live --tail",
-    "start": "npm run build && sam local start-api -p 11000 --warm-containers lazy",
-    "watch": "nodemon -e ts,graphql,yml,yaml -i __generated__ --signal SIGINT -x 'npm run start || exit 1'",
+    "prestart": "npm run build",
+    "start": "sam local start-api -p 11000 --warm-containers lazy",
+    "watch": "nodemon --config ./nodemon.config.json -x 'npm run start'",
     "test": "echo TODO",
-    "fix": "eslint --fix ./"
+    "fix": "eslint --fix ./",
+    "pretypecheck": "npm run gen",
+    "typecheck": "(npm run gen) && (tsc --noEmit)"
   },
   "author": "",
   "license": "ISC",
@@ -54,7 +55,6 @@
     "@graphql-codegen/typescript": "^2.8.7",
     "@graphql-codegen/typescript-operations": "^3.0.0",
     "@graphql-codegen/typescript-resolvers": "^2.7.12",
-    "@jest/globals": "^29.4.3",
     "@types/jest": "^29.4.0",
     "@types/jsonwebtoken": "^9.0.1",
     "@types/node": "^18.11.18",
