@@ -20,7 +20,8 @@ type Query {
   ): [App!]!
 
   ### User
-  getUser(pk: ID, email: Email): User!
+  getUser(pk: ID!): User!
+  getUserByEmail(email: Email!): User!
 
   ### Endpoint
   getEndpoint(pk: ID!): Endpoint!

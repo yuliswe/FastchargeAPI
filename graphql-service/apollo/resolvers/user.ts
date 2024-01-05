@@ -6,7 +6,8 @@ import { Chalk } from "chalk";
 import { RequestContext } from "../RequestContext";
 import {
   GQLMutationCreateUserArgs,
-  GQLQueryUserArgs,
+  GQLQueryGetUserArgs,
+  GQLQueryGetUserByEmailArgs,
   GQLResolvers,
   GQLUserAccountActivitiesArgs,
   GQLUserGetFastchargeApiIdTokenArgs,
@@ -14,7 +15,7 @@ import {
   GQLUserUpdateUserArgs,
   GQLUserUsageSummariesArgs,
 } from "../__generated__/resolvers-types";
-import { BadInput, Denied } from "../errors";
+import { Denied } from "../errors";
 import { getUserBalance } from "../functions/account";
 import { createUserWithEmail, makeFastchargeAPIIdTokenForUser } from "../functions/user";
 import { Can } from "../permissions";
@@ -186,31 +187,24 @@ export const UserResolvers: GQLResolvers & {
     },
   },
   Query: {
-    // async users(parent: {}, args: {}, context: RequestContext): Promise<User[]> {
-    //     if (!(await Can.listUsers(context))) {
-    //         throw new Denied();
-    //     }
-    //     let users = await context.batched.User.scan();
-    //     return users;
-    // },
-    async getUser(parent: {}, { pk, email }: GQLQueryUserArgs, context: RequestContext) {
-      let user;
-      if (email) {
-        user = await context.batched.User.get(
-          { email },
-          {
-            using: UserTableIndex.IndexByEmailOnlyPk,
-          }
-        );
-      } else if (pk) {
-        user = await context.batched.User.get(UserPK.parse(pk));
+    async getUser(parent: {}, args: GQLQueryGetUserArgs, context: RequestContext) {
+      const { pk } = args;
+      const user = await context.batched.User.get(UserPK.parse(pk));
+      if (!(await Can.getUser(user, context))) {
+        throw new Denied();
       }
-      if (!user) {
-        throw new BadInput("id or email required");
-      }
-      // Does this need to be private? I don't think so, but I'll leave it
-      // for now.
-      if (!(await Can.queryUser(user, context))) {
+      return user;
+    },
+
+    async getUserByEmail(parent: {}, args: GQLQueryGetUserByEmailArgs, context: RequestContext) {
+      const { email } = args;
+      const user = await context.batched.User.get(
+        { email },
+        {
+          using: UserTableIndex.IndexByEmailOnlyPk,
+        }
+      );
+      if (!(await Can.getUserByEmail(user, context))) {
         throw new Denied();
       }
       return user;

@@ -3,6 +3,8 @@ projects:
     schema:
       - "graphql-service/apollo/schema/Public.graphql"
       - "graphql-service/apollo/__generated__/Public.final.graphql"
+    documents:
+      - "graphql-service/apollo/tests/resolvers/*/*.ts"
     extensions:
       languageService:
         cacheSchemaFileForLookup: false

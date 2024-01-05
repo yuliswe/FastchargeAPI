@@ -5,7 +5,7 @@ import { User } from "@/database/models/User";
 import { Can } from "@/permissions";
 import { AppPK } from "@/pks/AppPK";
 import { UserPK } from "@/pks/UserPK";
-import { getOrCreateTestUser, simplifyGraphQLPromiseRejection } from "@/tests/test-utils/test-utils";
+import { getGraphQLDataOrError, getOrCreateTestUser } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { v4 as uuidv4 } from "uuid";
@@ -71,8 +71,7 @@ describe("udpate User", () => {
   });
 
   test("User can only update their own name", async () => {
-    // Assuming the user can query the user.
-    jest.spyOn(Can, "queryUser").mockImplementationOnce((user, context) => Promise.resolve(true));
+    jest.spyOn(Can, "getUser").mockImplementationOnce((user, context) => Promise.resolve(true));
     const promise = getTestGQLClient({ user: testOtherUser }).mutate({
       mutation: graphql(`
         query UpdateUserAuthorName($user: ID!, $newAuthorName: String!) {
@@ -89,7 +88,7 @@ describe("udpate User", () => {
         newAuthorName: "new name",
       },
     });
-    await expect(simplifyGraphQLPromiseRejection(promise)).rejects.toMatchObject([
+    await expect(getGraphQLDataOrError(promise)).rejects.toMatchObject([
       {
         code: "PERMISSION_DENIED",
         path: "getUser.updateUser",
@@ -117,7 +116,7 @@ describe("udpate User", () => {
             [field]: "new value",
           },
         });
-        await expect(simplifyGraphQLPromiseRejection(promise)).rejects.toMatchObject([
+        await expect(getGraphQLDataOrError(promise)).rejects.toMatchObject([
           {
             code: "PERMISSION_DENIED",
             path: `getUser.updateUser`,

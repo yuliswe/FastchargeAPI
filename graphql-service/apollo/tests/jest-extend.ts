@@ -25,20 +25,10 @@ export function expectToMatchSnapshotExceptForProps<T>(object: T, matcher: Parti
       return expect.any(Boolean);
     }
     if (Array.isArray(subObj)) {
-      return expect.arrayContaining(subObj.map(recursivelyApply));
+      return subObj.map(recursivelyApply);
     }
     if (isMatcher(subObj)) {
-      const type = subObj.getExpectedType?.();
-      switch (type) {
-        case "number":
-          return expect.any(Number);
-        case "string":
-          return expect.any(String);
-        case "boolean":
-          return expect.any(Boolean);
-        default:
-          throw new Error(`Unexpected type ${type}`);
-      }
+      return subObj;
     }
     if (typeof subObj === "object") {
       const result: { [key: string]: unknown } = {};

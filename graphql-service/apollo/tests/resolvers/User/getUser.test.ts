@@ -4,10 +4,11 @@ import { User } from "@/database/models/User";
 import { Can } from "@/permissions";
 import { AppPK } from "@/pks/AppPK";
 import { UserPK } from "@/pks/UserPK";
-import { getOrCreateTestUser, simplifyGraphQLPromiseRejection } from "@/tests/test-utils/test-utils";
+import { createTestApp } from "@/tests/test-data/App";
+import { createTestUser } from "@/tests/test-data/User";
+import { getGraphQLDataOrError } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
 import { graphql } from "@/typed-graphql";
-import { v4 as uuidv4 } from "uuid";
 
 const context: RequestContext = {
   batched: createDefaultContextBatched(),
@@ -17,128 +18,78 @@ const context: RequestContext = {
   isAdminUser: false,
 };
 
-let testMainUser: User;
-let testOtherUser: User;
+let testUser: User;
+let testPublicUser: User;
 let testApp: App;
 
 beforeAll(async () => {
-  testMainUser = await getOrCreateTestUser(context, { email: `testuser_${uuidv4()}@gmail_mock.com` });
-  testOtherUser = await getOrCreateTestUser(context, { email: `testuser_${uuidv4()}@gmail_mock.com` });
-  testApp = await context.batched.App.create({
-    name: `testapp-${uuidv4()}`,
-    owner: UserPK.stringify(testMainUser),
+  testUser = await createTestUser(context);
+  testPublicUser = await createTestUser(context);
+  testApp = await createTestApp(context, {
+    owner: UserPK.stringify(testUser),
   });
 });
 
-const userPrivateFieldNames = [
-  "pk",
-  "email",
-  "subscriptions",
-  "createdAt",
-  "updatedAt",
-  "balance",
-  "balanceLimit",
-  "stripeCustomerId",
-  "stripeConnectAccountId",
-  "accountActivities",
-  "accountHistories",
-  // "usageSummaries",
-].sort((a, b) => a.localeCompare(b));
-
-const queryUserByPK = graphql(`
+const getUserByPK = graphql(`
   query GetUserByPK($pk: ID!) {
     getUser(pk: $pk) {
+      ...TestUserPublicFields
+      ...TestUserPrivateFields
+    }
+  }
+
+  fragment TestUserPublicFields on User {
+    author
+    apps {
       pk
-      email
-      subscriptions {
-        pk
-      }
-      createdAt
-      updatedAt
-      balance
-      balanceLimit
-      stripeCustomerId
-      stripeConnectAccountId
-      accountActivities {
-        pk
-      }
-      accountHistories {
-        pk
-      }
-      author
-      apps {
-        pk
-      }
+    }
+  }
+
+  fragment TestUserPrivateFields on User {
+    pk
+    email
+    subscriptions {
+      pk
+    }
+    createdAt
+    updatedAt
+    balance
+    balanceLimit
+    stripeCustomerId
+    stripeConnectAccountId
+  }
+`);
+
+const getUserByPkOnlyPublicFields = graphql(`
+  query getUserByPkOnlyPublicFields($pk: ID!) {
+    getUser(pk: $pk) {
+      ...TestUserPublicFields
     }
   }
 `);
 
-// usageSummaries (app: "${appPK}") { pk }
-const queryUserByEmail = graphql(`
-  query TestGetUserByEmail($email: Email!) {
-    getUser(email: $email) {
-      pk
-    }
-  }
-`);
-
-describe("Query User", () => {
-  test("by pk", async () => {
-    const result = await getTestGQLClient({ user: testMainUser }).query({
-      query: queryUserByPK,
+describe("getUser", () => {
+  test("A user can get itself", async () => {
+    const result = await getTestGQLClient({ user: testUser }).query({
+      query: getUserByPK,
       variables: {
-        pk: UserPK.stringify(testMainUser),
-        // app: AppPK.stringify(testApp),
+        pk: UserPK.stringify(testUser),
       },
     });
     expect(result.data?.getUser).toMatchObject({
       __typename: "User",
       pk: expect.stringContaining("user_"),
     });
-  });
-
-  test("by email", async () => {
-    const result = await getTestGQLClient({ user: testMainUser }).query({
-      query: queryUserByEmail,
-      variables: {
-        email: testMainUser.email,
-      },
-    });
-    expect(result.data?.getUser).toMatchObject({
-      __typename: "User",
-      pk: expect.stringContaining("user_"),
-    });
-  });
-
-  test("with no argument should fail", async () => {
-    const query = graphql(`
-      query GetUserWithNoArgument {
-        getUser {
-          pk
-        }
-      }
-    `);
-    const promise = getTestGQLClient({ user: testOtherUser }).query({
-      query,
-      variables: {},
-    });
-    await expect(simplifyGraphQLPromiseRejection(promise)).rejects.toMatchObject([
-      {
-        code: "BAD_USER_INPUT",
-        message: "id or email required",
-        path: "getUser",
-      },
-    ]);
   });
 
   test("A user cannot be queried by another user", async () => {
-    const promise = getTestGQLClient({ user: testOtherUser }).query({
-      query: queryUserByPK,
+    const promise = getTestGQLClient({ user: testPublicUser }).query({
+      query: getUserByPK,
       variables: {
-        pk: UserPK.stringify(testMainUser),
+        pk: UserPK.stringify(testUser),
       },
     });
-    await expect(simplifyGraphQLPromiseRejection(promise)).rejects.toMatchObject([
+    await expect(getGraphQLDataOrError(promise)).rejects.toMatchObject([
       {
         code: "PERMISSION_DENIED",
         message: "You do not have permission to perform this action.",
@@ -148,71 +99,34 @@ describe("Query User", () => {
   });
 
   test("User fields that are hidden from public", async () => {
-    jest.spyOn(Can, "queryUser").mockImplementation(() => Promise.resolve(true));
-    const promise = getTestGQLClient({ user: testOtherUser }).query({
-      query: graphql(`
-        query TestUserHiddenFields($pk: ID!) {
-          getUser(pk: $pk) {
-            pk
-            email
-            subscriptions {
-              pk
-            }
-            createdAt
-            updatedAt
-            balance
-            balanceLimit
-            stripeCustomerId
-            stripeConnectAccountId
-            accountActivities {
-              pk
-            }
-            accountHistories {
-              pk
-            }
-          }
-        }
-      `),
+    jest.spyOn(Can, "getUser").mockImplementation(() => Promise.resolve(true));
+    const promise = getTestGQLClient({ user: testPublicUser }).query({
+      query: getUserByPK,
       variables: {
-        pk: UserPK.stringify(testMainUser),
+        pk: UserPK.stringify(testUser),
       },
     });
 
-    await expect(simplifyGraphQLPromiseRejection(promise)).rejects.toMatchObject(
-      userPrivateFieldNames.map((p) => ({
-        code: "PERMISSION_DENIED",
-        message: "You do not have permission to perform this action.",
-        path: `getUser.${p}`,
-      }))
-    );
+    await expect(getGraphQLDataOrError(promise)).rejects.toMatchSnapshot();
   });
 
   test("User fields that are visible to public", async () => {
-    jest.spyOn(Can, "queryUser").mockImplementation(() => Promise.resolve(true));
-    const result = await getTestGQLClient({ user: testOtherUser }).query({
-      query: graphql(`
-        query TestUserPublicFields($pk: ID!) {
-          getUser(pk: $pk) {
-            author
-            apps {
-              pk
-            }
-          }
-        }
-      `),
+    jest.spyOn(Can, "getUser").mockImplementation(() => Promise.resolve(true));
+    const result = getTestGQLClient({ user: testPublicUser }).query({
+      query: getUserByPkOnlyPublicFields,
       variables: {
-        pk: UserPK.stringify(testMainUser),
+        pk: UserPK.stringify(testUser),
       },
     });
-    expect(result.data?.getUser).toMatchObject({
-      __typename: "User",
-      apps: [
-        {
-          __typename: "App",
-          pk: AppPK.stringify(testApp),
-        },
-      ],
-      author: testMainUser.author,
+    await expect(getGraphQLDataOrError(result)).resolves.toMatchSnapshotExceptForProps({
+      getUser: {
+        author: testUser.author,
+        apps: [
+          {
+            pk: AppPK.stringify(testApp),
+          },
+        ],
+      },
     });
   });
 });

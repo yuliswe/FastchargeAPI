@@ -1,0 +1,66 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getUser User fields that are hidden from public 1`] = `
+[
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "getUser.balance",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "getUser.balanceLimit",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "getUser.createdAt",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "getUser.email",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "getUser.pk",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "getUser.stripeConnectAccountId",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "getUser.stripeCustomerId",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "getUser.subscriptions",
+  },
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "getUser.updatedAt",
+  },
+]
+`;
+
+exports[`getUser User fields that are visible to public 1`] = `
+{
+  "getUser": {
+    "__typename": "User",
+    "apps": [
+      {
+        "__typename": "App",
+        "pk": Any<String>,
+      },
+    ],
+    "author": Any<String>,
+  },
+}
+`;

@@ -11,7 +11,8 @@ projects:
       - "./functions/*.ts"
       - "./resolvers/*.ts"
       - "./pks/*.ts"
-      - "./tests/**/*.ts"
+      - "./tests/resolvers/*/*.ts"
+      - "./tests/resolvers/*/*.graphql"
     extensions:
       codegen:
         generates:

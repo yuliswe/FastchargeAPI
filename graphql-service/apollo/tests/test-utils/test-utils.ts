@@ -139,7 +139,7 @@ export function simplifyGraphQLError(errors: GraphQLErrors) {
   return sortGraphQLErrors(simpleErrors);
 }
 
-export async function simplifyGraphQLPromiseRejection(response: Promise<unknown>): Promise<unknown> {
+export async function simplifyGraphQLPromiseRejection<T>(response: Promise<T>): Promise<T> {
   try {
     return await response;
   } catch (error) {
@@ -148,6 +148,11 @@ export async function simplifyGraphQLPromiseRejection(response: Promise<unknown>
     }
     throw error;
   }
+}
+
+export async function getGraphQLDataOrError<T extends { data?: unknown }>(response: Promise<T>): Promise<T["data"]> {
+  const result = await simplifyGraphQLPromiseRejection(response);
+  return result.data;
 }
 
 export async function getUserBalanceNoCache(context: RequestContext, user: User): Promise<string> {
