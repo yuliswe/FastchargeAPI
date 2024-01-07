@@ -3,7 +3,7 @@ import { AccountActivity, AccountActivityModel } from "@/database/models/Account
 import { StripeTransfer } from "@/database/models/StripeTransfer";
 import { UsageSummary } from "@/database/models/UsageSummary";
 import { User } from "@/database/models/User";
-import { sqsSettleAccountActivities } from "@/functions/account";
+import { settleAccountActivitiesOnSQS, sqsSettleAccountActivities } from "@/functions/account";
 import { AppPK } from "@/pks/AppPK";
 import { GraphQLResolveInfoWithCacheControl } from "@apollo/cache-control-types";
 import {
@@ -117,23 +117,30 @@ export const AccountActivityResolvers: GQLResolvers & {
     },
   },
   Mutation: {
+    /**
+     * Used for adding money to a user's account for testing cli.
+     */
     async createAccountActivity(
       parent: {},
       args: GQLMutationCreateAccountActivityArgs,
       context: RequestContext
     ): Promise<AccountActivity> {
-      const { user, amount, description, reason, settleAt, type } = args;
+      const { user, amount, description, reason, settleAt, type, settleImmediately } = args;
       if (!(await Can.createAccountActivity(context))) {
         throw new Denied();
       }
-      return await context.batched.AccountActivity.create({
+      const accountActivity = await context.batched.AccountActivity.create({
         user,
         amount,
         description,
         reason,
-        settleAt: settleAt ?? Date.now(),
+        settleAt: settleAt ?? Date.now() - 60_000,
         type,
       });
+      if (settleImmediately) {
+        await settleAccountActivitiesOnSQS(user);
+      }
+      return accountActivity;
     },
 
     async _sqsSettleAccountActivitiesForUser(

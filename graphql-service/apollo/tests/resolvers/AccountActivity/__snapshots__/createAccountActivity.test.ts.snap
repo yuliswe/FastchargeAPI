@@ -1,0 +1,16 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`createAccountActivity If settles immediately, creates new account history 1`] = `
+[
+  {
+    "closingBalance": "100",
+    "closingTime": Any<Number>,
+    "createdAt": Any<Date>,
+    "sequentialId": 0,
+    "startingBalance": "0",
+    "startingTime": 0,
+    "updatedAt": Any<Date>,
+    "user": Any<String>,
+  },
+]
+`;

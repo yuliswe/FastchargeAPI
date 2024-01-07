@@ -3,7 +3,7 @@ import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
 import { AccountActivityReason, AccountActivityType } from "@/__generated__/resolvers-types";
 import { User } from "@/database/models/User";
 import { UserPK } from "@/pks/UserPK";
-import { getAdminUser, getOrCreateTestUser, simplifyGraphQLPromiseRejection } from "@/tests/test-utils/test-utils";
+import { getAdminUser, getGraphQLDataOrError, getOrCreateTestUser } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { v4 as uuidv4 } from "uuid";
@@ -29,6 +29,7 @@ const createAccountActivityMutation = graphql(`
     $reason: AccountActivityReason!
     $amount: NonNegativeDecimal!
     $description: String!
+    $settleImmediately: Boolean!
     $settleAt: Timestamp
   ) {
     createAccountActivity(
@@ -37,6 +38,7 @@ const createAccountActivityMutation = graphql(`
       reason: $reason
       amount: $amount
       description: $description
+      settleImmediately: $settleImmediately
       settleAt: $settleAt
     ) {
       pk
@@ -60,6 +62,7 @@ function accountActivityProps() {
     amount: "0",
     description: "test description",
     settleAt: Date.now(),
+    settleImmediately: false,
   };
 }
 
@@ -93,11 +96,39 @@ describe("createAccountActivity", () => {
       mutation: createAccountActivityMutation,
       variables: accountActivityProps(),
     });
-    await expect(simplifyGraphQLPromiseRejection(promise)).rejects.toMatchObject([
+    await expect(getGraphQLDataOrError(promise)).rejects.toMatchObject([
       {
         code: "PERMISSION_DENIED",
         message: "You do not have permission to perform this action.",
         path: "createAccountActivity",
+      },
+    ]);
+  });
+
+  test("If settles immediately, creates new account history", async () => {
+    const oldAccountHistory = await context.batched.AccountHistory.many({
+      user: UserPK.stringify(testUser),
+    });
+    expect(oldAccountHistory.length).toBe(0);
+    await getTestGQLClient({ user: await getAdminUser(context) }).mutate({
+      mutation: createAccountActivityMutation,
+      variables: {
+        ...accountActivityProps(),
+        settleImmediately: true,
+        amount: "100",
+        type: AccountActivityType.Incoming,
+      },
+    });
+    context.batched.AccountHistory.clearCache();
+    const newAccountHistory = context.batched.AccountHistory.many({
+      user: UserPK.stringify(testUser),
+    });
+    await expect(newAccountHistory).resolves.toMatchSnapshotExceptForProps([
+      {
+        user: UserPK.stringify(testUser),
+        closingTime: expect.any(Number),
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
       },
     ]);
   });

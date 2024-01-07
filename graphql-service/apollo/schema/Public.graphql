@@ -154,6 +154,7 @@ type Mutation {
     reason: AccountActivityReason!
     amount: NonNegativeDecimal!
     description: String!
+    settleImmediately: Boolean!
     settleAt: Timestamp
   ): AccountActivity!
   flushAppSearchIndex: Int!
