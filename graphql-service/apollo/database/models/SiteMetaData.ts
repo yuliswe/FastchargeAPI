@@ -1,7 +1,7 @@
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
 import { SiteMetaDataKey } from "../../__generated__/resolvers-types";
-import { tableConfigs } from "../utils";
+import { tableConfigs } from "../dynamodb";
 
 export const SiteMetaDataTableSchema = new dynamoose.Schema(
   {
@@ -28,3 +28,14 @@ export type SiteMetaDataCreateProps = {
 export const SiteMetaDataModel = dynamoose.model<SiteMetaData>("SiteMetaData", SiteMetaDataTableSchema, {
   ...tableConfigs,
 });
+
+export const defaultSiteMetaData: { [key: string]: SiteMetaData } = {
+  [SiteMetaDataKey.StripeFlatFee]: new SiteMetaDataModel({
+    key: SiteMetaDataKey.StripeFlatFee,
+    value: 0.3,
+  }),
+  [SiteMetaDataKey.StripePercentageFee]: new SiteMetaDataModel({
+    key: SiteMetaDataKey.StripePercentageFee,
+    value: 0.029,
+  }),
+};
