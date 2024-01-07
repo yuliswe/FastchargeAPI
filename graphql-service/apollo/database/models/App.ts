@@ -2,7 +2,8 @@ import { AppVisibility } from "@/__generated__/gql/graphql";
 import { GatewayMode } from "@/__generated__/resolvers-types";
 import { validateAppName } from "@/functions/app";
 import dynamoose from "dynamoose";
-import { Item, tableConfigs } from "../utils";
+import { tableConfigs } from "../dynamodb";
+import { Item } from "../utils";
 
 export { AppVisibility, GatewayMode };
 export enum AppTableIndex {

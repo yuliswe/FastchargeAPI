@@ -1,6 +1,7 @@
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
-import { PK, defaultCreatedAt, tableConfigs } from "../utils";
+import { tableConfigs } from "../dynamodb";
+import { PK, defaultCreatedAt } from "../utils";
 
 export const UserAppTokenTableSchema = new dynamoose.Schema(
   {

@@ -2,7 +2,8 @@ import { Currency } from "@/__generated__/gql/graphql";
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
 import { StripeTransferStatus } from "../../__generated__/resolvers-types";
-import { PK, String_Required_NotEmpty, defaultCreatedAt, tableConfigs, validateStringDecimal } from "../utils";
+import { tableConfigs } from "../dynamodb";
+import { PK, String_Required_NotEmpty, defaultCreatedAt, validateStringDecimal } from "../utils";
 
 export enum StripeTransferTableIndex {
   StatusTransferAt = "indexByStatus_transferAt__onlyPK",

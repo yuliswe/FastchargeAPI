@@ -1,6 +1,7 @@
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
-import { PK, String_Required_NotEmpty, tableConfigs } from "../utils";
+import { tableConfigs } from "../dynamodb";
+import { PK, String_Required_NotEmpty } from "../utils";
 
 export enum AppTagTableIndex {
   TagApp = "indexByTag_app__onlyPK",

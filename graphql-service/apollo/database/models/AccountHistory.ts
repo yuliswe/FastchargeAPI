@@ -1,6 +1,7 @@
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
-import { PK, String_Required_NotEmpty, tableConfigs, validateStringDecimal } from "../utils";
+import { tableConfigs } from "../dynamodb";
+import { PK, String_Required_NotEmpty, validateStringDecimal } from "../utils";
 
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.

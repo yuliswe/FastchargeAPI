@@ -9,9 +9,9 @@ parameter_overrides = [
     "MainDomain=\"devfastchargeapi.com\"",
     "Route53ZoneId=\"Z07362872NENGXHWMNLU5\"",
     "EnvDevDomain=\"1\"",
-    "TablePrefix=\"dev_restored_1686776400000_live_\"",
+    "TablePrefix=\"dev_2023_jan_7_\"",
     "PointInTimeRecovery=0",
-    "DeletionProtection=0"
+    "DeletionProtection=0",
 ]
 resolve_s3 = true
 image_repositories = []
@@ -32,7 +32,7 @@ parameter_overrides = [
     "Route53ZoneId=\"Z0358815GI2I8U5CTHXW\"",
     "TablePrefix=\"live_\"",
     "PointInTimeRecovery=1",
-    "DeletionProtection=1"
+    "DeletionProtection=1",
 ]
 resolve_s3 = true
 image_repositories = []

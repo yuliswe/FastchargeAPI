@@ -277,7 +277,7 @@ Resources:
     Properties:
       FunctionName: !Sub ${AWS::StackName}-SQSApolloServer
       CodeUri: ./apollo/dist/
-      Handler: lambdaHandler.lambdaHandler
+      Handler: sqsHandler.sqsHandler
       Runtime: nodejs18.x
       Architectures:
         - arm64

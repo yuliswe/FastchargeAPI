@@ -2,7 +2,6 @@ import { ValidationError } from "@/errors";
 import dynamoose from "dynamoose";
 import { ModelType } from "dynamoose/dist/General";
 import { Item } from "dynamoose/dist/Item";
-import { TableClass } from "dynamoose/dist/Table/types";
 
 export const NULL = dynamoose.type.NULL;
 
@@ -24,25 +23,6 @@ export type GQLPartial<T> = {
   [K in keyof T]?: Optional<T[K]>;
 };
 export type PK = string;
-export const tableConfigs = {
-  create: false,
-  update: false, // do not set this to true. It will whipe the GSI.
-  initialize: true,
-  throughput: "ON_DEMAND" as const,
-  prefix: process.env.DEV_DOMAIN === "1" ? "dev_restored_1686776400000_live_" : "live_",
-  suffix: "",
-  waitForActive: {
-    enabled: false,
-    check: {
-      timeout: 128000,
-      frequency: 1000,
-    },
-  },
-  expires: undefined,
-  tags: {},
-  tableClass: TableClass.standard,
-};
-
 export const defaultCreatedAt = (async () => {
   await new Promise((resolve) => setTimeout(resolve, 1));
   return Date.now();

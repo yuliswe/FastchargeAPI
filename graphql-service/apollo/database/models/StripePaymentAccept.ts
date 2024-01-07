@@ -1,7 +1,8 @@
 import { Currency, StripePaymentAcceptStatus } from "@/__generated__/gql/graphql";
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
-import { PK, String_Required_NotEmpty, defaultCreatedAt, tableConfigs, validateStringDecimal } from "../utils";
+import { tableConfigs } from "../dynamodb";
+import { PK, String_Required_NotEmpty, defaultCreatedAt, validateStringDecimal } from "../utils";
 
 /**
  * StripePaymentAccept represents an event when the user successfully pays over

@@ -1,6 +1,7 @@
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
-import { PK, tableConfigs } from "../utils";
+import { tableConfigs } from "../dynamodb";
+import { PK } from "../utils";
 
 export const GatewayRequestDecisionCacheTableSchema = new dynamoose.Schema(
   {

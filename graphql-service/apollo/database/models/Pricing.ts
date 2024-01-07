@@ -1,7 +1,8 @@
 import { PricingAvailability } from "@/__generated__/gql/graphql";
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
-import { PK, String_Required_NotEmpty, defaultCreatedAt, tableConfigs } from "../utils";
+import { tableConfigs } from "../dynamodb";
+import { PK, String_Required_NotEmpty, defaultCreatedAt } from "../utils";
 
 export { PricingAvailability };
 
