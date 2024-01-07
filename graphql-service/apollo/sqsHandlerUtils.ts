@@ -36,15 +36,16 @@ export async function callOrCreateSQSHandler(
           },
           parseHeaders(record) {
             const headers = new HeaderMap();
-            headers.set("Content-Type", "application/json");
+            headers.set("content-type", "application/json");
+            headers.set("origin", "devfastchargeapi.com");
             return headers;
           },
-          parseBody(record) {
+          parseBody(record, headers) {
             const { body } = record;
             const bodyObj = JSON.parse(body) as unknown;
             console.log(
-              chalk.blue(chalk.bold("SQSHandler Recieved SQSRecord:")),
-              chalk.blue(JSON.stringify({ ...record, body: `<${typeof body}>` }, null, 2)),
+              chalk.blue(chalk.bold("SQSHandler Received SQSRecord:")),
+              chalk.blue(JSON.stringify({ ...record, headers, body: `<${typeof body}>` }, null, 2)),
               chalk.blue(chalk.bold("\nPretty print body (JSON.parsed):")),
               chalk.blue(JSON.stringify(bodyObj, null, 2))
             );

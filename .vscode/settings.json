@@ -44,9 +44,9 @@
   },
   "python.analysis.typeCheckingMode": "basic",
   "editor.codeActionsOnSave": {
-    "source.organizeImports": true,
-    "source.unusedImports": true,
-    "source.fixAll.eslint": true
+    "source.organizeImports": "explicit",
+    "source.unusedImports": "explicit",
+    "source.fixAll.eslint": "explicit"
   },
   "[python]": {
     "editor.defaultFormatter": "ms-python.black-formatter"
@@ -73,5 +73,9 @@
   },
   "files.watcherExclude": {
     "**/dist/**": true
-  }
+  },
+  "javascript.preferences.importModuleSpecifier": "non-relative",
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "typescript.preferences.importModuleSpecifierEnding": "minimal",
+  "javascript.preferences.importModuleSpecifierEnding": "minimal"
 }

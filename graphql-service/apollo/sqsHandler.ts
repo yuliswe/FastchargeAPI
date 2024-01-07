@@ -9,7 +9,7 @@ import chalk from "chalk";
 import { callOrCreateSQSHandler } from "./sqsHandlerUtils";
 chalk.level = 3;
 
-export const handler = async (
+export const sqsHandler = async (
   event: SQSEvent,
   context: LambdaContext,
   callback: LambdaCallback

@@ -177,7 +177,7 @@ export async function callOrCreateHandler(
           parseHeaders(event) {
             const headerMap = new HeaderMap();
             for (const [key, value] of Object.entries(event.headers ?? {})) {
-              headerMap.set(key, value ?? "");
+              headerMap.set(key.toLowerCase(), value ?? "");
             }
             return headerMap;
           },
@@ -189,7 +189,7 @@ export async function callOrCreateHandler(
             const bodyObj = JSON.parse(body) as unknown;
             console.log(
               chalk.blue(chalk.bold("GraphQL handler recieved LambdaEvent:")),
-              chalk.blue(JSON.stringify({ ...event, body: `<${typeof body}>` }, null, 2)),
+              chalk.blue(JSON.stringify({ ...event, headers, body: `<${typeof body}>` }, null, 2)),
               chalk.blue(chalk.bold("\nPretty print body (JSON.parsed):")),
               chalk.blue(JSON.stringify(bodyObj, null, 2))
             );
