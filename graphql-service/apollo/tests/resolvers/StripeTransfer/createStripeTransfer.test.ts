@@ -1,15 +1,14 @@
 import { StripeTransferStatus } from "@/__generated__/resolvers-types";
 import { User } from "@/database/models/User";
-import { getMinWithdrawalAmount } from "@/functions/fees";
 import { UserPK } from "@/pks/UserPK";
 import { StripeTransferResolvers } from "@/resolvers/StripeTransfer";
 import { mockSQS } from "@/tests/test-utils/MockSQS";
 import {
   addMoneyForUser,
   baseRequestContext as context,
+  getGraphQLDataOrError,
   getOrCreateTestUser,
   getUserBalanceNoCache,
-  simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
 import { graphql } from "@/typed-graphql";
@@ -69,7 +68,7 @@ describe("createStripeTransfer", () => {
       variables: { ...getVariables(), receiver: UserPK.stringify(testOtherUser) },
     });
 
-    await expect(simplifyGraphQLPromiseRejection(promise)).rejects.toMatchObject([
+    await expect(getGraphQLDataOrError(promise)).rejects.toMatchObject([
       {
         code: "PERMISSION_DENIED",
         message: "You do not have permission to perform this action.",
@@ -78,19 +77,12 @@ describe("createStripeTransfer", () => {
     ]);
   });
 
-  test("Withdrawal amount cannot be less than getMinWithdrawalAmount", async () => {
-    const minAmount = await getMinWithdrawalAmount(context);
+  test("Receivable amount must be greater than 0", async () => {
     const promise = getTestGQLClient({ user: testOwnerUser }).mutate({
       mutation: createStripeTransferMutation,
-      variables: { ...getVariables(), withdrawAmount: minAmount.minus(1).toString() },
+      variables: { ...getVariables(), withdrawAmount: 0.1 },
     });
-    await expect(simplifyGraphQLPromiseRejection(promise)).rejects.toMatchObject([
-      {
-        code: "BAD_USER_INPUT",
-        message: "Withdrawal amount cannot be less than 3",
-        path: "createStripeTransfer",
-      },
-    ]);
+    await expect(getGraphQLDataOrError(promise)).rejects.toMatchSnapshot();
   });
 
   test("Withdrawal amount should be deducted from user balance.", async () => {
@@ -118,7 +110,7 @@ describe("createStripeTransfer", () => {
       variables: { ...getVariables(), withdrawAmount: "101" },
     });
 
-    await expect(simplifyGraphQLPromiseRejection(promise)).rejects.toMatchObject([
+    await expect(getGraphQLDataOrError(promise)).rejects.toMatchObject([
       {
         code: "BAD_USER_INPUT",
         message: "User does not have enough balance to withdraw 101",

@@ -39,8 +39,6 @@ describe("getSiteMetaDataByKeyByKey", () => {
           __typename: "SiteMetaData",
           key: testSiteMetaData.key,
           value: testSiteMetaData.value,
-          updatedAt: expect.any(Number),
-          createdAt: expect.any(Number),
         },
       },
     });

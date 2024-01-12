@@ -1,5 +1,5 @@
 import { StripeTransfer, StripeTransferModel } from "@/database/models/StripeTransfer";
-import { getMinWithdrawalAmount, getRecivableAmountForWithdrawal } from "@/functions/fees";
+import { getRecivableAmountForWithdrawal } from "@/functions/fees";
 import { SQSQueueName, getSQSClient } from "@/sqsClient";
 import { graphql } from "@/typed-graphql";
 import Decimal from "decimal.js-light";
@@ -105,19 +105,21 @@ export const StripeTransferResolvers: GQLResolvers & {
         throw new Denied();
       }
       const withdrawAmountDecimal = new Decimal(withdrawAmount);
-      const minWithdrawal = await getMinWithdrawalAmount(context);
-      if (withdrawAmountDecimal.lessThan(minWithdrawal)) {
-        throw new BadInput(`Withdrawal amount cannot be less than ${minWithdrawal.toString()}`);
-      }
       const balance = await getUserBalance(context, receiver);
       if (new Decimal(balance).lessThan(withdrawAmount)) {
         throw new BadInput(`User does not have enough balance to withdraw ${withdrawAmount}`);
       }
-      const receiveAmount = await getRecivableAmountForWithdrawal(withdrawAmountDecimal, context);
+      const { receivable, totalFee } = await getRecivableAmountForWithdrawal(withdrawAmountDecimal, context);
+      if (receivable.lessThanOrEqualTo(0)) {
+        throw new BadInput(
+          `Unable to withdraw due to total transfer fee being ${totalFee.toString()}. ` +
+            "This means that after paying the transfer fees, the user will not receive any money."
+        );
+      }
       const stripeTransfer = await context.batched.StripeTransfer.create({
         receiver,
         withdrawAmount,
-        receiveAmount: receiveAmount.toString(),
+        receiveAmount: receivable.toString(),
         transferAt: Date.now() + 1000 * 60 * 60 * 24, // Transfer after 24 hours
         status: StripeTransferStatus.Created,
       });

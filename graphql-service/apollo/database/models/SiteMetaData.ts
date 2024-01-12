@@ -29,13 +29,8 @@ export const SiteMetaDataModel = dynamoose.model<SiteMetaData>("SiteMetaData", S
   ...tableConfigs,
 });
 
-export const defaultSiteMetaData: { [key: string]: SiteMetaData } = {
-  [SiteMetaDataKey.StripeFlatFee]: new SiteMetaDataModel({
-    key: SiteMetaDataKey.StripeFlatFee,
-    value: 0.3,
-  }),
-  [SiteMetaDataKey.StripePercentageFee]: new SiteMetaDataModel({
-    key: SiteMetaDataKey.StripePercentageFee,
-    value: 0.029,
-  }),
+export const defaultSiteMetaDataValue: { [k in SiteMetaDataKey]: string | number } = {
+  [SiteMetaDataKey.StripeFlatFee]: "0.3",
+  [SiteMetaDataKey.StripePercentageFee]: "0.029",
+  [SiteMetaDataKey.PerRequestCharge]: "0.001",
 };

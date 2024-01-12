@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`createStripeTransfer Receivable amount must be greater than 0 1`] = `
+[
+  {
+    "code": "BAD_USER_INPUT",
+    "message": "Unable to withdraw due to total transfer fee being 0.3029. This means that after paying the transfer fees, the user will not receive any money.",
+    "path": "createStripeTransfer",
+  },
+]
+`;

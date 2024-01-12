@@ -5,6 +5,7 @@ import { GatewayRequestDecisionCache } from "@/database/models/GatewayRequestDec
 import { Pricing } from "@/database/models/Pricing";
 import { PK } from "@/database/utils";
 import { NotFound } from "@/errors";
+import { getSiteMetaDataOrDefault } from "@/functions/site";
 import { AppPK } from "@/pks/AppPK";
 import { PricingPK } from "@/pks/PricingPK";
 import { GatewayDecisionResponse } from "@/resolvers/Gateway";
@@ -98,9 +99,7 @@ export async function cacheGatewayDecisionForRequest(
             nextForcedBalanceCheckRequestCount: 0,
             nextForcedBalanceCheckTime: 0,
           }), // decision
-      context.batched.SiteMetaData.get({ key: SiteMetaDataKey.PerRequestCharge }).then(
-        (v) => new Decimal(v.value as string)
-      ), // platformFee
+      getSiteMetaDataOrDefault(context, SiteMetaDataKey.PerRequestCharge).then((x) => new Decimal(x.value as string)), // platformFee
       context.batched.Pricing.get(PricingPK.parse(pricing)), // pricingObject
       context.batched.App.get(AppPK.parse(app)), // appObject
       getUserBalance(context, requester).then((v) => new Decimal(v)), // requestUserBalance
@@ -147,9 +146,7 @@ export async function checkUserIsAllowedForGatewayRequest(
   const [appObject, pricingObject, platformFee, userBalance] = await Promise.all([
     context.batched.App.get(AppPK.parse(app)), // appObject
     context.batched.Pricing.get(PricingPK.parse(pricing)), // pricingObject
-    context.batched.SiteMetaData.get({ key: SiteMetaDataKey.PerRequestCharge }).then(
-      (v) => new Decimal(v.value as string)
-    ), // platformFee
+    getSiteMetaDataOrDefault(context, SiteMetaDataKey.PerRequestCharge).then((x) => new Decimal(x.value as string)), // platformFee
     getUserBalance(context, requester), // userBalance
   ]);
   const [requesterHasFreeQuota, collectMonthlyCharge, appOwnerBalance] = await Promise.all([

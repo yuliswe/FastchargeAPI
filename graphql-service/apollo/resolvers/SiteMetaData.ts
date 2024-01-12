@@ -1,4 +1,5 @@
-import { SiteMetaData, SiteMetaDataModel, defaultSiteMetaData } from "@/database/models/SiteMetaData";
+import { SiteMetaData, SiteMetaDataModel } from "@/database/models/SiteMetaData";
+import { getSiteMetaDataOrDefault } from "@/functions/site";
 import { RequestContext } from "../RequestContext";
 import {
   GQLMutationCreateSiteMetaDataArgs,
@@ -7,8 +8,9 @@ import {
   GQLResolvers,
   GQLSiteMetaDataResolvers,
   GQLSiteMetaDataUpdateSiteMetaDataArgs,
+  SiteMetaDataKey,
 } from "../__generated__/resolvers-types";
-import { Denied, NotFound } from "../errors";
+import { Denied } from "../errors";
 import { Can } from "../permissions";
 
 export const SiteMetaDataResolvers: GQLResolvers & {
@@ -46,17 +48,7 @@ export const SiteMetaDataResolvers: GQLResolvers & {
       if (!(await Can.viewSiteMetaData(key, context))) {
         throw new Denied();
       }
-      try {
-        return await context.batched.SiteMetaData.get({ key });
-      } catch (e) {
-        if (e instanceof NotFound) {
-          const defaultValue = defaultSiteMetaData[key];
-          if (defaultValue) {
-            return defaultValue;
-          }
-        }
-        throw e;
-      }
+      return await getSiteMetaDataOrDefault(context, key as SiteMetaDataKey);
     },
     async siteMetaData(
       parent: {},

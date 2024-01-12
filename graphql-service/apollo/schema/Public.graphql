@@ -514,7 +514,6 @@ enum SiteMetaDataKey {
   per_request_charge
   stripe_percentage_fee
   stripe_flat_fee
-  min_withdrawal_amount
 }
 
 enum PricingAvailability {
