@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getAppByName Get a deleted app should reject 1`] = `
+[
+  {
+    "code": "RESOURCE_DELETED",
+    "message": "This resource has been removed and will soon be deleted.",
+    "path": "getAppByName",
+  },
+]
+`;

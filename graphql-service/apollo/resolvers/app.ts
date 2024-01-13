@@ -115,7 +115,11 @@ export const AppResolvers: GQLResolvers & {
       return app;
     },
     async getAppByName(parent: {}, { name }: GQLQueryGetAppByNameArgs, context: RequestContext): Promise<App> {
-      return await context.batched.App.get({ name });
+      const app = await context.batched.App.get({ name });
+      if (app.deleted) {
+        throw new ResourceDeleted("App");
+      }
+      return app;
     },
     async app(parent: {}, { pk, name }: GQLQueryAppArgs, context: RequestContext): Promise<App> {
       if (pk) {

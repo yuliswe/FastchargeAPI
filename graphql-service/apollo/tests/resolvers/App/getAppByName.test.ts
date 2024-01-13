@@ -3,24 +3,19 @@ import { App } from "@/database/models/App";
 import { User } from "@/database/models/User";
 import { AppPK } from "@/pks/AppPK";
 import { UserPK } from "@/pks/UserPK";
-import { baseRequestContext, getOrCreateTestUser } from "@/tests/test-utils/test-utils";
+import { createTestApp } from "@/tests/test-data/App";
+import { createTestUser } from "@/tests/test-data/User";
+import { baseRequestContext as context, getGraphQLDataOrError } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
 import { graphql } from "@/typed-graphql";
 import { v4 as uuidv4 } from "uuid";
-
-const context = baseRequestContext;
 
 let testAppOwner: User;
 let testOtherOwner: User;
 let testApp: App;
 beforeAll(async () => {
-  testAppOwner = await getOrCreateTestUser(context, {
-    email: `testAppOwner_${uuidv4()}@gmail_mock.com`,
-  });
-  testOtherOwner = await getOrCreateTestUser(context, {
-    email: `testOtherOwner_${uuidv4()}@gmail_mock.com`,
-  });
-  testApp = await context.batched.App.createOverwrite({
+  testAppOwner = await createTestUser(context);
+  testApp = await createTestApp(context, {
     name: `testapp-${uuidv4()}`,
     owner: UserPK.stringify(testAppOwner),
     title: "Test App",
@@ -31,6 +26,7 @@ beforeAll(async () => {
     visibility: AppVisibility.Public,
     readme: "readme",
   });
+  testOtherOwner = await createTestUser(context);
 });
 
 describe("getAppByName", () => {
@@ -59,5 +55,19 @@ describe("getAppByName", () => {
         },
       },
     });
+  });
+
+  test("Get a deleted app should reject", async () => {
+    await context.batched.App.update(testApp, {
+      deleted: true,
+      deletedAt: Date.now(),
+    });
+    const promise = getTestGQLClient({ user: testOtherOwner }).query({
+      query: queryGetAppByName,
+      variables: {
+        name: testApp.name,
+      },
+    });
+    await expect(getGraphQLDataOrError(promise)).rejects.toMatchSnapshot();
   });
 });
