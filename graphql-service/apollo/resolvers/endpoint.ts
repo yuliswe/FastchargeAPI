@@ -5,12 +5,11 @@ import {
   GQLEndpointResolvers,
   GQLEndpointUpdateEndpointArgs,
   GQLMutationCreateEndpointArgs,
-  GQLQueryEndpointArgs,
   GQLQueryGetEndpointArgs,
   GQLQueryListEndpointsByAppArgs,
   GQLResolvers,
 } from "../__generated__/resolvers-types";
-import { BadInput, Denied } from "../errors";
+import { Denied } from "../errors";
 import { Can } from "../permissions";
 import { EndpointPK } from "../pks/EndpointPK";
 
@@ -80,19 +79,6 @@ export const EndpointResolvers: GQLResolvers & {
     async getEndpoint(parent: {}, { pk }: GQLQueryGetEndpointArgs, context, info) {
       return await context.batched.Endpoint.get(EndpointPK.parse(pk));
     },
-
-    async endpoint(parent: {}, { pk, app, path }: GQLQueryEndpointArgs, context, info) {
-      if (pk) {
-        return EndpointResolvers.Query!.getEndpoint!(parent, { pk }, context, info);
-      }
-
-      if (app && path) {
-        return EndpointResolvers.Query!.getEndpointByApp!(parent, { app, path }, context, info);
-      }
-
-      throw new BadInput("Must provide either pk or app+path");
-    },
-
     async listEndpointsByApp(parent: {}, { app }: GQLQueryListEndpointsByAppArgs, context: RequestContext) {
       const endpoints = await context.batched.Endpoint.many({
         app,
@@ -122,6 +108,3 @@ export const EndpointResolvers: GQLResolvers & {
     },
   },
 };
-
-/* Deprecated */
-EndpointResolvers.Query!.endpoint = EndpointResolvers.Query?.getEndpoint;

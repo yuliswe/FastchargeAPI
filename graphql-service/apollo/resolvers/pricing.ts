@@ -5,8 +5,8 @@ import { RequestContext } from "../RequestContext";
 import {
   GQLMutationCreatePricingArgs,
   GQLPricingUpdatePricingArgs,
+  GQLQueryGetPricingArgs,
   GQLQueryListPricingsByAppArgs,
-  GQLQueryPricingArgs,
   GQLResolvers,
   PricingAvailability,
 } from "../__generated__/resolvers-types";
@@ -92,7 +92,7 @@ export const PricingResolvers: GQLResolvers = {
     },
   },
   Query: {
-    async getPricing(parent: {}, { pk }: GQLQueryPricingArgs, context: RequestContext) {
+    async getPricing(parent: {}, { pk }: GQLQueryGetPricingArgs, context: RequestContext) {
       if (!pk) {
         throw new BadInput("pk is required");
       }
@@ -168,6 +168,3 @@ export const PricingResolvers: GQLResolvers = {
     },
   },
 };
-
-/* Deprecated */
-PricingResolvers.Query!.pricing = PricingResolvers.Query!.getPricing;

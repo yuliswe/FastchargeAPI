@@ -95,18 +95,18 @@ type Query {
     _forceAwait: Boolean = false
   ): GatewayDecisionResponse!
 
-  # Deprecated
-  apps(tag: String, limit: Int): [App!]! @deprecated(reason: "Use listApps() instead")
-  app(pk: ID, name: String): App! @deprecated(reason: "Use getApp() instead")
-  user(pk: ID, email: Email): User! @deprecated(reason: "Use getUser() instead")
-  endpoint(pk: ID, app: ID, path: String): Endpoint! @deprecated(reason: "Use getEndpoint() instead")
-  subscription(pk: ID, subscriber: ID, app: ID): Subscribe! @deprecated(reason: "Use getSubscription() instead")
-  pricing(pk: ID): Pricing! @deprecated(reason: "Use getPricing() instead")
-  secret(key: String!): Secret! @deprecated(reason: "Use getSecret() instead")
-  stripeTransfer(pk: ID): StripeTransfer! @deprecated(reason: "Use getStripeTransfer() instead")
-  appTags(tag: String): [AppTag!]! @deprecated(reason: "Use listAppTags() instead")
-  accountActivity(pk: ID): AccountActivity! @deprecated(reason: "Use getAccountActivity() instead")
-  siteMetaData(keys: [SiteMetaDataKey!]!): [SiteMetaData!]! @deprecated(reason: "Use getSiteMetaData() instead")
+  # # Deprecated
+  # apps(tag: String, limit: Int): [App!]! @deprecated(reason: "Use listApps() instead")
+  # app(pk: ID, name: String): App! @deprecated(reason: "Use getApp() instead")
+  # user(pk: ID, email: Email): User! @deprecated(reason: "Use getUser() instead")
+  # endpoint(pk: ID, app: ID, path: String): Endpoint! @deprecated(reason: "Use getEndpoint() instead")
+  # subscription(pk: ID, subscriber: ID, app: ID): Subscribe! @deprecated(reason: "Use getSubscription() instead")
+  # pricing(pk: ID): Pricing! @deprecated(reason: "Use getPricing() instead")
+  # secret(key: String!): Secret! @deprecated(reason: "Use getSecret() instead")
+  # stripeTransfer(pk: ID): StripeTransfer! @deprecated(reason: "Use getStripeTransfer() instead")
+  # appTags(tag: String): [AppTag!]! @deprecated(reason: "Use listAppTags() instead")
+  # accountActivity(pk: ID): AccountActivity! @deprecated(reason: "Use getAccountActivity() instead")
+  # siteMetaData(keys: [SiteMetaDataKey!]!): [SiteMetaData!]! @deprecated(reason: "Use getSiteMetaData() instead")
 }
 
 type Mutation {

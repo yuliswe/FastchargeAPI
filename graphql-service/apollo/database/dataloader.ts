@@ -1,4 +1,4 @@
-import { asyncGetAll, settlePromisesInBatches } from "@/functions/promise";
+import { settlePromisesInBatches } from "@/functions/promise";
 import { ConditionalCheckFailedException } from "@aws-sdk/client-dynamodb";
 import DataLoader from "dataloader";
 import { KeyObject, ModelType } from "dynamoose/dist/General";
@@ -104,7 +104,7 @@ async function assignDefaults<I extends Item>(item: I): Promise<I> {
   // type to a string. This may cause issues when the item is saved back to
   // the DB, failing the validation because the DB expects a Date type.
   const defaults = (await item.withDefaults()) as I;
-  for (const key of Object.keys(defaults) as (keyof I)[]) {
+  for (const key of Object.keys(defaults)) {
     // This is a temporary fix, but if the item's date field is undefined
     // (maybe an old object before a schema added a new date field), then
     // the problem still exists. The workaround is to not ever use the Date
@@ -391,7 +391,7 @@ export class Batched<I extends Item, CreateProps extends Partial<I>> {
     } else {
       const nonPKData = { ...data };
       for (const pkPart of Object.keys(lookupKeys)) {
-        delete nonPKData[pkPart as keyof I];
+        delete nonPKData[pkPart];
       }
       return await this.update(item, nonPKData);
     }

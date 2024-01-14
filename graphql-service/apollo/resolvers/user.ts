@@ -223,6 +223,3 @@ export const UserResolvers: GQLResolvers & {
     },
   },
 };
-
-/* Deprecated */
-UserResolvers.Query!.user = UserResolvers.Query!.getUser;

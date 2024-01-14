@@ -104,6 +104,3 @@ export const SubscriptionResolvers: GQLResolvers = {
     },
   },
 };
-
-/* Deprecated */
-SubscriptionResolvers.Query!.subscription = SubscriptionResolvers.Query!.getSubscription!;

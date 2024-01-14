@@ -144,6 +144,3 @@ export const StripeTransferResolvers: GQLResolvers & {
     },
   },
 };
-
-/* Deprecated */
-StripeTransferResolvers.Query!.stripeTransfer = StripeTransferResolvers.Query!.getStripeTransfer!;

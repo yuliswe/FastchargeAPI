@@ -154,6 +154,3 @@ export const AccountActivityResolvers: GQLResolvers & {
     },
   },
 };
-
-/* Deprecated */
-AccountActivityResolvers.Query!.accountActivity = AccountActivityResolvers.Query?.getAccountActivity;

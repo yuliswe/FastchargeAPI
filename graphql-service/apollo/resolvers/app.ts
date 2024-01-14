@@ -6,7 +6,6 @@ import {
   GQLAppResolvers,
   GQLAppUpdateAppArgs,
   GQLMutationCreateAppArgs,
-  GQLQueryAppArgs,
   GQLQueryAppFullTextSearchArgs,
   GQLQueryGetAppArgs,
   GQLQueryGetAppByNameArgs,
@@ -121,14 +120,6 @@ export const AppResolvers: GQLResolvers & {
       }
       return app;
     },
-    async app(parent: {}, { pk, name }: GQLQueryAppArgs, context: RequestContext): Promise<App> {
-      if (pk) {
-        return await context.batched.App.get(AppPK.parse(pk));
-      } else if (name) {
-        return await context.batched.App.get({ name });
-      }
-      throw new Error("Either pk or name must be provided");
-    },
     async appFullTextSearch(
       parent: {},
       { query, tag, orderBy, limit, offset }: GQLQueryAppFullTextSearchArgs,
@@ -208,6 +199,3 @@ export const AppResolvers: GQLResolvers & {
     },
   },
 };
-
-/* Deprecated */
-AppResolvers.Query!.apps = AppResolvers.Query!.listAppsByTag;

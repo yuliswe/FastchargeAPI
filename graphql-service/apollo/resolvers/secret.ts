@@ -3,7 +3,7 @@ import { SecretPK } from "@/pks/SecretPK";
 import { RequestContext } from "../RequestContext";
 import {
   GQLMutationCreateSecretArgs,
-  GQLQuerySecretArgs,
+  GQLQueryGetSecretArgs,
   GQLResolvers,
   GQLSecretResolvers,
 } from "../__generated__/resolvers-types";
@@ -25,7 +25,7 @@ export const SecretResolvers: GQLResolvers & {
     },
   },
   Query: {
-    async getSecret(parent: {}, { key }: GQLQuerySecretArgs, context: RequestContext) {
+    async getSecret(parent: {}, { key }: GQLQueryGetSecretArgs, context: RequestContext) {
       const secret = await context.batched.Secret.get({ key });
       return secret;
     },
@@ -41,6 +41,3 @@ export const SecretResolvers: GQLResolvers & {
     },
   },
 };
-
-/* Deprecated */
-SecretResolvers.Query!.secret = SecretResolvers.Query?.getSecret;

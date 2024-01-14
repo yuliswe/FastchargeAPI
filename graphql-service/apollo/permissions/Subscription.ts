@@ -1,6 +1,6 @@
 import {
   GQLMutationCreateSubscriptionArgs,
-  GQLQuerySubscriptionArgs,
+  GQLQueryGetSubscriptionArgs,
   GQLSubscribeUpdateSubscriptionArgs,
 } from "@/__generated__/resolvers-types";
 import { Subscription } from "@/database/models/Subscription";
@@ -66,7 +66,7 @@ export const SubscriptionPermissions = {
 
   async viewSubscription(
     subscription: Subscription,
-    args: GQLQuerySubscriptionArgs,
+    args: GQLQueryGetSubscriptionArgs,
     context: RequestContext
   ): Promise<boolean> {
     if (context.isServiceRequest || context.isAdminUser) {

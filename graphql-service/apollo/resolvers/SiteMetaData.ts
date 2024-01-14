@@ -4,7 +4,6 @@ import { RequestContext } from "../RequestContext";
 import {
   GQLMutationCreateSiteMetaDataArgs,
   GQLQueryGetSiteMetaDataByKeyArgs,
-  GQLQuerySiteMetaDataArgs,
   GQLResolvers,
   GQLSiteMetaDataResolvers,
   GQLSiteMetaDataUpdateSiteMetaDataArgs,
@@ -49,16 +48,6 @@ export const SiteMetaDataResolvers: GQLResolvers & {
         throw new Denied();
       }
       return await getSiteMetaDataOrDefault(context, key as SiteMetaDataKey);
-    },
-    async siteMetaData(
-      parent: {},
-      { keys }: GQLQuerySiteMetaDataArgs,
-      context: RequestContext,
-      info
-    ): Promise<SiteMetaData[]> {
-      return await Promise.all(
-        keys.map(async (key) => SiteMetaDataResolvers.Query!.getSiteMetaDataByKey!(parent, { key }, context, info))
-      );
     },
   },
   Mutation: {
