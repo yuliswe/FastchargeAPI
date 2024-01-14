@@ -13,22 +13,6 @@ import { v4 as uuidv4 } from "uuid";
 let testAppOwner: User;
 let testOtherOwner: User;
 let testApp: App;
-beforeAll(async () => {
-  testAppOwner = await createTestUser(context);
-  testApp = await createTestApp(context, {
-    name: `testapp-${uuidv4()}`,
-    owner: UserPK.stringify(testAppOwner),
-    title: "Test App",
-    description: "Test App Description",
-    homepage: "https://fastchargeapi.com",
-    repository: "https://github/myrepo",
-    gatewayMode: GatewayMode.Proxy,
-    visibility: AppVisibility.Public,
-    readme: "readme",
-  });
-  testOtherOwner = await createTestUser(context);
-});
-
 describe("getAppByName", () => {
   const queryGetAppByName = graphql(`
     query TestGetAppByName($name: String!) {
@@ -38,6 +22,22 @@ describe("getAppByName", () => {
       }
     }
   `);
+
+  beforeEach(async () => {
+    testAppOwner = await createTestUser(context);
+    testApp = await createTestApp(context, {
+      name: `testapp-${uuidv4()}`,
+      owner: UserPK.stringify(testAppOwner),
+      title: "Test App",
+      description: "Test App Description",
+      homepage: "https://fastchargeapi.com",
+      repository: "https://github/myrepo",
+      gatewayMode: GatewayMode.Proxy,
+      visibility: AppVisibility.Public,
+      readme: "readme",
+    });
+    testOtherOwner = await createTestUser(context);
+  });
 
   test("Can get a public app by name", async () => {
     const promise = getTestGQLClient({ user: testOtherOwner }).query({
