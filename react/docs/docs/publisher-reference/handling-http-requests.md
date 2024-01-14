@@ -1,17 +1,17 @@
-# Handling HTTP requests 
+# Handling HTTP requests
 
 This document explains how FastchargeAPI handles requests and passes them to the destination endpoint.
 
 ## TLDR
 
 FastchargeAPI is designed to be a transparent gateway that passes request
-headers. body, and query params to the destination unchanged. 
+headers. body, and query params to the destination unchanged.
 
-:::note 
+:::note
 However, a caveat is that since HTTP headers are case insensitive, your
 server must be able to handle HTTP headers case insensitively. FastchargeAPI
 gateway makes the best effort to keep the original case of the headers, but it
-is not always possible. 
+is not always possible.
 :::
 
 ## HTTP headers
@@ -35,16 +35,15 @@ cases insensitively.
 
 #### Request headers
 
-* `Host` - The `Host` header is always set to the domain of the destination.
+- `Host` - The `Host` header is always set to the domain of the destination.
 
-* `x-fast-user` - A unique identifer that helps identify API users.
+- `x-fast-user` - A unique identifer that helps identify API users.
 
-* `Accept-Encoding` - This is always set to `identity`.
+- `Accept-Encoding` - This is always set to `identity`.
 
 #### Response headers
 
-* `Content-Encoding` - This is always set to `identity`.
-
+- `Content-Encoding` - This is always set to `identity`.
 
 ## HTTP body
 
@@ -56,12 +55,11 @@ request is sent to this endpoint:
 curl "https://example.fastchargeapi.com/echo" -X POST -H "Content-Type: application/json" -d '{"username":"xyz","password":"xyz"}'
 ```
 
-The request to the destination will contain the same body: 
+The request to the destination will contain the same body:
 
     {"username":"xyz","password":"xyz"}
 
-
-## URL query 
+## URL query
 
 The URL query (content after `?` in a URL) are passed to the destination,
 although the order the params may be different from the original requests.
@@ -75,4 +73,3 @@ https://example.fastchargeapi.com/echo?a=1&a=2&b=3&c will pass
 ```bash
 curl "https://example.fastchargeapi.com/echo?a=1&a=2&b=3&c="
 ```
-

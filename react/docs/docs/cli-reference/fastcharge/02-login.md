@@ -14,7 +14,6 @@ Sign in a user account.
 
     fastcharge login
 
-
 ## Available options
 
 ### --profile STRING
@@ -29,4 +28,3 @@ When not provided, log in as the default account.
 #### Example
 
     fastcharge --profile adminuser login
-

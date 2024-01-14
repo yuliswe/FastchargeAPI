@@ -10,7 +10,7 @@ List available endpoints of an app published by you.
 
     fastcharge api list [APP_NAME]
 
-## Example 
+## Example
 
     $ fastcharge api list myapp
 

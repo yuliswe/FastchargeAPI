@@ -22,37 +22,37 @@ $footer-max-offset: 17rem;
 // }
 
 .react-terminal-wrapper {
-    font-size: 0.95em !important;
-    padding: 4em 3em !important;
-    height: inherit;
-    background-color: inherit !important;
-    .react-terminal {
-        overflow: visible !important;
-    }
-    .terminal-hidden-input {
-        visibility: hidden;
-    }
+  font-size: 0.95em !important;
+  padding: 4em 3em !important;
+  height: inherit;
+  background-color: inherit !important;
+  .react-terminal {
+    overflow: visible !important;
+  }
+  .terminal-hidden-input {
+    visibility: hidden;
+  }
 }
 .react-terminal-line {
-    font-size: 0.95em !important;
-    // opacity: 0.5;
+  font-size: 0.95em !important;
+  // opacity: 0.5;
 }
 .react-terminal-line.react-terminal-input {
-    opacity: 1;
+  opacity: 1;
 }
 
 html {
-    main {
-        min-height: calc(100vh - #{$footer-max-offset});
-    }
+  main {
+    min-height: calc(100vh - #{$footer-max-offset});
+  }
 }
 
 .MuiAutocomplete-option[aria-selected="true"] {
-    background-color: unset !important;
+  background-color: unset !important;
 }
 
 svg.change-color {
-    path {
-        fill: currentColor;
-    }
+  path {
+    fill: currentColor;
+  }
 }

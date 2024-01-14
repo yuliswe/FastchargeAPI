@@ -11,4 +11,3 @@ List apps owned by you.
 ```bash
 fastcharge app list
 ```
-

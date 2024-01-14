@@ -29,4 +29,3 @@ Login a user account and save the credential in a profile named "user1":
 Run the list apps command as the "user1" user:
 
     fastapi --profile user1 app list
-

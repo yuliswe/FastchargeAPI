@@ -26,4 +26,3 @@ Type: string. Required.
 
 ID of the endpoint to be deleted. The endpoint id can be obtained by
 [`fastcharge api list`](./list.md).
-

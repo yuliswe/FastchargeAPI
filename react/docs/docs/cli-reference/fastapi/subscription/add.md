@@ -18,7 +18,6 @@ fastapi subscription add [APP_NAME] --plan [PRICING_ID]
 
 Name of the app to subscribe to.
 
-
 ## Available options:
 
 ### --plan STRING

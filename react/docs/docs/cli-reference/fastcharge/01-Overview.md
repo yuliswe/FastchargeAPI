@@ -29,4 +29,3 @@ Login a user account and save the credential in a profile named "adminuser":
 Run the list apps command as the "adminuser" user:
 
     fastcharge --profile adminuser app list
-

@@ -36,7 +36,7 @@ Specify a name for the pricing plan. For examples, "Free", "Advanced" or "Premiu
 
 Type: float. Required.
 
-Set a monthly charge in USD for this subscription plan. 
+Set a monthly charge in USD for this subscription plan.
 
 #### Example
 
@@ -45,7 +45,6 @@ To charge a $10.50 monthly fee:
 ```bash
 --monthly-charge 10.5
 ```
-
 
 ### --charge-per-request, -m FLOAT
 
@@ -57,7 +56,6 @@ Set a per-request charge in USD for this subscription plan.
 --charge-per-request 0.001
 ```
 
-
 ### --free-quota, -m INT
 
 Type: int. Required.
@@ -67,7 +65,6 @@ Set the number of requests that users can make without paying.
 ```bash
 --free-quota 100
 ```
-
 
 ### --call-to-action STRING
 
@@ -90,5 +87,3 @@ Type: boolean. Optional. Default: `false`.
 
 Set the visibility of the pricing. Setting the property to `false` allows you to
 pause new subscriptions of a plan without affecting existing subscribers.
-
-

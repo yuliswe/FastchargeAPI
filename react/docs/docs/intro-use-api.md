@@ -36,9 +36,9 @@ In case you haven't installed the cli, there's the instruction for installing th
 
 ### What you'll need
 
--   [Python](https://www.python.org/) version 3.9 or above:
-    -   A package manager such as [pip](https://pypi.org/project/pip/) or
-        [poetry](https://python-poetry.org/).
+- [Python](https://www.python.org/) version 3.9 or above:
+  - A package manager such as [pip](https://pypi.org/project/pip/) or
+    [poetry](https://python-poetry.org/).
 
 Install the cli tool from pypi:
 
@@ -50,8 +50,8 @@ You can type this command into Command Prompt, Powershell, Terminal, or any othe
 
 The command also all necessary dependencies you need. It will install 2 command-line toos:
 
-* `fastapi` - cli when you are using an app published by someone else. This is the tool we'll use.
-* `fastcharge` - cli when you are publishing an app 
+- `fastapi` - cli when you are using an app published by someone else. This is the tool we'll use.
+- `fastcharge` - cli when you are publishing an app
 
 ## Subscribe to a pricing plan
 
@@ -60,7 +60,6 @@ app. Not All pricing plans charge an active monthly fee. And some of the
 plans offer free quota.
 
 We will subscribe to the `Free` pricing plan that offers 100 free quota for this app.
-
 
 First, sign in or sign up for the fist time to FastchargeAPI.com:
 
@@ -73,7 +72,6 @@ Then, run the following command to subscribe to the `Free` plan:
 ```bash
 fastapi subscription sub myapp --plan Free
 ```
-
 
 ## Create an API token
 
@@ -114,9 +112,7 @@ fastapi api ls myapp
 
 Congratulation, now you can use the endpoint in your own applications.
 
-
 ```bash
 curl "https://myapp.fastchargeapi.com/google?q=fastchargeapi" \
     -H "X-Fast-API-KEY: [Your Token]"
 ```
-

@@ -11,7 +11,7 @@ asynchronously. Upon being processed, your account balance and account
 activities will be updated.
 
 :::note
-The withdrawal request may take a few seconds to a few minutes to be processed. 
+The withdrawal request may take a few seconds to a few minutes to be processed.
 It may take 1-2 business days for the money to arrive at your bank account.
 :::
 

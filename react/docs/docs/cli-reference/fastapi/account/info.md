@@ -11,7 +11,7 @@ View your account information.
     fastapi account info
 
 ## Example output:
-    
+
     $ fastapi account info
     Account:        xxxxxx@gmail.com
     Author:         xxxxxx

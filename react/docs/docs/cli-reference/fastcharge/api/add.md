@@ -49,7 +49,7 @@ The path that the endpoint matches. This can be a simple path, or a path that co
 
 #### Using a named segment in path
 
-Paths that contain a segment starting with a colon, eg. `:id`, `:name` are matched dynamically. 
+Paths that contain a segment starting with a colon, eg. `:id`, `:name` are matched dynamically.
 
 ##### Example
 
@@ -75,7 +75,6 @@ This path matches:
 
     https://example.fastchargeapi.com/users/123/posts/abc # userId == 123, postId == abc
 
-
 ### --destination, -d STRING
 
 Type: string. Required.
@@ -86,13 +85,13 @@ Where incoming requests to this endpoint are forwarded to.
 
 ```bash
 # Forward requests to https://example.com
---destination "https://example.com" 
+--destination "https://example.com"
 
 # Forward requests to https://example.com/users
---destination "https://example.com/users" 
+--destination "https://example.com/users"
 
 # Forward requests to https://example.com/users/:id
---destination "https://example.com/users/:id" 
+--destination "https://example.com/users/:id"
 ```
 
 #### Using a named segment in destination
@@ -103,7 +102,7 @@ replaced with the matched value in the `--path`.
 ##### Example
 
 ```bash
---path "/users/:id" --destination "https://example.com/users/:id" 
+--path "/users/:id" --destination "https://example.com/users/:id"
 ```
 
 This forwards requests:
@@ -121,7 +120,7 @@ https://example.fastchargeapi.com/users/abc ~> https://example.fastchargeapi/use
 Similarly you can as many named segments as you want:
 
 ```bash
---path "/users/:userId/posts/:postId" --destination "https://example.com/users/:userId/posts/:postId" 
+--path "/users/:userId/posts/:postId" --destination "https://example.com/users/:userId/posts/:postId"
 ```
 
 This forwards requests:

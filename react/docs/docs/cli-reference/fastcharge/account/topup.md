@@ -15,4 +15,3 @@ Top-up your account. The amount is in USD.
 For example, to top up $10.50:
 
     fastcharge account topup 10.5
-

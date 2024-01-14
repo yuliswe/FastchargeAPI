@@ -11,4 +11,3 @@ Get a link to login to your stripe dashboard.
 ```bash
 fastcharge stripe dashboard
 ```
-

@@ -11,7 +11,7 @@ View and manage your publisher account. Shows the account email and balance.
     fastcharge account info
 
 ## Example output:
-    
+
     $ fastcharge account info
     Account:        xxxxxx@gmail.com
     Author:         xxxxxx

@@ -26,7 +26,6 @@ Must be unique.
 
 Maximum length: 63
 
-
 ## Available options:
 
 ### --visibility ENUM
@@ -93,8 +92,3 @@ Or can be any url to a markdown file:
 
 If the file comes from a source other than `raw.githubusercontent.com`, you need
 to ensure that the file can be access by a CORS request from https://fastchargeapi.com.
-
-
-
-
-

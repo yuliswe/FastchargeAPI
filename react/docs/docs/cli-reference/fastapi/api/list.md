@@ -10,7 +10,7 @@ List available endpoints of an app.
 
     fastapi api list [APP_NAME]
 
-## Example 
+## Example
 
     $ fastapi api list myapp
 

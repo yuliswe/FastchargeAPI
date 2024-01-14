@@ -12,7 +12,6 @@ Update attributes of an app.
 fastcharge app update [APP_NAME]
 ```
 
-
 ## Arguments:
 
 ### APP_NAME
@@ -20,7 +19,6 @@ fastcharge app update [APP_NAME]
 Type: string. Required.
 
 Name of the app to be updated.
-
 
 ## Available options:
 
@@ -88,8 +86,3 @@ Or can be any url to a markdown file:
 
 If the file comes from a source other than `raw.githubusercontent.com`, you need
 to ensure that the file can be access by a CORS request from https://fastchargeapi.com.
-
-
-
-
-

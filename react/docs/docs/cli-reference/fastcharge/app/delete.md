@@ -11,7 +11,7 @@ This command may cause you financial loss. Read carefully.
 Delete an app created by you.
 
 If your app is actively accepting subscriptions, your subscribers will no longer
-be able to access the APIs. 
+be able to access the APIs.
 
 **Subscribers will be refunded the active monthly fee of their current
 billing period.**
@@ -25,7 +25,6 @@ subscribers are not affected.
 ```bash
 fastcharge app delete [APP_NAME]
 ```
-
 
 ## Arguments:
 

@@ -28,76 +28,76 @@ export type SubscriptionDetailPageQuery = { sdate?: string; spage?: string };
 export type MyAppDetailPageParams = { app: string };
 
 export function buildSearchParams(query: any): string {
-    const search = new URLSearchParams();
-    for (const key of Object.keys(query)) {
-        search.set(key, query[key]);
-    }
-    return search.toString();
+  const search = new URLSearchParams();
+  for (const key of Object.keys(query)) {
+    search.set(key, query[key]);
+  }
+  return search.toString();
 }
 
 export const RouteURL = {
-    searchResultPage({
-        params = {},
-        query = {},
-    }: { params?: SearchResultPageParams; query?: SearchResultPageQuery } = {}) {
-        return `/search/?${buildSearchParams(query)}#`;
-    },
-    appDetailPage({ params }: { params: AppDetailPageParams }): string {
-        return `/app/${params.app}/#`;
-    },
-    termsPage({ tag }: { tag?: TermsPageTag } = {}): string {
-        return `/terms-of-service/#${tag ?? ""}`;
-    },
-    homePage(): string {
-        return "/";
-    },
-    documentationPage(): string {
-        if (process.env.REACT_APP_LOCAL_DOC === "1") {
-            return "http://localhost:3000";
-        }
-        return `https://doc.${baseDomain}`;
-    },
-    accountPage(): string {
-        return `/account/#`;
-    },
-    myAppsPage(): string {
-        return `/account/my-apps/#`;
-    },
-    myAppDetailPage({ params }: { params: MyAppDetailPageParams }): string {
-        return `/account/my-apps/${params.app}/#`;
-    },
-    authPage({ query }: { query?: AuthPageQuery } = {}): string {
-        return `/auth/?${buildSearchParams(query)}#`;
-    },
-    onboardPage(): string {
-        return `/onboard/#`;
-    },
-    subscriptionsPage(): string {
-        return `/account/subscriptions/#`;
-    },
-    dashboardPage({ query }: { query?: DashboardPageQuery }): string {
-        return `/account/#`;
-    },
-    subscriptionDetailPage({
-        params,
-        query = {},
-    }: {
-        params: SubscriptionDetailPageParams;
-        query?: SubscriptionDetailPageQuery;
-    }): string {
-        return `/account/subscriptions/${params.app}/?${buildSearchParams(query)}#`;
-    },
+  searchResultPage({
+    params = {},
+    query = {},
+  }: { params?: SearchResultPageParams; query?: SearchResultPageQuery } = {}) {
+    return `/search/?${buildSearchParams(query)}#`;
+  },
+  appDetailPage({ params }: { params: AppDetailPageParams }): string {
+    return `/app/${params.app}/#`;
+  },
+  termsPage({ tag }: { tag?: TermsPageTag } = {}): string {
+    return `/terms-of-service/#${tag ?? ""}`;
+  },
+  homePage(): string {
+    return "/";
+  },
+  documentationPage(): string {
+    if (process.env.REACT_APP_LOCAL_DOC === "1") {
+      return "http://localhost:3000";
+    }
+    return `https://doc.${baseDomain}`;
+  },
+  accountPage(): string {
+    return `/account/#`;
+  },
+  myAppsPage(): string {
+    return `/account/my-apps/#`;
+  },
+  myAppDetailPage({ params }: { params: MyAppDetailPageParams }): string {
+    return `/account/my-apps/${params.app}/#`;
+  },
+  authPage({ query }: { query?: AuthPageQuery } = {}): string {
+    return `/auth/?${buildSearchParams(query)}#`;
+  },
+  onboardPage(): string {
+    return `/onboard/#`;
+  },
+  subscriptionsPage(): string {
+    return `/account/subscriptions/#`;
+  },
+  dashboardPage({ query }: { query?: DashboardPageQuery }): string {
+    return `/account/#`;
+  },
+  subscriptionDetailPage({
+    params,
+    query = {},
+  }: {
+    params: SubscriptionDetailPageParams;
+    query?: SubscriptionDetailPageQuery;
+  }): string {
+    return `/account/subscriptions/${params.app}/?${buildSearchParams(query)}#`;
+  },
 };
 
 enum RoutePattern {
-    AppDetailPage = "/app/:app",
-    SubscriptionsPage = "/account/subscriptions",
-    SubscriptionDetailPage = "/account/subscriptions/:app",
-    HomePage = "/",
-    MyAppsPage = "/account/my-apps",
-    MyAppDetailPage = "/account/my-apps/:app",
-    DashboardPage = "/account",
-    TermsPage = "/terms-of-service",
+  AppDetailPage = "/app/:app",
+  SubscriptionsPage = "/account/subscriptions",
+  SubscriptionDetailPage = "/account/subscriptions/:app",
+  HomePage = "/",
+  MyAppsPage = "/account/my-apps",
+  MyAppDetailPage = "/account/my-apps/:app",
+  DashboardPage = "/account",
+  TermsPage = "/terms-of-service",
 }
 
 /**
@@ -105,100 +105,99 @@ enum RoutePattern {
  */
 export type RouteDataFetcher = (context: AppContext, params: any, query: any) => Promise<void>;
 export const routeDataFetchers: {
-    path: RoutePattern;
-    fetchData: RouteDataFetcher;
+  path: RoutePattern;
+  fetchData: RouteDataFetcher;
 }[] = [
-    {
-        path: RoutePattern.AppDetailPage,
-        fetchData: (context, params, query) => AppDetailPage.WrappedComponent.fetchData(context, params, query),
-    },
-    {
-        path: RoutePattern.SubscriptionsPage,
-        fetchData: (context, params, query) => SubscriptionsPage.WrappedComponent.fetchData(context, params, query),
-    },
-    {
-        path: RoutePattern.HomePage,
-        fetchData: (context, params, query) => HomePage.WrappedComponent.fetchData(context, params, query),
-    },
-    {
-        path: RoutePattern.MyAppsPage,
-        fetchData: (context, params, query) => MyAppsPage.WrappedComponent.fetchData(context, params, query),
-    },
-    {
-        path: RoutePattern.DashboardPage,
-        fetchData: (context, params, query) => DashboardPage.WrappedComponent.fetchData(context, params, query),
-    },
-    {
-        path: RoutePattern.SubscriptionDetailPage,
-        fetchData: (context, params, query) =>
-            SubscriptionDetailPage.WrappedComponent.fetchData(context, params, query),
-    },
-    {
-        path: RoutePattern.MyAppDetailPage,
-        fetchData: (context, params, query) => MyAppDetailPage.WrappedComponent.fetchData(context, params, query),
-    },
-    {
-        path: RoutePattern.TermsPage,
-        fetchData: (context, params, query) => TermsPage.WrappedComponent.fetchData(context, params, query),
-    },
+  {
+    path: RoutePattern.AppDetailPage,
+    fetchData: (context, params, query) => AppDetailPage.WrappedComponent.fetchData(context, params, query),
+  },
+  {
+    path: RoutePattern.SubscriptionsPage,
+    fetchData: (context, params, query) => SubscriptionsPage.WrappedComponent.fetchData(context, params, query),
+  },
+  {
+    path: RoutePattern.HomePage,
+    fetchData: (context, params, query) => HomePage.WrappedComponent.fetchData(context, params, query),
+  },
+  {
+    path: RoutePattern.MyAppsPage,
+    fetchData: (context, params, query) => MyAppsPage.WrappedComponent.fetchData(context, params, query),
+  },
+  {
+    path: RoutePattern.DashboardPage,
+    fetchData: (context, params, query) => DashboardPage.WrappedComponent.fetchData(context, params, query),
+  },
+  {
+    path: RoutePattern.SubscriptionDetailPage,
+    fetchData: (context, params, query) => SubscriptionDetailPage.WrappedComponent.fetchData(context, params, query),
+  },
+  {
+    path: RoutePattern.MyAppDetailPage,
+    fetchData: (context, params, query) => MyAppDetailPage.WrappedComponent.fetchData(context, params, query),
+  },
+  {
+    path: RoutePattern.TermsPage,
+    fetchData: (context, params, query) => TermsPage.WrappedComponent.fetchData(context, params, query),
+  },
 ];
 
 export function createRouter(WithContext: (props: WithRouteContextProps) => React.ReactElement) {
-    const router = createBrowserRouter([
+  const router = createBrowserRouter([
+    {
+      path: "/auth",
+      element: <WithContext children={<AuthPage />} />,
+    },
+    {
+      path: "/onboard",
+      element: <WithContext requireAuth={true} children={<OnboardPage />} />,
+    },
+    {
+      path: "/topup",
+      element: <WithContext requireAuth={true} children={<TopUpPage />} />,
+    },
+    {
+      path: RoutePattern.HomePage,
+      element: <WithContext children={<HomePage />} />,
+    },
+    {
+      path: "/search",
+      element: <WithContext children={<SearchResultPage />} />,
+    },
+    {
+      path: RoutePattern.AppDetailPage,
+      element: <WithContext children={<AppDetailPage />} />,
+    },
+    {
+      path: "/account",
+      element: <WithContext requireAuth={true} children={<AccountPage />} />,
+      children: [
         {
-            path: "/auth",
-            element: <WithContext children={<AuthPage />} />,
+          path: "",
+          element: <DashboardPage />,
         },
         {
-            path: "/onboard",
-            element: <WithContext requireAuth={true} children={<OnboardPage />} />,
+          path: RoutePattern.MyAppsPage,
+          element: <MyAppsPage />,
         },
         {
-            path: "/topup",
-            element: <WithContext requireAuth={true} children={<TopUpPage />} />,
+          path: RoutePattern.MyAppDetailPage,
+          element: <MyAppDetailPage />,
         },
         {
-            path: RoutePattern.HomePage,
-            element: <WithContext children={<HomePage />} />,
+          path: RoutePattern.SubscriptionsPage,
+          element: <SubscriptionsPage />,
         },
         {
-            path: "/search",
-            element: <WithContext children={<SearchResultPage />} />,
+          path: RoutePattern.SubscriptionDetailPage,
+          element: <SubscriptionDetailPage />,
         },
-        {
-            path: RoutePattern.AppDetailPage,
-            element: <WithContext children={<AppDetailPage />} />,
-        },
-        {
-            path: "/account",
-            element: <WithContext requireAuth={true} children={<AccountPage />} />,
-            children: [
-                {
-                    path: "",
-                    element: <DashboardPage />,
-                },
-                {
-                    path: RoutePattern.MyAppsPage,
-                    element: <MyAppsPage />,
-                },
-                {
-                    path: RoutePattern.MyAppDetailPage,
-                    element: <MyAppDetailPage />,
-                },
-                {
-                    path: RoutePattern.SubscriptionsPage,
-                    element: <SubscriptionsPage />,
-                },
-                {
-                    path: RoutePattern.SubscriptionDetailPage,
-                    element: <SubscriptionDetailPage />,
-                },
-            ],
-        },
-        {
-            path: RoutePattern.TermsPage,
-            element: <WithContext children={<TermsPage />} />,
-        },
-    ]);
-    return router;
+      ],
+    },
+    {
+      path: RoutePattern.TermsPage,
+      element: <WithContext children={<TermsPage />} />,
+    },
+  ]);
+  return router;
 }

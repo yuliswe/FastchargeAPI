@@ -11,19 +11,19 @@ import { SubscriptionsAppState } from "./SubscriptionsAppState";
 import { TermsAppState } from "./TermsAppState";
 
 export class RootAppState extends AppState {
-    home = new HomeAppState({});
-    search = new AppSearchResultState({});
-    appDetail = new AppDetailAppState({});
-    account = new AccountAppState({});
-    subscriptions = new SubscriptionsAppState({});
-    dashboard = new DashboardAppState({});
-    myApps = new MyAppsAppState({});
-    myAppDetail = new MyAppDetailAppState({});
-    subscriptionDetail = new SubscriptionDetailAppState({});
-    terms = new TermsAppState({});
+  home = new HomeAppState({});
+  search = new AppSearchResultState({});
+  appDetail = new AppDetailAppState({});
+  account = new AccountAppState({});
+  subscriptions = new SubscriptionsAppState({});
+  dashboard = new DashboardAppState({});
+  myApps = new MyAppsAppState({});
+  myAppDetail = new MyAppDetailAppState({});
+  subscriptionDetail = new SubscriptionDetailAppState({});
+  terms = new TermsAppState({});
 
-    constructor(props: PartialProps<RootAppState>) {
-        super();
-        this.assignProps(props);
-    }
+  constructor(props: PartialProps<RootAppState>) {
+    super();
+    this.assignProps(props);
+  }
 }

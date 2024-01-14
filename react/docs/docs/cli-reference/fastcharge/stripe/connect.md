@@ -11,4 +11,3 @@ Start the onboarding process for your Stripe account.
 ```bash
 fastcharge stripe connect
 ```
-

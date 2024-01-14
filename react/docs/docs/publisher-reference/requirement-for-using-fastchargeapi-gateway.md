@@ -4,9 +4,8 @@
 
 Our gateway current supports the HTTP protocol, which includes the REST, GraphQL, and other HTTP based APIs. In the future, we will also support Websocket APIs and TCP proxy.
 
-
 | HTTP API | REST API | GraphQL | Websocket | TCP |
-|----------|----------|---------|-----------|-----|
+| -------- | -------- | ------- | --------- | --- |
 | Yes      | Yes      | Yes     | WIP       | WIP |
 
 ## Respond time
@@ -26,5 +25,4 @@ Currently, the maximum payload size supported is 6MB.
 ## Content type
 
 Currently, any non-binary type of responses, such as `application/json` or
-`text/html`  are supported.
-
+`text/html` are supported.

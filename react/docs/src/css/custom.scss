@@ -14,55 +14,55 @@ $red: #df2935;
 
 /* You can override the default Infima variables here. */
 :root {
-    --ifm-color-primary: #{$blue};
-    --ifm-color-primary-dark: #{$blue-dark};
-    --ifm-color-primary-darker: #{$blue-dark};
-    --ifm-color-primary-darkest: #{$blue-dark};
-    --ifm-color-primary-light: #{$blue-light};
-    --ifm-color-primary-lighter: #{$blue-light};
-    --ifm-color-primary-lightest: #{$blue-light};
-    --ifm-hero-background-color: var(--ifm-color-primary-lightest);
-    --ifm-font-family-base: "Roboto", sans-serif;
-    --ifm-global-radius: 1em;
-    --ifm-button-font-weight: 500;
-    .button {
-        --ifm-button-size-multiplier: 1.2;
-        line-height: 1.75;
-        letter-spacing: 0.02857em;
-        font-family: "Roboto", sans-serif;
-    }
+  --ifm-color-primary: #{$blue};
+  --ifm-color-primary-dark: #{$blue-dark};
+  --ifm-color-primary-darker: #{$blue-dark};
+  --ifm-color-primary-darkest: #{$blue-dark};
+  --ifm-color-primary-light: #{$blue-light};
+  --ifm-color-primary-lighter: #{$blue-light};
+  --ifm-color-primary-lightest: #{$blue-light};
+  --ifm-hero-background-color: var(--ifm-color-primary-lightest);
+  --ifm-font-family-base: "Roboto", sans-serif;
+  --ifm-global-radius: 1em;
+  --ifm-button-font-weight: 500;
+  .button {
+    --ifm-button-size-multiplier: 1.2;
+    line-height: 1.75;
+    letter-spacing: 0.02857em;
+    font-family: "Roboto", sans-serif;
+  }
 }
 
 [data-theme="light"] {
-    .hero--primary {
-        --ifm-hero-text-color: #{$black};
-        --ifm-hero-background-color: var(--ifm-color-primary-lightest);
+  .hero--primary {
+    --ifm-hero-text-color: #{$black};
+    --ifm-hero-background-color: var(--ifm-color-primary-lightest);
+  }
+  .button.button--secondary {
+    color: #{$white};
+    background-color: #{$black};
+    &:hover {
+      background-color: #{$black-light};
     }
-    .button.button--secondary {
-        color: #{$white};
-        background-color: #{$black};
-        &:hover {
-            background-color: #{$black-light};
-        }
-    }
-    .footer {
-        --ifm-footer-background-color: #{$black};
-    }
+  }
+  .footer {
+    --ifm-footer-background-color: #{$black};
+  }
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme="dark"] {
-    --ifm-color-primary: #c5d6ff;
-    --ifm-color-primary-dark: #98b6ff;
-    --ifm-color-primary-darker: #81a6ff;
-    --ifm-color-primary-darkest: #3d76ff;
-    --ifm-color-primary-light: #f2f6ff;
-    --ifm-color-primary-lighter: #ffffff;
-    --ifm-color-primary-lightest: #ffffff;
-    .hero--primary {
-        --ifm-hero-text-color: #{$white};
-        --ifm-hero-background-color: rgb(38, 79, 178);
-    }
+  --ifm-color-primary: #c5d6ff;
+  --ifm-color-primary-dark: #98b6ff;
+  --ifm-color-primary-darker: #81a6ff;
+  --ifm-color-primary-darkest: #3d76ff;
+  --ifm-color-primary-light: #f2f6ff;
+  --ifm-color-primary-lighter: #ffffff;
+  --ifm-color-primary-lightest: #ffffff;
+  .hero--primary {
+    --ifm-hero-text-color: #{$white};
+    --ifm-hero-background-color: rgb(38, 79, 178);
+  }
 }
 
 // html[data-theme="dark"] {
@@ -88,53 +88,53 @@ $red: #df2935;
 // }
 
 h1 {
-    font-family: "Ubuntu", sans-serif;
-    font-weight: 400;
-    font-size: 3.125rem;
+  font-family: "Ubuntu", sans-serif;
+  font-weight: 400;
+  font-size: 3.125rem;
 }
 
 h2 {
-    font-family: "Ubuntu", sans-serif;
-    font-weight: 700;
-    font-size: 1.875rem;
+  font-family: "Ubuntu", sans-serif;
+  font-weight: 700;
+  font-size: 1.875rem;
 }
 
 h3 {
-    font-family: "Ubuntu", sans-serif;
-    font-weight: 600;
-    font-size: 1.25rem;
+  font-family: "Ubuntu", sans-serif;
+  font-weight: 600;
+  font-size: 1.25rem;
 }
 
 h4 {
-    font-family: "Ubuntu", sans-serif;
-    font-weight: 800;
-    font-size: 1.125rem;
+  font-family: "Ubuntu", sans-serif;
+  font-weight: 800;
+  font-size: 1.125rem;
 }
 
 h5 {
-    font-family: "Ubuntu", sans-serif;
-    font-weight: 800;
-    font-size: 1rem;
+  font-family: "Ubuntu", sans-serif;
+  font-weight: 800;
+  font-size: 1rem;
 }
 
 h6 {
-    font-family: "Roboto", sans-serif;
-    font-weight: 800;
-    font-size: 0.9375rem;
+  font-family: "Roboto", sans-serif;
+  font-weight: 800;
+  font-size: 0.9375rem;
 }
 
 p {
-    font-family: "Roboto", sans-serif;
-    font-weight: 400;
-    font-size: 1rem;
+  font-family: "Roboto", sans-serif;
+  font-weight: 400;
+  font-size: 1rem;
 }
 
 .table-of-contents {
-    font-family: "Roboto", sans-serif;
-    font-weight: 400;
-    font-size: 0.9rem;
+  font-family: "Roboto", sans-serif;
+  font-weight: 400;
+  font-size: 0.9rem;
 }
 
 .menu {
-    font-weight: 400;
+  font-weight: 400;
 }
