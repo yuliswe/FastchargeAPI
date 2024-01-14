@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`listAccountActivitiesByUser A user cannot list other user's account activities 1`] = `
+[
+  {
+    "code": "PERMISSION_DENIED",
+    "message": "You do not have permission to perform this action.",
+    "path": "listAccountActivitiesByUser",
+  },
+]
+`;

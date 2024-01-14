@@ -1,6 +1,7 @@
+import { GQLQueryListAccountActivitiesByUserArgs } from "@/__generated__/resolvers-types";
 import { AccountActivity } from "@/database/models/AccountActivity";
 import { RequestContext } from "../RequestContext";
-import { isCurrentUserPK } from "./utils";
+import { isAdminOrServiceUser, isCurrentUserPK } from "./utils";
 
 export const AccountActivityPermissions = {
   async viewAccountActivityPrivateAttributes(parent: AccountActivity, context: RequestContext): Promise<boolean> {
@@ -17,5 +18,12 @@ export const AccountActivityPermissions = {
   },
   async createAccountActivity(context: RequestContext): Promise<boolean> {
     return Promise.resolve(context.isServiceRequest || context.isAdminUser);
+  },
+  async listAccountActivitiesByUser(
+    args: GQLQueryListAccountActivitiesByUserArgs,
+    context: RequestContext
+  ): Promise<boolean> {
+    const { user } = args;
+    return Promise.resolve(isCurrentUserPK(user, context) || isAdminOrServiceUser(context));
   },
 };

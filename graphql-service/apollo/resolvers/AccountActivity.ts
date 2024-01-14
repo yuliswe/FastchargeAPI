@@ -11,6 +11,7 @@ import {
   GQLMutationCreateAccountActivityArgs,
   GQLMutationGetAccountActivityArgs,
   GQLMutation_SqsSettleAccountActivitiesForUserArgs,
+  GQLQueryListAccountActivitiesByUserArgs,
   GQLResolvers,
 } from "../__generated__/resolvers-types";
 import { Denied } from "../errors";
@@ -99,10 +100,32 @@ export const AccountActivityResolvers: GQLResolvers & {
      *****************************************************/
   },
   Query: {
-    // async accountActivities(parent: {}, { status, using }: GQLQueryAccountActivitiesArgs, context) {
-    //     let activities = await context.batched.AccountActivity.many({ status }, { using });
-    //     return activities;
-    // },
+    async listAccountActivitiesByUser(
+      parent: {},
+      args: GQLQueryListAccountActivitiesByUserArgs,
+      context: RequestContext
+    ) {
+      if (!(await Can.listAccountActivitiesByUser(args, context))) {
+        throw new Denied();
+      }
+      const { user, limit, dateRange } = args;
+      const activities = await context.batched.AccountActivity.many(
+        {
+          user,
+          createdAt: dateRange
+            ? {
+                le: dateRange.end ?? undefined,
+                ge: dateRange.start ?? undefined,
+              }
+            : undefined,
+        },
+        {
+          limit,
+          sort: "descending",
+        }
+      );
+      return activities;
+    },
     async getAccountActivity(
       parent: {},
       args: GQLMutationGetAccountActivityArgs,

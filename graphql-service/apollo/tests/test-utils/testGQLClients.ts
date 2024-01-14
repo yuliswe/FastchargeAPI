@@ -56,8 +56,8 @@ export function getTestGQLClient({ user, isServiceRequest }: { user?: User; isSe
           }
         );
 
-        /* The request may trigger a SQS message. Wait for it to be
-                handled before returning to the test case. */
+        // The request may trigger a SQS message. Wait for it to be handled
+        // before returning to the test case.
         await mockSQS.waitForQueuesToEmpty();
 
         return new Response(result.body, {
