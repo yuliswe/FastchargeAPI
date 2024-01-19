@@ -38,7 +38,7 @@ export class SearchBar extends React.Component<_Props, _State> {
 
   borderRadius() {
     const themeBR =
-      (this._context.theme.components?.MuiButton?.styleOverrides?.root as any)["borderRadius"] ??
+      (this._context.theme.components?.MuiButton?.styleOverrides?.root as { borderRadius: number }).borderRadius ??
       this._context.theme.shape.borderRadius;
     return themeBR * 0.5;
   }

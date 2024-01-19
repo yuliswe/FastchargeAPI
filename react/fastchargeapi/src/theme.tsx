@@ -98,11 +98,11 @@ const shadows: Shadows = [
 
 const blue = "#3772FF";
 const bgWhite = "#fff";
-const bgGrey = "#E8E9EB";
+// const bgGrey = "#E8E9EB";
 const yellow = "#FFC100";
 const black = "#313638";
 const red = "#DF2935";
-const pink = "#CA907E";
+// const pink = "#CA907E";
 const green = "#00CC66";
 
 const primary = blue;
@@ -116,7 +116,7 @@ const warningDark = darken(yellow, 0.2);
 const success = green;
 const successLight = lighten(green, 0.85);
 const successDark = darken(green, 0.2);
-const error = red;
+// const error = red;
 const errorLight = lighten(red, 0.85);
 const errorDark = darken(red, 0.2);
 

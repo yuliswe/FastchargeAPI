@@ -3,9 +3,9 @@ import React from "react";
 import { connect } from "react-redux";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { fetchWithAuth } from "../fetch";
+import { paymentServiceBaseURL } from "../runtime";
 import { OnboardAppState } from "../states/OnBoardAppState";
 import { RootAppState } from "../states/RootAppState";
-import { paymentServiceBaseURL } from "../runtime";
 type _State = {};
 
 type _Props = {
@@ -105,7 +105,7 @@ class _Onboard extends React.Component<_Props, _State> {
       const response = await fetchWithAuth(this._context, this.getBackendUrl(), {
         method: "POST",
       });
-      const { location } = await response.json();
+      const { location } = (await response.json()) as { location: string };
       document.location.href = location;
     }
   }

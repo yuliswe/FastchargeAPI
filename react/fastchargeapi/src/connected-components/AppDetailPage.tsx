@@ -12,7 +12,8 @@ import remarkGfm from "remark-gfm";
 import remarkGithub from "remark-github";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { SiteLayout } from "../SiteLayout";
-import { AppDetailEndpoint, AppDetailEvent, AppDetailPricing } from "../events/AppDetailEvent";
+import { AppDetailEndpointFragment, AppDetailPricingFragment } from "../__generated__/gql/graphql";
+import { AppDetailEvent } from "../events/AppDetailEvent";
 import { AppDetailPageParams, RouteURL } from "../routes";
 import {
   DocumentationDialog,
@@ -43,12 +44,10 @@ class _AppDetailPage extends React.Component<_Props, _State> {
   }
 
   static isLoading(): boolean {
-    return (
-      appStore.getState().appDetail.loadingAppInfo ||
-      appStore.getState().appDetail.loadingEndpoints ||
-      appStore.getState().appDetail.loadingPricing
-    );
+    const { loadingAppInfo, loadingEndpoints, loadingPricing } = appStore.getState().appDetail;
+    return loadingAppInfo || loadingEndpoints || loadingPricing;
   }
+
   static async fetchData(context: AppContext, { app }: AppDetailPageParams, query: {}): Promise<void> {
     return new Promise<void>((resolve) => {
       appStore.dispatch(
@@ -76,7 +75,7 @@ class _AppDetailPage extends React.Component<_Props, _State> {
     });
   }
 
-  getPricingList(): (AppDetailPricing | null)[] {
+  getPricingList(): (AppDetailPricingFragment | null)[] {
     return this.loading() ? [null, null] : this.appState.pricings;
   }
 
@@ -108,7 +107,7 @@ class _AppDetailPage extends React.Component<_Props, _State> {
     return _AppDetailPage.isLoading();
   }
 
-  getEndpoints(): (AppDetailEndpoint | null)[] {
+  getEndpoints(): (AppDetailEndpointFragment | null)[] {
     return this.loading() ? new Array(3).fill(null) : this.appState.endpoints;
   }
 
@@ -148,7 +147,7 @@ class _AppDetailPage extends React.Component<_Props, _State> {
     );
   }
 
-  renderEndpoint(endpoint: AppDetailEndpoint, idx: number) {
+  renderEndpoint(endpoint: AppDetailEndpointFragment, idx: number) {
     return (
       <Box key={idx}>
         <Stack direction="row" spacing={1}>

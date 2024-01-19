@@ -11,9 +11,10 @@ import {
   AccountActivityReason,
   AccountActivityStatus,
   AccountActivityType,
+  DashboardAccountActivityFragment,
   StripeTransferStatus,
 } from "../__generated__/gql/graphql";
-import { AccountActivity, DashboardEvent } from "../events/DashboardEvent";
+import { DashboardEvent } from "../events/DashboardEvent";
 import { DashboardPageQuery, RouteURL } from "../routes";
 import {
   DocumentationDialog,
@@ -55,7 +56,8 @@ class _DashboardPage extends React.Component<Props, State> {
   }
 
   static isLoading(): boolean {
-    return appStore.getState().dashboard.loadingBalance || appStore.getState().dashboard.loadingActivities;
+    const { loadingBalance, loadingActivities } = appStore.getState().dashboard;
+    return loadingBalance || loadingActivities;
   }
 
   static fetchData(context: AppContext, params: {}, query: DashboardPageQuery): Promise<void> {
@@ -118,7 +120,7 @@ class _DashboardPage extends React.Component<Props, State> {
     );
   };
 
-  reason(activity: AccountActivity): string {
+  reason(activity: DashboardAccountActivityFragment): string {
     switch (activity.reason) {
       case AccountActivityReason.Topup:
         return "Top-up";
@@ -139,21 +141,21 @@ class _DashboardPage extends React.Component<Props, State> {
     }
   }
 
-  spent(activity: AccountActivity): string {
+  spent(activity: DashboardAccountActivityFragment): string {
     if (activity.type === AccountActivityType.Outgoing) {
       return `$${activity.amount}`;
     }
     return "";
   }
 
-  earned(activity: AccountActivity): string {
+  earned(activity: DashboardAccountActivityFragment): string {
     if (activity.type === AccountActivityType.Incoming) {
       return `$${activity.amount}`;
     }
     return "";
   }
 
-  date(activity: AccountActivity): string {
+  date(activity: DashboardAccountActivityFragment): string {
     const date = new Date(activity.createdAt);
     return date.toLocaleDateString() + " " + date.toLocaleTimeString();
   }
@@ -166,7 +168,7 @@ class _DashboardPage extends React.Component<Props, State> {
     return this.appState.accountHistories;
   }
 
-  eta(activity: AccountActivity): string {
+  eta(activity: DashboardAccountActivityFragment): string {
     if (activity.reason === AccountActivityReason.Payout) {
       if (activity.stripeTransfer?.transferAt) {
         const date = new Date(activity.stripeTransfer?.transferAt);
@@ -179,7 +181,7 @@ class _DashboardPage extends React.Component<Props, State> {
     return "";
   }
 
-  status(activity: AccountActivity): string {
+  status(activity: DashboardAccountActivityFragment): string {
     if (activity.reason === AccountActivityReason.Payout) {
       switch (activity.stripeTransfer?.status) {
         case StripeTransferStatus.PendingTransfer:
@@ -206,7 +208,7 @@ class _DashboardPage extends React.Component<Props, State> {
     }
     const values: number[] = [];
     const labels: string[] = [];
-    for (const [index, v] of this.accountHistory().entries()) {
+    for (const v of this.accountHistory()) {
       values.push(Number.parseFloat(v.closingBalance));
       labels.push(new Date(v.closingTime).toLocaleDateString());
     }
@@ -411,13 +413,13 @@ class _DashboardPage extends React.Component<Props, State> {
           </Grid>
           <Grid item xs={12}>
             <Paper sx={{ padding: 5 }}>
-              <LogTable<AccountActivity>
+              <LogTable<DashboardAccountActivityFragment>
                 tableName="Activities"
                 urlNamespace="s"
                 activities={this.allActivities()}
                 activitiesPerPage={this.activitiesPerPage()}
                 onChange={this.handleActivitiesPageChange}
-                renderCell={(head: string, activity: AccountActivity) => {
+                renderCell={(head: string, activity: DashboardAccountActivityFragment) => {
                   switch (head) {
                     case "Date":
                       return this.date(activity);

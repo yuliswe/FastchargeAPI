@@ -2,9 +2,9 @@ import { AppEvent, AppEventStream, mapState, to } from "react-appevent-redux";
 import { AppContext } from "../AppContext";
 import { graphql } from "../__generated__/gql";
 import {
+  AppDetailEndpointFragment,
   AppDetailLoadAppInfoQuery,
-  AppDetailLoadEndpointsQuery,
-  AppDetailLoadPricingsQuery,
+  AppDetailPricingFragment,
 } from "../__generated__/gql/graphql";
 import { getGQLClient } from "../graphql-client";
 import { RootAppState } from "../states/RootAppState";
@@ -74,7 +74,6 @@ class LoadAppInfo extends AppEvent<RootAppState> {
   }
 }
 
-export type AppDetailPricing = AppDetailLoadPricingsQuery["getApp"]["pricingPlans"][0];
 class LoadPricings extends AppEvent<RootAppState> {
   constructor(public context: AppContext, public options: { app: string }) {
     super();
@@ -87,7 +86,7 @@ class LoadPricings extends AppEvent<RootAppState> {
     });
   }
 
-  pricingPlans: AppDetailPricing[] = [];
+  pricingPlans: AppDetailPricingFragment[] = [];
   async *run(state: RootAppState): AppEventStream<RootAppState> {
     const { client } = await getGQLClient(this.context);
     const result = await client.query({
@@ -95,13 +94,16 @@ class LoadPricings extends AppEvent<RootAppState> {
         query AppDetailLoadPricings($app: ID!) {
           getApp(pk: $app) {
             pricingPlans {
-              name
-              callToAction
-              minMonthlyCharge
-              chargePerRequest
-              freeQuota
+              ...AppDetailPricing
             }
           }
+        }
+        fragment AppDetailPricing on Pricing {
+          name
+          callToAction
+          minMonthlyCharge
+          chargePerRequest
+          freeQuota
         }
       `),
       variables: {
@@ -121,7 +123,6 @@ class LoadPricings extends AppEvent<RootAppState> {
   }
 }
 
-export type AppDetailEndpoint = AppDetailLoadEndpointsQuery["getApp"]["endpoints"][0];
 class LoadEndpoints extends AppEvent<RootAppState> {
   constructor(public context: AppContext, public options: { app: string }) {
     super();
@@ -134,7 +135,7 @@ class LoadEndpoints extends AppEvent<RootAppState> {
     });
   }
 
-  endpoints: AppDetailEndpoint[] = [];
+  endpoints: AppDetailEndpointFragment[] = [];
   async *run(state: RootAppState): AppEventStream<RootAppState> {
     const { client } = await getGQLClient(this.context);
     const result = await client.query({
@@ -142,11 +143,14 @@ class LoadEndpoints extends AppEvent<RootAppState> {
         query AppDetailLoadEndpoints($app: ID!) {
           getApp(pk: $app) {
             endpoints {
-              method
-              path
-              description
+              ...AppDetailEndpoint
             }
           }
+        }
+        fragment AppDetailEndpoint on Endpoint {
+          method
+          path
+          description
         }
       `),
       variables: {

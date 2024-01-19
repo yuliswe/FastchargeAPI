@@ -1,7 +1,11 @@
 import { AppEvent, AppEventStream, mapState, to } from "react-appevent-redux";
 import { AppContext } from "../AppContext";
 import { graphql } from "../__generated__/gql";
-import { GetAccountActivitiesQuery, GetAccountHistoriesQuery, GetAccountInfoQuery } from "../__generated__/gql/graphql";
+import {
+  DashboardAccountActivityFragment,
+  DashboardAccountHistoryFragment,
+  GetAccountInfoQuery,
+} from "../__generated__/gql/graphql";
 import { fetchWithAuth } from "../fetch";
 import { getGQLClient } from "../graphql-client";
 import { paymentServiceBaseURL } from "../runtime";
@@ -50,7 +54,6 @@ class LoadUserInfo extends AppEvent<RootAppState> {
   }
 }
 
-export type AccountActivity = GetAccountActivitiesQuery["getUser"]["accountActivities"][0];
 class LoadActivities extends AppEvent<RootAppState> {
   constructor(public context: AppContext, public options: { beforeDate: number }) {
     super();
@@ -64,34 +67,35 @@ class LoadActivities extends AppEvent<RootAppState> {
     });
   }
 
-  activities: AccountActivity[] = [];
+  activities: DashboardAccountActivityFragment[] = [];
 
   async *run(state: RootAppState): AppEventStream<RootAppState> {
     const { client, currentUser } = await getGQLClient(this.context);
     const result = await client.query({
       query: graphql(`
         query GetAccountActivities($user: ID!, $dateRange: DateRangeInput!) {
-          getUser(pk: $user) {
-            accountActivities(dateRange: $dateRange, limit: 200) {
-              createdAt
-              type
-              amount
-              reason
-              description
-              status
-              settleAt
-              consumedFreeQuota
-              billedApp {
-                name
-              }
-              usageSummary {
-                volume
-              }
-              stripeTransfer {
-                transferAt
-                status
-              }
-            }
+          listAccountActivitiesByUser(user: $user, dateRange: $dateRange, limit: 200) {
+            ...DashboardAccountActivity
+          }
+        }
+        fragment DashboardAccountActivity on AccountActivity {
+          createdAt
+          type
+          amount
+          reason
+          description
+          status
+          settleAt
+          consumedFreeQuota
+          billedApp {
+            name
+          }
+          usageSummary {
+            volume
+          }
+          stripeTransfer {
+            transferAt
+            status
           }
         }
       `),
@@ -102,7 +106,8 @@ class LoadActivities extends AppEvent<RootAppState> {
         },
       },
     });
-    this.activities = result.data.getUser.accountActivities;
+
+    this.activities = result.data.listAccountActivitiesByUser;
   }
 
   reduceAfter(state: RootAppState): RootAppState {
@@ -114,8 +119,6 @@ class LoadActivities extends AppEvent<RootAppState> {
     });
   }
 }
-
-export type AccountHistory = GetAccountHistoriesQuery["getUser"]["accountHistories"][0];
 
 class LoadAccountHistory extends AppEvent<RootAppState> {
   constructor(public context: AppContext, public options: { beforeDate: number }) {
@@ -130,18 +133,19 @@ class LoadAccountHistory extends AppEvent<RootAppState> {
     });
   }
 
-  accountHistories: AccountHistory[] = [];
+  accountHistories: DashboardAccountHistoryFragment[] = [];
   async *run(state: RootAppState): AppEventStream<RootAppState> {
     const { client, currentUser } = await getGQLClient(this.context);
     const result = await client.query({
       query: graphql(`
         query GetAccountHistories($user: ID!, $dateRange: DateRangeInput!) {
-          getUser(pk: $user) {
-            accountHistories(dateRange: $dateRange, limit: 200) {
-              closingBalance
-              closingTime
-            }
+          listAccountHistoryByUser(user: $user, dateRange: $dateRange, limit: 200) {
+            ...DashboardAccountHistory
           }
+        }
+        fragment DashboardAccountHistory on AccountHistory {
+          closingBalance
+          closingTime
         }
       `),
       variables: {
@@ -151,7 +155,7 @@ class LoadAccountHistory extends AppEvent<RootAppState> {
         },
       },
     });
-    this.accountHistories = result.data.getUser.accountHistories;
+    this.accountHistories = result.data.listAccountHistoryByUser;
   }
 
   reduceAfter(state: RootAppState): RootAppState {

@@ -7,11 +7,13 @@
     "gen": "graphql-codegen --config codegen.yml",
     "build": "npm run gen && react-scripts build",
     "test": "npm run gen && react-scripts test",
-    "start": "npm run gen && PORT=8000 react-scripts start",
-    "watch": "(PORT=8000 react-scripts start) & (nodemon -e ts,tsx,yml,yaml -i build/ -i src/__generated__ --exec 'npm run gen')",
+    "prestart": "npm run typecheck",
+    "start": "PORT=8000 react-scripts start",
+    "watch": "nodemon --config ./nodemon.config.json --exec 'npm run typecheck' & npm run start",
     "new-page": "node ../react-appevent-redux-tools/dist/index.js",
     "fix": "eslint --fix ./",
-    "typecheck": "npm run gen && tsc --noEmit"
+    "pretypecheck": "npm run gen",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@apollo/client": "^3.7.9",

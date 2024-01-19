@@ -1,0 +1,8 @@
+{
+  "ext": "ts,tsx,graphql,yml,yaml,json",
+  "ignore": [
+    "src/__generated__/",
+    "build/"
+  ],
+  "signal": "SIGINT"
+}

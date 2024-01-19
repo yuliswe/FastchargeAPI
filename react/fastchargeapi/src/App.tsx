@@ -67,7 +67,7 @@ function WithRouteContext(props: WithRouteContextProps) {
     });
 
     async function sendPing() {
-      const { client, currentUser } = await getGQLClient(context);
+      const { client } = await getGQLClient(context);
       await client.mutate({
         mutation: gql`
           mutation SendPing {

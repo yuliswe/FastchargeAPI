@@ -17,8 +17,8 @@ import React from "react";
 import { connect } from "react-redux";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { SiteLayout } from "../SiteLayout";
-import { AppFullTextSearchOrderBy } from "../__generated__/gql/graphql";
-import { AppSearchResultEvent, SearchResult } from "../events/AppSearchResultEvent";
+import { AppFullTextSearchOrderBy, AppSearchResultFragment } from "../__generated__/gql/graphql";
+import { AppSearchResultEvent } from "../events/AppSearchResultEvent";
 import { RouteURL } from "../routes";
 import { PaginatedList, PaginatedListOnPageChangeHandler } from "../stateless-components/PaginatedList";
 import { AppSearchResultState } from "../states/AppSearchResultState";
@@ -103,7 +103,7 @@ class _SearchResultPage extends React.Component<Props, {}> {
               </Grid>
             )}
             <Grid item xs={12} sm={12} md={10} lg={9} xl={9}>
-              <PaginatedList<SearchResult>
+              <PaginatedList<AppSearchResultFragment>
                 sx={{ my: 5 }}
                 sourceItems={
                   this.props.searchResultState.loading
@@ -123,7 +123,7 @@ class _SearchResultPage extends React.Component<Props, {}> {
   }
 }
 
-const generateAppSearchResultComponents = (searchResults: SearchResult[]) => {
+const generateAppSearchResultComponents = (searchResults: AppSearchResultFragment[]) => {
   return searchResults.map((result, index) => (
     <Paper key={index} sx={{ p: 3, mb: 2 }}>
       <Link
@@ -151,7 +151,7 @@ const generateAppSearchResultComponents = (searchResults: SearchResult[]) => {
   ));
 };
 
-const renderSkeleton = (searchResults: SearchResult[]) => {
+const renderSkeleton = (searchResults: AppSearchResultFragment[]) => {
   return searchResults.map((_, idx) => (
     <Stack key={idx} sx={{ mb: 2, height: 150 }} spacing={2}>
       <Skeleton variant="rounded" height={100} sx={{ bgcolor: "grey.100", borderRadius: 20 }} />

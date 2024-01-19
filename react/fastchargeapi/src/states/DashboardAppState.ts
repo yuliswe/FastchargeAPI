@@ -1,13 +1,14 @@
 import { AppState, PartialProps } from "react-appevent-redux";
-import { AccountActivity, AccountHistory, UserAccountInfo } from "../events/DashboardEvent";
+import { DashboardAccountActivityFragment, DashboardAccountHistoryFragment } from "../__generated__/gql/graphql";
+import { UserAccountInfo } from "../events/DashboardEvent";
 
 export class DashboardAppState extends AppState {
   loadingBalance = true;
   loadingActivities = true;
   loadingStripeLoginLink = false;
-  activities: AccountActivity[] = [];
+  activities: DashboardAccountActivityFragment[] = [];
   description = "";
-  accountHistories: AccountHistory[] = [];
+  accountHistories: DashboardAccountHistoryFragment[] = [];
   stripeLoginLink = "";
   userAccountInfo: UserAccountInfo | null = null;
 

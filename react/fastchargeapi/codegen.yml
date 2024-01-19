@@ -1,12 +1,15 @@
 # This configuration file tells GraphQL Code Generator how
 # to generate types based on our schema.
 documents:
-  - "./src/**/*.ts"
+  - "./src/graphql-client.ts"
+  - "./src/events/*.ts"
 schema: "../../graphql-service/apollo/__generated__/Public.final.graphql"
 generates:
   # Specify where our generated types should live.
   ./src/__generated__/gql/:
     preset: client
+    presetConfig:
+      fragmentMasking: false
     config:
       typesPrefix: GQL
       scalars:

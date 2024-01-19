@@ -1,5 +1,5 @@
-import { AppStore } from "react-appevent-redux";
 import * as Redux from "@reduxjs/toolkit";
+import { AppStore } from "react-appevent-redux";
 import { RootAppState } from "./states/RootAppState";
 
 function rootReducer(state: RootAppState | undefined, action: Redux.AnyAction) {
@@ -17,5 +17,6 @@ export const reduxStore = Redux.configureStore({
 });
 
 export const appStore = new AppStore<RootAppState>({
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   reduxStore: reduxStore,
 });

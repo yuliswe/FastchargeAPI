@@ -103,7 +103,7 @@ class _TopUp extends React.Component<_Props, _State> {
       throw new Error("key is missing from the url");
     }
     try {
-      const response = await setRemoteSecret(
+      await setRemoteSecret(
         this._context,
         {
           key: key,
@@ -176,7 +176,7 @@ class _TopUp extends React.Component<_Props, _State> {
             cancelUrl: this.getCancelUrl(),
           }),
         });
-        const { location } = await response.json();
+        const { location } = (await response.json()) as { location: string };
         document.location.href = location;
         if (!location) {
           throw new Error("location is missing from the response");

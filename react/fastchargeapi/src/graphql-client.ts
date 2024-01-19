@@ -1,9 +1,10 @@
-import { ApolloClient, InMemoryCache, TypedDocumentNode, createHttpLink, gql } from "@apollo/client";
+import { ApolloClient, InMemoryCache, TypedDocumentNode, createHttpLink } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
 import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
 import { sha256 } from "crypto-hash";
 import * as jose from "jose";
 import { AppContext } from "./AppContext";
+import { graphql } from "./__generated__/gql/gql";
 import { ENV_DEV_DOMAIN, ENV_LOCAL_GRAPHQL, baseDomain, graphqlURL } from "./runtime";
 
 // debug
@@ -40,7 +41,7 @@ export async function getGQLClient(
         ...headers,
         authorization: idToken,
         "x-user-email": ENV_LOCAL_GRAPHQL ? user?.email ?? undefined : undefined,
-      },
+      } as Record<string, string | undefined>,
     };
   });
 
@@ -55,19 +56,23 @@ export async function getGQLClient(
     return { client };
   }
 
+  if (!user.email) {
+    throw new Error("getGQLClient: User email is required");
+  }
+
   const response = await client.query({
-    query: gql`
+    query: graphql(`
       query GetUserPKByEmail($email: Email!) {
-        user(email: $email) {
+        getUserByEmail(email: $email) {
           pk
         }
       }
-    `,
+    `),
     variables: {
       email: user.email,
     },
   });
-  return { client, currentUser: response.data.user.pk };
+  return { client, currentUser: response.data.getUserByEmail.pk };
 }
 
 export function createSecret(): Uint8Array {
@@ -136,13 +141,13 @@ export async function setRemoteSecret(
   const signedValue = await encryptAndSign(value, { jweSecret, jwtSecret });
   const { client } = await getGQLClient(context);
   const response = await client.mutate({
-    mutation: gql`
+    mutation: graphql(`
       mutation PutSecret($key: String!, $signedValue: String!, $description: String, $expireAt: Timestamp) {
         createSecret(key: $key, value: $signedValue, description: $description, expireAt: $expireAt) {
           createdAt
         }
       }
-    `,
+    `),
     variables: {
       key,
       signedValue,

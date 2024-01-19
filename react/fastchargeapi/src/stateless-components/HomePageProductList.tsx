@@ -35,7 +35,7 @@ export function getRandomProductIcons(avatarSize: number, iconSize: number) {
   ];
 }
 
-const randomProductIconsOffset = 2; // First 2 icons are used by HomePageFeaturedProductList
+// const randomProductIconsOffset = 2; // First 2 icons are used by HomePageFeaturedProductList
 const randomProductIcons = getRandomProductIcons(75, 50).slice(2);
 
 export type HomePageProductListProduct = {

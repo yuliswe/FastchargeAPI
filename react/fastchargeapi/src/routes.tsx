@@ -27,7 +27,10 @@ export type SubscriptionDetailPageParams = { app: string };
 export type SubscriptionDetailPageQuery = { sdate?: string; spage?: string };
 export type MyAppDetailPageParams = { app: string };
 
-export function buildSearchParams(query: any): string {
+export function buildSearchParams(query?: Record<string, string>): string {
+  if (!query) {
+    return "";
+  }
   const search = new URLSearchParams();
   for (const key of Object.keys(query)) {
     search.set(key, query[key]);
@@ -110,35 +113,35 @@ export const routeDataFetchers: {
 }[] = [
   {
     path: RoutePattern.AppDetailPage,
-    fetchData: (context, params, query) => AppDetailPage.WrappedComponent.fetchData(context, params, query),
+    fetchData: AppDetailPage.WrappedComponent.fetchData.bind(AppDetailPage.WrappedComponent),
   },
   {
     path: RoutePattern.SubscriptionsPage,
-    fetchData: (context, params, query) => SubscriptionsPage.WrappedComponent.fetchData(context, params, query),
+    fetchData: SubscriptionsPage.WrappedComponent.fetchData.bind(SubscriptionsPage.WrappedComponent),
   },
   {
     path: RoutePattern.HomePage,
-    fetchData: (context, params, query) => HomePage.WrappedComponent.fetchData(context, params, query),
+    fetchData: HomePage.WrappedComponent.fetchData.bind(HomePage.WrappedComponent),
   },
   {
     path: RoutePattern.MyAppsPage,
-    fetchData: (context, params, query) => MyAppsPage.WrappedComponent.fetchData(context, params, query),
+    fetchData: MyAppsPage.WrappedComponent.fetchData.bind(MyAppsPage.WrappedComponent),
   },
   {
     path: RoutePattern.DashboardPage,
-    fetchData: (context, params, query) => DashboardPage.WrappedComponent.fetchData(context, params, query),
+    fetchData: DashboardPage.WrappedComponent.fetchData.bind(DashboardPage.WrappedComponent),
   },
   {
     path: RoutePattern.SubscriptionDetailPage,
-    fetchData: (context, params, query) => SubscriptionDetailPage.WrappedComponent.fetchData(context, params, query),
+    fetchData: SubscriptionDetailPage.WrappedComponent.fetchData.bind(SubscriptionDetailPage.WrappedComponent),
   },
   {
     path: RoutePattern.MyAppDetailPage,
-    fetchData: (context, params, query) => MyAppDetailPage.WrappedComponent.fetchData(context, params, query),
+    fetchData: MyAppDetailPage.WrappedComponent.fetchData.bind(MyAppDetailPage.WrappedComponent),
   },
   {
     path: RoutePattern.TermsPage,
-    fetchData: (context, params, query) => TermsPage.WrappedComponent.fetchData(context, params, query),
+    fetchData: TermsPage.WrappedComponent.fetchData.bind(TermsPage.WrappedComponent),
   },
 ];
 
