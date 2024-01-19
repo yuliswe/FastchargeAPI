@@ -22,7 +22,7 @@ export type StepsCarouselProps<T> = {
   currentPage?: number;
 };
 
-export class StepsCarousel<T> extends React.Component<StepsCarouselProps<T>, _State> {
+export class StepsCarousel<T> extends React.PureComponent<StepsCarouselProps<T>, _State> {
   constructor(props: StepsCarouselProps<T>) {
     super(props);
     this.state = {
@@ -33,23 +33,24 @@ export class StepsCarousel<T> extends React.Component<StepsCarouselProps<T>, _St
 
   containerRef = React.createRef<HTMLDivElement>();
 
-  renderForwardButton({ disabled = false }: { disabled?: boolean } = {}) {
+  renderForwardButton(args: { hightlighted?: boolean; onClick: () => void }) {
+    const { hightlighted, onClick } = args;
     return (
       this.props.forwardButton ?? (
         <IconButton
           size="large"
-          disabled={disabled}
+          // disabled={disabled ?? false}
           sx={{
-            bgcolor: "secondary.main",
-            color: "secondary.contrastText",
+            bgcolor: hightlighted ? "secondary.main" : "transparent",
+            color: hightlighted ? "secondary.contrastText" : "secondary.light",
             ":hover": {
-              bgcolor: "secondary.light",
+              bgcolor: hightlighted ? "secondary.light" : "grey.200",
             },
             zIndex: 10,
             position: this.props.iconButtonsOffsetY ? "relative" : "static",
             top: this.props.iconButtonsOffsetY ?? 0,
           }}
-          onClick={() => this.goForward()}
+          onClick={onClick}
         >
           <ArrowForwardRounded />
         </IconButton>
@@ -57,7 +58,8 @@ export class StepsCarousel<T> extends React.Component<StepsCarouselProps<T>, _St
     );
   }
 
-  renderBackButton() {
+  renderBackButton(props: { onClick: () => void }) {
+    const { onClick } = props;
     return (
       this.props.backButton ?? (
         <IconButton
@@ -72,7 +74,7 @@ export class StepsCarousel<T> extends React.Component<StepsCarouselProps<T>, _St
             position: this.props.iconButtonsOffsetY ? "relative" : "static",
             top: this.props.iconButtonsOffsetY ?? 0,
           }}
-          onClick={() => this.goBackward()}
+          onClick={onClick}
         >
           <ArrowBackRounded />
         </IconButton>
@@ -91,9 +93,7 @@ export class StepsCarousel<T> extends React.Component<StepsCarouselProps<T>, _St
         <Box
           key={2 * i}
           onClick={() => {
-            if (i !== this.state.currentPage) {
-              this.goTo(i);
-            }
+            this.goTo(i);
           }}
         >
           {this.props.renderPage(p, i, this.state.currentPage, this.state.totalPages)}
@@ -102,27 +102,14 @@ export class StepsCarousel<T> extends React.Component<StepsCarouselProps<T>, _St
       children.push(
         <Box key={2 * i + 1} display="flex" alignItems="center">
           {this.renderForwardButton({
-            disabled: this.state.currentPage !== i,
+            onClick: () => this.goTo(i + 1),
+            hightlighted: this.state.currentPage === i,
           })}
         </Box>
       );
     }
     children.pop();
     return children;
-  }
-
-  goForward() {
-    if (this.state.currentPage < this.state.totalPages - 1) {
-      const newPage = this.state.currentPage + 1;
-      this.goTo(newPage);
-    }
-  }
-
-  goBackward() {
-    if (this.state.currentPage > 0) {
-      const newPage = this.state.currentPage - 1;
-      this.goTo(newPage);
-    }
   }
 
   goTo(newPage: number) {
@@ -170,7 +157,11 @@ export class StepsCarousel<T> extends React.Component<StepsCarouselProps<T>, _St
         )}
         <Grid item {...this.defaultBodyGridProps()}>
           <Box sx={{ display: "flex", alignItems: "center" }}>
-            <Box sx={{ opacity: this.state.currentPage > 0 ? 1 : 0 }}>{this.renderBackButton()}</Box>
+            <Box sx={{ opacity: this.state.currentPage > 0 ? 1 : 0 }}>
+              {this.renderBackButton({
+                onClick: () => this.goTo(this.state.currentPage - 1),
+              })}
+            </Box>
             <Stack
               direction="row"
               ref={this.containerRef}
