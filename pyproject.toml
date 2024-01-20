@@ -6,7 +6,7 @@ authors = ["Yu Li <ylilarry@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.10"
+python = ">=3.10"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.12.0"
