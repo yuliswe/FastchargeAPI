@@ -146,7 +146,7 @@ export class HomePageBanner2 extends React.PureComponent {
 
   renderCenterBox() {
     return (
-      <Stack spacing={5} py={10} mx={10} alignItems="center" display="flex" zIndex={2}>
+      <Stack spacing={5} py={10} mx={10} alignItems="center" display="flex">
         <Typography variant="h1" maxWidth="10em" textAlign="center">
           Create revenue from your{" "}
           <Box component="span" color="primary.main" sx={{ fontWeight: 425 }}>
@@ -157,7 +157,9 @@ export class HomePageBanner2 extends React.PureComponent {
         <Typography variant="body1" textAlign="center">
           Publish your SaaS APIs here and start generating revenue from millions of developers.
         </Typography>
-        <AppSearchBar />
+        <Stack direction="row" alignSelf="stretch" px={10}>
+          <AppSearchBar />
+        </Stack>
       </Stack>
     );
   }

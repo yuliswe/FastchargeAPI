@@ -1,6 +1,7 @@
 import {
   ArrowForwardRounded,
   ArrowUpwardRounded,
+  BuildRounded,
   LabelRounded,
   PersonalVideoRounded,
   TipsAndUpdatesRounded,
@@ -156,7 +157,7 @@ class _Home extends React.Component<_Props, _State> {
       <Paper
         sx={{
           bgcolor: "primary.light",
-          p: { lg: 4, xl: 3 },
+          p: 3,
           display: this._context.mediaQuery.md.up ? "initial" : "none",
         }}
       >
@@ -184,7 +185,15 @@ class _Home extends React.Component<_Props, _State> {
 
   renderCallToAction2() {
     return (
-      <Paper sx={{ bgcolor: "primary.light", p: 5, position: "relative", overflow: "hidden", height: "100%" }}>
+      <Paper
+        sx={{
+          bgcolor: "primary.light",
+          p: 5,
+          position: "relative",
+          overflow: "hidden",
+          height: "100%",
+        }}
+      >
         <Box
           sx={{
             borderRadius: "50%",
@@ -205,12 +214,12 @@ class _Home extends React.Component<_Props, _State> {
           }}
         >
           <Avatar sx={{ height: 50, width: 50, bgcolor: "primary.dark" }}>
-            <ArrowUpwardRounded sx={{ height: "70%", width: "70%" }} />
+            <BuildRounded sx={{ height: "65%", width: "65%" }} />
           </Avatar>
           <Typography variant="h2" my={3}>
             Use APIs
           </Typography>
-          <Typography variant="body1" my={3}>
+          <Typography variant="body1" my={3} mb={5}>
             Learn how to use an API published by other developers.
           </Typography>
           <Button
@@ -255,7 +264,7 @@ class _Home extends React.Component<_Props, _State> {
           <Typography variant="h2" my={3} color="primary.contrastText">
             Publish APIs
           </Typography>
-          <Typography variant="body1" my={3} color="primary.contrastText">
+          <Typography variant="body1" my={3} mb={5} color="primary.contrastText">
             Learn how to release your API to millions of developers.
           </Typography>
           <Button

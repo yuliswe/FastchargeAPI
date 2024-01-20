@@ -45,7 +45,7 @@ export class SearchBar extends React.Component<_Props, _State> {
 
   render() {
     return (
-      <Stack direction="row" display="flex" flexGrow={1} height={50}>
+      <Stack direction="row" display="flex" flexGrow={1} height={50} alignSelf="stretch">
         <Paper
           sx={{
             pl: 1,
