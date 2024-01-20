@@ -69,7 +69,7 @@ export class SearchBar extends React.Component<_Props, _State> {
             <SearchIcon />
           </IconButton>
           <InputBase
-            placeholder="Search app"
+            placeholder="Search for an API..."
             fullWidth
             value={this.state.searchText}
             inputRef={this.inputRef}

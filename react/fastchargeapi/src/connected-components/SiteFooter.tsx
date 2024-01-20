@@ -63,7 +63,7 @@ export class SiteFooter extends React.PureComponent {
             <Grid item xs={this._context.mediaQuery.md.down ? 12 : 3}>
               {this.renderLogo()}
               <Typography variant="body1" mt={2}>
-                API metering made simple.
+                Generating revenue from APIs made easy.
               </Typography>
               {this.renderSocialMediaLinks()}
             </Grid>

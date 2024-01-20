@@ -141,14 +141,14 @@ export class HomePageBanner2 extends React.PureComponent {
         </Container>
         <Stack spacing={5} py={5} alignItems="center" display="flex" zIndex={2}>
           <Typography variant="h1" maxWidth="10em" textAlign="center">
-            API metering made{" "}
+            Create revenue from your{" "}
             <Box component="span" color="primary.main" sx={{ fontWeight: 425 }}>
-              simple
+              APIs
             </Box>
             .
           </Typography>
           <Typography variant="body1" textAlign="center">
-            We take care of billing, so you can focus on solving important problems.
+            Publish your SaaS APIs here and start generating revenue from millions of developers.
           </Typography>
           <AppSearchBar />
         </Stack>

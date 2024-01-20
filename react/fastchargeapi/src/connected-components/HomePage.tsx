@@ -167,7 +167,7 @@ class _Home extends React.Component<_Props, _State> {
           Publish your APIs!
         </Typography>
         <Typography variant="body1" my={3}>
-          FastCharge is a platform for API publishers to publish their APIs and manage their customers.
+          Learn these 3 simple commands to release your APIs.
         </Typography>
         <Button
           variant="contained"
@@ -208,10 +208,10 @@ class _Home extends React.Component<_Props, _State> {
             <ArrowUpwardRounded sx={{ height: "70%", width: "70%" }} />
           </Avatar>
           <Typography variant="h2" my={3}>
-            Publish your APIs!
+            Use APIs
           </Typography>
           <Typography variant="body1" my={3}>
-            FastCharge is a platform for API publishers to publish their APIs and manage their customers.
+            Learn how to use an API published by other developers.
           </Typography>
           <Button
             variant="contained"
@@ -253,10 +253,10 @@ class _Home extends React.Component<_Props, _State> {
             <TipsAndUpdatesRounded sx={{ height: "70%", width: "70%" }} />
           </Avatar>
           <Typography variant="h2" my={3} color="primary.contrastText">
-            Documentation
+            Publish APIs
           </Typography>
           <Typography variant="body1" my={3} color="primary.contrastText">
-            Learn how to subscribe to an app, or create an app to make income.
+            Learn how to release your API to millions of developers.
           </Typography>
           <Button
             variant="contained"
@@ -275,14 +275,14 @@ class _Home extends React.Component<_Props, _State> {
   renderTutorial() {
     const steps = [
       {
-        title: "Create an app",
-        description: "Start by creating an app that hosts your APIs.",
+        title: "Create your app",
+        description: "Start by creating an app that packages your APIs.",
         link: RouteURL.documentationPage() + "/docs/cli-reference/fastcharge/app/create/",
         icon: <img src={DrawingBoardPng} style={{ height: 160 }} />,
         target: "_blank",
       },
       {
-        title: "Set a price",
+        title: "Set the price",
         description: "Create pricing plans for your app.",
         link: RouteURL.documentationPage() + "/docs/cli-reference/fastcharge/pricing/add/",
         icon: <img src={SetAPricePng} style={{ height: 165 }} />,
@@ -328,9 +328,6 @@ class _Home extends React.Component<_Props, _State> {
             borderRadius: 20,
           }}
         >
-          <Typography variant="h2" mb={8} textAlign="center">
-            As simple as 3 commands.
-          </Typography>
           <Grid container spacing={5}>
             {steps.map((step, index) => (
               <Grid item xs={index < steps.length - 1 ? 4 : 8} key={step.title}>
@@ -395,7 +392,7 @@ class _Home extends React.Component<_Props, _State> {
                     <TableRow>
                       <TableCell>
                         <Typography variant="h3" fontWeight="bolder">
-                          FastchargeAPI fees breakdown
+                          FastchargeAPI
                         </Typography>
                       </TableCell>
                       <TableCell>{/* Fat&nbsp;(g) */}</TableCell>
@@ -404,33 +401,35 @@ class _Home extends React.Component<_Props, _State> {
                   <TableBody>
                     <TableRow>
                       <TableCell>
-                        <Chip color="primary" label="Per request" />
+                        <Chip color="primary" label="API requests" />
                       </TableCell>
                       <TableCell>
                         {this.props.homeAppState.loadingPricingData ? (
                           <CircularProgress size="1.5em" color="success" />
                         ) : (
-                          <Chip color="success" label={`${this.props.homeAppState.pricingPerRequest}`} size="small" />
+                          <Box
+                            sx={{
+                              lineHeight: "2em",
+                            }}
+                          >
+                            <Chip
+                              color="success"
+                              label={`$${Number.parseFloat(this.props.homeAppState.pricingPerRequest)}`}
+                              size="small"
+                            />
+                            {" per-request made to your API by your user, or "}
+                            <Chip
+                              color="warning"
+                              label={`$${(Number.parseFloat(this.props.homeAppState.pricingPerRequest) * 10000).toFixed(
+                                2
+                              )}`}
+                              size="small"
+                            />
+                            {" for every "}
+                            <Chip color="warning" label={"10K"} size="small" />
+                            {" requests."}
+                          </Box>
                         )}
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        <Chip color="primary" label="Commission" />
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body1">
-                          <Chip component="span" label="0.00%" size="small" color="warning" />
-                          {"  Yes, zero!"}
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        <Chip color="primary" label="Maximum monthly requests" />
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body1">Unlimited</Typography>
                       </TableCell>
                     </TableRow>
                   </TableBody>
@@ -438,12 +437,12 @@ class _Home extends React.Component<_Props, _State> {
                     <TableRow>
                       <TableCell>
                         <Typography variant="h3" fontWeight="bolder">
-                          Payment transfer
+                          3rd-party transfer
                         </Typography>
                       </TableCell>
                       <TableCell>
                         <Typography variant="body1">
-                          Transfer fees are charged by 3rd-party money transfer servies of your choice.
+                          To receive your payout, 3rd-party servies may charge a fee.
                         </Typography>
                       </TableCell>
                     </TableRow>
@@ -451,33 +450,31 @@ class _Home extends React.Component<_Props, _State> {
                   <TableBody>
                     <TableRow>
                       <TableCell sx={{ borderBottom: "none" }}>
-                        <Chip color="primary" label="With Stripe" />
+                        <Chip color="primary" label="Stripe" />
                       </TableCell>
                       <TableCell sx={{ borderBottom: "none" }}>
-                        <Typography variant="body1">
-                          {this.props.homeAppState.loadingPricingData ? (
-                            <CircularProgress size="1.5em" color="warning" />
-                          ) : (
-                            <React.Fragment>
-                              <Chip
-                                component="span"
-                                label={`${this.props.homeAppState.pricingStripeFlatFee}`}
-                                size="small"
-                                color="warning"
-                              />
-                              {" + "}
-                              <Chip
-                                component="span"
-                                label={`${
-                                  Number.parseFloat(this.props.homeAppState.pricingStripePercentageFee) * 100
-                                }%`}
-                                size="small"
-                                color="success"
-                              />
-                              {" of each payment to your bank account"}
-                            </React.Fragment>
-                          )}
-                        </Typography>
+                        {this.props.homeAppState.loadingPricingData ? (
+                          <CircularProgress size="1.5em" color="warning" />
+                        ) : (
+                          <React.Fragment>
+                            <Chip
+                              component="span"
+                              label={`$${Number.parseFloat(this.props.homeAppState.pricingStripeFlatFee).toFixed(2)}`}
+                              size="small"
+                              color="warning"
+                            />
+                            {" + "}
+                            <Chip
+                              component="span"
+                              label={`${(
+                                Number.parseFloat(this.props.homeAppState.pricingStripePercentageFee) * 100
+                              ).toFixed(2)}%`}
+                              size="small"
+                              color="success"
+                            />
+                            {" of each payment withdrawn to your bank account."}
+                          </React.Fragment>
+                        )}
                       </TableCell>
                     </TableRow>
                   </TableBody>
@@ -528,7 +525,7 @@ class _Home extends React.Component<_Props, _State> {
         }}
       >
         <Typography variant="h2" textAlign="center" mb={5}>
-          Publish an API in 1 minute
+          Publish your API in 1 minute
         </Typography>
         <HomePagePublisherTutorialCarousel />
       </Container>
