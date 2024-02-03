@@ -17,3 +17,5 @@ cov.xml
 .eslintcache
 .npm_cache/
 .DS_Store
+**/__tests_temp__
+.env
