@@ -146,6 +146,7 @@ export function handleError(formattedError: GraphQLFormattedError, error: unknow
       extensions: {
         ...formattedError.extensions,
         code: GQLErrorCode.BAD_USER_INPUT,
+        field: formattedError.path?.join(".") ?? "",
       },
       message: originalError.message,
     };
