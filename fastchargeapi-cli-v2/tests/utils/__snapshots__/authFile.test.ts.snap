@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`writeToAuthFile throws if the content is incomplete 1`] = `
+[Error: Validation failed:
+  value.idToken is missing
+  value.refreshToken is missing
+  value.userPK is missing
+Value: {
+  "issuer": "firebase"
+}]
+`;

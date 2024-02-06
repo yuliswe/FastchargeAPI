@@ -1,0 +1,10 @@
+{
+  "ext": "ts,graphql,yml,yaml,json",
+  "ignore": [
+    "src/__generated__/",
+    "dist/"
+  ],
+  "watch": ".",
+  "signal": "SIGINT",
+  "exec": "npm run build || exit 1"
+}

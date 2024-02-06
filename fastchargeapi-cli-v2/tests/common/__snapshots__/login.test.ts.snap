@@ -1,0 +1,113 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`loginCommand fastapi login --profile myprofile 1`] = `
+{
+  "behavior": "putsecret",
+  "jwe": Any<String>,
+  "jwt": Any<String>,
+  "key": Any<String>,
+  "relogin": "true",
+}
+`;
+
+exports[`loginCommand fastapi login --profile myprofile 2`] = `
+{
+  "email": Any<String>,
+  "idToken": Any<String>,
+  "issuer": "firebase",
+  "refreshToken": Any<String>,
+  "userPK": Any<String>,
+}
+`;
+
+exports[`loginCommand fastapi login --profile myprofile: console output 1`] = `
+"[33mPlease authenticate in the browser.[39m
+If the browser does not open, please visit:
+<REDACTED:URL>
+[32mLogin successful.[39m
+"
+`;
+
+exports[`loginCommand fastapi login 1`] = `
+{
+  "behavior": "putsecret",
+  "jwe": Any<String>,
+  "jwt": Any<String>,
+  "key": Any<String>,
+  "relogin": "true",
+}
+`;
+
+exports[`loginCommand fastapi login 2`] = `
+{
+  "email": Any<String>,
+  "idToken": Any<String>,
+  "issuer": "firebase",
+  "refreshToken": Any<String>,
+  "userPK": Any<String>,
+}
+`;
+
+exports[`loginCommand fastapi login: console output 1`] = `
+"[33mPlease authenticate in the browser.[39m
+If the browser does not open, please visit:
+<REDACTED:URL>
+[32mLogin successful.[39m
+"
+`;
+
+exports[`loginCommand fastcharge login --profile myprofile 1`] = `
+{
+  "behavior": "putsecret",
+  "jwe": Any<String>,
+  "jwt": Any<String>,
+  "key": Any<String>,
+  "relogin": "true",
+}
+`;
+
+exports[`loginCommand fastcharge login --profile myprofile 2`] = `
+{
+  "email": Any<String>,
+  "idToken": Any<String>,
+  "issuer": "firebase",
+  "refreshToken": Any<String>,
+  "userPK": Any<String>,
+}
+`;
+
+exports[`loginCommand fastcharge login --profile myprofile: console output 1`] = `
+"[33mPlease authenticate in the browser.[39m
+If the browser does not open, please visit:
+<REDACTED:URL>
+[32mLogin successful.[39m
+"
+`;
+
+exports[`loginCommand fastcharge login 1`] = `
+{
+  "behavior": "putsecret",
+  "jwe": Any<String>,
+  "jwt": Any<String>,
+  "key": Any<String>,
+  "relogin": "true",
+}
+`;
+
+exports[`loginCommand fastcharge login 2`] = `
+{
+  "email": Any<String>,
+  "idToken": Any<String>,
+  "issuer": "firebase",
+  "refreshToken": Any<String>,
+  "userPK": Any<String>,
+}
+`;
+
+exports[`loginCommand fastcharge login: console output 1`] = `
+"[33mPlease authenticate in the browser.[39m
+If the browser does not open, please visit:
+<REDACTED:URL>
+[32mLogin successful.[39m
+"
+`;

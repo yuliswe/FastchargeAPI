@@ -1,0 +1,11 @@
+{
+  "extends": "../graphql-service/apollo/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["node_modules/graphql-service-apollo/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist"],
+  "include": ["**/*"]
+}
