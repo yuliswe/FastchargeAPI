@@ -237,7 +237,7 @@ export async function callOrCreateHandler(
               body: body.string,
             };
           },
-          error(error: Error) {
+          error(error: unknown): { statusCode: number; headers: { "content-length": string }; body: string } {
             /* Non resolver error */
             throw error;
           },

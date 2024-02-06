@@ -188,7 +188,7 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
     return false;
   }
 
-  return async (bkArray: BatchKey<I>[]): Promise<DataLoaderResult<I>[]> => {
+  return async (bkArray: ReadonlyArray<BatchKey<I>>): Promise<DataLoaderResult<I>[]> => {
     type BatchableItem = { batchable: boolean; ko: KeyObject; index: number };
     type UnbatchableItem = { batchable: boolean; bk: BatchKey<I>; index: number };
     const batchable: BatchableItem[][] = [];
