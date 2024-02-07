@@ -22,8 +22,8 @@ describe("loginCommand", () => {
     consoleLogSpy = createConsoleLogSpy();
   });
 
-  for (const program of [createFastapiProgram(), createFastchargeProgram()]) {
-    for (const profile of [undefined, "myprofile"]) {
+  for (const profile of [undefined, "myprofile"]) {
+    for (const program of [createFastapiProgram(), createFastchargeProgram()]) {
       // eslint-disable-next-line jest/valid-title
       it(`${program.name()} login` + (profile ? ` --profile ${profile}` : ""), async () => {
         const { jweSecret, jwtSecret } = createSecretPair();
@@ -60,6 +60,9 @@ describe("loginCommand", () => {
           jwt: hex(jwtSecret),
           key,
         });
+        expect(loginCommandSpy.mock.lastCall).toMatchSnapshot(
+          `loginCommand must be called with the right profile name: ${profile}`
+        );
         const authFileContent = await loginCommandSpy.mock.results[0].value;
         expect(authFileContent).toMatchSnapshotExceptForProps({
           idToken: adminUserCredentials.idToken,

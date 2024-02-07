@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { Command, program } from "commander";
+import { Command } from "commander";
 import opener from "opener";
 import { graphql } from "src/__generated__/gql";
 import { envVars, reactHost } from "src/env";
@@ -11,12 +11,12 @@ import { createSecretPair, getRemoteSecret } from "src/utils/remoteSecret";
 import * as uuid from "uuid";
 import { readOrRefreshAuthFile, verifyIdToken, writeToAuthFile } from "../utils/authFile";
 
-export const createCommonLoginCommand = () =>
+export const createCommonLoginCommand = (program: Command) =>
   new Command("login")
     .summary("Login as a user")
     .description("Stores the user credentials in the system.")
     .helpOption("--help", "Display help for command")
-    .option("--profile <char>", "Store the user credentials in a profile")
+    .option("--profile <name>", "Store the user credentials in a profile")
     .action(async (options) => {
       await loginCommand({
         globalOptions: tiChecker.CliGlobalOptions.strictFrom(program.opts()),

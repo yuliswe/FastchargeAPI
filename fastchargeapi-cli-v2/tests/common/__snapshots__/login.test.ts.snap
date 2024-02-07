@@ -28,6 +28,17 @@ If the browser does not open, please visit:
 "
 `;
 
+exports[`loginCommand fastapi login --profile myprofile: loginCommand must be called with the right profile name: myprofile 1`] = `
+[
+  {
+    "globalOptions": {
+      "profile": "myprofile",
+    },
+    "options": {},
+  },
+]
+`;
+
 exports[`loginCommand fastapi login 1`] = `
 {
   "behavior": "putsecret",
@@ -54,6 +65,15 @@ If the browser does not open, please visit:
 <REDACTED:URL>
 [32mLogin successful.[39m
 "
+`;
+
+exports[`loginCommand fastapi login: loginCommand must be called with the right profile name: undefined 1`] = `
+[
+  {
+    "globalOptions": {},
+    "options": {},
+  },
+]
 `;
 
 exports[`loginCommand fastcharge login --profile myprofile 1`] = `
@@ -84,6 +104,17 @@ If the browser does not open, please visit:
 "
 `;
 
+exports[`loginCommand fastcharge login --profile myprofile: loginCommand must be called with the right profile name: myprofile 1`] = `
+[
+  {
+    "globalOptions": {
+      "profile": "myprofile",
+    },
+    "options": {},
+  },
+]
+`;
+
 exports[`loginCommand fastcharge login 1`] = `
 {
   "behavior": "putsecret",
@@ -110,4 +141,13 @@ If the browser does not open, please visit:
 <REDACTED:URL>
 [32mLogin successful.[39m
 "
+`;
+
+exports[`loginCommand fastcharge login: loginCommand must be called with the right profile name: undefined 1`] = `
+[
+  {
+    "globalOptions": {},
+    "options": {},
+  },
+]
 `;
