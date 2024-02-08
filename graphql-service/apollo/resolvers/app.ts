@@ -1,4 +1,4 @@
-import { App } from "@/database/models/App";
+import { App, AppTableIndex } from "@/database/models/App";
 import { AppTagTableIndex } from "@/database/models/AppTag";
 import { GraphQLResolveInfoWithCacheControl } from "@apollo/cache-control-types";
 import { RequestContext } from "../RequestContext";
@@ -9,6 +9,7 @@ import {
   GQLQueryAppFullTextSearchArgs,
   GQLQueryGetAppArgs,
   GQLQueryGetAppByNameArgs,
+  GQLQueryListAppsByOwnerArgs,
   GQLQueryListAppsByTagArgs,
   GQLResolvers,
 } from "../__generated__/resolvers-types";
@@ -147,6 +148,12 @@ export const AppResolvers: GQLResolvers & {
         }
       );
       const apps = await Promise.all(appTags.map((tag) => context.batched.App.get(AppPK.parse(tag.app))));
+      return apps.filter((app) => !app.deleted);
+    },
+
+    async listAppsByOwner(parent: {}, args: GQLQueryListAppsByOwnerArgs, context: RequestContext): Promise<App[]> {
+      const { owner, limit } = args;
+      const apps = await context.batched.App.many({ owner }, { limit, using: AppTableIndex.Owner });
       return apps.filter((app) => !app.deleted);
     },
   },

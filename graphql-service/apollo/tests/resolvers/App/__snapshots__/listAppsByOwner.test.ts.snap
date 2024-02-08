@@ -1,0 +1,12 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`listAppsByOwner List apps by owner 1`] = `
+{
+  "listAppsByOwner": [
+    {
+      "__typename": "App",
+      "pk": Any<String>,
+    },
+  ],
+}
+`;
