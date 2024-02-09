@@ -3,6 +3,7 @@ import fs from "fs/promises";
 import { tiChecker } from "src/tiChecker";
 import { CliCommonLogoutCommandOptions, CliGlobalOptions } from "src/types/cliOptions";
 import { deleteAuthFile, listAuthFiles } from "../utils/authFile";
+import { println } from "src/utils/console";
 
 export const createCommonLogoutCommand = (program: Command) =>
   new Command("logout")
@@ -30,5 +31,5 @@ export async function logoutCommand(args?: {
       await fs.unlink(file);
     }
   }
-  console.log("Logged out.");
+  println("Logged out.");
 }

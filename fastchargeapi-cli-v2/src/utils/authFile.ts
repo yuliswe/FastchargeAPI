@@ -36,13 +36,13 @@ export async function deleteAuthFile(profile?: string) {
   await fs.unlink(authFilePath);
 }
 
-export async function readAuthFile(profile?: string): Promise<AuthFileContent> {
+export const readAuthFile = async (profile?: string): Promise<AuthFileContent> => {
   const authFilePath = getAuthFilePath(profile);
   const authFileContent = await fs.readFile(authFilePath, "utf-8");
   const auth = tiChecker.AuthFileContent.from(JSON.parse(authFileContent));
   auth.issuer = auth.issuer || "firebase";
   return auth;
-}
+};
 
 /**
  * Partially update the auth file context, or create a new auth file with the
@@ -80,7 +80,7 @@ export async function refreshIdToken(refreshToken: string): Promise<RefreshIdTok
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ refreshToken: refreshToken }),
+    body: JSON.stringify({ refreshToken }),
   });
 
   if (!resp.ok) {
@@ -148,7 +148,7 @@ export async function verifyOrRefreshIdToken(args: {
       const newToken = await refreshIdToken(refreshToken);
       const { email } = await verifyIdToken(newToken.idToken);
       return {
-        email: email,
+        email,
         idToken: newToken.idToken,
         refreshToken: newToken.refreshToken,
         refreshed: true,
@@ -158,48 +158,57 @@ export async function verifyOrRefreshIdToken(args: {
 }
 
 /**
- * Gets the id token from the auth file. If the file doesn't exist, returns
- * None. If the id token is issued by Firebase, verifies the token. If the id
- * token is invalid, refreshes it and returns the new id token. If unable to
- * refresh, return None. If the id token is not issued by FastchargeAPI, skips
- * the verification. The new id token and refresh token are written to the auth
- * file.
+ * Gets the id token from the auth file.
+ *
+ * If the id token is issued by Firebase, verifies the token. If the id token is
+ * invalid, refreshes it and returns the new id token. If the id token is not
+ * issued by FastchargeAPI, skips the verification.
+ *
+ * The new id token and refresh token are written to the auth file.
  */
 export async function readOrRefreshAuthFile(args: {
   profile?: string;
   forceRefresh?: boolean;
-}): Promise<AuthFileContent | null> {
+}): Promise<AuthFileContent> {
   const { profile, forceRefresh } = args;
+
   const auth = await readAuthFile(profile);
-  if (auth) {
-    if (auth.issuer === "firebase") {
-      const user = await verifyOrRefreshIdToken({ ...auth, forceRefresh });
-      if (user && user.refreshed) {
-        const resp = await getGQLClient(user).query({
-          query: graphql(`
-            query GetUserPKByEmail($email: Email!) {
-              getUserByEmail(email: $email) {
-                pk
-              }
+  if (auth.issuer === "firebase") {
+    const user = await verifyOrRefreshIdToken({ ...auth, forceRefresh });
+    if (user.refreshed) {
+      const resp = await getGQLClient(user).query({
+        query: graphql(`
+          query GetUserPKByEmail($email: Email!) {
+            getUserByEmail(email: $email) {
+              pk
             }
-          `),
-          variables: { email: user.email },
-        });
-        const userPK = resp.data.getUserByEmail.pk;
-        return await writeToAuthFile(profile, {
-          idToken: user.idToken,
-          refreshToken: user.refreshToken,
-          email: user.email,
-          userPK,
-        });
-      } else {
-        return auth;
-      }
-    } else if (auth.issuer === "fastchargeapi") {
-      return auth;
+          }
+        `),
+        variables: { email: user.email },
+      });
+      const userPK = resp.data.getUserByEmail.pk;
+      return await writeToAuthFile(profile, {
+        idToken: user.idToken,
+        refreshToken: user.refreshToken,
+        email: user.email,
+        userPK,
+      });
     } else {
-      throw new Error(`Unknown issuer: ${auth.issuer}`);
+      return auth;
     }
+  } else if (auth.issuer === "fastchargeapi") {
+    return auth;
+  } else {
+    throw new Error(`Unknown issuer: ${auth.issuer}`);
   }
-  return null;
+}
+
+export async function readOrRefreshAuthFileContentOrExit(args: { profile?: string }): Promise<AuthFileContent> {
+  const { profile } = args;
+  try {
+    return await readOrRefreshAuthFile({ profile });
+  } catch (e) {
+    console.error("Login required.");
+    process.exit(1);
+  }
 }

@@ -9,3 +9,20 @@ export type CliCommonLoginCommandOptions = {
 export type CliCommonLogoutCommandOptions = {
   profile?: string;
 };
+
+export type CliFastchargeAppListCommandOptions = {};
+
+export enum AppVisibility {
+  Private = "private",
+  Public = "public",
+}
+
+export type CliFastchargeAppCreateCommandOptions = {
+  name: string;
+  title?: string;
+  description?: string;
+  repository?: string;
+  homepage?: string;
+  visibility?: AppVisibility;
+  logo?: string;
+};

@@ -7,6 +7,7 @@ import { getGQLClient } from "src/graphqlClient";
 import { NotFoundSimpleGQLError } from "src/simplifiedGQLErrors";
 import { tiChecker } from "src/tiChecker";
 import { CliCommonLoginCommandOptions, CliGlobalOptions } from "src/types/cliOptions";
+import { println } from "src/utils/console";
 import { createSecretPair, getRemoteSecret } from "src/utils/remoteSecret";
 import * as uuid from "uuid";
 import { readOrRefreshAuthFile, verifyIdToken, writeToAuthFile } from "../utils/authFile";
@@ -32,13 +33,11 @@ export const loginCommand = async (args?: {
   const profile = globalOptions?.profile ?? options?.profile ?? undefined;
   try {
     const auth = await readOrRefreshAuthFile({ profile });
-    if (auth) {
-      console.log(profile ? `Login successful for profile '${profile}'.` : "Login successful.");
-      if (envVars.SHOW_AUTH) {
-        console.log(auth);
-      }
-      return auth;
+    println(profile ? `Login successful for profile '${profile}'.` : "Login successful.");
+    if (envVars.SHOW_AUTH) {
+      console.log(auth);
     }
+    return auth;
   } catch (e) {
     // ignore error and proceed to login
   }
@@ -58,9 +57,9 @@ export const loginCommand = async (args?: {
   });
   const url = new URL(`/auth/?${params.toString()}`, reactHost);
   opener(url.href);
-  console.log(chalk.yellow("Please authenticate in the browser."));
-  console.log("If the browser does not open, please visit:");
-  console.log(chalk.blue(url.href));
+  println(chalk.yellow("Please authenticate in the browser."));
+  println("If the browser does not open, please visit:");
+  println(chalk.blue(url.href));
 
   let idToken = "";
   let refreshToken = "";
@@ -75,7 +74,7 @@ export const loginCommand = async (args?: {
     } catch (e) {
       if (e instanceof NotFoundSimpleGQLError) {
         if (tries >= 40) {
-          console.log("Timed out. Press enter to retry.");
+          println("Timed out. Press enter to retry.");
           await new Promise((r) => setTimeout(r, 3000));
         }
         continue;
@@ -105,6 +104,6 @@ export const loginCommand = async (args?: {
     console.log(auth);
   }
 
-  console.log(chalk.green("Login successful."));
+  println(chalk.green("Login successful."));
   return authFileContent;
 };

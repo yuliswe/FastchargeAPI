@@ -12,8 +12,9 @@ import {
 } from "@apollo/client";
 import { ApolloError } from "@apollo/client/errors";
 import { setContext } from "@apollo/client/link/context";
+import chalk from "chalk";
 
-import { graphqlHost } from "src/env";
+import { envVars, graphqlHost } from "src/env";
 import {
   AlreadyExistsSimpleGQLError,
   BadUserInputSimpleGQLError,
@@ -26,6 +27,40 @@ import {
 } from "src/simplifiedGQLErrors";
 import { tiChecker } from "src/tiChecker";
 
+async function loggingFetch(input: string, init?: RequestInit): Promise<Response> {
+  const { body } = init ?? {};
+  const { operationName, query, variables } = JSON.parse(body!.toString()) as {
+    operationName?: string;
+    query?: string;
+    variables?: Record<string, unknown>;
+  };
+
+  const start = Date.now();
+  console.log(chalk.blue(`${new Date().toISOString().slice(-13)} 📡 Sending ${operationName}`));
+  console.log(query);
+  console.log(`${chalk.blue("With variables:")} ${JSON.stringify(variables)}`);
+  const response = await fetch(input, init);
+  console.log(
+    chalk.blue(
+      `${new Date().toISOString().slice(-13)} 📡 Received ${operationName} response in ${Date.now() - start}ms`
+    )
+  );
+
+  return {
+    ...response,
+
+    async text() {
+      const start = Date.now();
+      const result = await response.text();
+      console.log(JSON.parse(result));
+      console.log(
+        chalk.blue(`${new Date().toISOString().slice(-13)} ⚙️ in ${Date.now() - start}ms (${result.length} bytes)`)
+      );
+      return result;
+    },
+  };
+}
+
 /**
  * Connects to the graphql server specified by uri.
  * @param param0
@@ -35,6 +70,7 @@ export function getGQLClient(args?: { idToken?: string; userPK?: string; email?:
   const { idToken, userPK, email } = args ?? {};
   const httpLink = createHttpLink({
     uri: graphqlHost,
+    fetch: envVars.LOG_REQUESTS ? loggingFetch : fetch,
   });
 
   const authLink = setContext((_, { headers }) => {
@@ -69,21 +105,22 @@ export function getGQLClient(args?: { idToken?: string; userPK?: string; email?:
     TContext extends Record<string, unknown> = DefaultContext
   >(
     options: MutationOptions<TData, TVariables, TContext>
-  ): Promise<FetchResult<TData>> => {
+  ): Promise<FetchResult<TData> & { data: TData }> => {
+    // Our backend always returns a data field. If the mutation fails, it will
+    // throw an ApolloError instead.
     return originalClientMutate(options).catch((e: ApolloError) => {
       throw mapApolloErrorToSimplifedGQLError(e);
-    });
+    }) as Promise<FetchResult<TData> & { data: TData }>;
   };
   return { ...client, query: wrapperClientQuery, mutate: wrapperClientMutate };
 }
 
 function mapApolloErrorToSimplifedGQLError(originalApolloError: ApolloError): SimplifiedGQLError | ApolloError {
   const { graphQLErrors } = originalApolloError;
-  const firstError = graphQLErrors?.[0];
-  if (!firstError) {
+  if (graphQLErrors.length === 0) {
     return originalApolloError;
   }
-  const { extensions } = firstError;
+  const { extensions } = graphQLErrors[0];
   switch (extensions.code) {
     case "ALREADY_EXISTS":
       return new AlreadyExistsSimpleGQLError({

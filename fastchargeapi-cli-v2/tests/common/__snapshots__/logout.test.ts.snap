@@ -1,6 +1,11 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`logoutCommand logs out: console output 1`] = `
+exports[`logoutCommand fastapi logout 1`] = `
+"Logged out.
+"
+`;
+
+exports[`logoutCommand fastcharge logout 1`] = `
 "Logged out.
 "
 `;

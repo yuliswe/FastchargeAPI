@@ -42,6 +42,7 @@ const envVars = {
   LOCAL_REACT: _envVars.LOCAL_REACT === "1",
   LOCAL_AUTH: _envVars.LOCAL_AUTH === "1",
   SHOW_AUTH: _envVars.SHOW_AUTH === "1",
+  LOG_REQUESTS: _envVars.LOG_REQUESTS === "1",
 };
 
 export { authServiceHost, awsAccountId, baseDomain, envVars, graphqlHost, paymentServiceHost, reactHost };

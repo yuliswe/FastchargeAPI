@@ -1,0 +1,18 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`fastcharge fastcharge --help 1`] = `
+"Usage: fastcharge [global-options] command
+
+fastcharge cli
+
+Options:
+  -V, --version     output the version number
+  --profile <name>  run command as a specific user
+  --help            Display help for command
+
+Commands:
+  login [options]   Login as a user
+  logout [options]  Logout a user
+  app
+"
+`;

@@ -40,6 +40,8 @@ type TypedCheckers = {
   CliGlobalOptions: TypedChecker<cliOptions.CliGlobalOptions>;
   CliCommonLoginCommandOptions: TypedChecker<cliOptions.CliCommonLoginCommandOptions>;
   CliCommonLogoutCommandOptions: TypedChecker<cliOptions.CliCommonLogoutCommandOptions>;
+  CliFastchargeAppListCommandOptions: TypedChecker<cliOptions.CliFastchargeAppListCommandOptions>;
+  CliFastchargeAppCreateCommandOptions: TypedChecker<cliOptions.CliFastchargeAppCreateCommandOptions>;
 };
 
 function from<T>(value: unknown, checker: TypedChecker<T>, opts: { strict: boolean }): T {

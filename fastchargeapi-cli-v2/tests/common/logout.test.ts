@@ -1,10 +1,15 @@
-import { logoutCommand } from "src/common/logout";
-import { createConsoleLogSpy } from "tests/utils";
+import { fastcharge } from "tests/utils";
 
 describe("logoutCommand", () => {
-  it("logs out", async () => {
-    const consoleLogSpy = createConsoleLogSpy();
-    await logoutCommand();
-    expect(consoleLogSpy.getOutput()).toMatchSnapshot("console output");
+  it("fastcharge logout", async () => {
+    const { console, exitCode } = await fastcharge(["logout"]);
+    expect(exitCode).toBe(0);
+    expect(console.getOutput()).toMatchSnapshot();
+  });
+
+  it("fastapi logout", async () => {
+    const { console, exitCode } = await fastcharge(["logout"]);
+    expect(exitCode).toBe(0);
+    expect(console.getOutput()).toMatchSnapshot();
   });
 });

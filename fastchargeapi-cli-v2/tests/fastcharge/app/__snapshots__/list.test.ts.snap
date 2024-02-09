@@ -1,0 +1,19 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`fastcharge app list prints app list 1`] = `
+"<REDACTED:AppName>
+ [2mNo description[22m
+
+<REDACTED:AppName>
+ [2mNo description[22m
+
+<REDACTED:AppName>
+ [2mNo description[22m
+
+"
+`;
+
+exports[`fastcharge app list prints output when user has not created any app 1`] = `
+"You don't have any app.
+"
+`;
