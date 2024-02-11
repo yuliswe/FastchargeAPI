@@ -2,7 +2,6 @@ import { App, AppTableIndex } from "@/database/models/App";
 import { Subscription } from "@/database/models/Subscription";
 import { User, UserModel, UserTableIndex } from "@/database/models/User";
 import type { GraphQLResolveInfoWithCacheControl } from "@apollo/cache-control-types";
-import { Chalk } from "chalk";
 import { RequestContext } from "../RequestContext";
 import {
   GQLMutationCreateUserArgs,
@@ -21,7 +20,6 @@ import { createUserWithEmail, makeFastchargeAPIIdTokenForUser } from "../functio
 import { Can } from "../permissions";
 import { UserPK } from "../pks/UserPK";
 import { AccountHistoryResolvers } from "./AccountHistory";
-const chalk = new Chalk({ level: 3 });
 
 function makePrivate<T>(
   getter: (parent: User, args: {}, context: RequestContext, info: GraphQLResolveInfoWithCacheControl) => T
@@ -175,6 +173,10 @@ export const UserResolvers: GQLResolvers & {
       return user;
     },
 
+    /**
+     * @deprecated The cli tests can now use
+     * {@link makeFastchargeAPIIdTokenForUser} directly
+     * */
     async getFastchargeAPIIdToken(
       parent: User,
       { expireInSeconds }: GQLUserGetFastchargeApiIdTokenArgs,

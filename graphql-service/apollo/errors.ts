@@ -29,7 +29,7 @@ export class NotFound extends GraphQLError {
 export class AlreadyExists extends GraphQLError {
   constructor(public resource: string, public query: object) {
     super(`${resource} already exists: ${JSON.stringify(query)}`, {
-      extensions: { code: GQLErrorCode.ALREADY_EXISTS },
+      extensions: { code: GQLErrorCode.ALREADY_EXISTS, resource, query },
     });
   }
 }

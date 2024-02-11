@@ -14,6 +14,8 @@ extendJest();
 const logLevel = Number.parseInt(process.env.LOG || "0");
 
 export function muteConsoleDuringTests() {
+  // AWS library console logs right when the server starts, before jest can mock
+  // the console. This is a workaround to mute the logs.
   const mute = (object: object, prop: string) => {
     Object.assign(object, { [prop]: () => ({}) });
   };
