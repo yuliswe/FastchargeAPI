@@ -1,0 +1,31 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`fastcharge app update --help prints help message 1`] = `
+"Usage: fastcharge app update [options] <id/name>
+
+Update your app's information
+
+Arguments:
+  id/name  App id or name
+
+Options:
+  --help   Display help for command
+"
+`;
+
+exports[`fastcharge app update updates an app 1`] = `
+"Updated <REDACTED:appName>
+"
+`;
+
+exports[`fastcharge app update updates an app 2`] = `
+{
+  "createdAt": Any<Date>,
+  "deleted": false,
+  "gatewayMode": "proxy",
+  "name": Any<String>,
+  "owner": Any<String>,
+  "updatedAt": Any<Date>,
+  "visibility": "private",
+}
+`;

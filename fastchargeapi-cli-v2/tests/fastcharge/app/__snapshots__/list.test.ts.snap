@@ -1,5 +1,15 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`fastcharge app list --help prints help message 1`] = `
+"Usage: fastcharge app list|ls [options]
+
+List your apps
+
+Options:
+  --help  Display help for command
+"
+`;
+
 exports[`fastcharge app list prints app list 1`] = `
 "<REDACTED:AppName>
  [2mNo description[22m

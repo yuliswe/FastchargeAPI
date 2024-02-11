@@ -34,23 +34,35 @@ export function createConsoleLogSpy() {
   const mock = jest.spyOn(consoleModule, "print").mockImplementation();
   return {
     mock,
-    getOutput(args?: { redact: Record<string, (line: string) => boolean> }) {
-      const { redact } = args ?? {};
-      let output = "";
-      for (const [str] of mock.mock.calls) {
-        const callOutput = [];
-        for (const line of str.toString().split("\n")) {
-          const maybeRedact = Object.entries(redact ?? {}).find(([_, redactFn]) => redactFn(line));
-          if (maybeRedact) {
-            const [name] = maybeRedact;
-            callOutput.push(`<REDACTED:${name}>`);
-          } else {
-            callOutput.push(line);
-          }
-        }
-        output += callOutput.join("\n");
-      }
-      return output;
+    getOutput(args?: {
+      redactLine?: Record<string, (line: string) => boolean>;
+      redactWord?: Record<string, (word: string) => boolean>;
+    }) {
+      const { redactLine: redact, redactWord } = args ?? {};
+      return mock.mock.calls
+        .map(([str]) =>
+          str
+            .split("\n")
+            .map((line) => {
+              const maybeRedact = Object.entries(redact ?? {}).find(([_, redactFn]) => redactFn(line));
+              if (maybeRedact) {
+                const [name] = maybeRedact;
+                return `<REDACTED:${name}>`;
+              } else {
+                const redactedWords = line.split(" ").map((word) => {
+                  const maybeRedact = Object.entries(redactWord ?? {}).find(([_, redactFn]) => redactFn(word));
+                  if (maybeRedact) {
+                    const [name] = maybeRedact;
+                    return `<REDACTED:${name}>`;
+                  }
+                  return word;
+                });
+                return redactedWords.join(" ");
+              }
+            })
+            .join("\n")
+        )
+        .join("");
     },
   };
 }
@@ -73,34 +85,34 @@ class ExitCalled extends Error {
 }
 
 export async function fastcharge(args: string[]) {
-  const console = createConsoleLogSpy();
+  const stdout = createConsoleLogSpy();
   const program = createFastchargeProgram();
   jest.spyOn(process, "exit").mockImplementation((exitCode: number) => {
     throw new ExitCalled(exitCode);
   });
   try {
     await program.parseAsync(args, { from: "user" });
-    return { console, exitCode: 0 };
+    return { stdout, exitCode: 0 };
   } catch (e) {
     if (e instanceof ExitCalled) {
-      return { console, exitCode: e.exitCode };
+      return { stdout, exitCode: e.exitCode };
     }
     throw e;
   }
 }
 
 export async function fastapi(args: string[]) {
-  const console = createConsoleLogSpy();
+  const stdout = createConsoleLogSpy();
   const program = createFastapiProgram();
   jest.spyOn(process, "exit").mockImplementation((exitCode: number) => {
     throw new ExitCalled(exitCode);
   });
   try {
     await program.parseAsync(args, { from: "user" });
-    return { console, exitCode: 0 };
+    return { stdout, exitCode: 0 };
   } catch (e) {
     if (e instanceof ExitCalled) {
-      return { console, exitCode: e.exitCode };
+      return { stdout, exitCode: e.exitCode };
     }
     throw e;
   }

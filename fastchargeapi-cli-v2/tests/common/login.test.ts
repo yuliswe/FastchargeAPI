@@ -3,7 +3,7 @@ import { createFastapiProgram } from "src/fastapi/program";
 import { createFastchargeProgram } from "src/fastcharge/program";
 import * as remoteSecretModule from "src/utils/remoteSecret";
 import { createSecretPair, setRemoteSecret } from "src/utils/remoteSecret";
-import { ConsoleLogSpy, createConsoleLogSpy, getAdminUserCredentials } from "tests/utils";
+import { ConsoleLogSpy, createConsoleLogSpy, fastapi, fastcharge, getAdminUserCredentials } from "tests/utils";
 
 jest.mock("opener", () => ({
   __esModule: true,
@@ -14,6 +14,22 @@ jest.mock("opener", () => ({
 const uuid = jest.requireActual("uuid") as { v4: () => string };
 
 jest.mock("uuid");
+
+describe("fastcharge login --help", () => {
+  it("prints help message", async () => {
+    const { stdout, exitCode } = await fastcharge(["login", "--help"]);
+    expect(exitCode).toBe(0);
+    expect(stdout.getOutput()).toMatchSnapshot();
+  });
+});
+
+describe("fastapi login --help", () => {
+  it("prints help message", async () => {
+    const { stdout, exitCode } = await fastapi(["login", "--help"]);
+    expect(exitCode).toBe(0);
+    expect(stdout.getOutput()).toMatchSnapshot();
+  });
+});
 
 describe("loginCommand", () => {
   let consoleLogSpy: ConsoleLogSpy;
@@ -72,7 +88,7 @@ describe("loginCommand", () => {
         });
         expect(
           consoleLogSpy.getOutput({
-            redact: { URL: (ln) => ln.includes("https://") },
+            redactLine: { URL: (ln) => ln.includes("https://") },
           })
         ).toMatchSnapshot("console output");
       });

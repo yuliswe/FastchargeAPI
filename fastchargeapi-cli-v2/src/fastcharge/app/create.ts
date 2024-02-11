@@ -1,20 +1,23 @@
 import { validateAppName } from "@/functions/app";
 import chalk from "chalk";
 import { Command } from "commander";
+import { ValidationError } from "graphql-service-apollo/errors";
 import { graphql } from "src/__generated__/gql";
 import { reactHost } from "src/env";
 import { AlreadyExistsSimpleGQLError } from "src/simplifiedGQLErrors";
 import { tiChecker } from "src/tiChecker";
 import { CliFastchargeAppCreateCommandOptions, CliGlobalOptions } from "src/types/cliOptions";
 import { readOrRefreshAuthFileContentOrExit } from "src/utils/authFile";
+import { createCommand } from "src/utils/command";
 import { println } from "src/utils/console";
 import { getAuthorizedGQLClient } from "src/utils/graphqlClient";
 
 export const createFastchargeAppCreateCommand = (program: Command) =>
-  new Command("create")
-    .summary("Create your app")
-    .description("Create a new app")
-    .helpOption("--help", "Display help for command")
+  createCommand({
+    name: "create",
+    summary: "Create your app",
+    description: "Create a new app",
+  })
     .requiredOption("--name <name>", "Name of the app", parseAppName)
     .option("--title <title>", "Title of the app, defaults to name")
     .action(async (options) => {
@@ -78,9 +81,17 @@ async function appCreateCommand(args: {
 }
 
 const parseAppName = (name: string) => {
-  if (validateAppName(name)) {
+  try {
+    validateAppName(name);
     return name;
+  } catch (e) {
+    if (e instanceof ValidationError) {
+      if (e.field === "name") {
+        println(`Invalid app name "${name}": ${e.validationErrorMessage}.`);
+        println(chalk.yellow(`Please use a different name.`));
+      }
+      process.exit(1);
+    }
+    throw e;
   }
-  println("Invalid app name. Please use a different name.\n");
-  process.exit(1);
 };

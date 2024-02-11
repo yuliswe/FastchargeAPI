@@ -2,14 +2,16 @@ import { Command } from "commander";
 import fs from "fs/promises";
 import { tiChecker } from "src/tiChecker";
 import { CliCommonLogoutCommandOptions, CliGlobalOptions } from "src/types/cliOptions";
-import { deleteAuthFile, listAuthFiles } from "../utils/authFile";
+import { createCommand } from "src/utils/command";
 import { println } from "src/utils/console";
+import { deleteAuthFile, listAuthFiles } from "../utils/authFile";
 
 export const createCommonLogoutCommand = (program: Command) =>
-  new Command("logout")
-    .summary("Logout a user")
-    .description("Clears the user credentials from the system.")
-    .helpOption("--help", "Display help for command")
+  createCommand({
+    name: "logout",
+    summary: "Logout a user",
+    description: "Clears the user credentials from the system.",
+  })
     .option("--profile <name>", "Clear the user credentials for a specific profile")
     .action(async (options) => {
       await logoutCommand({

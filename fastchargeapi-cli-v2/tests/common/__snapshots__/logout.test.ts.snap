@@ -1,11 +1,33 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`logoutCommand fastapi logout 1`] = `
+exports[`fastapi logout --help prints help message 1`] = `
+"Usage: fastapi logout [options]
+
+Clears the user credentials from the system.
+
+Options:
+  --profile <name>  Clear the user credentials for a specific profile
+  --help            Display help for command
+"
+`;
+
+exports[`fastapi logout 1`] = `
 "Logged out.
 "
 `;
 
-exports[`logoutCommand fastcharge logout 1`] = `
+exports[`fastcharge logout --help prints help message 1`] = `
+"Usage: fastcharge logout [options]
+
+Clears the user credentials from the system.
+
+Options:
+  --profile <name>  Clear the user credentials for a specific profile
+  --help            Display help for command
+"
+`;
+
+exports[`fastcharge logout 1`] = `
 "Logged out.
 "
 `;

@@ -1,5 +1,27 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`fastapi login --help prints help message 1`] = `
+"Usage: fastapi login [options]
+
+Stores the user credentials in the system.
+
+Options:
+  --profile <name>  Store the user credentials in a profile
+  --help            Display help for command
+"
+`;
+
+exports[`fastcharge login --help prints help message 1`] = `
+"Usage: fastcharge login [options]
+
+Stores the user credentials in the system.
+
+Options:
+  --profile <name>  Store the user credentials in a profile
+  --help            Display help for command
+"
+`;
+
 exports[`loginCommand fastapi login --profile myprofile 1`] = `
 {
   "behavior": "putsecret",

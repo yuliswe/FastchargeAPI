@@ -1,0 +1,51 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`fastcharge app create --help prints help message 1`] = `
+"Usage: fastcharge app create [options]
+
+Create a new app
+
+Options:
+  --name <name>    Name of the app
+  --title <title>  Title of the app, defaults to name
+  --help           Display help for command
+"
+`;
+
+exports[`fastcharge app create creates app 1`] = `
+"App created: <REDACTED:appName>
+[34m <REDACTED:url>
+"
+`;
+
+exports[`fastcharge app create creates app 2`] = `
+[
+  {
+    "createdAt": Any<Date>,
+    "deleted": false,
+    "gatewayMode": "proxy",
+    "name": Any<String>,
+    "owner": Any<String>,
+    "updatedAt": Any<Date>,
+    "visibility": "public",
+  },
+]
+`;
+
+exports[`fastcharge app create fails when creating app with invalid app name 1`] = `
+"Invalid app name "&!#!": can only contain lowercase letters, numbers, and dashes. ([a-z\\d][a-z\\d\\-]*[a-z\\d]).
+[33mPlease use a different name.[39m
+"
+`;
+
+exports[`fastcharge app create fails when creating app with long app name 1`] = `
+"Invalid app name "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": cannot be more than 63 characters.
+[33mPlease use a different name.[39m
+"
+`;
+
+exports[`fastcharge app create fails when creating app with reserved app name 1`] = `
+"Invalid app name "api": is a reserved name.
+[33mPlease use a different name.[39m
+"
+`;

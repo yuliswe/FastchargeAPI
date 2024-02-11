@@ -7,16 +7,18 @@ import { getGQLClient } from "src/graphqlClient";
 import { NotFoundSimpleGQLError } from "src/simplifiedGQLErrors";
 import { tiChecker } from "src/tiChecker";
 import { CliCommonLoginCommandOptions, CliGlobalOptions } from "src/types/cliOptions";
+import { createCommand } from "src/utils/command";
 import { println } from "src/utils/console";
 import { createSecretPair, getRemoteSecret } from "src/utils/remoteSecret";
 import * as uuid from "uuid";
 import { readOrRefreshAuthFile, verifyIdToken, writeToAuthFile } from "../utils/authFile";
 
 export const createCommonLoginCommand = (program: Command) =>
-  new Command("login")
-    .summary("Login as a user")
-    .description("Stores the user credentials in the system.")
-    .helpOption("--help", "Display help for command")
+  createCommand({
+    name: "login",
+    summary: "Login as a user",
+    description: "Stores the user credentials in the system.",
+  })
     .option("--profile <name>", "Store the user credentials in a profile")
     .action(async (options) => {
       await loginCommand({

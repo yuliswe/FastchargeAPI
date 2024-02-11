@@ -26,3 +26,12 @@ export type CliFastchargeAppCreateCommandOptions = {
   visibility?: AppVisibility;
   logo?: string;
 };
+
+export type CliFastchargeAppUpdateCommandOptions = {
+  title?: string;
+  description?: string;
+  repository?: string;
+  homepage?: string;
+  visibility?: AppVisibility;
+  logo?: string;
+};

@@ -4,15 +4,17 @@ import { graphql } from "src/__generated__/gql";
 import { tiChecker } from "src/tiChecker";
 import { CliFastchargeAppListCommandOptions, CliGlobalOptions } from "src/types/cliOptions";
 import { readOrRefreshAuthFileContentOrExit } from "src/utils/authFile";
+import { createCommand } from "src/utils/command";
 import { println } from "src/utils/console";
 import { getAuthorizedGQLClient } from "src/utils/graphqlClient";
 
 export const createFastchargeAppListCommand = (program: Command) =>
-  new Command("list")
-    .summary("List your apps")
+  createCommand({
+    name: "list",
+    summary: "List your apps",
+    description: "List your apps",
+  })
     .aliases(["ls"])
-    .description("List your apps")
-    .helpOption("--help", "Display help for command")
     .action(async (options) => {
       await appListCommand({
         globalOptions: tiChecker.CliGlobalOptions.strictFrom(program.opts()),

@@ -3,27 +3,22 @@ import { createCommonLoginCommand } from "src/common/login";
 import { createCommonLogoutCommand } from "src/common/logout";
 import { createFastchargeAppCreateCommand } from "src/fastcharge/app/create";
 import { createFastchargeAppListCommand } from "src/fastcharge/app/list";
-import { print } from "src/utils/console";
+import { createFastchargeAppUpdateCommand } from "src/fastcharge/app/update";
+import { createCommand } from "src/utils/command";
 
 export const createFastchargeProgram = () => {
-  const program = new Command("fastcharge");
+  const program = createCommand({ name: "fastcharge", summary: "fastcharge cli", description: "fastcharge cli" });
   return program
     .version("0.0.1")
-    .configureOutput({
-      writeErr: print,
-      writeOut: print,
-    })
-    .description("fastcharge cli")
     .usage("[global-options] command")
-    .helpOption("--help", "Display help for command")
-    .addHelpCommand(false)
     .option("--profile <name>", "run command as a specific user")
     .addCommand(createCommonLoginCommand(program))
     .addCommand(createCommonLogoutCommand(program))
     .addCommand(createFastchargeAppCommand(program));
 };
 export const createFastchargeAppCommand = (program: Command) =>
-  new Command("app")
+  createCommand({ name: "app", summary: "Manage or create your apps", description: "Manage or create your apps" })
     .addHelpCommand(false)
     .addCommand(createFastchargeAppListCommand(program))
-    .addCommand(createFastchargeAppCreateCommand(program));
+    .addCommand(createFastchargeAppCreateCommand(program))
+    .addCommand(createFastchargeAppUpdateCommand(program));

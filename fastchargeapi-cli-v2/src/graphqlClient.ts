@@ -85,7 +85,15 @@ export function getGQLClient(args?: { idToken?: string; userPK?: string; email?:
     };
   });
 
-  const retryLink = new RetryLink();
+  const retryLink = new RetryLink({
+    attempts: (count, operation, error) => {
+      return Boolean(error) && count < 10;
+    },
+    delay: (count, operation, error) => {
+      console.log(chalk.dim("Network error, retrying in 5 seconds."));
+      return 5_000;
+    },
+  });
 
   const client = new ApolloClient({
     link: linksFrom([authLink, retryLink, httpLink]),
