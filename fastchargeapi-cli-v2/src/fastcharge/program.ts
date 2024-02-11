@@ -2,6 +2,7 @@ import { Command } from "commander";
 import { createCommonLoginCommand } from "src/common/login";
 import { createCommonLogoutCommand } from "src/common/logout";
 import { createFastchargeAppCreateCommand } from "src/fastcharge/app/create";
+import { createFastchargeAppDeleteCommand } from "src/fastcharge/app/delete";
 import { createFastchargeAppListCommand } from "src/fastcharge/app/list";
 import { createFastchargeAppUpdateCommand } from "src/fastcharge/app/update";
 import { createCommand } from "src/utils/command";
@@ -21,4 +22,5 @@ export const createFastchargeAppCommand = (program: Command) =>
     .addHelpCommand(false)
     .addCommand(createFastchargeAppListCommand(program))
     .addCommand(createFastchargeAppCreateCommand(program))
-    .addCommand(createFastchargeAppUpdateCommand(program));
+    .addCommand(createFastchargeAppUpdateCommand(program))
+    .addCommand(createFastchargeAppDeleteCommand(program));

@@ -33,6 +33,7 @@ export class AlreadyExistsSimpleGQLError extends SimplifiedGQLError implements A
   resource: string;
   constructor(props: AlreadyExistsSimpleGQLErrorProps) {
     super(props);
+    Object.assign(this, props.extensions);
   }
 }
 
@@ -43,6 +44,7 @@ export class NotFoundSimpleGQLError extends SimplifiedGQLError implements NotFou
 
   constructor(props: NotFoundSimpleGQLErrorProps) {
     super(props);
+    Object.assign(this, props.extensions);
   }
 }
 
@@ -53,6 +55,7 @@ export class TooManyResourcesSimpleGQLError
 {
   constructor(props: TooManyResourcesSimpleGQLErrorProps) {
     super(props);
+    Object.assign(this, props.extensions);
   }
 }
 
@@ -63,6 +66,7 @@ export class PermissionDeniedSimpleGQLError
 {
   constructor(props: PermissionDeniedSimpleGQLErrorProps) {
     super(props);
+    Object.assign(this, props.extensions);
   }
 }
 
@@ -74,6 +78,7 @@ export class ImmutableResourceSimpleGQLError
   resource: string;
   constructor(props: ImmutableResourceSimpleGQLErrorProps) {
     super(props);
+    Object.assign(this, props.extensions);
   }
 }
 
@@ -82,6 +87,7 @@ export class BadUserInputSimpleGQLError extends SimplifiedGQLError implements Ba
   field: string;
   constructor(props: BadUserInputSimpleGQLErrorProps) {
     super(props);
+    Object.assign(this, props.extensions);
   }
 }
 
@@ -94,5 +100,6 @@ export class ResourceDeletedSimpleGQLError
   query: object;
   constructor(props: ResourceDeletedSimpleGQLErrorProps) {
     super(props);
+    Object.assign(this, props.extensions);
   }
 }

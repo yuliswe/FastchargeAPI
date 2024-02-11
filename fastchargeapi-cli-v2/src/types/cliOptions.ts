@@ -36,3 +36,5 @@ export type CliFastchargeAppUpdateCommandOptions = {
   logo?: string;
   readme?: string;
 };
+
+export type CliFastchargeAppDeleteCommandOptions = {};

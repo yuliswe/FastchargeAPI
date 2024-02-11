@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`fastcharge app delete --help prints help message 1`] = `
+"Usage: fastcharge app delete [options] <name/id>
+
+Delete an existing app
+
+Arguments:
+  name/id  Name or id of the app to be deleted.
+
+Options:
+  --help   Display help for command
+"
+`;
+
+exports[`fastcharge app delete delete does not exist 1`] = `
+"App not found: <REDACTED:appName>
+"
+`;
+
+exports[`fastcharge app delete deletes app by id 1`] = `
+"App deleted: <REDACTED:appName>
+"
+`;
+
+exports[`fastcharge app delete deletes app by name 1`] = `
+"App deleted: <REDACTED:appName>
+"
+`;
