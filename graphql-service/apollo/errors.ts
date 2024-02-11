@@ -127,6 +127,7 @@ export class UpdateContainsPrimaryKey extends GraphQLError {
 }
 
 export class ValidationError extends GraphQLError {
+  validationErrorMessage: string;
   constructor(public field: string, public message: string, public current: unknown) {
     super(`Validation faild on "${field}": ${message}.\nGot: ${JSON.stringify(current)}`, {
       extensions: {
@@ -134,6 +135,7 @@ export class ValidationError extends GraphQLError {
         field,
       },
     });
+    this.validationErrorMessage = message;
   }
 }
 

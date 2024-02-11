@@ -82,14 +82,17 @@ function fromArray<T>(value: unknown, checker: TypedChecker<T>, opts: { strict: 
 }
 
 export const tiChecker = Object.fromEntries(
-  Object.entries(createCheckers(checkers) as Record<keyof typeof checkers, Checker>).map(([k, checker]) => [
-    k,
-    {
-      ...checker,
-      from: <T>(value: unknown): T => from(value, checker as TypedChecker<T>, { strict: false }),
-      fromArray: <T>(value: unknown): T[] => fromArray(value, checker as TypedChecker<T>, { strict: false }),
-      strictFrom: <T>(value: unknown): T => from(value, checker as TypedChecker<T>, { strict: true }),
-      strictFromArray: <T>(value: unknown): T[] => fromArray(value, checker as TypedChecker<T>, { strict: true }),
-    },
-  ])
+  Object.entries(createCheckers(checkers) as Record<keyof typeof checkers, Checker>).map(([k, checker]) => {
+    checker.setReportedPath("");
+    return [
+      k,
+      {
+        ...checker,
+        from: <T>(value: unknown): T => from(value, checker as TypedChecker<T>, { strict: false }),
+        fromArray: <T>(value: unknown): T[] => fromArray(value, checker as TypedChecker<T>, { strict: false }),
+        strictFrom: <T>(value: unknown): T => from(value, checker as TypedChecker<T>, { strict: true }),
+        strictFromArray: <T>(value: unknown): T[] => fromArray(value, checker as TypedChecker<T>, { strict: true }),
+      },
+    ];
+  })
 ) as TypedCheckers;
