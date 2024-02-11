@@ -14,6 +14,7 @@ import { ApolloError } from "@apollo/client/errors";
 import { setContext } from "@apollo/client/link/context";
 import chalk from "chalk";
 
+import { RetryLink } from "@apollo/client/link/retry";
 import { envVars, graphqlHost } from "src/env";
 import {
   AlreadyExistsSimpleGQLError,
@@ -84,8 +85,10 @@ export function getGQLClient(args?: { idToken?: string; userPK?: string; email?:
     };
   });
 
+  const retryLink = new RetryLink();
+
   const client = new ApolloClient({
-    link: linksFrom([authLink, httpLink]),
+    link: linksFrom([authLink, retryLink, httpLink]),
     cache: new InMemoryCache(),
   });
 
@@ -93,9 +96,11 @@ export function getGQLClient(args?: { idToken?: string; userPK?: string; email?:
   const wrapperClientQuery = <T = any, TVariables extends OperationVariables = OperationVariables>(
     options: QueryOptions<TVariables, T>
   ): Promise<ApolloQueryResult<T>> => {
+    // Our backend always returns a data field. If the query fails, it will
+    // throw an ApolloError instead.
     return originalClientQuery(options).catch((e: ApolloError) => {
       throw mapApolloErrorToSimplifedGQLError(e);
-    });
+    }) as Promise<ApolloQueryResult<T>> & { data: T };
   };
 
   const originalClientMutate = client.mutate.bind(client);
@@ -114,6 +119,8 @@ export function getGQLClient(args?: { idToken?: string; userPK?: string; email?:
   };
   return { ...client, query: wrapperClientQuery, mutate: wrapperClientMutate };
 }
+
+export type GQLClient = ReturnType<typeof getGQLClient>;
 
 function mapApolloErrorToSimplifedGQLError(originalApolloError: ApolloError): SimplifiedGQLError | ApolloError {
   const { graphQLErrors } = originalApolloError;
