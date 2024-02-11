@@ -14,6 +14,13 @@ export const createFastchargeAppUpdateCommand = (program: Command) =>
     description: "Update your app's information",
   })
     .argument("<id/name>", "App id or name")
+    .option("--title [text]", "Set app title")
+    .option("--description [text]", "Set app description")
+    .option("--repository [url]", "Set app repository")
+    .option("--homepage [url]", "Set app homepage")
+    .option("--readme [url]", "Set app readme")
+    .option("--logo [url]", "Set app logo")
+    .option("--visibility [public|private]", "Set app visibility")
     .action(async (appIdOrName: string, options) => {
       await appUpdateCommand({
         appIdOrName,
@@ -42,6 +49,7 @@ async function appUpdateCommand(args: {
         $description: String
         $repository: URL
         $homepage: URL
+        $readme: URL
         $visibility: AppVisibility
         $logo: URL
       ) {
@@ -52,6 +60,7 @@ async function appUpdateCommand(args: {
             repository: $repository
             homepage: $homepage
             visibility: $visibility
+            readme: $readme
             logo: $logo
           ) {
             pk

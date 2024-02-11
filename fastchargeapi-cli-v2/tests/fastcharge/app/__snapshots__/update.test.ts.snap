@@ -6,10 +6,17 @@ exports[`fastcharge app update --help prints help message 1`] = `
 Update your app's information
 
 Arguments:
-  id/name  App id or name
+  id/name                        App id or name
 
 Options:
-  --help   Display help for command
+  --title [text]                 Set app title
+  --description [text]           Set app description
+  --repository [url]             Set app repository
+  --homepage [url]               Set app homepage
+  --readme [url]                 Set app readme
+  --logo [url]                   Set app logo
+  --visibility [public|private]  Set app visibility
+  --help                         Display help for command
 "
 `;
 
@@ -22,9 +29,14 @@ exports[`fastcharge app update updates an app 2`] = `
 {
   "createdAt": Any<Date>,
   "deleted": false,
+  "description": "New description",
   "gatewayMode": "proxy",
+  "homepage": "https://new-homepage.com",
   "name": Any<String>,
   "owner": Any<String>,
+  "readme": "https://new-readme.com",
+  "repository": "https://new-repo.com",
+  "title": "New title",
   "updatedAt": Any<Date>,
   "visibility": "private",
 }

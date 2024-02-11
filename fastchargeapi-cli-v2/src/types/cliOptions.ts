@@ -34,4 +34,5 @@ export type CliFastchargeAppUpdateCommandOptions = {
   homepage?: string;
   visibility?: AppVisibility;
   logo?: string;
+  readme?: string;
 };

@@ -24,7 +24,21 @@ describe("fastcharge app update", () => {
 
   it("updates an app", async () => {
     const testApp = await createTestApp(context, { owner: UserPK.stringify(testUser) });
-    const { stdout, exitCode } = await fastcharge(["app", "update", AppPK.stringify(testApp)]);
+    const updateProps = {
+      "--description": "New description",
+      "--title": "New title",
+      "--repository": "https://new-repo.com",
+      "--homepage": "https://new-homepage.com",
+      "--logo": "https://new-logo.com",
+      "--readme": "https://new-readme.com",
+      "--visibility": "private",
+    };
+    const { stdout, exitCode } = await fastcharge([
+      "app",
+      "update",
+      AppPK.stringify(testApp),
+      ...Object.entries(updateProps).flat(),
+    ]);
     expect(
       stdout.getOutput({
         redactWord: { appName: (word) => word.startsWith("testapp-") },
