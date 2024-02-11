@@ -25,6 +25,7 @@ module.exports = {
     ".eslintrc.cjs",
     "**/__generated__/",
     "**/__generated__/**",
+    "**/*.js",
   ],
   rules: {
     "@typescript-eslint/no-misused-promises": "error",
@@ -48,6 +49,7 @@ module.exports = {
       },
     ],
     "@typescript-eslint/no-empty-function": "warn",
+    "@typescript-eslint/no-unnecessary-condition": "error",
     "no-restricted-imports": [
       "error",
       {
@@ -58,6 +60,16 @@ module.exports = {
             importNames: ["RequestContext"],
             group: ["node-fetch"],
             message: "Did you mean to import it from @/RequestContext?",
+          },
+          {
+            importNames: ["program"],
+            group: ["commander"],
+            message: 'Do not import "program". Use "createCommand" from src/utils/commands instead.',
+          },
+          {
+            importNames: ["createCommand"],
+            group: ["commander"],
+            message: 'Do not import "createCommand". Use "createCommand" from src/utils/commands instead.',
           },
           {
             group: ["@/lambdaHandler", "**/lambdaHandler", "@/sqsHandler", "**/sqsHandler"],
@@ -73,6 +85,9 @@ module.exports = {
         message: "Function expressions are not allowed in source files.",
       },
     ],
+    curly: "error",
+    "object-shorthand": ["error", "always"],
+    "no-useless-rename": "error",
   },
   overrides: [
     {
