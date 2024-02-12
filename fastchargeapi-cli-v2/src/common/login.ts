@@ -4,13 +4,11 @@ import opener from "opener";
 import { graphql } from "src/__generated__/gql";
 import { envVars, reactHost } from "src/env";
 import { getGQLClient } from "src/graphqlClient";
-import { NotFoundSimpleGQLError } from "src/simplifiedGQLErrors";
 import { tiChecker } from "src/tiChecker";
 import { CliCommonLoginCommandOptions, CliGlobalOptions } from "src/types/cliOptions";
 import { createCommand } from "src/utils/command";
 import { println } from "src/utils/console";
-import { createSecretPair, getRemoteSecret } from "src/utils/remoteSecret";
-import * as uuid from "uuid";
+import { hex, waitForSecretContent } from "src/utils/remoteSecret";
 import { readOrRefreshAuthFile, verifyIdToken, writeToAuthFile } from "../utils/authFile";
 
 export const createCommonLoginCommand = (program: Command) =>
@@ -44,46 +42,26 @@ export const loginCommand = async (args?: {
     // ignore error and proceed to login
   }
 
-  const key = uuid.v4();
-  const { jweSecret, jwtSecret } = createSecretPair();
-  const hex = (arr: Uint8Array) =>
-    Array.from(arr)
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-  const params = new URLSearchParams({
-    relogin: "true",
-    behavior: "putsecret",
-    jwe: hex(jweSecret),
-    jwt: hex(jwtSecret),
-    key,
+  const value = await waitForSecretContent({
+    timeoutSeconds: 60 * 3,
+    sendSecrets: (args) => {
+      const { jweSecret, jwtSecret, key } = args;
+      const params = new URLSearchParams({
+        relogin: "true",
+        behavior: "putsecret",
+        key,
+        jwe: hex(jweSecret),
+        jwt: hex(jwtSecret),
+      });
+      const url = new URL(`/auth/?${params.toString()}`, reactHost);
+      opener(url.href);
+      println(chalk.yellow("Please authenticate in the browser."));
+      println("If the browser does not open, please visit:");
+      println(chalk.blue(url.href));
+    },
   });
-  const url = new URL(`/auth/?${params.toString()}`, reactHost);
-  opener(url.href);
-  println(chalk.yellow("Please authenticate in the browser."));
-  println("If the browser does not open, please visit:");
-  println(chalk.blue(url.href));
 
-  let idToken = "";
-  let refreshToken = "";
-  let tries = 0;
-  while (tries < 120) {
-    await new Promise((r) => setTimeout(r, 1000));
-    tries += 1;
-    try {
-      const value = await getRemoteSecret({ key, jweSecret, jwtSecret });
-      ({ idToken, refreshToken } = tiChecker.RefreshIdTokenResult.from(value));
-      break;
-    } catch (e) {
-      if (e instanceof NotFoundSimpleGQLError) {
-        if (tries >= 40) {
-          println("Timed out. Press enter to retry.");
-          await new Promise((r) => setTimeout(r, 3000));
-        }
-        continue;
-      }
-      throw e;
-    }
-  }
+  const { idToken, refreshToken } = tiChecker.RefreshIdTokenResult.from(value);
   const { email } = await verifyIdToken(idToken);
   if (!email) {
     throw new Error("ID token is invalid. Login failed.");
