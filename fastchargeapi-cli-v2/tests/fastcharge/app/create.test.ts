@@ -34,7 +34,6 @@ describe("fastcharge app create", () => {
     expect(userApp).toBeNull();
     const appName = `testapp-${uuid.v4()}`;
     const { stdout, exitCode } = await fastcharge(["app", "create", "--name", appName]);
-    expect(exitCode).toBe(0);
     expect(
       stdout.getOutput({
         redactWord: {
@@ -43,6 +42,7 @@ describe("fastcharge app create", () => {
         },
       })
     ).toMatchSnapshot();
+    expect(exitCode).toBe(0);
     context.batched.App.clearCache();
     const createdUserApp = await context.batched.App.many(
       {

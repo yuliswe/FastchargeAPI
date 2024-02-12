@@ -2,6 +2,7 @@ import crypto from "crypto";
 import { EncryptJWT, JWTPayload, SignJWT, jwtDecrypt, jwtVerify } from "jose";
 import { graphql } from "src/__generated__/gql";
 import { getGQLClient } from "src/graphqlClient";
+import { NotFoundSimpleGQLError } from "src/simplifiedGQLErrors";
 
 export async function getRemoteSecret(args: {
   key: string;
@@ -26,7 +27,7 @@ export async function getRemoteSecret(args: {
 
   const { encrypted } = jwtVerified.payload as { encrypted: string };
   const jweDecrypted = await jwtDecrypt(encrypted, jweSecret);
-  return jweDecrypted.payload;
+  return jweDecrypted.payload["body"] as object;
 }
 
 export async function setRemoteSecret(args: {
@@ -65,7 +66,7 @@ export async function encryptAndSign(
   }
 ): Promise<string> {
   const { jweSecret, jwtSecret } = options;
-  const encrypted = await new EncryptJWT(body)
+  const encrypted = await new EncryptJWT({ body })
     .setIssuedAt()
     .setIssuer("fastchargeapi.com")
     .setAudience("fastchargeapi.com")
@@ -85,12 +86,55 @@ export async function encryptAndSign(
   return signed;
 }
 
-export function createSecret(): Uint8Array {
-  const secret = new Uint8Array(64);
+export function createSecret(args?: { nbits: number }): Uint8Array {
+  const { nbits = 512 } = args ?? {};
+  const secret = new Uint8Array(nbits / 8);
   crypto.getRandomValues(secret);
   return secret;
 }
 
 export function createSecretPair(): { jweSecret: Uint8Array; jwtSecret: Uint8Array } {
-  return { jweSecret: createSecret(), jwtSecret: createSecret() };
+  return { jweSecret: createSecret({ nbits: 512 }), jwtSecret: createSecret({ nbits: 512 }) };
+}
+
+export const hex = (arr: Uint8Array) =>
+  Array.from(arr)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+
+export const createRandomHex = (args: { nchars: number }) => {
+  const { nchars } = args;
+  const arr = new Uint8Array(nchars / 2);
+  crypto.getRandomValues(arr);
+  return hex(arr);
+};
+
+type SendSecretsProps = { jweSecret: Uint8Array; jwtSecret: Uint8Array; key: string };
+export function waitForSecretContent(options: {
+  sendSecrets: (args: SendSecretsProps) => void | Promise<void>;
+  timeoutSeconds: number;
+}): Promise<object> {
+  const { sendSecrets, timeoutSeconds } = options;
+  return new Promise((resolve, reject) => {
+    const { jweSecret, jwtSecret } = createSecretPair();
+    const key = createRandomHex({ nchars: 32 });
+    void sendSecrets({ jweSecret, jwtSecret, key });
+    const startTime = Date.now();
+    void (async () => {
+      while (Date.now() - startTime < timeoutSeconds * 1000) {
+        try {
+          const value = await getRemoteSecret({ key, jweSecret, jwtSecret });
+          resolve(value);
+        } catch (e) {
+          if (e instanceof NotFoundSimpleGQLError && e.resource === "Secret") {
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            continue;
+          }
+          reject(e);
+        }
+        break;
+      }
+      reject(new Error("Timeout"));
+    })();
+  });
 }
