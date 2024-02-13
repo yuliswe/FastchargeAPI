@@ -16,7 +16,7 @@ const cache = new InMemoryCache();
 
 export function getTestGQLClient({ user, isServiceRequest }: { user?: User; isServiceRequest?: boolean }) {
   return new ApolloClient({
-    cache: cache,
+    cache,
     // Disabling cache will prevent error because we can't return a response
     defaultOptions: {
       watchQuery: {
@@ -30,6 +30,8 @@ export function getTestGQLClient({ user, isServiceRequest }: { user?: User; isSe
       },
     },
     link: new HttpLink({
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore // The ApolloClient type definition is wrong.
       fetch: async (uri: string, options: RequestInit) => {
         const body = options.body?.toString() ?? "";
         const result = await callOrCreateHandler(
@@ -86,7 +88,7 @@ export function getClientForDirectSQSCall({
   groupId?: string;
 }) {
   return new ApolloClient({
-    cache: cache,
+    cache,
     defaultOptions: {
       watchQuery: {
         fetchPolicy: "no-cache",
@@ -99,6 +101,8 @@ export function getClientForDirectSQSCall({
       },
     },
     link: new HttpLink({
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore // The ApolloClient type definition is wrong.
       fetch: async (uri: string, options: RequestInit) => {
         const body = options.body;
         const input: SendMessageCommandInput = {
@@ -143,7 +147,7 @@ export async function handSendMessageCommandData(command: SendMessageCommandInpu
       messageAttributes: {},
       md5OfBody: "",
       eventSource: "",
-      eventSourceARN: `arn:aws:sqs:${command?.QueueUrl?.split("/").at(-1) ?? ""}`,
+      eventSourceARN: `arn:aws:sqs:${command.QueueUrl?.split("/").at(-1) ?? ""}`,
       awsRegion: "",
     },
     {} as LambdaContext,

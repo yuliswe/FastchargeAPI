@@ -28,7 +28,7 @@ export function getSQSClient({
   groupId?: string;
 }) {
   return new ApolloClient({
-    cache: cache,
+    cache,
     // Disabling cache will prevent error because we can't return a response
     defaultOptions: {
       watchQuery: {
@@ -42,6 +42,8 @@ export function getSQSClient({
       },
     },
     link: new HttpLink({
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore // The ApolloClient type definition is wrong.
       fetch: async (uri: string, options: RequestInit) => {
         const body = options.body;
         const command = new SendMessageCommand({

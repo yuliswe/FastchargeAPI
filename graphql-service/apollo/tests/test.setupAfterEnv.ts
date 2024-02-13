@@ -77,10 +77,12 @@ if (process.env.NO_LOCAL_SQS !== "1") {
           },
         },
         link: new HttpLink({
-          fetch: async (uri: string, { body }: RequestInit): Promise<Response> => {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore // The ApolloClient type definition is wrong.
+          fetch: async (uri: string, init?: RequestInit): Promise<Response> => {
             mockSQS.enqueue({
               input: {
-                MessageBody: body?.toString(),
+                MessageBody: init?.body?.toString(),
                 MessageGroupId: groupId,
                 QueueUrl: sqsClientModule.getUrlFromSQSQueueName(queueName),
                 MessageDeduplicationId: dedupId,

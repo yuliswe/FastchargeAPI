@@ -16,7 +16,11 @@ export function validateAppName(name: unknown): boolean {
     throw new ValidationError("name", "must be a string", name);
   }
   if (!/^[a-z\d][a-z\d\\-]*[a-z\d]$/.test(name)) {
-    throw new ValidationError("name", "can only contain lowercase letters, numbers, and dashes", name);
+    throw new ValidationError(
+      "name",
+      "can only contain lowercase letters, numbers, and dashes. ([a-z\\d][a-z\\d\\-]*[a-z\\d])",
+      name
+    );
   }
   const reserved = ["api", "login", "auth"];
   if (reserved.includes(name)) {
