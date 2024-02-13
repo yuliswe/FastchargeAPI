@@ -38,3 +38,7 @@ export type CliFastchargeAppUpdateCommandOptions = {
 };
 
 export type CliFastchargeAppDeleteCommandOptions = {};
+
+export type CliCommonPayCommandOptions = {
+  amount: number;
+};

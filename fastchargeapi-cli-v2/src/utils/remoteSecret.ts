@@ -93,10 +93,6 @@ export function createSecret(args?: { nbits: number }): Uint8Array {
   return secret;
 }
 
-export function createSecretPair(): { jweSecret: Uint8Array; jwtSecret: Uint8Array } {
-  return { jweSecret: createSecret({ nbits: 512 }), jwtSecret: createSecret({ nbits: 512 }) };
-}
-
 export const hex = (arr: Uint8Array) =>
   Array.from(arr)
     .map((b) => b.toString(16).padStart(2, "0"))
@@ -112,12 +108,19 @@ export const createRandomHex = (args: { nchars: number }) => {
 type SendSecretsProps = { jweSecret: Uint8Array; jwtSecret: Uint8Array; key: string };
 export function waitForSecretContent(options: {
   sendSecrets: (args: SendSecretsProps) => void | Promise<void>;
+  /** Overrides the auto generated secrets. Useful for testing. */
+  jweSecret?: Uint8Array;
+  /** Overrides the auto generated secrets. Useful for testing. */
+  jwtSecret?: Uint8Array;
+  /** Overrides the auto generated key. Useful for testing. */
+  key?: string;
   timeoutSeconds: number;
 }): Promise<object> {
   const { sendSecrets, timeoutSeconds } = options;
   return new Promise((resolve, reject) => {
-    const { jweSecret, jwtSecret } = createSecretPair();
-    const key = createRandomHex({ nchars: 32 });
+    const jweSecret = options.jweSecret ?? createSecret({ nbits: 512 });
+    const jwtSecret = options.jwtSecret ?? createSecret({ nbits: 512 });
+    const key = options.key ?? createRandomHex({ nchars: 32 });
     void sendSecrets({ jweSecret, jwtSecret, key });
     const startTime = Date.now();
     void (async () => {

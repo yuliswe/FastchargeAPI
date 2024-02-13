@@ -1,12 +1,25 @@
 import { AuthFileContent, RefreshIdTokenResult, VerifyIdTokenResult } from "src/__generated__/authFile-ti";
 import cliOptionsChckers from "src/__generated__/cliOptions-ti";
 import { EnvVars } from "src/__generated__/env-ti";
+import remoteSecretCheckers from "src/__generated__/remoteSecret-ti";
 import simplfiedGQLErrorsCheckers from "src/__generated__/simplfiedGQLErrors-ti";
 import type * as authFile from "src/types/authFile";
 import type * as cliOptions from "src/types/cliOptions";
 import type * as env from "src/types/env";
+import type * as remoteSecret from "src/types/remoteSecret";
 import * as simplfiedGQLErrors from "src/types/simplfiedGQLErrors";
 import { Checker, createCheckers } from "ts-interface-checker";
+
+/**
+ * How to add a new type to the tiChecker:
+ *
+ * 1. Create a new type in the types directory, for example `src/types/myType.ts`.
+ * 2. Generates new ti file in the __generated__ directory, for example `src/__generated__/myType-ti.ts`.
+ * 3. Add `import type * as myType from "src/types/myType";`
+ * 4. Add `import myTypeCheckers from "src/__generated__/myType-ti";`
+ * 5. Add `...myTypeCheckers` to the `checkers` object.
+ * 6. Add `MyType: TypedChecker<myType.MyType>` to the `TypedCheckers` type.
+ */
 
 const checkers = {
   AuthFileContent,
@@ -15,6 +28,7 @@ const checkers = {
   EnvVars,
   ...simplfiedGQLErrorsCheckers,
   ...cliOptionsChckers,
+  ...remoteSecretCheckers,
 };
 
 type TypedChecker<T> = Checker & {
@@ -44,6 +58,8 @@ type TypedCheckers = {
   CliFastchargeAppCreateCommandOptions: TypedChecker<cliOptions.CliFastchargeAppCreateCommandOptions>;
   CliFastchargeAppUpdateCommandOptions: TypedChecker<cliOptions.CliFastchargeAppUpdateCommandOptions>;
   CliFastchargeAppDeleteCommandOptions: TypedChecker<cliOptions.CliFastchargeAppDeleteCommandOptions>;
+  CliCommonPayCommandOptions: TypedChecker<cliOptions.CliCommonPayCommandOptions>;
+  CliRemoteSercretResult: TypedChecker<remoteSecret.CliRemoteSercretResult>;
 };
 
 function from<T>(value: unknown, checker: TypedChecker<T>, opts: { strict: boolean }): T {

@@ -1,4 +1,5 @@
 import { Command } from "commander";
+import { createCommonPayCommand } from "src/common/account/pay";
 import { createCommonLoginCommand } from "src/common/login";
 import { createCommonLogoutCommand } from "src/common/logout";
 import { createFastchargeAppCreateCommand } from "src/fastcharge/app/create";
@@ -15,12 +16,18 @@ export const createFastchargeProgram = () => {
     .option("--profile <name>", "run command as a specific user")
     .addCommand(createCommonLoginCommand(program))
     .addCommand(createCommonLogoutCommand(program))
-    .addCommand(createFastchargeAppCommand(program));
+    .addCommand(createFastchargeAppCommand(program))
+    .addCommand(createFastchargeAccountCommand(program));
 };
-export const createFastchargeAppCommand = (program: Command) =>
+
+const createFastchargeAppCommand = (program: Command) =>
   createCommand({ name: "app", summary: "Manage or create your apps", description: "Manage or create your apps" })
-    .addHelpCommand(false)
     .addCommand(createFastchargeAppListCommand(program))
     .addCommand(createFastchargeAppCreateCommand(program))
     .addCommand(createFastchargeAppUpdateCommand(program))
     .addCommand(createFastchargeAppDeleteCommand(program));
+
+const createFastchargeAccountCommand = (program: Command) =>
+  createCommand({ name: "account", summary: "Manage your account", description: "Manage your account" }).addCommand(
+    createCommonPayCommand(program)
+  );
