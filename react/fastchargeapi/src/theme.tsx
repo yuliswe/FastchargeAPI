@@ -366,15 +366,3 @@ export function getTheme(extraThemeOpts?: ThemeOptions) {
     )
   );
 }
-
-export function getThemeWithWhiteBackground(extraThemeOpts?: ThemeOptions) {
-  return getTheme({
-    ...extraThemeOpts,
-    palette: {
-      background: {
-        default: bgWhite,
-        paper: bgWhite,
-      },
-    },
-  });
-}

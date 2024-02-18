@@ -18,5 +18,5 @@ export const reduxStore = Redux.configureStore({
 
 export const appStore = new AppStore<RootAppState>({
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  reduxStore: reduxStore,
+  reduxStore,
 });

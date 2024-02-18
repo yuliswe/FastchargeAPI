@@ -1,10 +1,7 @@
 import { AppContext } from "./AppContext";
 
 export async function fetchWithAuth(context: AppContext, url: RequestInfo, options?: RequestInit) {
-  const u = await context.firebase.userPromise;
-  if (!u) {
-    throw new Error("fetchWithAuth: Not logged in");
-  }
+  const user = await context.firebase.userPromise;
   if (!options) {
     options = {};
   }
@@ -12,6 +9,6 @@ export async function fetchWithAuth(context: AppContext, url: RequestInfo, optio
     options.headers = {};
   }
   options.mode = "cors";
-  (options.headers as { [key: string]: string })["Authorization"] = await u.getIdToken();
+  (options.headers as { [key: string]: string })["Authorization"] = await user.getIdToken();
   return fetch(url, options);
 }
