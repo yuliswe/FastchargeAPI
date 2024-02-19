@@ -29,7 +29,7 @@ type Props = {
   searchResultState: AppSearchResultState;
 };
 
-class _SearchResultPage extends React.Component<Props, {}> {
+class _SearchResultPage extends React.PureComponent<Props, {}> {
   static contextType = ReactAppContextType;
   get _context(): AppContext {
     return this.context as AppContext;
@@ -58,7 +58,7 @@ class _SearchResultPage extends React.Component<Props, {}> {
   };
 
   searchForAppsbyKeyword = (keyword: string) => {
-    this._context.route?.updateQuery({
+    this._context.route.updateQuery({
       q: keyword,
     });
     this.search();
@@ -85,7 +85,7 @@ class _SearchResultPage extends React.Component<Props, {}> {
                     defaultValue="exact-match"
                     name="radio-buttons-group"
                     onChange={(e) => {
-                      this._context.route?.updateQuery({
+                      this._context.route.updateQuery({
                         sort: e.target.value,
                       });
                       // this._context.route?.navigate({

@@ -13,7 +13,7 @@ type _Props = {
   showSearchButton?: boolean;
 };
 
-export class SearchBar extends React.Component<_Props, _State> {
+export class SearchBar extends React.PureComponent<_Props, _State> {
   static contextType = ReactAppContextType;
   get _context(): AppContext {
     return this.context as AppContext;
@@ -26,7 +26,7 @@ export class SearchBar extends React.Component<_Props, _State> {
     };
   }
 
-  componentDidUpdate(prevProps: Readonly<_Props>, prevState: Readonly<_State>, snapshot?: any): void {
+  componentDidUpdate(prevProps: Readonly<_Props>): void {
     if (prevProps.searchText !== this.props.searchText) {
       this.setState({
         searchText: this.props.searchText,
@@ -38,7 +38,7 @@ export class SearchBar extends React.Component<_Props, _State> {
 
   borderRadius() {
     const themeBR =
-      (this._context.theme.components?.MuiButton?.styleOverrides?.root as { borderRadius: number }).borderRadius ??
+      (this._context.theme.components?.MuiButton?.styleOverrides?.root as { borderRadius?: number }).borderRadius ??
       this._context.theme.shape.borderRadius;
     return themeBR * 0.5;
   }

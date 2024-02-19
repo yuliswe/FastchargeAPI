@@ -1,12 +1,9 @@
-import { ApolloClient, InMemoryCache, TypedDocumentNode, createHttpLink } from "@apollo/client";
+import { ApolloClient, InMemoryCache, TypedDocumentNode, createHttpLink, from as linksFrom } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
-import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
-import { sha256 } from "crypto-hash";
-import * as jose from "jose";
+import { EncryptJWT, JWTPayload, SignJWT } from "jose";
 import { AppContext } from "./AppContext";
 import { graphql } from "./__generated__/gql/gql";
 import { ENV_DEV_DOMAIN, ENV_LOCAL_GRAPHQL, baseDomain, graphqlURL } from "./runtime";
-
 // debug
 
 if (ENV_DEV_DOMAIN) {
@@ -30,9 +27,6 @@ export async function getGQLClient(
   });
 
   const user = await context.firebase.userPromise;
-  if (!user) {
-    throw new Error("getGQLClient: User Not logged in");
-  }
   const idToken = await user.getIdToken(true);
 
   const authLink = setContext((_, { headers }) => {
@@ -40,15 +34,21 @@ export async function getGQLClient(
       headers: {
         ...headers,
         authorization: idToken,
-        "x-user-email": ENV_LOCAL_GRAPHQL ? user?.email ?? undefined : undefined,
+        "x-user-email": ENV_LOCAL_GRAPHQL ? user.email ?? undefined : undefined,
       } as Record<string, string | undefined>,
     };
   });
 
-  const cacheLink = createPersistedQueryLink({ sha256, useGETForHashedQueries: true });
+  // const cacheLink = createPersistedQueryLink({
+  //   sha256: (content: string) =>
+  //     hash(content, {
+  //       algorithm: "sha256",
+  //     }),
+  //   useGETForHashedQueries: true,
+  // });
 
   const client = new ApolloClient({
-    link: authLink.concat(cacheLink).concat(httpLink),
+    link: linksFrom([authLink, httpLink]),
     cache: new InMemoryCache(),
   });
 
@@ -82,22 +82,14 @@ export function createSecret(): Uint8Array {
 }
 
 export async function encryptAndSign(
-  body: jose.JWTPayload,
-  {
-    jweSecret,
-    jwtSecret,
-  }: {
+  body: JWTPayload,
+  args: {
     jweSecret: Uint8Array;
     jwtSecret: Uint8Array;
   }
 ): Promise<string> {
-  // if (!jweSecret) {
-  //     jweSecret = createSecret();
-  // }
-  // if (!jwtSecret) {
-  //     jwtSecret = createSecret();
-  // }
-  const encrypted = await new jose.EncryptJWT(body)
+  const { jweSecret, jwtSecret } = args;
+  const encrypted = await new EncryptJWT({ body })
     .setIssuedAt()
     .setIssuer("fastchargeapi.com")
     .setAudience("fastchargeapi.com")
@@ -107,7 +99,7 @@ export async function encryptAndSign(
     })
     .encrypt(jweSecret);
 
-  const signed = await new jose.SignJWT({
+  const signed = await new SignJWT({
     encrypted,
   })
     .setProtectedHeader({
@@ -119,14 +111,9 @@ export async function encryptAndSign(
 
 export async function setRemoteSecret(
   context: AppContext,
-  {
-    key,
-    value,
-    description,
-    expireAt,
-  }: {
+  args: {
     key: string;
-    value: jose.JWTPayload;
+    value: JWTPayload;
     description?: string;
     expireAt?: number;
   },
@@ -138,6 +125,8 @@ export async function setRemoteSecret(
     jwtSecret: Uint8Array;
   }
 ) {
+  const { key, value, description, expireAt } = args;
+  console.log("setRemoteSecret", key, value, description, expireAt, jweSecret, jwtSecret);
   const signedValue = await encryptAndSign(value, { jweSecret, jwtSecret });
   const { client } = await getGQLClient(context);
   const response = await client.mutate({
@@ -157,4 +146,5 @@ export async function setRemoteSecret(
   });
   return response;
 }
-export type GetQueryResult<T> = T extends TypedDocumentNode<infer U, any> ? U : never;
+
+export type GetQueryResult<T> = T extends TypedDocumentNode<infer U, unknown> ? U : never;

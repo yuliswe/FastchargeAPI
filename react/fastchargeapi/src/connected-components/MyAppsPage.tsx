@@ -35,7 +35,7 @@ type _Props = {
 type _State = {
   newAuthorName: string | null;
 } & SupportDocumentation;
-class _MyAppsPage extends React.Component<_Props, _State> {
+class _MyAppsPage extends React.PureComponent<_Props, _State> {
   static contextType = ReactAppContextType;
   get _context(): AppContext {
     return this.context as AppContext;

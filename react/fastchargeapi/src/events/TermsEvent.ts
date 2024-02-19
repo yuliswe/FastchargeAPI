@@ -2,7 +2,7 @@ import { AppEvent, AppEventStream, mapState, to } from "react-appevent-redux";
 import { AppContext } from "../AppContext";
 import { graphql } from "../__generated__/gql";
 import { SiteMetaDataKey } from "../__generated__/gql/graphql";
-import { GetQueryResult, getGQLClient } from "../graphql-client";
+import { getGQLClient } from "../graphql-client";
 import { RootAppState } from "../states/RootAppState";
 
 class LoadPricingData extends AppEvent<RootAppState> {
@@ -15,47 +15,55 @@ class LoadPricingData extends AppEvent<RootAppState> {
 
   queryPricingdata = graphql(`
     query TermsPageGetPricingData(
-      $per_request_charge: String!
-      $stripe_flat_fee: String!
-      $stripe_percentage_fee: String!
+      $perRequestChargeKey: String!
+      $stripeFlatFeeKey: String!
+      $stripePercentageFeeKey: String!
     ) {
-      per_request_charge: getSiteMetaDataByKey(key: $per_request_charge) {
+      perRequestCharge: getSiteMetaDataByKey(key: $perRequestChargeKey) {
         key
         value
       }
-      stripe_flat_fee: getSiteMetaDataByKey(key: $stripe_flat_fee) {
+      stripeFlatFee: getSiteMetaDataByKey(key: $stripeFlatFeeKey) {
         key
         value
       }
-      stripe_percentage_fee: getSiteMetaDataByKey(key: $stripe_percentage_fee) {
+      stripePercentageFee: getSiteMetaDataByKey(key: $stripePercentageFeeKey) {
         key
         value
       }
     }
   `);
 
-  pricingData: GetQueryResult<typeof this.queryPricingdata> | null = null;
+  pricingData: {
+    perRequestCharge: string;
+    stripeFlatFee: string;
+    stripePercentageFee: string;
+  } | null = null;
 
   async *run(state: RootAppState): AppEventStream<RootAppState> {
     const { client } = await getGQLClient(this.context);
     const result = await client.query({
       query: this.queryPricingdata,
       variables: {
-        per_request_charge: SiteMetaDataKey.PerRequestCharge,
-        stripe_flat_fee: SiteMetaDataKey.StripeFlatFee,
-        stripe_percentage_fee: SiteMetaDataKey.StripePercentageFee,
+        perRequestChargeKey: SiteMetaDataKey.PerRequestCharge,
+        stripeFlatFeeKey: SiteMetaDataKey.StripeFlatFee,
+        stripePercentageFeeKey: SiteMetaDataKey.StripePercentageFee,
       },
     });
-    this.pricingData = result.data;
+    this.pricingData = {
+      perRequestCharge: result.data.perRequestCharge.value as string,
+      stripeFlatFee: result.data.stripeFlatFee.value as string,
+      stripePercentageFee: result.data.stripePercentageFee.value as string,
+    };
   }
 
   reduceAfter(state: RootAppState): RootAppState {
     return state.mapState({
       terms: mapState({
         loading: to(false),
-        pricingPerRequest: to(this.pricingData?.per_request_charge?.value || ""),
-        pricingStripeFlatFee: to(this.pricingData?.stripe_flat_fee?.value || ""),
-        pricingStripePercentageFee: to(this.pricingData?.stripe_percentage_fee?.value || ""),
+        pricingPerRequest: to(this.pricingData?.perRequestCharge || ""),
+        pricingStripeFlatFee: to(this.pricingData?.stripeFlatFee || ""),
+        pricingStripePercentageFee: to(this.pricingData?.stripePercentageFee || ""),
       }),
     });
   }

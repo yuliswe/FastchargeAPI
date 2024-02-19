@@ -1,8 +1,8 @@
 import { Box, LinearProgress } from "@mui/material";
 import React from "react";
-import { AppContext, ReactAppContextType } from "./AppContext";
-import { SiteFooter } from "./connected-components/SiteFooter";
-import { AppBar, MobileMenuItemProps } from "./stateless-components/AppBar";
+import { AppContext, ReactAppContextType } from "src/AppContext";
+import { SiteFooter } from "src/connected-components/SiteFooter";
+import { AppBar, MobileMenuItemProps } from "src/stateless-components/AppBar";
 type Props = {
   children: React.ReactNode;
   onSearch?: (query: string) => void;

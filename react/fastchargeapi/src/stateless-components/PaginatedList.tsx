@@ -13,7 +13,7 @@ type PaginatedListProps<T> = {
   sx?: SxProps;
 };
 
-export class PaginatedList<T> extends React.Component<PaginatedListProps<T>> {
+export class PaginatedList<T> extends React.PureComponent<PaginatedListProps<T>> {
   static contextType = ReactAppContextType;
   get _context(): AppContext {
     return this.context as AppContext;

@@ -25,7 +25,7 @@ import { appStore, reduxStore } from "../store-config";
 type Props = {
   appState: SubscriptionsAppState;
 };
-class _SubscriptionsPage extends React.Component<Props> {
+class _SubscriptionsPage extends React.PureComponent<Props> {
   static contextType = ReactAppContextType;
   get _context(): AppContext {
     return this.context as AppContext;

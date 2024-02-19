@@ -1,7 +1,6 @@
-import { gql } from "@apollo/client";
-import { throttle } from "lodash";
 import React, { useContext, useEffect, useState } from "react";
 import { createBrowserRouter, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Error404Page } from "src/connected-components/Error404Page";
 import { AppContext, AppContextProvider, ReactAppContextType } from "./AppContext";
 import { AccountPage } from "./connected-components/AccountPage";
 import { AppDetailPage } from "./connected-components/AppDetailPage";
@@ -15,8 +14,7 @@ import { SearchResultPage } from "./connected-components/SearchResultPage";
 import { SubscriptionDetailPage } from "./connected-components/SubscriptionDetailPage";
 import { SubscriptionsPage } from "./connected-components/SubscriptionsPage";
 import { TermsPage } from "./connected-components/TermsPage";
-import { TopUpPage } from "./connected-components/TopupPage";
-import { getGQLClient } from "./graphql-client";
+import { TopUpPage } from "./connected-components/TopUpPage";
 import { baseDomain } from "./runtime";
 
 export type SearchResultPageParams = {};
@@ -28,14 +26,23 @@ export type DashboardPageQuery = { sdate?: string; spage?: string };
 export type SubscriptionDetailPageParams = { app: string };
 export type SubscriptionDetailPageQuery = { sdate?: string; spage?: string };
 export type MyAppDetailPageParams = { app: string };
+export type TopUpPageQuery = { success?: boolean; cancel?: boolean; amount?: string; jtw?: string; jwe?: string };
 
-export function buildSearchParams(query?: Record<string, string>): string {
+export function buildSearchParams(
+  query?: Record<string, { toString: () => string } | { toString: () => string }[]>
+): string {
   if (!query) {
     return "";
   }
   const search = new URLSearchParams();
-  for (const key of Object.keys(query)) {
-    search.set(key, query[key]);
+  for (const [key, value] of Object.entries(query)) {
+    if (Array.isArray(value)) {
+      for (const v of value as { toString: () => string }[]) {
+        search.append(key, v.toString());
+      }
+    } else {
+      search.append(key, value.toString());
+    }
   }
   return search.toString();
 }
@@ -92,6 +99,13 @@ export const RouteURL = {
   }): string {
     return `/account/subscriptions/${params.app}/?${buildSearchParams(query)}#`;
   },
+  topUpPage(args: { query?: TopUpPageQuery }): string {
+    const { query } = args;
+    return `/topup?${buildSearchParams(query)}#`;
+  },
+  error404Page(): string {
+    return "/error404#";
+  },
 };
 
 enum RoutePath {
@@ -108,50 +122,8 @@ enum RoutePath {
   TopUpPage = "/topup",
   SearchResultPage = "/search",
   AccountPage = "/account",
+  Error404Page = "/error404",
 }
-
-/**
- * Every page component should implement a static RouteDataFetcher method.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type RouteDataFetcher = (context: AppContext, params: any, query: any) => Promise<void>;
-export const routeDataFetchers: {
-  path: RoutePath;
-  fetchData: RouteDataFetcher;
-}[] = [
-  {
-    path: RoutePath.AppDetailPage,
-    fetchData: AppDetailPage.WrappedComponent.fetchData.bind(AppDetailPage.WrappedComponent),
-  },
-  {
-    path: RoutePath.SubscriptionsPage,
-    fetchData: SubscriptionsPage.WrappedComponent.fetchData.bind(SubscriptionsPage.WrappedComponent),
-  },
-  {
-    path: RoutePath.HomePage,
-    fetchData: HomePage.WrappedComponent.fetchData.bind(HomePage.WrappedComponent),
-  },
-  {
-    path: RoutePath.MyAppsPage,
-    fetchData: MyAppsPage.WrappedComponent.fetchData.bind(MyAppsPage.WrappedComponent),
-  },
-  {
-    path: RoutePath.DashboardPage,
-    fetchData: DashboardPage.WrappedComponent.fetchData.bind(DashboardPage.WrappedComponent),
-  },
-  {
-    path: RoutePath.SubscriptionDetailPage,
-    fetchData: SubscriptionDetailPage.WrappedComponent.fetchData.bind(SubscriptionDetailPage.WrappedComponent),
-  },
-  {
-    path: RoutePath.MyAppDetailPage,
-    fetchData: MyAppDetailPage.WrappedComponent.fetchData.bind(MyAppDetailPage.WrappedComponent),
-  },
-  {
-    path: RoutePath.TermsPage,
-    fetchData: TermsPage.WrappedComponent.fetchData.bind(TermsPage.WrappedComponent),
-  },
-];
 
 export type RouteConfig = React.PropsWithChildren<{
   requireAuth?: boolean;
@@ -197,27 +169,6 @@ function RoutePage(props: RouteConfig) {
         );
       }
     });
-
-    async function sendPing() {
-      const { client } = await getGQLClient(context);
-      await client.mutate({
-        mutation: gql`
-          mutation SendPing {
-            ping
-          }
-        `,
-      });
-    }
-
-    const throttledSendPing = throttle(sendPing, 200000);
-
-    void throttledSendPing();
-    window.addEventListener("mousemove", () => void throttledSendPing());
-    window.addEventListener("scroll", () => void throttledSendPing());
-    return () => {
-      window.removeEventListener("mousemove", () => void throttledSendPing());
-      window.removeEventListener("scroll", () => void throttledSendPing());
-    };
   }, []);
 
   return (
@@ -225,8 +176,10 @@ function RoutePage(props: RouteConfig) {
       value={{
         ...context,
         route: {
-          location,
-          locationHref: location.pathname + location.search + location.hash,
+          location: {
+            ...location,
+            fullpath: location.pathname + location.search + location.hash,
+          },
           navigate,
           params,
           query: searchParam,
@@ -255,62 +208,98 @@ function RoutePage(props: RouteConfig) {
   );
 }
 
-export function createRouter() {
-  const router = createBrowserRouter([
-    {
-      path: RoutePath.AuthPage,
-      element: <RoutePage children={<AuthPage />} />,
-    },
-    {
-      path: RoutePath.OnboardPage,
-      element: <RoutePage requireAuth={true} children={<OnboardPage />} />,
-    },
-    {
-      path: RoutePath.TopUpPage,
-      element: <RoutePage requireAuth={true} children={<TopUpPage />} />,
-    },
-    {
-      path: RoutePath.HomePage,
-      element: <RoutePage children={<HomePage />} />,
-    },
-    {
-      path: RoutePath.SearchResultPage,
-      element: <RoutePage children={<SearchResultPage />} />,
-    },
-    {
-      path: RoutePath.AppDetailPage,
-      element: <RoutePage children={<AppDetailPage />} />,
-    },
-    {
-      path: RoutePath.AccountPage,
-      element: <RoutePage requireAuth={true} children={<AccountPage />} />,
-      children: [
-        {
-          path: "",
-          element: <DashboardPage />,
-        },
-        {
-          path: RoutePath.MyAppsPage,
-          element: <MyAppsPage />,
-        },
-        {
-          path: RoutePath.MyAppDetailPage,
-          element: <MyAppDetailPage />,
-        },
-        {
-          path: RoutePath.SubscriptionsPage,
-          element: <SubscriptionsPage />,
-        },
-        {
-          path: RoutePath.SubscriptionDetailPage,
-          element: <SubscriptionDetailPage />,
-        },
-      ],
-    },
-    {
-      path: RoutePath.TermsPage,
-      element: <RoutePage children={<TermsPage />} />,
-    },
-  ]);
-  return router;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type RouteDataFetcher = (context: AppContext, params: any, query: any) => Promise<void>;
+type NestedRoutes = { path: string; fetchData?: RouteDataFetcher; element: React.ReactNode; children?: NestedRoutes }[];
+export const routes: NestedRoutes = [
+  {
+    path: RoutePath.AuthPage,
+    element: <RoutePage children={<AuthPage />} />,
+  },
+  {
+    path: RoutePath.OnboardPage,
+    element: <RoutePage requireAuth={true} children={<OnboardPage />} />,
+    fetchData: DashboardPage.WrappedComponent.fetchData.bind(DashboardPage.WrappedComponent),
+  },
+  {
+    path: RoutePath.TopUpPage,
+    element: <RoutePage requireAuth={true} children={<TopUpPage />} />,
+  },
+  {
+    path: RoutePath.HomePage,
+    element: <RoutePage children={<HomePage />} />,
+    fetchData: HomePage.WrappedComponent.fetchData.bind(HomePage.WrappedComponent),
+  },
+  {
+    path: RoutePath.SearchResultPage,
+    element: <RoutePage children={<SearchResultPage />} />,
+  },
+  {
+    path: RoutePath.AppDetailPage,
+    element: <RoutePage children={<AppDetailPage />} />,
+    fetchData: AppDetailPage.WrappedComponent.fetchData.bind(AppDetailPage.WrappedComponent),
+  },
+  {
+    path: RoutePath.AccountPage,
+    element: <RoutePage requireAuth={true} children={<AccountPage />} />,
+    children: [
+      {
+        path: "",
+        element: <DashboardPage />,
+      },
+      {
+        path: RoutePath.MyAppsPage,
+        element: <MyAppsPage />,
+        fetchData: MyAppsPage.WrappedComponent.fetchData.bind(MyAppsPage.WrappedComponent),
+      },
+      {
+        path: RoutePath.MyAppDetailPage,
+        element: <MyAppDetailPage />,
+        fetchData: MyAppDetailPage.WrappedComponent.fetchData.bind(MyAppDetailPage.WrappedComponent),
+      },
+      {
+        path: RoutePath.SubscriptionsPage,
+        element: <SubscriptionsPage />,
+        fetchData: SubscriptionsPage.WrappedComponent.fetchData.bind(SubscriptionsPage.WrappedComponent),
+      },
+      {
+        path: RoutePath.SubscriptionDetailPage,
+        element: <SubscriptionDetailPage />,
+        fetchData: SubscriptionDetailPage.WrappedComponent.fetchData.bind(SubscriptionDetailPage.WrappedComponent),
+      },
+    ],
+  },
+  {
+    path: RoutePath.TermsPage,
+    element: <RoutePage children={<TermsPage />} />,
+    fetchData: TermsPage.WrappedComponent.fetchData.bind(TermsPage.WrappedComponent),
+  },
+  {
+    path: RoutePath.Error404Page,
+    element: <RoutePage children={<Error404Page />} />,
+    fetchData: Error404Page.WrappedComponent.fetchData.bind(Error404Page.WrappedComponent),
+  },
+];
+
+function flattenRoutes(routes: NestedRoutes): { path: string; fetchData?: RouteDataFetcher }[] {
+  const result: { path: string; fetchData?: RouteDataFetcher }[] = [];
+  for (const route of routes) {
+    if (route.children) {
+      result.push(...flattenRoutes(route.children));
+    } else {
+      result.push({ ...route });
+    }
+  }
+  return result;
+}
+export const routeDataFetchers = flattenRoutes(routes);
+
+export const createRouter = () => createBrowserRouter(routes);
+export let globalRouter: ReturnType<typeof createRouter> | undefined = undefined;
+export function getRouter() {
+  if (globalRouter) {
+    return globalRouter;
+  }
+  globalRouter = createRouter();
+  return globalRouter;
 }

@@ -29,7 +29,7 @@ type DashboardLink = MobileMenuItemProps & {
   isActive: boolean;
 };
 
-class _AccountPage extends React.Component<Props> {
+class _AccountPage extends React.PureComponent<Props> {
   static contextType = ReactAppContextType;
 
   get _context() {
@@ -37,7 +37,7 @@ class _AccountPage extends React.Component<Props> {
   }
 
   links(): DashboardLink[] {
-    const currentPath = this._context.route?.location.pathname;
+    const currentPath = this._context.route.location.pathname;
     return [
       {
         text: "Dashboard",

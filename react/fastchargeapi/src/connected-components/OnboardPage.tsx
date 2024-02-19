@@ -17,7 +17,7 @@ type _Props = {
  * made to the backend to get a onboard url. The splash screen is needed for a
  * better user experience.
  */
-class _Onboard extends React.Component<_Props, _State> {
+class _Onboard extends React.PureComponent<_Props, _State> {
   static contextType = ReactAppContextType;
   get _context() {
     return this.context as AppContext;

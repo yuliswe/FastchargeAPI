@@ -1,42 +1,42 @@
+import { gql } from "@apollo/client";
 import { CssBaseline, useMediaQuery } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
 import { User as FirebaseUser, getAuth, signInAnonymously } from "firebase/auth";
+import { throttle } from "lodash";
 import { useEffect, useState } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import { Provider } from "react-redux";
 import { LinkProps, RouterProvider } from "react-router-dom";
+import { getGQLClient } from "src/graphql-client";
 import { AppContext, AppContextProvider } from "./AppContext";
 import { LinkBehavior } from "./LinkBehavior";
+import { useRenderingTrace } from "./debug";
 import { initializeFirebase } from "./firebase";
-import { createRouter } from "./routes";
+import { getRouter } from "./routes";
 import { reduxStore } from "./store-config";
 import { getTheme } from "./theme";
-import { useRenderingTrace } from "./debug";
+
+export const sendPing = async (context: AppContext) => {
+  const { client } = await getGQLClient(context);
+  await client.mutate({
+    mutation: gql`
+      mutation SendPing {
+        ping
+      }
+    `,
+  });
+};
 
 let userPromiseResolve: undefined | ((user: FirebaseUser) => void);
 const userPromise = new Promise<FirebaseUser>((resolve) => {
   userPromiseResolve = resolve;
 });
-const firebaseApp = initializeFirebase();
-const auth = getAuth(firebaseApp);
-if (auth.currentUser) {
-  userPromiseResolve?.(auth.currentUser);
-}
-auth.onAuthStateChanged((user) => {
-  if (user == null) {
-    void signInAnonymously(auth);
-  } else {
-    userPromiseResolve?.(user);
-  }
-});
-
 const originalTheme = getTheme();
-const router = createRouter();
 
 /**
  * Provides the context for the entire app. It is only constructed once.
  */
-function App() {
+export function App() {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [isAnonymousUser, setIsAnonymousUser] = useState<boolean>(true);
 
@@ -44,6 +44,19 @@ function App() {
     void userPromise.then((user) => {
       setFirebaseUser(user);
       setIsAnonymousUser(user.isAnonymous);
+    });
+
+    const firebaseApp = initializeFirebase();
+    const auth = getAuth(firebaseApp);
+    if (auth.currentUser) {
+      userPromiseResolve?.(auth.currentUser);
+    }
+    auth.onAuthStateChanged((user) => {
+      if (user == null) {
+        void signInAnonymously(auth);
+      } else {
+        userPromiseResolve?.(user);
+      }
     });
   }, []);
 
@@ -111,7 +124,19 @@ function App() {
     theme: modifiedTheme,
   } as AppContext;
 
-  useRenderingTrace("App", { context, firebaseUser, isAnonymousUser, router, originalTheme, reduxStore });
+  useRenderingTrace("App", { context, firebaseUser, isAnonymousUser, originalTheme, reduxStore });
+
+  useEffect(() => {
+    const throttledSendPing = throttle(() => sendPing(context), 200000);
+    void throttledSendPing();
+    const installedHandler = () => void throttledSendPing();
+    window.addEventListener("mousemove", installedHandler);
+    window.addEventListener("scroll", installedHandler);
+    return () => {
+      window.removeEventListener("mousemove", installedHandler);
+      window.removeEventListener("scroll", installedHandler);
+    };
+  }, []);
 
   return (
     <Provider store={reduxStore}>
@@ -119,12 +144,10 @@ function App() {
         <AppContextProvider value={context}>
           <ThemeProvider theme={originalTheme}>
             <CssBaseline />
-            <RouterProvider router={router} />
+            <RouterProvider router={getRouter()} />
           </ThemeProvider>
         </AppContextProvider>
       </HelmetProvider>
     </Provider>
   );
 }
-
-export default App;

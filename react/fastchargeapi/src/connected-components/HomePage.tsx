@@ -60,7 +60,7 @@ type _Props = {
   homeAppState: HomeAppState;
 };
 
-class _Home extends React.Component<_Props, _State> {
+class _Home extends React.PureComponent<_Props, _State> {
   constructor(props: _Props) {
     super(props);
     this.state = {};
@@ -124,7 +124,7 @@ class _Home extends React.Component<_Props, _State> {
   }
 
   renderCategoryList() {
-    const icons: { [title: string]: JSX.Element } = {
+    const icons: { [title: string]: JSX.Element | undefined } = {
       Development: <PersonalVideoRounded />,
     };
     return (

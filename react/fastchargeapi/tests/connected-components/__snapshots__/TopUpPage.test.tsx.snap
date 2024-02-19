@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TopUpPage redirects to login page if user is not logged in 1`] = `
+[
+  [
+    "/auth/?redirect=%2Ftopup%3Famount%3D100%23#",
+    {
+      "fromRouteId": "2",
+      "replace": true,
+    },
+  ],
+]
+`;

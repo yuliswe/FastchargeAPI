@@ -5,7 +5,7 @@ import { connect } from "react-redux";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { fetchWithAuth } from "../fetch";
 import { setRemoteSecret } from "../graphql-client";
-import { RouteURL } from "../routes";
+import { type TopUpPageQuery } from "../routes";
 import { paymentServiceBaseURL } from "../runtime";
 import { RootAppState } from "../states/RootAppState";
 import { TopUpAppState } from "../states/TopupAppState";
@@ -20,7 +20,7 @@ type _Props = {
  * made to the backend to get a topup url. The splash screen is needed for a
  * better user experience.
  */
-class _TopUp extends React.Component<_Props, _State> {
+class _TopUp extends React.PureComponent<_Props, _State> {
   static contextType = ReactAppContextType;
   get _context() {
     return this.context as AppContext;
@@ -59,20 +59,24 @@ class _TopUp extends React.Component<_Props, _State> {
     return parsedUrl.host === document.location.host || parsedUrl.host === "localhost";
   }
 
+  getUrlQuery(): TopUpPageQuery {
+    return Object.fromEntries(this._context.route.query.entries());
+  }
+
   isSuccess(): boolean {
-    return this._context.route.query.get("success") != null;
+    return this.getUrlQuery().success != null;
   }
 
   isCanceled(): boolean {
-    return this._context.route.query.get("cancel") != null;
+    return this.getUrlQuery().cancel != null;
   }
 
   getAmount(): string {
-    return this._context.route.query.get("amount") || "0";
+    return this.getUrlQuery().amount || "0";
   }
 
   getJWTSecret(): Uint8Array {
-    const hexString = this._context.route?.query.get("jwt");
+    const hexString = this._context.route.query.get("jwt");
     if (!hexString) {
       throw new Error("jwt is missing from the url");
     }
@@ -81,7 +85,7 @@ class _TopUp extends React.Component<_Props, _State> {
   }
 
   getJWESecret(): Uint8Array {
-    const hexString = this._context.route?.query.get("jwe");
+    const hexString = this._context.route.query.get("jwe");
     if (!hexString) {
       throw new Error("jwe is missing from the url");
     }
@@ -106,7 +110,7 @@ class _TopUp extends React.Component<_Props, _State> {
       await setRemoteSecret(
         this._context,
         {
-          key: key,
+          key,
           value: {
             status: this.isSuccess() ? "success" : "canceled",
           },
@@ -151,17 +155,7 @@ class _TopUp extends React.Component<_Props, _State> {
       await this.postResultToCli();
     } else if (this.isCanceled()) {
       await this.postResultToCli();
-    } else if (!(await this.isLoggedIn())) {
-      // redirect to the login path, and when successful, redirect back to this page
-      this._context.route?.navigate(
-        RouteURL.authPage({
-          query: {
-            redirect: `redirect=${this._context.route.location.pathname}${this._context.route.location.search}`,
-          },
-        }),
-        { replace: true }
-      );
-    } else {
+    } else if (await this.isLoggedIn()) {
       // Otherwise start the topuping process
       try {
         const response = await fetchWithAuth(this._context, this.getBackendUrl(), {
@@ -177,7 +171,7 @@ class _TopUp extends React.Component<_Props, _State> {
           }),
         });
         const { location } = (await response.json()) as { location: string };
-        document.location.href = location;
+        this._context.route.navigate(location);
         if (!location) {
           throw new Error("location is missing from the response");
         }

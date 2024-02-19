@@ -2,20 +2,19 @@
   "name": "fastchargeapi",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "eject": "react-scripts eject",
     "gen": "graphql-codegen --config codegen.yml",
     "build": "npm run gen && react-scripts build",
     "test": "npm run gen && react-scripts test",
-    "prestart": "npm run typecheck",
-    "start": "PORT=8000 react-scripts start",
-    "watch": "nodemon --config ./nodemon.config.json --exec 'npm run typecheck' & npm run start",
+    "watch": "(nodemon --config ./nodemon.config.json --exec 'npm run typecheck') & (PORT=8000 BROWSER=none react-scripts start) && wait",
     "new-page": "node ../react-appevent-redux-tools/dist/index.js",
     "fix": "eslint --fix ./",
     "pretypecheck": "npm run gen",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {
+  "devDependencies": {
     "@apollo/client": "^3.7.9",
     "@aws-sdk/client-s3": "^3.279.0",
     "@aws-sdk/client-sqs": "^3.279.0",
@@ -25,20 +24,33 @@
     "@fontsource/roboto": "^4.5.8",
     "@fontsource/source-sans-pro": "^4.5.11",
     "@fontsource/ubuntu": "^4.5.11",
+    "@graphql-codegen/cli": "^2.16.5",
+    "@graphql-codegen/client-preset": "^2.0.0",
     "@mui/icons-material": "^5.11.16",
     "@mui/material": "^5.13.0",
     "@mui/x-date-pickers": "^5.0.20",
+    "@remix-run/web-fetch": "^4.4.2",
+    "@types/lodash": "^4.14.195",
+    "@types/md5": "^2.3.2",
+    "@types/node": "^16.18.11",
+    "@types/react": "^18.2.56",
+    "@types/react-dom": "^18.0.10",
+    "@types/react-router-hash-link": "^2.4.5",
+    "@types/react-test-renderer": "^18.0.7",
+    "@types/uuid": "^9.0.1",
     "chart.js": "^4.2.1",
     "commander": "^10.0.0",
-    "crypto-hash": "^2.0.1",
     "date-fns": "^2.29.3",
+    "fastchargeapi-cli-v2": "file:../../fastchargeapi-cli-v2",
     "firebase": "^9.17.2",
+    "graphql-service-apollo": "file:../../graphql-service/apollo",
     "highlight.js": "^11.7.0",
+    "history": "^5.3.0",
     "jose": "^4.12.0",
     "localforage": "^1.10.0",
     "lodash": "^4.17.21",
     "match-sorter": "^6.3.1",
-    "md5": "^2.3.0",
+    "prettier": "^2.7.1",
     "react": "^18.2.0",
     "react-appevent-redux": "^1.0.4",
     "react-chartjs-2": "^5.2.0",
@@ -47,40 +59,25 @@
     "react-markdown": "^8.0.6",
     "react-router-dom": "^6.8.1",
     "react-router-hash-link": "^2.4.3",
+    "react-scripts": "^5.0.1",
     "react-syntax-highlighter": "^15.5.0",
     "react-terminal-ui": "github:yuliswe/react-terminal-ui",
+    "react-test-renderer": "^18.2.0",
     "rehype-highlight": "^6.0.0",
     "rehype-remove-comments": "^5.0.0",
     "remark-gfm": "^3.0.1",
     "remark-github": "^11.2.4",
+    "sass": "^1.59.2",
     "sort-by": "^1.2.0",
-    "typescript": "^4.9.4",
     "uuid": "^9.0.0",
     "web-vitals": "^2.1.4"
   },
-  "devDependencies": {
-    "@graphql-codegen/cli": "^2.16.5",
-    "@graphql-codegen/client-preset": "^2.0.0",
-    "@testing-library/jest-dom": "^5.16.5",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
-    "@types/jest": "^27.5.2",
-    "@types/lodash": "^4.14.195",
-    "@types/md5": "^2.3.2",
-    "@types/node": "^16.18.11",
-    "@types/react": "^18.0.27",
-    "@types/react-dom": "^18.0.10",
-    "@types/react-router-hash-link": "^2.4.5",
-    "@types/uuid": "^9.0.1",
-    "prettier": "^2.7.1",
-    "react-scripts": "^5.0.1",
-    "sass": "^1.59.2"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+  "resolutions": {
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "react": "^18.2.0",
+    "@types/react": "^18.2.56",
+    "eslint-plugin-testing-library": "^6.2.0"
   },
   "browserslist": {
     "production": [
@@ -93,5 +90,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "dependencies": {
+    "eslint-plugin-testing-library": "^6.2.0"
   }
 }

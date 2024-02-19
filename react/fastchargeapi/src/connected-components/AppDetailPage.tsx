@@ -30,7 +30,7 @@ type _Props = {
   appState: AppDetailAppState;
 };
 type _State = {} & SupportDocumentation;
-class _AppDetailPage extends React.Component<_Props, _State> {
+class _AppDetailPage extends React.PureComponent<_Props, _State> {
   static contextType = ReactAppContextType;
   get _context() {
     return this.context as AppContext;
@@ -108,7 +108,7 @@ class _AppDetailPage extends React.Component<_Props, _State> {
   }
 
   getEndpoints(): (AppDetailEndpointFragment | null)[] {
-    return this.loading() ? new Array(3).fill(null) : this.appState.endpoints;
+    return this.loading() ? (new Array(3).fill(null) as null[]) : this.appState.endpoints;
   }
 
   renderChangeSubscriptionDocumentation({ plan, app }: { plan: string; app: string }) {
@@ -166,8 +166,8 @@ class _AppDetailPage extends React.Component<_Props, _State> {
         {this.loading() ? (
           <Skeleton variant="text" sx={{ width: "50%", height: "1.5em", borderRadius: 5 }} />
         ) : this.appState.appInfo?.repository ? (
-          <Link href={this.appState.appInfo?.repository} target="_blank" variant="body2">
-            {this.appState.appInfo?.repository}
+          <Link href={this.appState.appInfo.repository} target="_blank" variant="body2">
+            {this.appState.appInfo.repository}
             <OpenInNew sx={{ height: "0.5em", width: "0.5em", ml: 0.3 }} />
           </Link>
         ) : (
@@ -188,8 +188,8 @@ class _AppDetailPage extends React.Component<_Props, _State> {
         {this.loading() ? (
           <Skeleton variant="text" sx={{ width: "50%", height: "1.5em", borderRadius: 5 }} />
         ) : this.appState.appInfo?.homepage ? (
-          <Link href={this.appState.appInfo?.homepage} target="_blank" variant="body2">
-            {this.appState.appInfo?.homepage}
+          <Link href={this.appState.appInfo.homepage} target="_blank" variant="body2">
+            {this.appState.appInfo.homepage}
             <OpenInNew sx={{ height: "0.5em", width: "0.5em", ml: 0.3 }} />
           </Link>
         ) : (
@@ -209,8 +209,8 @@ class _AppDetailPage extends React.Component<_Props, _State> {
         {this.loading() ? (
           <Skeleton variant="text" sx={{ width: "50%", height: "1.5em", borderRadius: 5 }} />
         ) : this.appState.appInfo?.readme ? (
-          <Link href={this.appState.appInfo?.readme} target="_blank" variant="body2">
-            {this.appState.appInfo?.readme}
+          <Link href={this.appState.appInfo.readme} target="_blank" variant="body2">
+            {this.appState.appInfo.readme}
             <OpenInNew sx={{ height: "0.5em", width: "0.5em", ml: 0.3 }} />
           </Link>
         ) : (
@@ -303,10 +303,10 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                     ) : (
                       <React.Fragment>
                         <Typography variant="h3" id="description" noWrap maxWidth="20em" component="span">
-                          {this.appState?.appInfo?.title || this.appState?.appInfo?.name}
+                          {this.appState.appInfo?.title || this.appState.appInfo?.name}
                         </Typography>
                         <Typography variant="body1" noWrap maxWidth="20em" component="span">
-                          @{this.appState?.appInfo?.name}
+                          @{this.appState.appInfo?.name}
                         </Typography>
                         {/* <Typography variant="body1">1.3.7</Typography>
                                         <Typography variant="body1">Published 10 months ago</Typography> */}
@@ -324,7 +324,7 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                     <Skeleton variant="rounded" sx={{ borderRadius: 20 }} height="5em" width="100%" />
                   ) : (
                     <Typography variant="body1">
-                      {this.appState?.appInfo?.description || "The author did not provide a description for this app."}
+                      {this.appState.appInfo?.description || "The author did not provide a description for this app."}
                     </Typography>
                   )}
                 </Box>
@@ -411,7 +411,7 @@ class _AppDetailPage extends React.Component<_Props, _State> {
                       remarkPlugins={(() => {
                         const plugins: PluggableList = [remarkGfm];
                         if (this.appState.appInfo!.repository) {
-                          plugins.push([remarkGithub, { repository: this.appState.appInfo!.repository }] as any);
+                          plugins.push([remarkGithub, { repository: this.appState.appInfo!.repository }]);
                         }
                         return plugins;
                       })()}

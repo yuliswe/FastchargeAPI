@@ -43,7 +43,7 @@ export type LogTableHeaderCell = {
   flexGrow?: boolean;
   hideByDefault?: boolean;
 };
-export class LogTable<Activity> extends React.Component<LogTableProps<Activity>, LogTableState> {
+export class LogTable<Activity> extends React.PureComponent<LogTableProps<Activity>, LogTableState> {
   static contextType = ReactAppContextType;
   get _context(): AppContext {
     return this.context as AppContext;
@@ -77,7 +77,7 @@ export class LogTable<Activity> extends React.Component<LogTableProps<Activity>,
     this._context.route.updateQuery({
       [`${this.props.urlNamespace}date`]: date.getTime().toString(),
     });
-    this.props.onChange?.({
+    this.props.onChange({
       page: this.activityPageNum(),
       dateRange: { end: utc.getTime() },
     });

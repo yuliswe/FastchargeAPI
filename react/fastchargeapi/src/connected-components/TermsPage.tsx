@@ -14,7 +14,7 @@ type _Props = {
   appState: TermsAppState;
 };
 
-class _TermsPage extends React.Component<_Props, _State> {
+class _TermsPage extends React.PureComponent<_Props, _State> {
   static contextType = ReactAppContextType;
   get _context() {
     return this.context as AppContext;

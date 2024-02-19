@@ -42,7 +42,7 @@ export const LinkBehavior = React.forwardRef<
           if (match) {
             const queryParams = url.searchParams;
             context.loading.setIsLoading(true); // Show loading progress bar.
-            await fetchData(context, match.params, queryParams.entries());
+            await fetchData?.(context, match.params, queryParams.entries());
             context.loading.setIsLoading(false); // Hide loading progress bar.
             originalLinkRef.current?.click(); // Click the orignal link.
             found = true;

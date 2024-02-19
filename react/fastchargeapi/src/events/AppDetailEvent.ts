@@ -54,9 +54,9 @@ class LoadAppInfo extends AppEvent<RootAppState> {
       },
     });
     this.appInfo = result.data.getApp;
-    if (this.appInfo?.readme) {
+    if (this.appInfo.readme) {
       try {
-        this.appReadmeContent = await this.getReadmeFileContent(this.appInfo?.readme);
+        this.appReadmeContent = await this.getReadmeFileContent(this.appInfo.readme);
       } catch (e) {
         console.error(e);
       }

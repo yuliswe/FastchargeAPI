@@ -36,7 +36,7 @@ type State = {
   stripeLoginLinkTimeout: number;
 } & SupportDocumentation;
 
-class _DashboardPage extends React.Component<Props, State> {
+class _DashboardPage extends React.PureComponent<Props, State> {
   static contextType = ReactAppContextType;
   get _context() {
     return this.context as AppContext;
@@ -171,7 +171,7 @@ class _DashboardPage extends React.Component<Props, State> {
   eta(activity: DashboardAccountActivityFragment): string {
     if (activity.reason === AccountActivityReason.Payout) {
       if (activity.stripeTransfer?.transferAt) {
-        const date = new Date(activity.stripeTransfer?.transferAt);
+        const date = new Date(activity.stripeTransfer.transferAt);
         return date.toDateString();
       }
     } else if (activity.status === AccountActivityStatus.Pending && activity.settleAt) {
@@ -338,7 +338,7 @@ class _DashboardPage extends React.Component<Props, State> {
               >
                 <Box fontSize={25}>$</Box>
                 {this.appState.userAccountInfo?.balance ? (
-                  this.appState.userAccountInfo?.balance
+                  this.appState.userAccountInfo.balance
                 ) : (
                   <CircularProgress size="1em" sx={{ ml: 1 }} color="primary" />
                 )}

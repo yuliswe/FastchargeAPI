@@ -23,7 +23,7 @@ type _Props = {
 };
 type _State = {} & SupportDocumentation;
 
-class _SubscriptionDetailPage extends React.Component<_Props, _State> {
+class _SubscriptionDetailPage extends React.PureComponent<_Props, _State> {
   static contextType = ReactAppContextType;
   get _context(): AppContext {
     return this.context as AppContext;
@@ -123,7 +123,7 @@ class _SubscriptionDetailPage extends React.Component<_Props, _State> {
     appStore.dispatch(
       new SubscriotionDetailEvent.LoadUsageSummary(this._context, {
         appName: this.getAppNameFromUrl(),
-        dateRange: dateRange,
+        dateRange,
       })
     );
   };

@@ -13,6 +13,7 @@ import {
 } from "firebase/auth";
 import React from "react";
 import { connect } from "react-redux";
+import type { AuthPageQuery } from "src/routes";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { setRemoteSecret } from "../graphql-client";
 import { RootAppState } from "../states/RootAppState";
@@ -25,7 +26,7 @@ type _State = {
 
 type _Props = {};
 
-class _AuthPage extends React.Component<_Props, _State> {
+class _AuthPage extends React.PureComponent<_Props, _State> {
   static contextType = ReactAppContextType;
   get _context() {
     return this.context as AppContext;
@@ -38,12 +39,15 @@ class _AuthPage extends React.Component<_Props, _State> {
     };
   }
 
-  getRedirectUrl(): string | null {
-    const redirectUrl = this._context.route?.query.get("redirect");
-    return redirectUrl;
+  getUrlQuery() {
+    return this._context.route.query as AuthPageQuery;
   }
 
-  get behavior(): "redirect" | "putsecret" | undefined {
+  getRedirectUrl(): string | null {
+    return this.getUrlQuery().redirect || null;
+  }
+
+  getBehavior(): "redirect" | "putsecret" | undefined {
     if (this.getRedirectUrl()) {
       return "redirect";
     }
@@ -53,26 +57,26 @@ class _AuthPage extends React.Component<_Props, _State> {
     return undefined;
   }
 
-  getJWTSecret(): Uint8Array {
-    const hexString = this._context.route?.query.get("jwt");
+  getJWTSecret(): Uint8Array | null {
+    const hexString = this._context.route.query.get("jwt");
     if (!hexString) {
-      throw new Error("jwt is missing from the url");
+      return null;
     }
     const bytes = new Uint8Array(hexString.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)));
     return bytes;
   }
 
-  getJWESecret(): Uint8Array {
-    const hexString = this._context.route?.query.get("jwe");
+  getJWESecret(): Uint8Array | null {
+    const hexString = this._context.route.query.get("jwe");
     if (!hexString) {
-      throw new Error("jwe is missing from the url");
+      return null;
     }
     const bytes = new Uint8Array(hexString.match(/.{1,2}/g)!.map((byte) => parseInt(byte, 16)));
     return bytes;
   }
 
   getBucketKey(): string | undefined {
-    return this._context.route?.query.get("key") || undefined;
+    return this._context.route.query.get("key") || undefined;
   }
 
   reloginNeeded() {
@@ -94,7 +98,7 @@ class _AuthPage extends React.Component<_Props, _State> {
       // User could be logging in with a different email
       await this.linkAccounts(user, this.pendingLinkAccount.credential);
     }
-    switch (this.behavior) {
+    switch (this.getBehavior()) {
       // Redirect to the redirect url after authentication
       case "redirect": {
         const redirect = this.getRedirectUrl();
@@ -112,11 +116,19 @@ class _AuthPage extends React.Component<_Props, _State> {
         if (!key) {
           throw new Error("No bucket key provided");
         }
+        const jweSecret = this.getJWESecret();
+        const jwtSecret = this.getJWTSecret();
+        if (!jwtSecret) {
+          throw new Error("No jwt secret provided");
+        }
+        if (!jweSecret) {
+          throw new Error("No jwe secret provided");
+        }
         const idToken = await user.getIdToken(/* forceRefresh */ true);
         await setRemoteSecret(
           this._context,
           {
-            key: key,
+            key,
             value: {
               idToken,
               refreshToken: user.refreshToken,
@@ -124,8 +136,8 @@ class _AuthPage extends React.Component<_Props, _State> {
             expireAt: Date.now() + 1000 * 60 * 60 * 24, // 1 day,
           },
           {
-            jweSecret: this.getJWESecret(),
-            jwtSecret: this.getJWTSecret(),
+            jweSecret,
+            jwtSecret,
           }
         );
         break;

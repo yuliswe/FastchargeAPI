@@ -44,7 +44,7 @@ export type MobileMenuItemProps = {
   icon?: React.ReactNode;
 };
 
-export class AppBar extends React.Component<Props, State> {
+export class AppBar extends React.PureComponent<Props, State> {
   static contextType = ReactAppContextType;
   get _context(): AppContext {
     return this.context as AppContext;
@@ -157,7 +157,7 @@ export class AppBar extends React.Component<Props, State> {
   ];
 
   loginHref() {
-    return `/auth?redirect=${this._context.route.locationHref}`;
+    return `/auth?redirect=${this._context.route.location.fullpath}`;
   }
 
   renderAvatar() {

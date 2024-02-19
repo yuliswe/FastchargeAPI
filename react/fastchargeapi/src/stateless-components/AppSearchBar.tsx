@@ -8,7 +8,7 @@ type _Props = {
   onSearch?: (query: string) => void;
 };
 
-export class AppSearchBar extends React.Component<_Props, _State> {
+export class AppSearchBar extends React.PureComponent<_Props, _State> {
   static contextType = ReactAppContextType;
   get _context(): AppContext {
     return this.context as AppContext;
@@ -18,7 +18,7 @@ export class AppSearchBar extends React.Component<_Props, _State> {
     return (
       <SearchBar
         showSearchButton={this._context.mediaQuery.sm.up}
-        searchText={this._context.route?.query.get("q") || ""}
+        searchText={this._context.route.query.get("q") || ""}
         onSearch={(query) => {
           if (this.props.onSearch) {
             this.props.onSearch(query);

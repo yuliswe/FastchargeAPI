@@ -2,11 +2,13 @@ import { AppEvent, AppEventStream, mapState, to } from "react-appevent-redux";
 import { AppContext } from "../AppContext";
 import { graphql } from "../__generated__/gql";
 import {
+  FeaturedProductFragment,
   GetFeaturedProductsQuery,
   HomePageGetLatestProductsQuery,
+  LatestProductFragment,
   SiteMetaDataKey,
 } from "../__generated__/gql/graphql";
-import { GetQueryResult, getGQLClient } from "../graphql-client";
+import { getGQLClient } from "../graphql-client";
 import { RouteURL } from "../routes";
 import { RootAppState } from "../states/RootAppState";
 
@@ -40,37 +42,41 @@ class LoadFeaturedProducts extends AppEvent<RootAppState> {
   constructor(private context: AppContext) {
     super();
   }
+
   reducer(state: RootAppState): RootAppState {
     return state;
   }
 
-  getFeaturedProductsQuery = graphql(`
-    query GetFeaturedProducts {
-      listAppsByTag(tag: "Featured") {
-        pk
-        name
-        logo
-        title
-        description
-      }
-    }
-  `);
-
-  featuredProducts: GetQueryResult<typeof this.getFeaturedProductsQuery> | null = null;
+  featuredProducts: FeaturedProductFragment[] = [];
 
   async *run(state: RootAppState): AppEventStream<RootAppState> {
     const { client } = await getGQLClient(this.context);
     const result = await client.query({
-      query: this.getFeaturedProductsQuery,
+      query: graphql(`
+        query GetFeaturedProducts {
+          listAppsByTag(tag: "Featured") {
+            ...FeaturedProduct
+          }
+        }
+
+        fragment FeaturedProduct on App {
+          pk
+          name
+          logo
+          title
+          description
+        }
+      `),
     });
-    this.featuredProducts = result.data;
+
+    this.featuredProducts = result.data.listAppsByTag;
   }
 
   reduceAfter(state: RootAppState): RootAppState {
     return state.mapState({
       home: mapState({
         featuredProducts: to(
-          this.featuredProducts!.listAppsByTag.map(({ pk, name, title, logo, description }) => ({
+          this.featuredProducts.map(({ pk, logo, title, description, name }) => ({
             pk,
             logo: logo || "",
             title: title || name,
@@ -95,33 +101,36 @@ class LoadLatestProducts extends AppEvent<RootAppState> {
     return state;
   }
 
-  getLatestProductsQuery = graphql(`
-    query HomePageGetLatestProducts {
-      listAppsByTag(tag: "Latest") {
-        pk
-        name
-        logo
-        title
-        description
-      }
-    }
-  `);
-
-  latestProducts: GetQueryResult<typeof this.getLatestProductsQuery> | null = null;
+  latestProducts: LatestProductFragment[] = [];
 
   async *run(state: RootAppState): AppEventStream<RootAppState> {
     const { client } = await getGQLClient(this.context);
     const result = await client.query({
-      query: this.getLatestProductsQuery,
+      query: graphql(`
+        query HomePageGetLatestProducts {
+          listAppsByTag(tag: "Latest") {
+            ...LatestProduct
+          }
+        }
+
+        fragment LatestProduct on App {
+          pk
+          name
+          logo
+          title
+          description
+        }
+      `),
     });
-    this.latestProducts = result.data;
+
+    this.latestProducts = result.data.listAppsByTag;
   }
 
   reduceAfter(state: RootAppState): RootAppState {
     return state.mapState({
       home: mapState({
         latestProducts: to(
-          this.latestProducts!.listAppsByTag.map(({ pk, name, logo, title, description }) => ({
+          this.latestProducts.map(({ pk, name, logo, title, description }) => ({
             pk,
             logo: logo || "",
             title: title || name,
@@ -144,49 +153,56 @@ class LoadPricingData extends AppEvent<RootAppState> {
     return state;
   }
 
-  queryPricingdata = graphql(`
-    query HomePageGetPricingData(
-      $per_request_charge: String!
-      $stripe_flat_fee: String!
-      $stripe_percentage_fee: String!
-    ) {
-      per_request_charge: getSiteMetaDataByKey(key: $per_request_charge) {
-        key
-        value
-      }
-      stripe_flat_fee: getSiteMetaDataByKey(key: $stripe_flat_fee) {
-        key
-        value
-      }
-      stripe_percentage_fee: getSiteMetaDataByKey(key: $stripe_percentage_fee) {
-        key
-        value
-      }
-    }
-  `);
-
-  pricingData: GetQueryResult<typeof this.queryPricingdata> | null = null;
+  pricingData: {
+    perRequestCharge: string;
+    stripeFlatFee: string;
+    stripePercentageFee: string;
+  } | null = null;
 
   async *run(state: RootAppState): AppEventStream<RootAppState> {
     const { client } = await getGQLClient(this.context);
     const result = await client.query({
-      query: this.queryPricingdata,
+      query: graphql(`
+        query HomePageGetPricingData(
+          $perRequestChargeKey: String!
+          $stripeFlatFeeKey: String!
+          $stripePercentageFeeKey: String!
+        ) {
+          preRequestCharge: getSiteMetaDataByKey(key: $perRequestChargeKey) {
+            key
+            value
+          }
+          stripeFlatFee: getSiteMetaDataByKey(key: $stripeFlatFeeKey) {
+            key
+            value
+          }
+          stripePercentageFee: getSiteMetaDataByKey(key: $stripePercentageFeeKey) {
+            key
+            value
+          }
+        }
+      `),
       variables: {
-        per_request_charge: SiteMetaDataKey.PerRequestCharge,
-        stripe_flat_fee: SiteMetaDataKey.StripeFlatFee,
-        stripe_percentage_fee: SiteMetaDataKey.StripePercentageFee,
+        perRequestChargeKey: SiteMetaDataKey.PerRequestCharge,
+        stripeFlatFeeKey: SiteMetaDataKey.StripeFlatFee,
+        stripePercentageFeeKey: SiteMetaDataKey.StripePercentageFee,
       },
     });
-    this.pricingData = result.data;
+    const { preRequestCharge, stripeFlatFee, stripePercentageFee } = result.data;
+    this.pricingData = {
+      perRequestCharge: preRequestCharge.value as string,
+      stripeFlatFee: stripeFlatFee.value as string,
+      stripePercentageFee: stripePercentageFee.value as string,
+    };
   }
 
   reduceAfter(state: RootAppState): RootAppState {
     return state.mapState({
       home: mapState({
         loadingPricingData: to(false),
-        pricingPerRequest: to(this.pricingData?.per_request_charge?.value || ""),
-        pricingStripeFlatFee: to(this.pricingData?.stripe_flat_fee?.value || ""),
-        pricingStripePercentageFee: to(this.pricingData?.stripe_percentage_fee?.value || ""),
+        pricingPerRequest: to(this.pricingData?.perRequestCharge || ""),
+        pricingStripeFlatFee: to(this.pricingData?.stripeFlatFee || ""),
+        pricingStripePercentageFee: to(this.pricingData?.stripePercentageFee || ""),
       }),
     });
   }

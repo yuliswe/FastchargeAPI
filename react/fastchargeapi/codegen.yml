@@ -17,3 +17,4 @@ generates:
         URL: string
         Email: string
         Any: any
+        Decimal: string

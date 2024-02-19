@@ -46,7 +46,7 @@ type _State = {
   pricingCheckboxes: Set<string>; // Stores the IDs of the endpoints that are checked
 } & SupportDocumentation;
 
-class _MyAppDetailPage extends React.Component<_Props, _State> {
+class _MyAppDetailPage extends React.PureComponent<_Props, _State> {
   static contextType = ReactAppContextType;
   get _context(): AppContext {
     return this.context as AppContext;

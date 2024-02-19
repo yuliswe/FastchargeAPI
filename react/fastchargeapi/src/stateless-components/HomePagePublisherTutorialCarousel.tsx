@@ -70,7 +70,10 @@ type State = {
   openHelper: boolean;
 };
 export type HomePagePublisherTutorialCarouselProps = {};
-export class HomePagePublisherTutorialCarousel extends React.Component<HomePagePublisherTutorialCarouselProps, State> {
+export class HomePagePublisherTutorialCarousel extends React.PureComponent<
+  HomePagePublisherTutorialCarouselProps,
+  State
+> {
   constructor(props: HomePagePublisherTutorialCarouselProps) {
     super(props);
     this.state = {

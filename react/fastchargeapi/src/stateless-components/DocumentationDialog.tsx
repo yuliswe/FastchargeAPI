@@ -6,7 +6,7 @@ export enum DocumentationName {
 }
 
 export type DocumentationDialogProps = {
-  parent: React.Component<{}, SupportDocumentation>;
+  parent: React.PureComponent<{}, SupportDocumentation>;
 };
 
 export type SupportDocumentation = {
@@ -14,7 +14,7 @@ export type SupportDocumentation = {
   renderDocumentation?: () => React.ReactNode;
 };
 
-export class DocumentationDialog extends React.Component<DocumentationDialogProps> {
+export class DocumentationDialog extends React.PureComponent<DocumentationDialogProps> {
   render(): React.ReactNode {
     return (
       <Dialog
@@ -37,7 +37,7 @@ export const supportDocumenationDefault: SupportDocumentation = {
 };
 
 export const openDocumentationDialog = (
-  node: React.Component<{}, SupportDocumentation>,
+  node: React.PureComponent<{}, SupportDocumentation>,
   renderDocumentation: () => React.ReactNode
 ) => {
   node.setState({

@@ -141,9 +141,9 @@ export class StepsCarousel<T> extends React.PureComponent<StepsCarouselProps<T>,
     this.props.onPageChange?.(0, this.state.totalPages, this.getPageElement(0)!);
   }
 
-  componentDidUpdate(prevProps: Readonly<StepsCarouselProps<T>>, prevState: Readonly<_State>, snapshot?: any): void {
+  componentDidUpdate(): void {
     if (this.props.currentPage != undefined && this.props.currentPage !== this.state.currentPage) {
-      this.goTo(this.props.currentPage ?? 0);
+      this.goTo(this.props.currentPage);
     }
   }
 
@@ -152,7 +152,7 @@ export class StepsCarousel<T> extends React.PureComponent<StepsCarouselProps<T>,
       <Grid container>
         {this.props.renderHeader && (
           <Grid item xs={this.defaultHeaderGridSize} {...this.props.headerGridProps}>
-            {this.props.renderHeader?.(this.state.currentPage, this.state.totalPages)}
+            {this.props.renderHeader(this.state.currentPage, this.state.totalPages)}
           </Grid>
         )}
         <Grid item {...this.defaultBodyGridProps()}>
@@ -176,7 +176,7 @@ export class StepsCarousel<T> extends React.PureComponent<StepsCarouselProps<T>,
         </Grid>
         {this.props.renderFooter && (
           <Grid item xs={this.defaultFooterGridSize} {...this.props.footerGridProps}>
-            {this.props.renderFooter?.(this.state.currentPage, this.state.totalPages)}
+            {this.props.renderFooter(this.state.currentPage, this.state.totalPages)}
           </Grid>
         )}
       </Grid>
