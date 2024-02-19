@@ -1,12 +1,7 @@
 import { program } from "commander";
 import fs from "fs";
 import { exit } from "process";
-import readline from "readline";
 
-let Rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
 program.argument("<component name>", "Name of the component to create").action((ComponentName: string) => {
   ComponentName = ComponentName[0].toUpperCase() + ComponentName.slice(1);
 
@@ -34,61 +29,104 @@ program.argument("<component name>", "Name of the component to create").action((
 
   for (let f of outfileList) {
     console.log(`Creating ${f}`);
-    // console.log();
-    // Rl.question("Continue? (y/n)", (ans) => {
-    //     if (ans.trim().toLowerCase() !== "y") {
-    //         console.log("Aborted.");
-    //         exit(0);
-    //     }
-    // });
   }
 
   fs.writeFileSync(outfileList[0], createConnectedComponent(ComponentName));
 
   fs.writeFileSync(outfileList[1], createAppState(ComponentName));
   fs.writeFileSync(outfileList[2], createAppEvent(ComponentName));
+  process.exit(0);
 });
 
 program.parse();
 
-function createConnectedComponent(ComponentName: string) {
-  let componentName = ComponentName[0].toLowerCase() + ComponentName.slice(1);
+function getAppStateName(baseName: string) {
+  return `${baseName}AppState`;
+}
+
+function getComponentName(baseName: string) {
+  return `${baseName}Page`;
+}
+
+function getRootAppStatePropName(baseName: string) {
+  return baseName[0].toLowerCase() + baseName.slice(1);
+}
+
+function getEventName(baseName: string) {
+  return `${baseName}Event`;
+}
+
+function createConnectedComponent(baseName: string) {
+  const componentName = getComponentName(baseName);
+  const appStateName = getAppStateName(baseName);
+  const rootAppStatePropName = getRootAppStatePropName(baseName);
+
   return `
 import React from "react";
-import { RootAppState } from "../states/RootAppState";
 import { connect } from "react-redux";
+import { ReactAppContextType, type AppContext } from "src/AppContext";
+import { SiteLayout } from "src/SiteLayout";
+import type { ${appStateName} } from "src/states/${appStateName}";
+import { RootAppState } from "src/states/RootAppState";
+import { reduxStore } from "src/store-config";
 
 type _State = {};
 
 type _Props = {
-    appState: ${ComponentName}AppState;
+  appState: ${appStateName};
 };
 
-class _${ComponentName}Page extends React.Component<_Props, _State> {
-    constructor(props: _Props) {
-        super(props);
-        this.state = {};
-    }
+class _${componentName} extends React.Component<_Props, _State> {
+  static contextType = ReactAppContextType;
+  get _context() {
+    return this.context as AppContext;
+  }
 
-    render(): React.ReactNode {
-        return "TODO: render()"
-    }
+  constructor(props: _Props) {
+    super(props);
+    this.state = {};
+  }
+
+  static isLoading(): boolean {
+    return false;
+  }
+
+  static async fetchData(context: AppContext, params: {}, query: {}): Promise<void> {
+    return new Promise<void>((resolve) => {
+      const unsub = reduxStore.subscribe(() => {
+        if (!_${componentName}.isLoading()) {
+          resolve();
+          unsub();
+          context.loading.setIsLoading(false);
+        }
+      });
+    });
+  }
+
+  async componentDidMount(): Promise<void> {
+    await _${componentName}.fetchData(this._context, {}, {});
+  }
+
+  render(): React.ReactNode {
+    return <SiteLayout>
+      // TODO: Implement render
+    </SiteLayout>;
+  }
 }
 
-export const ${ComponentName}Page = connect<_Props, {}, {}, RootAppState>(
-    (rootAppState: RootAppState) => ({
-        appState: rootAppState.${componentName},
-    })
-)(_${ComponentName}Page);
+export const ${componentName} = connect<_Props, {}, {}, RootAppState>((rootAppState: RootAppState) => ({
+  appState: rootAppState.${rootAppStatePropName},
+}))(_${componentName});
 `;
 }
 
-function createAppState(ComponentName: string) {
+function createAppState(baseName: string) {
+  const appStateName = getAppStateName(baseName);
   return `
 import { AppState, PartialProps } from "react-appevent-redux";
 
-export class ${ComponentName}AppState extends AppState {
-    constructor(props: PartialProps<${ComponentName}AppState>) {
+export class ${appStateName} extends AppState {
+    constructor(props: PartialProps<${appStateName}>) {
         super();
         this.assignProps(props);
     }
