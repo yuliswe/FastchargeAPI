@@ -1,4 +1,5 @@
 import { AppState, PartialProps } from "react-appevent-redux";
+import { Error404AppState } from "src/states/Error404AppState";
 import { AccountAppState } from "./AccountAppState";
 import { AppDetailAppState } from "./AppDetailAppState";
 import { AppSearchResultState } from "./AppSearchResultState";
@@ -21,6 +22,7 @@ export class RootAppState extends AppState {
   myAppDetail = new MyAppDetailAppState({});
   subscriptionDetail = new SubscriptionDetailAppState({});
   terms = new TermsAppState({});
+  error404 = new Error404AppState({});
 
   constructor(props: PartialProps<RootAppState>) {
     super();
