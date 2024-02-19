@@ -76,7 +76,7 @@ type _Props = {
   appState: ${appStateName};
 };
 
-class _${componentName} extends React.Component<_Props, _State> {
+class _${componentName} extends React.PureComponent<_Props, _State> {
   static contextType = ReactAppContextType;
   get _context() {
     return this.context as AppContext;
