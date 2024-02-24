@@ -2,8 +2,8 @@ import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { SES } from "aws-sdk";
 import { Chalk } from "chalk";
 import Stripe from "stripe";
-import { LambdaEventV2, LambdaHandlerV2, getCurrentUserFromEvent } from "../utils/LambdaContext";
-import { getStripeClient } from "../utils/stripe-client";
+import { LambdaEventV2, LambdaHandlerV2, getCurrentUserFromEvent } from "utils/LambdaContext";
+import { getStripeClient } from "utils/stripe-client";
 
 const chalk = new Chalk({ level: 3 });
 const ses = new SES({ region: "us-east-1" });

@@ -1,7 +1,7 @@
-import { RequestContext } from "@/RequestContext";
-import { PricingAvailability, PricingCreateProps } from "@/database/models/Pricing";
-import { AppPK } from "@/pks/AppPK";
-import { createTestApp } from "./App";
+import { RequestContext } from "@/src/RequestContext";
+import { PricingAvailability, PricingCreateProps } from "@/src/database/models/Pricing";
+import { AppPK } from "@/src/pks/AppPK";
+import { createTestApp } from "tests/test-data/App";
 
 export async function createTestPricing(
   context: RequestContext,

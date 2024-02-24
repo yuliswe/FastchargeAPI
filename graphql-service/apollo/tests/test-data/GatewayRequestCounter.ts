@@ -1,7 +1,7 @@
-import { RequestContext } from "@/RequestContext";
-import { GatewayRequestCounterCreateProps } from "@/database/models/GatewayRequestCounter";
-import { UserPK } from "@/pks/UserPK";
-import { createTestUser } from "./User";
+import { RequestContext } from "@/src/RequestContext";
+import { GatewayRequestCounterCreateProps } from "@/src/database/models/GatewayRequestCounter";
+import { UserPK } from "@/src/pks/UserPK";
+import { createTestUser } from "tests/test-data/User";
 
 export async function createTestGatewayRequestCounter(
   context: RequestContext,

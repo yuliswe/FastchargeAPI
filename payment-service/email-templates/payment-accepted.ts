@@ -1,6 +1,6 @@
-import { baseDomain } from "@/runtime-config";
+import { baseDomain } from "@/src/runtime-config";
 import Handlebars from "handlebars";
-import paymentAcceptedEmailTemplate from "./payment-accepted.hbs";
+import paymentAcceptedEmailTemplate from "email-templates/payment-accepted.hbs";
 
 export type PaymentAcceptedEmailTemplateProps = {
   userName: string;

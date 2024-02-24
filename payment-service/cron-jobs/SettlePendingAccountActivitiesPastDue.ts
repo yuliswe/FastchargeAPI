@@ -1,10 +1,10 @@
 import { EventBridgeEvent } from "aws-lambda";
 import chalk from "chalk";
 
-import { AccountActivityStatus } from "@/__generated__/resolvers-types";
-import { AccountActivityTableIndex } from "@/database/models/AccountActivity";
-import { settleAccountActivitiesOnSQS } from "@/functions/account";
-import { safelySettlePromisesInBatches } from "@/functions/promise";
+import { AccountActivityStatus } from "@/src/__generated__/resolvers-types";
+import { AccountActivityTableIndex } from "@/src/database/models/AccountActivity";
+import { settleAccountActivitiesOnSQS } from "@/src/functions/account";
+import { safelySettlePromisesInBatches } from "@/src/functions/promise";
 import { baseRequestContext as context } from "@/tests/test-utils/test-utils";
 
 type EventDetail = {};

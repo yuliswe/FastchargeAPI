@@ -2,13 +2,13 @@
  * You can use this file as a template for your Lambda function.
  */
 
-import { createDefaultContextBatched } from "@/RequestContext";
-import { UserTableIndex } from "@/database/models/User";
+import { createDefaultContextBatched } from "@/src/RequestContext";
+import { UserTableIndex } from "@/src/database/models/User";
 import { APIGatewayProxyStructuredResultV2, Context as LambdaContext } from "aws-lambda";
 import { Chalk } from "chalk";
 import Stripe from "stripe";
-import { LambdaCallbackV2, LambdaEventV2, LambdaHandlerV2 } from "../utils/LambdaContext";
-import { parseStripeWebhookEvent } from "../utils/stripe-client";
+import { LambdaCallbackV2, LambdaEventV2, LambdaHandlerV2 } from "utils/LambdaContext";
+import { parseStripeWebhookEvent } from "utils/stripe-client";
 
 const chalk = new Chalk({ level: 3 });
 const batched = createDefaultContextBatched();

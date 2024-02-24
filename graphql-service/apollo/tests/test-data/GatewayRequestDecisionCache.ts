@@ -1,11 +1,11 @@
-import { RequestContext } from "@/RequestContext";
-import { GatewayRequestDecisionCacheCreateProps } from "@/database/models/GatewayRequestDecisionCache";
-import { AppPK } from "@/pks/AppPK";
-import { PricingPK } from "@/pks/PricingPK";
-import { UserPK } from "@/pks/UserPK";
-import { createTestApp } from "./App";
-import { createTestPricing } from "./Pricing";
-import { createTestUser } from "./User";
+import { RequestContext } from "@/src/RequestContext";
+import { GatewayRequestDecisionCacheCreateProps } from "@/src/database/models/GatewayRequestDecisionCache";
+import { AppPK } from "@/src/pks/AppPK";
+import { PricingPK } from "@/src/pks/PricingPK";
+import { UserPK } from "@/src/pks/UserPK";
+import { createTestApp } from "tests/test-data/App";
+import { createTestPricing } from "tests/test-data/Pricing";
+import { createTestUser } from "tests/test-data/User";
 
 export async function createTestGatewayRequestDecisionCache(
   context: RequestContext,

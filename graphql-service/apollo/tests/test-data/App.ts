@@ -1,8 +1,8 @@
-import { RequestContext } from "@/RequestContext";
-import { AppCreateProps } from "@/database/models/App";
-import { UserPK } from "@/pks/UserPK";
+import { RequestContext } from "@/src/RequestContext";
+import { AppCreateProps } from "@/src/database/models/App";
+import { UserPK } from "@/src/pks/UserPK";
+import { createTestUser } from "@/tests/test-data/User";
 import * as uuid from "uuid";
-import { createTestUser } from "./User";
 
 export async function createTestApp(context: RequestContext, overwrites?: Partial<AppCreateProps>) {
   return context.batched.App.create({

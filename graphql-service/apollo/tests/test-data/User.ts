@@ -1,5 +1,5 @@
-import { RequestContext } from "@/RequestContext";
-import { UserCreateProps } from "@/database/models/User";
+import { RequestContext } from "@/src/RequestContext";
+import { UserCreateProps } from "@/src/database/models/User";
 import { MD5 } from "object-hash";
 import * as uuid from "uuid";
 

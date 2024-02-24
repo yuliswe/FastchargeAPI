@@ -1,9 +1,9 @@
-import { Secret } from "@/database/models/Secret";
-import { User } from "@/database/models/User";
-import { SecretPK } from "@/pks/SecretPK";
+import { Secret } from "@/src/database/models/Secret";
+import { User } from "@/src/database/models/User";
+import { SecretPK } from "@/src/pks/SecretPK";
+import { graphql } from "@/src/typed-graphql";
 import { baseRequestContext as context, getOrCreateTestUser } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
-import { graphql } from "@/typed-graphql";
 import * as uuid from "uuid";
 
 describe("getSecret", () => {

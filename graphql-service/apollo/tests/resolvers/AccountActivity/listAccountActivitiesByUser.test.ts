@@ -1,12 +1,12 @@
-import { AccountActivity } from "@/database/models/AccountActivity";
-import { User } from "@/database/models/User";
-import { AccountActivityPK } from "@/pks/AccountActivityPK";
-import { UserPK } from "@/pks/UserPK";
+import { AccountActivity } from "@/src/database/models/AccountActivity";
+import { User } from "@/src/database/models/User";
+import { AccountActivityPK } from "@/src/pks/AccountActivityPK";
+import { UserPK } from "@/src/pks/UserPK";
+import { graphql } from "@/src/typed-graphql";
 import { createTestAccountActivity } from "@/tests/test-data/AccountActivity";
 import { createTestUser } from "@/tests/test-data/User";
 import { baseRequestContext as context, getGraphQLDataOrError } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
-import { graphql } from "@/typed-graphql";
 
 describe("listAccountActivitiesByUser", () => {
   let testUser: User;

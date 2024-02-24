@@ -5,19 +5,19 @@
 
 projects:
   operations:
-    schema: "./__generated__/Public.final.graphql"
+    schema: "./src/__generated__/Public.final.graphql"
     documents:
-      - "./cron-jobs/*.ts"
-      - "./functions/*.ts"
-      - "./resolvers/*.ts"
-      - "./pks/*.ts"
+      - "./src/cron-jobs/*.ts"
+      - "./src/functions/*.ts"
+      - "./src/resolvers/*.ts"
+      - "./src/pks/*.ts"
       - "./tests/resolvers/*/*.ts"
       - "./tests/resolvers/*/*.graphql"
     extensions:
       codegen:
         generates:
           # Specify where our generated types should live.
-          ./__generated__/gql/:
+          src/__generated__/gql/:
             preset: client
             config:
               # namingConvention: keep
@@ -26,8 +26,8 @@ projects:
     extensions:
       codegen:
         generates:
-          ./__generated__/resolvers-types.ts:
-            schema: "./__generated__/Public.final.graphql"
+          src/__generated__/resolvers-types.ts:
+            schema: "src/__generated__/Public.final.graphql"
             plugins:
               - "typescript"
               - "typescript-resolvers"
@@ -46,38 +46,38 @@ projects:
               customResolveInfo: "@apollo/cache-control-types#GraphQLResolveInfoWithCacheControl"
               # defaultMapper: "{[k in keyof {T}]: {T}[k] | (() => {T})}"
               mappers:
-                App: ../database/models/App#App
-                AppTag: ../database/models/AppTag#AppTag
-                User: ../database/models/User#User
-                Endpoint: ../database/models/Endpoint#Endpoint
-                Pricing: ../database/models/Pricing#Pricing
-                Subscribe: ../database/models/Subscription#Subscription
-                UsageLog: ../database/models/UsageLog#UsageLog
-                StripePaymentAccept: ../database/models/StripePaymentAccept#StripePaymentAccept
-                StripeTransfer: ../database/models/StripeTransfer#StripeTransfer
-                AccountActivity: ../database/models/AccountActivity#AccountActivity
-                AccountHistory: ../database/models/AccountHistory#AccountHistory
-                UsageSummary: ../database/models/UsageSummary#UsageSummary
-                Secret: ../database/models/Secret#Secret
-                GatewayRequestCounter: ../database/models/GatewayRequestCounter#GatewayRequestCounter
-                GatewayRequestDecisionCache: ../database/models/GatewayRequestDecisionCache#GatewayRequestDecisionCache
-                UserAppToken: ../database/models/UserAppToken#UserAppToken
-                SiteMetaData: ../database/models/SiteMetaData#SiteMetaData
+                App: "@/src/database/models/App#App"
+                AppTag: "@/src/database/models/AppTag#AppTag"
+                User: "@/src/database/models/User#User"
+                Endpoint: "@/src/database/models/Endpoint#Endpoint"
+                Pricing: "@/src/database/models/Pricing#Pricing"
+                Subscribe: "@/src/database/models/Subscription#Subscription"
+                UsageLog: "@/src/database/models/UsageLog#UsageLog"
+                StripePaymentAccept: "@/src/database/models/StripePaymentAccept#StripePaymentAccept"
+                StripeTransfer: "@/src/database/models/StripeTransfer#StripeTransfer"
+                AccountActivity: "@/src/database/models/AccountActivity#AccountActivity"
+                AccountHistory: "@/src/database/models/AccountHistory#AccountHistory"
+                UsageSummary: "@/src/database/models/UsageSummary#UsageSummary"
+                Secret: "@/src/database/models/Secret#Secret"
+                GatewayRequestCounter: "@/src/database/models/GatewayRequestCounter#GatewayRequestCounter"
+                GatewayRequestDecisionCache: "@/src/database/models/GatewayRequestDecisionCache#GatewayRequestDecisionCache"
+                UserAppToken: "@/src/database/models/UserAppToken#UserAppToken"
+                SiteMetaData: "@/src/database/models/SiteMetaData#SiteMetaData"
               enumValues:
-                GatewayMode: ../__generated__/gql/graphql#GatewayMode
-                PricingAvailability: ../__generated__/gql/graphql#PricingAvailability
-                HttpMethod: ../__generated__/gql/graphql#HttpMethod
-                AccountActivityReason: ../__generated__/gql/graphql#AccountActivityReason
-                AccountActivityStatus: ../__generated__/gql/graphql#AccountActivityStatus
-                AccountActivityType: ../__generated__/gql/graphql#AccountActivityType
-                SiteMetaDataKey: ../__generated__/gql/graphql#SiteMetaDataKey
-                StripeTransferStatus: ../__generated__/gql/graphql#StripeTransferStatus
-                UsageLogStatus: ../__generated__/gql/graphql#UsageLogStatus
-                UsageSummaryStatus: ../__generated__/gql/graphql#UsageSummaryStatus
-                StripePaymentAcceptStatus: ../__generated__/gql/graphql#StripePaymentAcceptStatus
-                Currency: ../__generated__/gql/graphql#Currency
-                AppVisibility: ../__generated__/gql/graphql#AppVisibility
-                GatewayDecisionResponseReason: ../__generated__/gql/graphql#GatewayDecisionResponseReason
+                GatewayMode: "@/src/__generated__/gql/graphql#GatewayMode"
+                PricingAvailability: "@/src/__generated__/gql/graphql#PricingAvailability"
+                HttpMethod: "@/src/__generated__/gql/graphql#HttpMethod"
+                AccountActivityReason: "@/src/__generated__/gql/graphql#AccountActivityReason"
+                AccountActivityStatus: "@/src/__generated__/gql/graphql#AccountActivityStatus"
+                AccountActivityType: "@/src/__generated__/gql/graphql#AccountActivityType"
+                SiteMetaDataKey: "@/src/__generated__/gql/graphql#SiteMetaDataKey"
+                StripeTransferStatus: "@/src/__generated__/gql/graphql#StripeTransferStatus"
+                UsageLogStatus: "@/src/__generated__/gql/graphql#UsageLogStatus"
+                UsageSummaryStatus: "@/src/__generated__/gql/graphql#UsageSummaryStatus"
+                StripePaymentAcceptStatus: "@/src/__generated__/gql/graphql#StripePaymentAcceptStatus"
+                Currency: "@/src/__generated__/gql/graphql#Currency"
+                AppVisibility: "@/src/__generated__/gql/graphql#AppVisibility"
+                GatewayDecisionResponseReason: "@/src/__generated__/gql/graphql#GatewayDecisionResponseReason"
               scalars:
                 Email: string
                 Timestamp: number

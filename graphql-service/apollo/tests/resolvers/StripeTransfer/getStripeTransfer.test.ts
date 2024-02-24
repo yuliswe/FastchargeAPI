@@ -1,9 +1,10 @@
-import { StripeTransferStatus } from "@/__generated__/gql/graphql";
-import { StripeTransfer } from "@/database/models/StripeTransfer";
-import { User } from "@/database/models/User";
-import { Can } from "@/permissions";
-import { StripeTransferPK } from "@/pks/StripeTransferPK";
-import { UserPK } from "@/pks/UserPK";
+import { StripeTransferStatus } from "@/src/__generated__/gql/graphql";
+import { StripeTransfer } from "@/src/database/models/StripeTransfer";
+import { User } from "@/src/database/models/User";
+import { Can } from "@/src/permissions";
+import { StripeTransferPK } from "@/src/pks/StripeTransferPK";
+import { UserPK } from "@/src/pks/UserPK";
+import { graphql } from "@/src/typed-graphql";
 import {
   baseRequestContext as context,
   getAdminUser,
@@ -12,7 +13,6 @@ import {
   sortGraphQLErrors,
 } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
-import { graphql } from "@/typed-graphql";
 import * as uuid from "uuid";
 
 describe("getStripeTransfer", () => {

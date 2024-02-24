@@ -1,6 +1,6 @@
-import { User } from "@/database/models/User";
-import { incrementOrCreateRequestCounter } from "@/functions/gateway";
-import { UserPK } from "@/pks/UserPK";
+import { User } from "@/src/database/models/User";
+import { incrementOrCreateRequestCounter } from "@/src/functions/gateway";
+import { UserPK } from "@/src/pks/UserPK";
 import { baseRequestContext as context, getOrCreateTestUser } from "@/tests/test-utils/test-utils";
 
 describe("incrementOrCreateRequestCounter", () => {

@@ -1,13 +1,13 @@
-import * as sqsClientModule from "@/sqsClient";
+import { setUpTraceConsole } from "@/src/console";
+import * as sqsClientModule from "@/src/sqsClient";
 import { mockSQS } from "@/tests/test-utils/MockSQS";
-import { ApolloClient, InMemoryCache } from "@apollo/client";
+import { ApolloClient, InMemoryCache } from "@apollo/client/core";
 import { HttpLink } from "@apollo/client/link/http";
 import { ApolloServer } from "@apollo/server";
 import { afterEach, jest } from "@jest/globals";
 import { RequestInit, Response } from "node-fetch";
-import { setUpTraceConsole } from "../console";
-import { extendJest } from "./jest-extend";
-import { handSendMessageCommandData } from "./test-utils/testGQLClients";
+import { extendJest } from "@/tests/jest-extend";
+import { handSendMessageCommandData } from "@/tests/test-utils/testGQLClients";
 
 extendJest();
 

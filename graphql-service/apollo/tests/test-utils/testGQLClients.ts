@@ -1,16 +1,16 @@
-import { User } from "@/database/models/User";
-import { LambdaResult, callOrCreateHandler } from "@/lambdaHandlerUtils";
-import { SQSQueueName, getUrlFromSQSQueueName } from "@/sqsClient";
-import { callOrCreateSQSHandler } from "@/sqsHandlerUtils";
+import { User } from "@/src/database/models/User";
+import { LambdaResult, callOrCreateHandler } from "@/src/lambdaHandlerUtils";
+import { UserPK } from "@/src/pks/UserPK";
+import { SQSQueueName, getUrlFromSQSQueueName } from "@/src/sqsClient";
+import { callOrCreateSQSHandler } from "@/src/sqsHandlerUtils";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient } from "@apollo/client/core";
 import { HttpLink } from "@apollo/client/link/http";
 import { SendMessageCommandInput } from "@aws-sdk/client-sqs";
 import { Context as LambdaContext } from "aws-lambda";
 import { RequestInit, Response } from "node-fetch";
-import { UserPK } from "../../pks/UserPK";
-import { mockSQS } from "./MockSQS";
-import { exampleLambdaEvent } from "./example-lambda-event";
+import { mockSQS } from "@/tests/test-utils/MockSQS";
+import { exampleLambdaEvent } from "@/tests/test-utils/example-lambda-event";
 
 const cache = new InMemoryCache();
 

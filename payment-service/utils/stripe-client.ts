@@ -1,6 +1,6 @@
-import { getParameterFromAWSSystemsManager } from "@/functions/aws";
+import { getParameterFromAWSSystemsManager } from "@/src/functions/aws";
 import { Stripe } from "stripe";
-import { LambdaEventV2 } from "./LambdaContext";
+import { LambdaEventV2 } from "utils/LambdaContext";
 
 let stripeClient: Stripe | null = null;
 export async function getStripeClient() {

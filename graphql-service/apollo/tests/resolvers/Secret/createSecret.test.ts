@@ -1,7 +1,7 @@
-import { User } from "@/database/models/User";
+import { User } from "@/src/database/models/User";
+import { graphql } from "@/src/typed-graphql";
 import { baseRequestContext as context, getOrCreateTestUser } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
-import { graphql } from "@/typed-graphql";
 import * as uuid from "uuid";
 
 describe("createSecret", () => {

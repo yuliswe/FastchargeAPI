@@ -1,10 +1,11 @@
-import { PricingAvailability, TestGetPricingByPkQuery } from "@/__generated__/gql/graphql";
-import { App } from "@/database/models/App";
-import { Pricing } from "@/database/models/Pricing";
-import { User } from "@/database/models/User";
-import { AppPK } from "@/pks/AppPK";
-import { PricingPK } from "@/pks/PricingPK";
-import { UserPK } from "@/pks/UserPK";
+import { PricingAvailability, TestGetPricingByPkQuery } from "@/src/__generated__/gql/graphql";
+import { App } from "@/src/database/models/App";
+import { Pricing } from "@/src/database/models/Pricing";
+import { User } from "@/src/database/models/User";
+import { AppPK } from "@/src/pks/AppPK";
+import { PricingPK } from "@/src/pks/PricingPK";
+import { UserPK } from "@/src/pks/UserPK";
+import { graphql } from "@/src/typed-graphql";
 import {
   baseRequestContext as context,
   getOrCreateTestUser,
@@ -12,7 +13,6 @@ import {
   sortGraphQLErrors,
 } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
-import { graphql } from "@/typed-graphql";
 import { v4 as uuidv4 } from "uuid";
 
 describe("getPricing", () => {

@@ -1,16 +1,16 @@
-import { startStandaloneServer } from "@apollo/server/standalone";
-import chalk from "chalk";
-import { IncomingMessage } from "http";
-import { RequestContext, createDefaultContextBatched } from "./RequestContext";
-import { setUpTraceConsole } from "./console";
+import { RequestContext, createDefaultContextBatched } from "@/src/RequestContext";
+import { setUpTraceConsole } from "@/src/console";
 import {
   getCurrentUser,
   getIsAdminUser,
   getIsServiceRequest,
   normalizeHeaders,
   printWarnings,
-} from "./lambdaHandlerUtils";
-import { getServer } from "./server";
+} from "@/src/lambdaHandlerUtils";
+import { getServer } from "@/src/server";
+import { startStandaloneServer } from "@apollo/server/standalone";
+import chalk from "chalk";
+import { IncomingMessage } from "http";
 
 if (process.env.TRACE_CONSOLE === "1") {
   setUpTraceConsole();

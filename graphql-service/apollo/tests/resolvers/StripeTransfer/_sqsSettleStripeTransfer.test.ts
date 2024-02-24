@@ -1,10 +1,11 @@
-import { StripeTransferStatus } from "@/__generated__/resolvers-types";
-import { StripeTransfer } from "@/database/models/StripeTransfer";
-import { User } from "@/database/models/User";
-import { getSQSDedupIdForSettleStripeTransfer } from "@/functions/transfer";
-import { StripeTransferPK } from "@/pks/StripeTransferPK";
-import { UserPK } from "@/pks/UserPK";
-import { SQSQueueName } from "@/sqsClient";
+import { StripeTransferStatus } from "@/src/__generated__/resolvers-types";
+import { StripeTransfer } from "@/src/database/models/StripeTransfer";
+import { User } from "@/src/database/models/User";
+import { getSQSDedupIdForSettleStripeTransfer } from "@/src/functions/transfer";
+import { StripeTransferPK } from "@/src/pks/StripeTransferPK";
+import { UserPK } from "@/src/pks/UserPK";
+import { SQSQueueName } from "@/src/sqsClient";
+import { graphql } from "@/src/typed-graphql";
 import {
   addMoneyForUser,
   baseRequestContext as context,
@@ -13,7 +14,6 @@ import {
   simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils/test-utils";
 import { getClientForDirectSQSCall, getTestGQLClient } from "@/tests/test-utils/testGQLClients";
-import { graphql } from "@/typed-graphql";
 import * as uuid from "uuid";
 
 describe("_sqsSettleStripeTransfer", () => {

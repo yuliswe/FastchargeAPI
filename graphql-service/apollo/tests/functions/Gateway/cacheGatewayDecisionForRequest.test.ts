@@ -1,16 +1,16 @@
-import { GatewayDecisionResponseReason, PricingAvailability } from "@/__generated__/gql/graphql";
-import { App } from "@/database/models/App";
-import { GatewayRequestCounter } from "@/database/models/GatewayRequestCounter";
-import { GatewayRequestDecisionCache } from "@/database/models/GatewayRequestDecisionCache";
-import { Pricing } from "@/database/models/Pricing";
-import { User } from "@/database/models/User";
+import { GatewayDecisionResponseReason, PricingAvailability } from "@/src/__generated__/gql/graphql";
+import { App } from "@/src/database/models/App";
+import { GatewayRequestCounter } from "@/src/database/models/GatewayRequestCounter";
+import { GatewayRequestDecisionCache } from "@/src/database/models/GatewayRequestDecisionCache";
+import { Pricing } from "@/src/database/models/Pricing";
+import { User } from "@/src/database/models/User";
 
-import * as gatewayFunctions from "@/functions/gateway";
-import { cacheGatewayDecisionForRequest } from "@/functions/gateway";
-import { AppPK } from "@/pks/AppPK";
-import { PricingPK } from "@/pks/PricingPK";
-import { UserPK } from "@/pks/UserPK";
-import { GatewayDecisionResponse } from "@/resolvers/Gateway";
+import * as gatewayFunctions from "@/src/functions/gateway";
+import { cacheGatewayDecisionForRequest } from "@/src/functions/gateway";
+import { AppPK } from "@/src/pks/AppPK";
+import { PricingPK } from "@/src/pks/PricingPK";
+import { UserPK } from "@/src/pks/UserPK";
+import { GatewayDecisionResponse } from "@/src/resolvers/Gateway";
 import { createTestApp } from "@/tests/test-data/App";
 import { createTestPricing } from "@/tests/test-data/Pricing";
 import { createTestUser } from "@/tests/test-data/User";
@@ -56,14 +56,14 @@ describe("cacheGatewayDecisionForRequest", () => {
   }) {
     return {
       response: {
-        allowed: overwrite?.response?.allowed ?? false,
+        allowed: overwrite.response.allowed ?? false,
         reason: GatewayDecisionResponseReason.Unknown,
         pricingPK: PricingPK.stringify(testPricing),
         userPK: UserPK.stringify(testRequestUser),
       } as GatewayDecisionResponse,
       app: AppPK.stringify(testApp),
       requester: UserPK.stringify(testRequestUser),
-      gatewayDecisionCache: overwrite?.gatewayDecisionCache ?? null,
+      gatewayDecisionCache: overwrite.gatewayDecisionCache ?? null,
       globalRequestCounter: testGlobalRequestCounter,
       pricing: PricingPK.stringify(testPricing),
     };

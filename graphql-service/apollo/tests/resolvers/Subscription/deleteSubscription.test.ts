@@ -1,19 +1,19 @@
-import { App, AppVisibility, GatewayMode } from "@/database/models/App";
-import { Pricing, PricingAvailability } from "@/database/models/Pricing";
-import { Subscription } from "@/database/models/Subscription";
-import { User } from "@/database/models/User";
-import { Can } from "@/permissions";
-import { AppPK } from "@/pks/AppPK";
-import { PricingPK } from "@/pks/PricingPK";
-import { SubscriptionPK } from "@/pks/SubscriptionPK";
-import { UserPK } from "@/pks/UserPK";
+import { App, AppVisibility, GatewayMode } from "@/src/database/models/App";
+import { Pricing, PricingAvailability } from "@/src/database/models/Pricing";
+import { Subscription } from "@/src/database/models/Subscription";
+import { User } from "@/src/database/models/User";
+import { Can } from "@/src/permissions";
+import { AppPK } from "@/src/pks/AppPK";
+import { PricingPK } from "@/src/pks/PricingPK";
+import { SubscriptionPK } from "@/src/pks/SubscriptionPK";
+import { UserPK } from "@/src/pks/UserPK";
+import { graphql } from "@/src/typed-graphql";
 import {
   baseRequestContext as context,
   getOrCreateTestUser,
   simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
-import { graphql } from "@/typed-graphql";
 import * as uuid from "uuid";
 
 describe("deleteSubscription", () => {

@@ -1,17 +1,18 @@
-import { AccountActivityReason, AccountActivityType, StripeTransferStatus } from "@/__generated__/resolvers-types";
-import { AccountActivity } from "@/database/models/AccountActivity";
-import { App } from "@/database/models/App";
-import { Pricing } from "@/database/models/Pricing";
-import { StripeTransfer } from "@/database/models/StripeTransfer";
-import { UsageSummary } from "@/database/models/UsageSummary";
-import { User } from "@/database/models/User";
-import { Can } from "@/permissions";
-import { AccountActivityPK } from "@/pks/AccountActivityPK";
-import { AppPK } from "@/pks/AppPK";
-import { PricingPK } from "@/pks/PricingPK";
-import { StripeTransferPK } from "@/pks/StripeTransferPK";
-import { UsageSummaryPK } from "@/pks/UsageSummaryPK";
-import { UserPK } from "@/pks/UserPK";
+import { AccountActivityReason, AccountActivityType, StripeTransferStatus } from "@/src/__generated__/resolvers-types";
+import { AccountActivity } from "@/src/database/models/AccountActivity";
+import { App } from "@/src/database/models/App";
+import { Pricing } from "@/src/database/models/Pricing";
+import { StripeTransfer } from "@/src/database/models/StripeTransfer";
+import { UsageSummary } from "@/src/database/models/UsageSummary";
+import { User } from "@/src/database/models/User";
+import { Can } from "@/src/permissions";
+import { AccountActivityPK } from "@/src/pks/AccountActivityPK";
+import { AppPK } from "@/src/pks/AppPK";
+import { PricingPK } from "@/src/pks/PricingPK";
+import { StripeTransferPK } from "@/src/pks/StripeTransferPK";
+import { UsageSummaryPK } from "@/src/pks/UsageSummaryPK";
+import { UserPK } from "@/src/pks/UserPK";
+import { graphql } from "@/src/typed-graphql";
 import {
   baseRequestContext as context,
   getOrCreateTestUser,
@@ -19,7 +20,6 @@ import {
   sortGraphQLErrors,
 } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
-import { graphql } from "@/typed-graphql";
 import { v4 as uuidv4 } from "uuid";
 
 describe("query AccountActivity", () => {

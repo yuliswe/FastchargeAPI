@@ -1,7 +1,8 @@
-import { StripePaymentAccept } from "@/database/models/StripePaymentAccept";
-import { User } from "@/database/models/User";
-import { StripePaymentAcceptPK } from "@/pks/StripePaymentAccept";
-import { UserPK } from "@/pks/UserPK";
+import { StripePaymentAccept } from "@/src/database/models/StripePaymentAccept";
+import { User } from "@/src/database/models/User";
+import { StripePaymentAcceptPK } from "@/src/pks/StripePaymentAccept";
+import { UserPK } from "@/src/pks/UserPK";
+import { graphql } from "@/src/typed-graphql";
 import {
   baseRequestContext as context,
   getAdminUser,
@@ -9,7 +10,6 @@ import {
   simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
-import { graphql } from "@/typed-graphql";
 import * as uuid from "uuid";
 
 describe("getStripePaymentAcceptByStripeSessionId", () => {

@@ -1,8 +1,9 @@
-import { AccountActivityStatus, AccountActivityType } from "@/__generated__/resolvers-types";
-import { User } from "@/database/models/User";
-import { AccountActivityPK } from "@/pks/AccountActivityPK";
-import { UserPK } from "@/pks/UserPK";
-import { SQSQueueName } from "@/sqsClient";
+import { AccountActivityStatus, AccountActivityType } from "@/src/__generated__/resolvers-types";
+import { User } from "@/src/database/models/User";
+import { AccountActivityPK } from "@/src/pks/AccountActivityPK";
+import { UserPK } from "@/src/pks/UserPK";
+import { SQSQueueName } from "@/src/sqsClient";
+import { graphql } from "@/src/typed-graphql";
 import { createTestAccountActivity } from "@/tests/test-data/AccountActivity";
 import { createTestUser } from "@/tests/test-data/User";
 import {
@@ -11,7 +12,6 @@ import {
   simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils/test-utils";
 import { getClientForDirectSQSCall, getTestGQLClient } from "@/tests/test-utils/testGQLClients";
-import { graphql } from "@/typed-graphql";
 
 let testUser: User;
 

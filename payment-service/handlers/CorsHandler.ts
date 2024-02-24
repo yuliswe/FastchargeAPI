@@ -4,7 +4,7 @@
 
 import { Context as LambdaContext, APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { Chalk } from "chalk";
-import { LambdaCallbackV2, LambdaEventV2, LambdaHandlerV2 } from "../utils/LambdaContext";
+import { LambdaCallbackV2, LambdaEventV2, LambdaHandlerV2 } from "utils/LambdaContext";
 
 const chalk = new Chalk({ level: 3 });
 

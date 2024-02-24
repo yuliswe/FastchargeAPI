@@ -1,18 +1,16 @@
-import { createDefaultContextBatched } from "@/RequestContext";
-import { App } from "@/database/models/App";
-import { FreeQuotaUsage } from "@/database/models/FreeQuotaUsage";
-import { Pricing } from "@/database/models/Pricing";
-import { User, UserTableIndex } from "@/database/models/User";
-import { PK } from "@/database/utils";
-import { getUserBalance } from "@/functions/account";
-import { UserPK } from "@/pks/UserPK";
-import { ApolloError } from "@apollo/client";
-import { GraphQLErrors } from "@apollo/client/errors";
+import { RequestContext, createDefaultContextBatched } from "@/src/RequestContext";
+import { App } from "@/src/database/models/App";
+import { FreeQuotaUsage } from "@/src/database/models/FreeQuotaUsage";
+import { Pricing } from "@/src/database/models/Pricing";
+import { User, UserTableIndex } from "@/src/database/models/User";
+import { PK } from "@/src/database/utils";
+import { getUserBalance } from "@/src/functions/account";
+import { createUserWithEmail } from "@/src/functions/user";
+import { AppPK } from "@/src/pks/AppPK";
+import { UserPK } from "@/src/pks/UserPK";
+import { ApolloError, GraphQLErrors } from "@apollo/client/errors";
 import Decimal from "decimal.js-light";
 import { v4 as uuid4 } from "uuid";
-import { RequestContext } from "../../RequestContext";
-import { createUserWithEmail } from "../../functions/user";
-import { AppPK } from "../../pks/AppPK";
 
 export const baseRequestContext: RequestContext = {
   batched: createDefaultContextBatched(),
@@ -132,7 +130,7 @@ export function simplifyGraphQLError(errors: GraphQLErrors) {
   for (const e of errors) {
     simpleErrors.push({
       message: e.message,
-      code: e.extensions?.code as string,
+      code: e.extensions.code as string,
       path: e.path?.map((x) => x.toString()).join(".") ?? "",
     });
   }

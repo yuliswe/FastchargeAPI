@@ -1,14 +1,14 @@
-import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
-import { App } from "@/database/models/App";
-import { User } from "@/database/models/User";
-import { Can } from "@/permissions";
-import { AppPK } from "@/pks/AppPK";
-import { UserPK } from "@/pks/UserPK";
+import { RequestContext, createDefaultContextBatched } from "@/src/RequestContext";
+import { App } from "@/src/database/models/App";
+import { User } from "@/src/database/models/User";
+import { Can } from "@/src/permissions";
+import { AppPK } from "@/src/pks/AppPK";
+import { UserPK } from "@/src/pks/UserPK";
+import { graphql } from "@/src/typed-graphql";
 import { createTestApp } from "@/tests/test-data/App";
 import { createTestUser } from "@/tests/test-data/User";
 import { getGraphQLDataOrError } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
-import { graphql } from "@/typed-graphql";
 
 const context: RequestContext = {
   batched: createDefaultContextBatched(),
@@ -76,7 +76,7 @@ describe("getUser", () => {
         pk: UserPK.stringify(testUser),
       },
     });
-    expect(result.data?.getUser).toMatchObject({
+    expect(result.data.getUser).toMatchObject({
       __typename: "User",
       pk: expect.stringContaining("user_"),
     });

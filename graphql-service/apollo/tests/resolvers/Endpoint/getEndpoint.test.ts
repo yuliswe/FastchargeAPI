@@ -1,10 +1,11 @@
-import { HttpMethod } from "@/__generated__/resolvers-types";
-import { App } from "@/database/models/App";
-import { Endpoint } from "@/database/models/Endpoint";
-import { User } from "@/database/models/User";
-import { AppPK } from "@/pks/AppPK";
-import { EndpointPK } from "@/pks/EndpointPK";
-import { UserPK } from "@/pks/UserPK";
+import { HttpMethod } from "@/src/__generated__/resolvers-types";
+import { App } from "@/src/database/models/App";
+import { Endpoint } from "@/src/database/models/Endpoint";
+import { User } from "@/src/database/models/User";
+import { AppPK } from "@/src/pks/AppPK";
+import { EndpointPK } from "@/src/pks/EndpointPK";
+import { UserPK } from "@/src/pks/UserPK";
+import { graphql } from "@/src/typed-graphql";
 import {
   baseRequestContext as context,
   getOrCreateTestUser,
@@ -12,7 +13,6 @@ import {
   sortGraphQLErrors,
 } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
-import { graphql } from "@/typed-graphql";
 import * as uuid from "uuid";
 
 describe("getEndpoint", () => {

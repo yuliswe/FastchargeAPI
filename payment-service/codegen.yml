@@ -3,7 +3,7 @@
 documents:
   - "./handlers/**/*.ts"
   - "./cron-jobs/**/*.ts"
-schema: "../graphql-service/apollo/__generated__/Public.final.graphql"
+schema: "node_modules/graphql-service-apollo/src/__generated__/Public.final.graphql"
 generates:
   ./__generated__/gql/:
     preset: client

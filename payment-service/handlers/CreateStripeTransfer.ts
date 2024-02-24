@@ -1,8 +1,8 @@
-import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
-import { Currency, SiteMetaDataKey } from "@/__generated__/resolvers-types";
-import { getUserBalance } from "@/functions/account";
-import { UserPK } from "@/pks/UserPK";
-import { SQSQueueName, getSQSClient } from "@/sqsClient";
+import { RequestContext, createDefaultContextBatched } from "@/src/RequestContext";
+import { Currency, SiteMetaDataKey } from "@/src/__generated__/resolvers-types";
+import { getUserBalance } from "@/src/functions/account";
+import { UserPK } from "@/src/pks/UserPK";
+import { SQSQueueName, getSQSClient } from "@/src/sqsClient";
 import { gql } from "@apollo/client";
 import { APIGatewayProxyStructuredResultV2, Context as LambdaContext } from "aws-lambda";
 import { Chalk } from "chalk";
@@ -13,7 +13,7 @@ import {
   LambdaHandlerV2,
   LambdaResultV2,
   getCurrentUserFromEvent,
-} from "../utils/LambdaContext";
+} from "utils/LambdaContext";
 
 const chalk = new Chalk({ level: 3 });
 

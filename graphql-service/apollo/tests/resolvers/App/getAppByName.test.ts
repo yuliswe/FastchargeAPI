@@ -1,13 +1,13 @@
-import { AppVisibility, GatewayMode } from "@/__generated__/gql/graphql";
-import { App } from "@/database/models/App";
-import { User } from "@/database/models/User";
-import { AppPK } from "@/pks/AppPK";
-import { UserPK } from "@/pks/UserPK";
+import { AppVisibility, GatewayMode } from "@/src/__generated__/gql/graphql";
+import { App } from "@/src/database/models/App";
+import { User } from "@/src/database/models/User";
+import { AppPK } from "@/src/pks/AppPK";
+import { UserPK } from "@/src/pks/UserPK";
+import { graphql } from "@/src/typed-graphql";
 import { createTestApp } from "@/tests/test-data/App";
 import { createTestUser } from "@/tests/test-data/User";
 import { baseRequestContext as context, getGraphQLDataOrError } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
-import { graphql } from "@/typed-graphql";
 import { v4 as uuidv4 } from "uuid";
 
 let testAppOwner: User;

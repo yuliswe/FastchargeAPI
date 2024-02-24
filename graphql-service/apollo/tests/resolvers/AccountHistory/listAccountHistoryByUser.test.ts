@@ -1,14 +1,14 @@
-import { AccountHistory } from "@/database/models/AccountHistory";
-import { User } from "@/database/models/User";
-import { AccountHistoryPK } from "@/pks/AccountHistoryPK";
-import { UserPK } from "@/pks/UserPK";
+import { AccountHistory } from "@/src/database/models/AccountHistory";
+import { User } from "@/src/database/models/User";
+import { AccountHistoryPK } from "@/src/pks/AccountHistoryPK";
+import { UserPK } from "@/src/pks/UserPK";
+import { graphql } from "@/src/typed-graphql";
 import {
   baseRequestContext,
   getOrCreateTestUser,
   simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
-import { graphql } from "@/typed-graphql";
 import { v4 as uuidv4 } from "uuid";
 
 const context = baseRequestContext;

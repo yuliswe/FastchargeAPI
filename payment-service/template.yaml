@@ -23,7 +23,7 @@ Parameters:
 Globals:
   Function:
     Tracing: Active
-    Timeout: 1
+    Timeout: 3
     MemorySize: 3008
     Environment:
       Variables:
@@ -150,7 +150,7 @@ Resources:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       FunctionName: !Sub ${AWS::StackName}-SendStripeDashboardLink
-      CodeUri: ./dist
+      CodeUri: ./dist/handlers
       Handler: SendStripeDashboardLink.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
@@ -170,7 +170,7 @@ Resources:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       FunctionName: !Sub ${AWS::StackName}-GetStripeOnBoardLink
-      CodeUri: ./dist
+      CodeUri: ./dist/handlers
       Handler: GetStripeOnBoardLink.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
@@ -190,7 +190,7 @@ Resources:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       FunctionName: !Sub ${AWS::StackName}-AcceptStripePayment
-      CodeUri: ./dist
+      CodeUri: ./dist/handlers
       Handler: AcceptStripePayment.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
@@ -212,7 +212,7 @@ Resources:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       FunctionName: !Sub ${AWS::StackName}-GetStripeCheckoutLink
-      CodeUri: ./dist
+      CodeUri: ./dist/handlers
       Handler: GetStripeCheckoutLink.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
@@ -232,7 +232,7 @@ Resources:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       FunctionName: !Sub ${AWS::StackName}-CreateStripeTransfer
-      CodeUri: ./dist
+      CodeUri: ./dist/handlers
       Handler: CreateStripeTransfer.lambdaHandler
       Runtime: nodejs18.x
       Architectures:
@@ -252,7 +252,7 @@ Resources:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       FunctionName: !Sub ${AWS::StackName}-FinishStripeOnboard
-      CodeUri: ./dist
+      CodeUri: ./dist/handlers
       Handler: FinishStripeOnboard.lambdaHandler
       Runtime: nodejs18.x
       Architectures:

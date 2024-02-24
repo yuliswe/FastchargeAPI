@@ -1,10 +1,11 @@
-import { StripePaymentAcceptStatus } from "@/__generated__/gql/graphql";
-import { StripePaymentAccept } from "@/database/models/StripePaymentAccept";
-import { User } from "@/database/models/User";
-import { getSQSDedupIdForSettleStripePaymentAccept } from "@/functions/payment";
-import { StripePaymentAcceptPK } from "@/pks/StripePaymentAccept";
-import { UserPK } from "@/pks/UserPK";
-import { SQSQueueName } from "@/sqsClient";
+import { StripePaymentAcceptStatus } from "@/src/__generated__/gql/graphql";
+import { StripePaymentAccept } from "@/src/database/models/StripePaymentAccept";
+import { User } from "@/src/database/models/User";
+import { getSQSDedupIdForSettleStripePaymentAccept } from "@/src/functions/payment";
+import { StripePaymentAcceptPK } from "@/src/pks/StripePaymentAccept";
+import { UserPK } from "@/src/pks/UserPK";
+import { SQSQueueName } from "@/src/sqsClient";
+import { graphql } from "@/src/typed-graphql";
 import {
   baseRequestContext as context,
   getOrCreateTestUser,
@@ -12,7 +13,6 @@ import {
   simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils/test-utils";
 import { getClientForDirectSQSCall, getTestGQLClient } from "@/tests/test-utils/testGQLClients";
-import { graphql } from "@/typed-graphql";
 import * as uuid from "uuid";
 
 describe("_sqsSettleStripePaymentAccept", () => {

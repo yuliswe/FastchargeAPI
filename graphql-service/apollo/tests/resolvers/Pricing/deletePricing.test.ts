@@ -1,11 +1,11 @@
-import { graphql } from "@/__generated__/gql";
-import { PricingAvailability } from "@/__generated__/gql/graphql";
-import { App } from "@/database/models/App";
-import { Pricing } from "@/database/models/Pricing";
-import { User } from "@/database/models/User";
-import { AppPK } from "@/pks/AppPK";
-import { PricingPK } from "@/pks/PricingPK";
-import { UserPK } from "@/pks/UserPK";
+import { graphql } from "@/src/__generated__/gql";
+import { PricingAvailability } from "@/src/__generated__/gql/graphql";
+import { App } from "@/src/database/models/App";
+import { Pricing } from "@/src/database/models/Pricing";
+import { User } from "@/src/database/models/User";
+import { AppPK } from "@/src/pks/AppPK";
+import { PricingPK } from "@/src/pks/PricingPK";
+import { UserPK } from "@/src/pks/UserPK";
 import {
   baseRequestContext as context,
   getOrCreateTestUser,
@@ -70,7 +70,7 @@ describe("deletePricing", () => {
         pk: PricingPK.stringify(testPricing),
       },
     });
-    expect(result.data?.getPricing?.deletePricing).toEqual({
+    expect(result.data?.getPricing.deletePricing).toEqual({
       __typename: "Pricing",
       pk: PricingPK.stringify(testPricing),
       name: "test-pricing",

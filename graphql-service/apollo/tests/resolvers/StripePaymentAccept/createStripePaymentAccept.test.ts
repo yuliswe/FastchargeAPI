@@ -1,13 +1,13 @@
-import { User } from "@/database/models/User";
-import { UserPK } from "@/pks/UserPK";
-import { StripePaymentAcceptResolvers } from "@/resolvers/StripePaymentAccept";
+import { User } from "@/src/database/models/User";
+import { UserPK } from "@/src/pks/UserPK";
+import { StripePaymentAcceptResolvers } from "@/src/resolvers/StripePaymentAccept";
+import { graphql } from "@/src/typed-graphql";
 import {
   baseRequestContext as context,
   getOrCreateTestUser,
   simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
-import { graphql } from "@/typed-graphql";
 import * as uuid from "uuid";
 
 const _sqsSettleStripePaymentAcceptSpy = () =>

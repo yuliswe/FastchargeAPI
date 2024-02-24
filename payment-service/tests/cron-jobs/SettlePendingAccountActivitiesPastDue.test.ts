@@ -1,6 +1,6 @@
-import { User } from "@/database/models/User";
-import * as AccountUtils from "@/functions/account";
-import { UserPK } from "@/pks/UserPK";
+import { User } from "@/src/database/models/User";
+import * as AccountUtils from "@/src/functions/account";
+import { UserPK } from "@/src/pks/UserPK";
 import { createTestAccountActivity } from "@/tests/test-data/AccountActivity";
 import { createTestUser } from "@/tests/test-data/User";
 import { baseRequestContext as context } from "@/tests/test-utils/test-utils";
@@ -9,7 +9,7 @@ import { getTestEventBridgeEvent } from "tests/test-data/EventBridge";
 import {
   lambdaHandler as SettlePendingAccountActivitiesPastDueCronjob,
   detailType,
-} from "../../cron-jobs/SettlePendingAccountActivitiesPastDue";
+} from "cron-jobs/SettlePendingAccountActivitiesPastDue";
 
 describe("SettlePendingAccountActivitiesPastDue", () => {
   let testUsers: User[];

@@ -1,15 +1,15 @@
-import { HttpMethod } from "@/__generated__/resolvers-types";
-import { App } from "@/database/models/App";
-import { User } from "@/database/models/User";
-import { AppPK } from "@/pks/AppPK";
-import { UserPK } from "@/pks/UserPK";
+import { HttpMethod } from "@/src/__generated__/resolvers-types";
+import { App } from "@/src/database/models/App";
+import { User } from "@/src/database/models/User";
+import { AppPK } from "@/src/pks/AppPK";
+import { UserPK } from "@/src/pks/UserPK";
+import { graphql } from "@/src/typed-graphql";
 import {
   baseRequestContext as context,
   getOrCreateTestUser,
   simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
-import { graphql } from "@/typed-graphql";
 import * as uuid from "uuid";
 
 const createEndpointMutation = graphql(`

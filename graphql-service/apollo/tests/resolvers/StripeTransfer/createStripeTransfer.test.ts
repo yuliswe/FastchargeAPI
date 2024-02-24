@@ -1,7 +1,8 @@
-import { StripeTransferStatus } from "@/__generated__/resolvers-types";
-import { User } from "@/database/models/User";
-import { UserPK } from "@/pks/UserPK";
-import { StripeTransferResolvers } from "@/resolvers/StripeTransfer";
+import { StripeTransferStatus } from "@/src/__generated__/resolvers-types";
+import { User } from "@/src/database/models/User";
+import { UserPK } from "@/src/pks/UserPK";
+import { StripeTransferResolvers } from "@/src/resolvers/StripeTransfer";
+import { graphql } from "@/src/typed-graphql";
 import { mockSQS } from "@/tests/test-utils/MockSQS";
 import {
   addMoneyForUser,
@@ -11,7 +12,6 @@ import {
   getUserBalanceNoCache,
 } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
-import { graphql } from "@/typed-graphql";
 import * as uuid from "uuid";
 
 const _sqsSettleStripeTransferSpy = () =>

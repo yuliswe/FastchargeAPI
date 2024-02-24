@@ -1,19 +1,16 @@
-import { StripeTransfer } from "@/database/models/StripeTransfer";
-import { User } from "@/database/models/User";
-import { StripeTransferPK } from "@/pks/StripeTransferPK";
-import { UserPK } from "@/pks/UserPK";
+import { StripeTransfer } from "@/src/database/models/StripeTransfer";
+import { User } from "@/src/database/models/User";
+import { StripeTransferPK } from "@/src/pks/StripeTransferPK";
+import { UserPK } from "@/src/pks/UserPK";
 import { createTestStripeTransfer } from "@/tests/test-data/StripeTransfer";
 import { createTestUser } from "@/tests/test-data/User";
 import { baseRequestContext as context } from "@/tests/test-utils/test-utils";
-import { StripeTransferStatus } from "graphql-service-apollo/__generated__/resolvers-types";
+import { lambdaHandler as ExecuteDailyStripeTranferCronJob, detailType } from "cron-jobs/ExecuteDailyStripeTransfer";
+import { StripeTransferStatus } from "graphql-service-apollo/src/__generated__/resolvers-types";
 import Stripe from "stripe";
 import { getTestEventBridgeEvent } from "tests/test-data/EventBridge";
+import * as stripeClientModule from "utils/stripe-client";
 import * as uuid from "uuid";
-import {
-  lambdaHandler as ExecuteDailyStripeTranferCronJob,
-  detailType,
-} from "../../cron-jobs/ExecuteDailyStripeTransfer";
-import * as stripeClientModule from "../../utils/stripe-client";
 
 describe("ExecuteDailyStripeTransfer", () => {
   let testUser: User;

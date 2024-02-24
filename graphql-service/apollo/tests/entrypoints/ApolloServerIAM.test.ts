@@ -1,14 +1,15 @@
-import { App } from "@/database/models/App";
-import { User } from "@/database/models/User";
+import { App } from "@/src/database/models/App";
+import { User } from "@/src/database/models/User";
 /** We want to test the actual aws handler */
 // eslint-disable-next-line no-restricted-imports
-import { lambdaHandler } from "../../lambdaHandler";
-import { LambdaEvent } from "../../lambdaHandlerUtils";
-import { AppPK } from "../../pks/AppPK";
-import { UserPK } from "../../pks/UserPK";
-import { createTestApp } from "../test-data/App";
-import { createTestUser } from "../test-data/User";
-import { baseRequestContext as context } from "../test-utils/test-utils";
+import { LambdaEvent } from "@/src/lambdaHandlerUtils";
+import { AppPK } from "@/src/pks/AppPK";
+import { UserPK } from "@/src/pks/UserPK";
+// eslint-disable-next-line no-restricted-imports
+import { lambdaHandler } from "@/src/lambdaHandler";
+import { createTestApp } from "tests/test-data/App";
+import { createTestUser } from "tests/test-data/User";
+import { baseRequestContext as context } from "tests/test-utils/test-utils";
 
 const lambdaEvent: LambdaEvent = {
   resource: "/",

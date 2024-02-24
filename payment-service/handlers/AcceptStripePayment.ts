@@ -1,24 +1,24 @@
-import { RequestContext } from "@/RequestContext";
-import { StripePaymentAcceptStatus } from "@/__generated__/resolvers-types";
-import { StripePaymentAccept } from "@/database/models/StripePaymentAccept";
-import { User, UserTableIndex } from "@/database/models/User";
-import { UserPK } from "@/pks/UserPK";
-import { baseDomain } from "@/runtime-config";
-import { SQSQueueName, getSQSClient } from "@/sqsClient";
-import { gql } from "@apollo/client";
+import { RequestContext } from "@/src/RequestContext";
+import { StripePaymentAcceptStatus } from "@/src/__generated__/resolvers-types";
+import { StripePaymentAccept } from "@/src/database/models/StripePaymentAccept";
+import { User, UserTableIndex } from "@/src/database/models/User";
+import { UserPK } from "@/src/pks/UserPK";
+import { baseDomain } from "@/src/runtime-config";
+import { SQSQueueName, getSQSClient } from "@/src/sqsClient";
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
-import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
-import { Chalk } from "chalk";
-import Decimal from "decimal.js-light";
-import { getSQSDedupIdForSettleStripePaymentAccept } from "graphql-service-apollo/functions/payment";
-import { baseRequestContext } from "graphql-service-apollo/tests/test-utils/test-utils";
+import { graphql } from "__generated__/gql";
 import {
   GQLFulfillUserStripePaymentAcceptQuery,
   GQLFulfillUserStripePaymentAcceptQueryVariables,
-} from "../__generated__/gql-operations";
-import { getPaymentAcceptedEmail } from "../email-templates/payment-accepted";
-import { LambdaEventV2, LambdaHandlerV2 } from "../utils/LambdaContext";
-import { parseStripeWebhookEvent } from "../utils/stripe-client";
+} from "__generated__/gql-operations";
+import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
+import { Chalk } from "chalk";
+import Decimal from "decimal.js-light";
+import { getPaymentAcceptedEmail } from "email-templates/payment-accepted";
+import { getSQSDedupIdForSettleStripePaymentAccept } from "graphql-service-apollo/src/functions/payment";
+import { baseRequestContext } from "graphql-service-apollo/tests/test-utils/test-utils";
+import { LambdaEventV2, LambdaHandlerV2 } from "utils/LambdaContext";
+import { parseStripeWebhookEvent } from "utils/stripe-client";
 
 const chalk = new Chalk({ level: 3 });
 
@@ -167,25 +167,28 @@ async function createAndFufillOrder({
     groupId: UserPK.stringify(user),
     dedupId: `CreateStripePaymentAcceptAndSettle-${UserPK.stringify(user)}-${session.id}`,
   }).mutate({
-    mutation: gql(`
-            mutation CreateStripePaymentAcceptAndSettle($user: ID!, 
-            $amount: NonNegativeDecimal!, 
-            $stripeSessionId: String!, 
-            $stripeSessionObject: String!, 
-            $stripePaymentIntent: String!, 
-            $stripePaymentStatus: String!
+    mutation: graphql(`
+      mutation CreateStripePaymentAcceptAndSettle(
+        $user: ID!
+        $amount: NonNegativeDecimal!
+        $stripeSessionId: String!
+        $stripeSessionObject: String!
+        $stripePaymentIntent: String!
+        $stripePaymentStatus: String!
+      ) {
+        createStripePaymentAccept(
+          user: $user
+          amount: $amount
+          stripeSessionId: $stripeSessionId
+          stripeSessionObject: $stripeSessionObject
+          stripePaymentIntent: $stripePaymentIntent
+          stripePaymentStatus: $stripePaymentStatus
+          settleImmediately: true
         ) {
-                createStripePaymentAccept(user: $user, 
-                amount: $amount, 
-                stripeSessionId: $stripeSessionId, 
-                stripeSessionObject: $stripeSessionObject, 
-                stripePaymentIntent: $stripePaymentIntent, 
-                stripePaymentStatus: $stripePaymentStatus, 
-                settleImmediately: true) {
-                    pk
-                }
-            }
-        `),
+          pk
+        }
+      }
+    `),
     variables: {
       user: UserPK.stringify(user),
       amount,
@@ -234,16 +237,25 @@ async function fulfillOrder(
     GQLFulfillUserStripePaymentAcceptQuery,
     GQLFulfillUserStripePaymentAcceptQueryVariables
   >({
-    query: gql(`
-            query FulfillUserStripePaymentAccept($user: ID!, $stripeSessionId: String!, $stripeSessionObject: String!, $stripePaymentStatus: String!, $stripePaymentIntent: String!,
-               ) {
-                getStripePaymentAcceptByStripeSessionId(user: $user, stripeSessionId: $stripeSessionId) {
-                    _sqsSettleStripePaymentAccept(stripeSessionObject: $stripeSessionObject, stripePaymentStatus:$stripePaymentStatus, stripePaymentIntent: $stripePaymentIntent) {
-                        stripePaymentStatus
-                    }
-                }
-            }
-        `),
+    query: graphql(`
+      query FulfillUserStripePaymentAccept(
+        $user: ID!
+        $stripeSessionId: String!
+        $stripeSessionObject: String!
+        $stripePaymentStatus: String!
+        $stripePaymentIntent: String!
+      ) {
+        getStripePaymentAcceptByStripeSessionId(user: $user, stripeSessionId: $stripeSessionId) {
+          _sqsSettleStripePaymentAccept(
+            stripeSessionObject: $stripeSessionObject
+            stripePaymentStatus: $stripePaymentStatus
+            stripePaymentIntent: $stripePaymentIntent
+          ) {
+            stripePaymentStatus
+          }
+        }
+      }
+    `),
     variables: {
       user: paymentAccept.user,
       stripeSessionId: paymentAccept.stripeSessionId,
@@ -279,7 +291,7 @@ async function notifyUserOfSuccessfulPayment(session: StripeSessionObject, user:
             Charset: "UTF-8",
             Data: getPaymentAcceptedEmail({
               paymentAmount: amount,
-              userName: user.author ?? user.email,
+              userName: user.author || user.email,
             }),
           },
         },

@@ -1,9 +1,9 @@
-import { User } from "@/database/models/User";
-import { UserPK } from "@/pks/UserPK";
+import { User } from "@/src/database/models/User";
+import { UserPK } from "@/src/pks/UserPK";
+import { graphql } from "@/src/typed-graphql";
 import { createTestUser } from "@/tests/test-data/User";
 import { baseRequestContext as context } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
-import { graphql } from "@/typed-graphql";
 
 const getUserByEmail = graphql(`
   query TestGetUserByEmail($email: Email!) {

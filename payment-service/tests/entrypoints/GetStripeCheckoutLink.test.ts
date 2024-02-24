@@ -1,14 +1,14 @@
-import { RequestContext, createDefaultContextBatched } from "@/RequestContext";
-import { User } from "@/database/models/User";
-import { UserPK } from "@/pks/UserPK";
+import { RequestContext, createDefaultContextBatched } from "@/src/RequestContext";
+import { User } from "@/src/database/models/User";
+import { UserPK } from "@/src/pks/UserPK";
 import { baseRequestContext } from "@/tests/test-utils/test-utils";
 import { createTestUser } from "graphql-service-apollo/tests/test-data/User";
 import {
   ErrorResponseBody,
   SuccessResponseBody,
   handle as lambdaHandlerGetStripeCheckoutLink,
-} from "../../handlers/GetStripeCheckoutLink";
-import { makeGetStripeCheckoutLinkLambdaEvent } from "../test-data/GetStripeCheckoutLink";
+} from "handlers/GetStripeCheckoutLink";
+import { makeGetStripeCheckoutLinkLambdaEvent } from "tests/test-data/GetStripeCheckoutLink";
 
 const context: RequestContext = {
   ...baseRequestContext,

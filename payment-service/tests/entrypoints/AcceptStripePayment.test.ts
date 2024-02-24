@@ -1,13 +1,13 @@
-import { User } from "@/database/models/User";
-import { UserPK } from "@/pks/UserPK";
+import { User } from "@/src/database/models/User";
+import { UserPK } from "@/src/pks/UserPK";
 import { baseRequestContext as context } from "@/tests/test-utils/test-utils";
 import { createTestUser } from "graphql-service-apollo/tests/test-data/User";
 import { mockSQS } from "graphql-service-apollo/tests/test-utils/MockSQS";
+import { handle as AcceptPaymentLambdaHandler, StripeSessionObject } from "handlers/AcceptStripePayment";
 import stripe from "stripe";
+import { getTestAcceptStripePaymentLambdaEvent } from "tests/test-data/AcceptStripePayment";
 import * as StripeClientUtils from "utils/stripe-client";
 import { v4 as uuidv4 } from "uuid";
-import { handle as AcceptPaymentLambdaHandler, StripeSessionObject } from "../../handlers/AcceptStripePayment";
-import { getTestAcceptStripePaymentLambdaEvent } from "../test-data/AcceptStripePayment";
 
 describe("AcceptStripePayment", () => {
   let testUser: User;

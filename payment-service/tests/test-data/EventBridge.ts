@@ -10,7 +10,7 @@ export function getTestEventBridgeEvent<S extends string, T>(args: {
     account: "123456789012",
     region: "us-east-2",
     detail,
-    "detail-type": args?.detailType ?? "Scheduled Event",
+    "detail-type": args.detailType,
     source: "aws.events",
     time: "2019-03-01T01:23:45Z",
     id: "cdc73f9d-aea9-11e3-9d5a-835b769c0d9c",

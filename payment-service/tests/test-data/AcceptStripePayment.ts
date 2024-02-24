@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { LambdaEventV2 } from "../../utils/LambdaContext";
+import { LambdaEventV2 } from "utils/LambdaContext";
 
 export function getTestAcceptStripePaymentLambdaEvent(args: {
   userEmail: string;

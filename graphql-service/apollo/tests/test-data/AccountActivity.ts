@@ -1,8 +1,8 @@
-import { RequestContext } from "@/RequestContext";
-import { AccountActivityReason, AccountActivityStatus, AccountActivityType } from "@/__generated__/resolvers-types";
-import { AccountActivityCreateProps } from "@/database/models/AccountActivity";
-import { UserPK } from "@/pks/UserPK";
-import { createTestUser } from "./User";
+import { RequestContext } from "@/src/RequestContext";
+import { AccountActivityReason, AccountActivityStatus, AccountActivityType } from "@/src/__generated__/resolvers-types";
+import { AccountActivityCreateProps } from "@/src/database/models/AccountActivity";
+import { UserPK } from "@/src/pks/UserPK";
+import { createTestUser } from "@/tests/test-data/User";
 
 export async function createTestAccountActivity(
   context: RequestContext,

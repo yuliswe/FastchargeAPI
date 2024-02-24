@@ -1,9 +1,10 @@
-import { StripePaymentAcceptStatus } from "@/__generated__/gql/graphql";
-import { StripePaymentAccept } from "@/database/models/StripePaymentAccept";
-import { User } from "@/database/models/User";
-import { Can } from "@/permissions";
-import { StripePaymentAcceptPK } from "@/pks/StripePaymentAccept";
-import { UserPK } from "@/pks/UserPK";
+import { StripePaymentAcceptStatus } from "@/src/__generated__/gql/graphql";
+import { StripePaymentAccept } from "@/src/database/models/StripePaymentAccept";
+import { User } from "@/src/database/models/User";
+import { Can } from "@/src/permissions";
+import { StripePaymentAcceptPK } from "@/src/pks/StripePaymentAccept";
+import { UserPK } from "@/src/pks/UserPK";
+import { graphql } from "@/src/typed-graphql";
 import {
   baseRequestContext as context,
   getAdminUser,
@@ -12,7 +13,6 @@ import {
   sortGraphQLErrors,
 } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
-import { graphql } from "@/typed-graphql";
 import * as uuid from "uuid";
 
 describe("getStripePaymentAccept", () => {

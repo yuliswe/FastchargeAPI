@@ -13,6 +13,7 @@ void esbuild.build({
     "./cron-jobs/SettlePendingAccountActivitiesPastDue.ts",
   ],
   bundle: true,
+  minify: true,
   outdir: "./dist",
   platform: "node",
   target: "node18",
