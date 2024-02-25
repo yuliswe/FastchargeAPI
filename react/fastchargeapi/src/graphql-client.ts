@@ -3,14 +3,14 @@ import { setContext } from "@apollo/client/link/context";
 import { EncryptJWT, JWTPayload, SignJWT } from "jose";
 import { AppContext } from "./AppContext";
 import { graphql } from "./__generated__/gql/gql";
-import { ENV_DEV_DOMAIN, ENV_LOCAL_GRAPHQL, baseDomain, graphqlURL } from "./runtime";
+import { baseDomain, envVars, graphqlURL } from "./env";
 // debug
 
-if (ENV_DEV_DOMAIN) {
+if (envVars.DEV_DOMAIN) {
   console.warn("Using dev domain:", baseDomain);
 }
 
-if (ENV_LOCAL_GRAPHQL) {
+if (envVars.LOCAL_GRAPHQL) {
   console.warn("Using local graphql server:", graphqlURL);
 }
 
@@ -34,7 +34,7 @@ export async function getGQLClient(
       headers: {
         ...headers,
         authorization: idToken,
-        "x-user-email": ENV_LOCAL_GRAPHQL ? user.email ?? undefined : undefined,
+        "x-user-email": envVars.LOCAL_GRAPHQL ? user.email ?? undefined : undefined,
       } as Record<string, string | undefined>,
     };
   });
@@ -126,7 +126,6 @@ export async function setRemoteSecret(
   }
 ) {
   const { key, value, description, expireAt } = args;
-  console.log("setRemoteSecret", key, value, description, expireAt, jweSecret, jwtSecret);
   const signedValue = await encryptAndSign(value, { jweSecret, jwtSecret });
   const { client } = await getGQLClient(context);
   const response = await client.mutate({

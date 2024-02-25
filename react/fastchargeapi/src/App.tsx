@@ -3,7 +3,7 @@ import { CssBaseline, useMediaQuery } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
 import { User as FirebaseUser, getAuth, signInAnonymously } from "firebase/auth";
 import { throttle } from "lodash";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import { Provider } from "react-redux";
 import { LinkProps, RouterProvider } from "react-router-dom";
@@ -12,7 +12,7 @@ import { AppContext, AppContextProvider } from "./AppContext";
 import { LinkBehavior } from "./LinkBehavior";
 import { useRenderingTrace } from "./debug";
 import { initializeFirebase } from "./firebase";
-import { getRouter } from "./routes";
+import { createRouter } from "./routes";
 import { reduxStore } from "./store-config";
 import { getTheme } from "./theme";
 
@@ -27,10 +27,6 @@ export const sendPing = async (context: AppContext) => {
   });
 };
 
-let userPromiseResolve: undefined | ((user: FirebaseUser) => void);
-const userPromise = new Promise<FirebaseUser>((resolve) => {
-  userPromiseResolve = resolve;
-});
 const originalTheme = getTheme();
 
 /**
@@ -38,24 +34,24 @@ const originalTheme = getTheme();
  */
 export function App() {
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
-  const [isAnonymousUser, setIsAnonymousUser] = useState<boolean>(true);
+  const userPromiseResolve = useRef<null | ((user: FirebaseUser) => void)>();
+  const userPromise = useRef(new Promise<FirebaseUser>((resolve) => (userPromiseResolve.current = resolve)));
 
   useEffect(() => {
-    void userPromise.then((user) => {
+    void userPromise.current.then((user) => {
       setFirebaseUser(user);
-      setIsAnonymousUser(user.isAnonymous);
     });
 
     const firebaseApp = initializeFirebase();
     const auth = getAuth(firebaseApp);
     if (auth.currentUser) {
-      userPromiseResolve?.(auth.currentUser);
+      userPromiseResolve.current?.(auth.currentUser);
     }
     auth.onAuthStateChanged((user) => {
       if (user == null) {
         void signInAnonymously(auth);
       } else {
-        userPromiseResolve?.(user);
+        userPromiseResolve.current?.(user);
       }
     });
   }, []);
@@ -117,14 +113,12 @@ export function App() {
     mediaQuery,
     firebase: {
       user: firebaseUser,
-      userPromise,
-      isAnonymousUser,
-      isAnonymousUserPromise: userPromise.then((user) => user.isAnonymous),
+      userPromise: userPromise.current,
     },
     theme: modifiedTheme,
   } as AppContext;
 
-  useRenderingTrace("App", { context, firebaseUser, isAnonymousUser, originalTheme, reduxStore });
+  useRenderingTrace("App", { context, firebaseUser, originalTheme, reduxStore });
 
   useEffect(() => {
     const throttledSendPing = throttle(() => sendPing(context), 200000);
@@ -144,7 +138,7 @@ export function App() {
         <AppContextProvider value={context}>
           <ThemeProvider theme={originalTheme}>
             <CssBaseline />
-            <RouterProvider router={getRouter()} />
+            <RouterProvider router={createRouter()} />
           </ThemeProvider>
         </AppContextProvider>
       </HelmetProvider>

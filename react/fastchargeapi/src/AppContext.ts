@@ -13,8 +13,6 @@ export type AppContext = {
   firebase: {
     user: FirebaseUser | null;
     userPromise: Promise<FirebaseUser>;
-    isAnonymousUser: boolean;
-    isAnonymousUserPromise: Promise<boolean>;
   };
   route: {
     readonly location: Location & {
@@ -22,6 +20,7 @@ export type AppContext = {
       readonly fullpath: string;
     };
     navigate: NavigateFunction;
+    navigateExternal: (url: string) => void;
     readonly params: Params<string>; // Gets the values of the current route's dynamic segments, for example the id of /users/:id
     readonly query: ReturnType<typeof useSearchParams>[0]; // Gets the values of the current route's query string, ie, the part after the ? in /users?search=abc
     setQuery: ReturnType<typeof useSearchParams>[1]; // Sets the query params with an encoded string, eg setQuery("search=abc")

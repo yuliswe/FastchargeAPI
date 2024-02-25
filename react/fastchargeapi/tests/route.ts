@@ -8,8 +8,13 @@ export function getRouterSpy(args: { fullpath: string }) {
     initialIndex: 0,
   });
   jest.spyOn(RoutesModule, "createRouter").mockReturnValue(memRouter);
+  const navigateExternalSpy = jest.spyOn(RoutesModule, "navigateExternal");
+  navigateExternalSpy.mockImplementation((href: string) => {
+    console.log("navigateExternal", href);
+  });
   return {
     ...memRouter,
     navigate: jest.spyOn(memRouter, "navigate"),
+    navigateExternal: navigateExternalSpy,
   };
 }

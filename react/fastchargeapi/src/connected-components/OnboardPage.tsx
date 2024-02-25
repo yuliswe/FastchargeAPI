@@ -1,9 +1,9 @@
 import { Box, CircularProgress, Container, Fade, Grid, Stack, Typography } from "@mui/material";
 import React from "react";
 import { connect } from "react-redux";
+import { paymentServiceBaseURL } from "src/env";
 import { AppContext, ReactAppContextType } from "../AppContext";
 import { fetchWithAuth } from "../fetch";
-import { paymentServiceBaseURL } from "../runtime";
 import { OnboardAppState } from "../states/OnBoardAppState";
 import { RootAppState } from "../states/RootAppState";
 type _State = {};

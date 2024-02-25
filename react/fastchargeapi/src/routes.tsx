@@ -15,7 +15,7 @@ import { SubscriptionDetailPage } from "./connected-components/SubscriptionDetai
 import { SubscriptionsPage } from "./connected-components/SubscriptionsPage";
 import { TermsPage } from "./connected-components/TermsPage";
 import { TopUpPage } from "./connected-components/TopUpPage";
-import { baseDomain } from "./runtime";
+import { baseDomain, envVars } from "./env";
 
 export type SearchResultPageParams = {};
 export type SearchResultPageQuery = { q?: string; tag?: string; sort?: string; page?: string };
@@ -64,7 +64,7 @@ export const RouteURL = {
     return "/";
   },
   documentationPage(): string {
-    if (process.env.REACT_APP_LOCAL_DOC === "1") {
+    if (envVars.LOCAL_DOC) {
       return "http://localhost:3000";
     }
     return `https://doc.${baseDomain}`;
@@ -129,6 +129,10 @@ export type RouteConfig = React.PropsWithChildren<{
   requireAuth?: boolean;
 }>;
 
+export const navigateExternal = (url: string) => {
+  window.location.assign(url);
+};
+
 /**
  * This is a wrapper component that provides a unique context to each pages. It
  * is reconstructed for every route change.
@@ -154,7 +158,8 @@ function RoutePage(props: RouteConfig) {
       setIsLoading(false);
     }, 1000);
 
-    void context.firebase.isAnonymousUserPromise.then((isAnonymous) => {
+    void context.firebase.userPromise.then((user) => {
+      const { isAnonymous } = user;
       if (hideContent) {
         setHideContent(false);
       }
@@ -181,6 +186,7 @@ function RoutePage(props: RouteConfig) {
             fullpath: location.pathname + location.search + location.hash,
           },
           navigate,
+          navigateExternal,
           params,
           query: searchParam,
           setQuery: setSearchParam,

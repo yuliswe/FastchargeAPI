@@ -1,4 +1,5 @@
 import { AppEvent, AppEventStream, mapState, to } from "react-appevent-redux";
+import { paymentServiceBaseURL } from "src/env";
 import { AppContext } from "../AppContext";
 import { graphql } from "../__generated__/gql";
 import {
@@ -8,7 +9,6 @@ import {
 } from "../__generated__/gql/graphql";
 import { fetchWithAuth } from "../fetch";
 import { getGQLClient } from "../graphql-client";
-import { paymentServiceBaseURL } from "../runtime";
 import { RootAppState } from "../states/RootAppState";
 
 export type UserAccountInfo = GetAccountInfoQuery["getUser"];

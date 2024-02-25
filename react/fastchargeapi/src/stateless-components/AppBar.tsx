@@ -19,12 +19,12 @@ import {
 } from "@mui/material";
 import { getAuth } from "firebase/auth";
 import React from "react";
-import { AppContext, ReactAppContextType } from "../AppContext";
-import { ReactComponent as Logo } from "../svg/logo5.svg";
-import { AppSearchBar } from "./AppSearchBar";
+import { AppContext, ReactAppContextType } from "src/AppContext";
+import { AppSearchBar } from "src/stateless-components/AppSearchBar";
+import { ReactComponent as Logo } from "src/svg/logo5.svg";
 
 import MenuIcon from "@mui/icons-material/Menu";
-import { RouteURL } from "../routes";
+import { RouteURL } from "src/routes";
 
 type State = {
   accountButtonEl: HTMLElement | null;
@@ -186,7 +186,7 @@ export class AppBar extends React.PureComponent<Props, State> {
           display: this._context.mediaQuery.md.down ? "inline-flex" : "none",
         }}
       >
-        {this._context.firebase.isAnonymousUser ? <MenuIcon /> : this.renderAvatar()}
+        {this._context.firebase.user?.isAnonymous ? <MenuIcon /> : this.renderAvatar()}
       </IconButton>
     );
   }
@@ -225,12 +225,12 @@ export class AppBar extends React.PureComponent<Props, State> {
           ml: 4,
         }}
       >
-        {this._context.firebase.isAnonymousUser && (
+        {this._context.firebase.user?.isAnonymous && (
           <Button sx={{ color: "text.primary", p: 2 }} href={this.loginHref()}>
             <Typography noWrap>Sign In</Typography>
           </Button>
         )}
-        {!this._context.firebase.isAnonymousUser && (
+        {!this._context.firebase.user?.isAnonymous && (
           <React.Fragment>
             <Button
               size="small"
@@ -352,7 +352,7 @@ export class AppBar extends React.PureComponent<Props, State> {
                 <ListItemText primary={link.text} />
               </ListItemButton>
             ))}
-          {this._context.firebase.isAnonymousUser ? (
+          {this._context.firebase.user?.isAnonymous ? (
             <ListItemButton href={this.loginHref()} key={"Sign in"} onClick={() => this.closeMenu()} component={Link}>
               <ListItemText primary={"Sign in"} />
             </ListItemButton>

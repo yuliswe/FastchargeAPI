@@ -8,4 +8,10 @@ globalThis.TextDecoder = TextDecoder;
 globalThis.Request = Request;
 // @ts-ignore
 globalThis.Response = Response;
-globalThis.fetch = fetch;
+globalThis.fetch = async (...args) => {
+  console.log("fetch request", args);
+  // @ts-ignore
+  const resp = await fetch(...args);
+  console.log(`fetch response [${resp.status} ${resp.statusText}]`, await resp.clone().text());
+  return resp;
+};

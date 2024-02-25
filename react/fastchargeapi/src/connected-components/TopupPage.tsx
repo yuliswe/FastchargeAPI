@@ -2,17 +2,19 @@ import DoneIcon from "@mui/icons-material/Done";
 import { Box, CircularProgress, Container, Fade, Grid, Stack, Typography } from "@mui/material";
 import React from "react";
 import { connect } from "react-redux";
-import { AppContext, ReactAppContextType } from "../AppContext";
-import { fetchWithAuth } from "../fetch";
-import { setRemoteSecret } from "../graphql-client";
-import { type TopUpPageQuery } from "../routes";
-import { paymentServiceBaseURL } from "../runtime";
-import { RootAppState } from "../states/RootAppState";
-import { TopUpAppState } from "../states/TopupAppState";
+import { AppContext, ReactAppContextType } from "src/AppContext";
+import { paymentServiceBaseURL } from "src/env";
+import { fetchWithAuth } from "src/fetch";
+import { setRemoteSecret } from "src/graphql-client";
+import { type TopUpPageQuery } from "src/routes";
+import { RootAppState } from "src/states/RootAppState";
+import { TopUpAppState } from "src/states/TopUpAppState";
+import { appStore, reduxStore } from "src/store-config";
+
 type _State = {};
 
 type _Props = {
-  topupAppState: TopUpAppState;
+  appState: TopUpAppState;
 };
 
 /**
@@ -127,7 +129,7 @@ class _TopUp extends React.PureComponent<_Props, _State> {
   }
 
   async isLoggedIn() {
-    return !(await this._context.firebase.isAnonymousUserPromise);
+    return !(await this._context.firebase.userPromise).isAnonymous;
   }
 
   /**
@@ -149,7 +151,22 @@ class _TopUp extends React.PureComponent<_Props, _State> {
     this.state = {};
   }
 
-  async componentDidMount() {
+  static isLoading(): boolean {
+    return appStore.getState().topUp.loading;
+  }
+
+  static async fetchData(context: AppContext, params: {}, query: TopUpPageQuery): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const unsub = reduxStore.subscribe(() => {
+        if (!this.isLoading()) {
+          resolve();
+          unsub();
+        }
+      });
+    });
+  }
+
+  async onPageLoad() {
     // If the user is already topuped, then redirect to the success_url
     if (this.isSuccess()) {
       await this.postResultToCli();
@@ -157,28 +174,31 @@ class _TopUp extends React.PureComponent<_Props, _State> {
       await this.postResultToCli();
     } else if (await this.isLoggedIn()) {
       // Otherwise start the topuping process
-      try {
-        const response = await fetchWithAuth(this._context, this.getBackendUrl(), {
-          method: "POST",
-          mode: "cors",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            amount: this.getAmount(),
-            successUrl: this.getSuccessUrl(),
-            cancelUrl: this.getCancelUrl(),
-          }),
-        });
-        const { location } = (await response.json()) as { location: string };
-        this._context.route.navigate(location);
-        if (!location) {
-          throw new Error("location is missing from the response");
-        }
-      } catch (error) {
-        console.error("Error posting to", this.getBackendUrl(), error);
+      const response = await fetchWithAuth(this._context, this.getBackendUrl(), {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount: this.getAmount(),
+          successUrl: this.getSuccessUrl(),
+          cancelUrl: this.getCancelUrl(),
+        }),
+      });
+      const body = (await response.json()) as { location: string };
+      const { location } = body;
+      if (!location) {
+        throw new Error(`location is missing from the response: [${response.status}] ${JSON.stringify(body)}`);
       }
+      this._context.route.navigateExternal(location);
     }
+  }
+
+  componentDidMount() {
+    this.onPageLoad().catch((e) => {
+      console.error(e);
+    });
   }
 
   renderSuccessPage() {
@@ -308,5 +328,5 @@ class _TopUp extends React.PureComponent<_Props, _State> {
 }
 
 export const TopUpPage = connect<_Props, {}, {}, RootAppState>((rootAppState: RootAppState) => ({
-  topupAppState: rootAppState.home,
+  appState: rootAppState.topUp,
 }))(_TopUp);

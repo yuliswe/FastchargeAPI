@@ -295,7 +295,7 @@ class _AuthPage extends React.PureComponent<_Props, _State> {
   renderPageState() {
     // return this.renderLoginPage();
     // return this.renderSuccessPage();
-    return this._context.firebase.isAnonymousUser ? this.renderLoginPage() : this.renderSuccessPage();
+    return this._context.firebase.user?.isAnonymous ? this.renderLoginPage() : this.renderSuccessPage();
   }
 
   render() {

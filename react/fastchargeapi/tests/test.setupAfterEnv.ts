@@ -1,3 +1,4 @@
+import { cleanup as reactTestingLibraryCleanup } from "@testing-library/react";
 import * as AppModule from "src/App";
 import * as firebaseModule from "src/firebase";
 
@@ -7,4 +8,8 @@ beforeEach(() => {
     console.log("mock sendPing");
     await Promise.resolve();
   });
+});
+
+afterEach(() => {
+  reactTestingLibraryCleanup();
 });

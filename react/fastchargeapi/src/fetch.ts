@@ -10,5 +10,5 @@ export async function fetchWithAuth(context: AppContext, url: RequestInfo, optio
   }
   options.mode = "cors";
   (options.headers as { [key: string]: string })["Authorization"] = await user.getIdToken();
-  return fetch(url, options);
+  return globalThis.fetch(url, options);
 }
