@@ -68,7 +68,13 @@ describe("fastcharge app create", () => {
       owner: UserPK.stringify(testUser),
     });
     const { stdout, exitCode } = await fastcharge(["app", "create", "--name", name]);
-    expect(stdout.getOutput()).toMatchSnapshot();
+    expect(
+      stdout.getOutput({
+        redactWord: {
+          appName: (word) => word.startsWith("testapp-"),
+        },
+      })
+    ).toMatchSnapshot();
     expect(exitCode).toBe(1);
   });
 

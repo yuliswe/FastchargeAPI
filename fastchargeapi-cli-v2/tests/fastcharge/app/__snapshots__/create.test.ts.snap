@@ -33,7 +33,7 @@ exports[`fastcharge app create creates app 2`] = `
 `;
 
 exports[`fastcharge app create fails when app already exists 1`] = `
-"An app with this name already exists.
+"An app with this name already exists: <REDACTED:appName>
 Please use a different name.
 "
 `;
