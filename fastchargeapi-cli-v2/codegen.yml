@@ -2,7 +2,7 @@
 # to generate types based on our schema.
 documents:
   - "./src/**/*.ts"
-schema: "../graphql-service/apollo/__generated__/Public.final.graphql"
+schema: "node_modules/graphql-service-apollo/src/__generated__/Public.final.graphql"
 generates:
   ./src/__generated__/gql/:
     preset: client

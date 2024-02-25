@@ -1,7 +1,7 @@
-import { validateAppName } from "@/functions/app";
+import { ValidationError } from "@/src/errors";
+import { validateAppName } from "@/src/functions/app";
 import chalk from "chalk";
 import { Command } from "commander";
-import { ValidationError } from "graphql-service-apollo/errors";
 import { graphql } from "src/__generated__/gql";
 import { reactHost } from "src/env";
 import { AlreadyExistsSimpleGQLError } from "src/simplifiedGQLErrors";

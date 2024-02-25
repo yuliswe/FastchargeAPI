@@ -32,6 +32,12 @@ exports[`fastcharge app create creates app 2`] = `
 ]
 `;
 
+exports[`fastcharge app create fails when app already exists 1`] = `
+"An app with this name already exists.
+Please use a different name.
+"
+`;
+
 exports[`fastcharge app create fails when creating app with invalid app name 1`] = `
 "Invalid app name "&!#!": can only contain lowercase letters, numbers, and dashes. ([a-z\\d][a-z\\d\\-]*[a-z\\d]).
 [33mPlease use a different name.[39m

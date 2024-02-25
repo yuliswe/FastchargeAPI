@@ -1,9 +1,9 @@
-import { User } from "@/database/models/User";
+import { User } from "@/src/database/models/User";
+import { AppPK } from "@/src/pks/AppPK";
+import { UserPK } from "@/src/pks/UserPK";
+import { createTestApp } from "@/tests/test-data/App";
 import { createTestUser } from "@/tests/test-data/User";
 import { baseRequestContext as context } from "@/tests/test-utils/test-utils";
-import { AppPK } from "graphql-service-apollo/pks/AppPK";
-import { UserPK } from "graphql-service-apollo/pks/UserPK";
-import { createTestApp } from "graphql-service-apollo/tests/test-data/App";
 import { fastcharge, mockLoggedInAsUser } from "tests/utils";
 
 describe("fastcharge app update --help", () => {

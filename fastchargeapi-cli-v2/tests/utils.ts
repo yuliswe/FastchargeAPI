@@ -1,8 +1,8 @@
 /* eslint-disable jest/no-export */
-import { getParameterFromAWSSystemsManager } from "@/functions/aws";
-import { User } from "graphql-service-apollo/database/models/User";
-import { makeFastchargeAPIIdTokenForUser } from "graphql-service-apollo/functions/user";
-import { UserPK } from "graphql-service-apollo/pks/UserPK";
+import { User } from "@/src/database/models/User";
+import { getParameterFromAWSSystemsManager } from "@/src/functions/aws";
+import { makeFastchargeAPIIdTokenForUser } from "@/src/functions/user";
+import { UserPK } from "@/src/pks/UserPK";
 import { createFastapiProgram } from "src/fastapi/program";
 import { createFastchargeProgram } from "src/fastcharge/program";
 import { tiChecker } from "src/tiChecker";

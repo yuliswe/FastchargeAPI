@@ -2,9 +2,9 @@ import { Command } from "commander";
 import fs from "fs/promises";
 import { tiChecker } from "src/tiChecker";
 import { CliCommonLogoutCommandOptions, CliGlobalOptions } from "src/types/cliOptions";
+import { deleteAuthFile, listAuthFiles } from "src/utils/authFile";
 import { createCommand } from "src/utils/command";
 import { println } from "src/utils/console";
-import { deleteAuthFile, listAuthFiles } from "../utils/authFile";
 
 export const createCommonLogoutCommand = (program: Command) =>
   createCommand({

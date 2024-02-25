@@ -8,7 +8,7 @@ import type * as cliOptions from "src/types/cliOptions";
 import type * as env from "src/types/env";
 import type * as remoteSecret from "src/types/remoteSecret";
 import * as simplfiedGQLErrors from "src/types/simplfiedGQLErrors";
-import { Checker, createCheckers } from "ts-interface-checker";
+import { Checker, IErrorDetail, createCheckers } from "ts-interface-checker";
 
 /**
  * How to add a new type to the tiChecker:
@@ -70,10 +70,12 @@ function from<T>(value: unknown, checker: TypedChecker<T>, opts: { strict: boole
   const errors = strict ? checker.strictValidate(value) : checker.validate(value);
   if (errors !== null) {
     let msg = "Validation failed:\n";
-    for (const { path, message } of errors) {
+    const flatten = (errors: IErrorDetail[]): IErrorDetail[] =>
+      errors.flatMap((e) => (e.nested ? flatten(e.nested) : e));
+    for (const { path, message } of flatten(errors)) {
       msg += `  ${path} ${message}\n`;
     }
-    msg += `Value: ${JSON.stringify(value, null, 2)}`;
+    msg += `\nValue: ${JSON.stringify(value, null, 2)}`;
     throw new Error(msg);
   }
   return value as T;
@@ -84,11 +86,12 @@ function fromArray<T>(value: unknown, checker: TypedChecker<T>, opts: { strict: 
   if (!Array.isArray(value)) {
     throw new Error(`Expected array, got: ${JSON.stringify(value, null, 2)}`);
   }
+  const flatten = (errors: IErrorDetail[]): IErrorDetail[] => errors.flatMap((e) => (e.nested ? flatten(e.nested) : e));
   for (const v of value) {
     const errors = strict ? checker.strictValidate(v) : checker.validate(v);
     if (errors !== null) {
       let msg = "Validation failed:\n";
-      for (const { path, message } of errors) {
+      for (const { path, message } of flatten(errors)) {
         msg += `  ${path} ${message}\n`;
       }
       msg += `Value: ${JSON.stringify(value, null, 2)}\n`;

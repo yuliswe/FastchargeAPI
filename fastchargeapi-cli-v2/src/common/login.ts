@@ -6,10 +6,10 @@ import { envVars, reactHost } from "src/env";
 import { getGQLClient } from "src/graphqlClient";
 import { tiChecker } from "src/tiChecker";
 import { CliCommonLoginCommandOptions, CliGlobalOptions } from "src/types/cliOptions";
+import { readOrRefreshAuthFile, verifyIdToken, writeToAuthFile } from "src/utils/authFile";
 import { createCommand } from "src/utils/command";
 import { println } from "src/utils/console";
 import { hex, waitForSecretContent } from "src/utils/remoteSecret";
-import { readOrRefreshAuthFile, verifyIdToken, writeToAuthFile } from "../utils/authFile";
 
 export const createCommonLoginCommand = (program: Command) =>
   createCommand({

@@ -1,8 +1,9 @@
-import { User } from "@/database/models/User";
+import { AppTableIndex } from "@/src/database/models/App";
+import { User } from "@/src/database/models/User";
+import { UserPK } from "@/src/pks/UserPK";
+import { createTestApp } from "@/tests/test-data/App";
 import { createTestUser } from "@/tests/test-data/User";
 import { baseRequestContext as context } from "@/tests/test-utils/test-utils";
-import { AppTableIndex } from "graphql-service-apollo/database/models/App";
-import { UserPK } from "graphql-service-apollo/pks/UserPK";
 import { fastcharge, mockLoggedInAsUser } from "tests/utils";
 import * as uuid from "uuid";
 
@@ -60,6 +61,15 @@ describe("fastcharge app create", () => {
         updatedAt: expect.any(Date),
       },
     ]);
+  });
+
+  it("fails when app already exists", async () => {
+    const { name } = await createTestApp(context, {
+      owner: UserPK.stringify(testUser),
+    });
+    const { stdout, exitCode } = await fastcharge(["app", "create", "--name", name]);
+    expect(stdout.getOutput()).toMatchSnapshot();
+    expect(exitCode).toBe(1);
   });
 
   it("fails when creating app with invalid app name", async () => {

@@ -14,5 +14,6 @@ Commands:
   login [options]   Login as a user
   logout [options]  Logout a user
   app               Manage or create your apps
+  account           Manage your account
 "
 `;

@@ -1,0 +1,12 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`fastcharge account pay --help prints help 1`] = `
+"Usage: fastcharge account pay [options]
+
+Top up your account balance for API usage.
+
+Options:
+  --amount <number>  Pay amount in USD.
+  --help             Display help for command
+"
+`;

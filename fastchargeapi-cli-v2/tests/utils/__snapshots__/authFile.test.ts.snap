@@ -5,6 +5,7 @@ exports[`writeToAuthFile throws if the content is incomplete 1`] = `
   .idToken is missing
   .refreshToken is missing
   .userPK is missing
+
 Value: {
   "issuer": "firebase"
 }]

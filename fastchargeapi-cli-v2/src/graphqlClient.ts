@@ -9,7 +9,7 @@ import {
   QueryOptions,
   createHttpLink,
   from as linksFrom,
-} from "@apollo/client";
+} from "@apollo/client/core";
 import { ApolloError } from "@apollo/client/errors";
 import { setContext } from "@apollo/client/link/context";
 import chalk from "chalk";
