@@ -9,6 +9,8 @@ Parameters:
     Type: String
   BucketName:
     Type: String
+  CachePolicyId:
+    Type: String
 
 Resources:
   S3Bucket:
@@ -44,6 +46,7 @@ Resources:
             Id: Origin1
             S3OriginConfig:
               OriginAccessIdentity: ""
+            OriginAccessControlId: !Ref CloudFrontOriginAccessControl
         Enabled: true
         DefaultCacheBehavior:
           AllowedMethods:
@@ -63,12 +66,19 @@ Resources:
           AcmCertificateArn: !Ref Certificate
           SslSupportMethod: sni-only
         PriceClass: PriceClass_100
+        DefaultCacheBehavior:
+          CachePolicyId: !Ref CachePolicyId
+          ViewerProtocolPolicy: redirect-to-https
+          TargetOriginId: Origin1
 
-  CludFrontOriginAccessIdentity:
-    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+  CloudFrontOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
     Properties:
-      CloudFrontOriginAccessIdentityConfig:
-        Comment: !Sub "OAI for ${S3Bucket}"
+      OriginAccessControlConfig:
+        Name: !Sub "${AWS::StackName}-origin-access-control"
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
 
   BucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -80,9 +90,12 @@ Resources:
           - Sid: "AllowCloudFrontAccessToS3Bucket"
             Effect: Allow
             Action: "s3:GetObject"
-            Resource: !Join ["", ["arn:aws:s3:::", !Ref S3Bucket, "/*"]]
+            Resource: !Sub "arn:aws:s3:::${S3Bucket}/*"
             Principal:
-              CanonicalUser: !GetAtt CludFrontOriginAccessIdentity.S3CanonicalUserId
+              Service: "cloudfront.amazonaws.com"
+            Condition:
+              StringEquals:
+                "aws:SourceArn": !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
 
   Route53AliasRecord:
     Type: AWS::Route53::RecordSet
