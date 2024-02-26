@@ -9,7 +9,7 @@ capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
 parameter_overrides = "ServicePrefix=\"dev\" MainDomain=\"devfastchargeapi.com\" Route53ZoneId=\"Z07362872NENGXHWMNLU5\" EnvDevDomain=\"1\""
 image_repositories = []
 resolve_s3 = true
-no_fail_on_empty_changeset = true
+fail_on_empty_changeset = false
 
 [default.logs.parameters]
 stack_name = "dev-gateway-service"
@@ -25,7 +25,7 @@ capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
 parameter_overrides = "ServicePrefix=\"live\" MainDomain=\"fastchargeapi.com\" Route53ZoneId=\"Z0358815GI2I8U5CTHXW\""
 image_repositories = []
 resolve_s3 = true
-no_fail_on_empty_changeset = true
+fail_on_empty_changeset = false
 
 [live.logs.parameters]
 profile = "live_fastchargeapi"

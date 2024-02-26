@@ -15,7 +15,7 @@ parameter_overrides = [
 ]
 resolve_s3 = true
 image_repositories = []
-no_fail_on_empty_changeset = true
+fail_on_empty_changeset = false
 
 [default.logs.parameters]
 stack_name = "dev-graphql-service-dynamodb"
@@ -36,7 +36,7 @@ parameter_overrides = [
 ]
 resolve_s3 = true
 image_repositories = []
-no_fail_on_empty_changeset = true
+fail_on_empty_changeset = false
 
 [live.logs.parameters]
 profile = "live_fastchargeapi"

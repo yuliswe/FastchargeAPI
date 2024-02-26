@@ -7,15 +7,15 @@ s3_prefix = "dev-site-email"
 region = "us-east-1"
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
 parameter_overrides = [
-    "MainDomain=devfastchargeapi.com" ,
-    "Route53ZoneId=Z07362872NENGXHWMNLU5" ,
+    "MainDomain=devfastchargeapi.com",
+    "Route53ZoneId=Z07362872NENGXHWMNLU5",
     "ForwardEmailTo=devfastchargeapi@gmail.com",
     "MaingunTxtRecordName=mailo._domainkey.devfastchargeapi.com",
     "MailgunTxtRecordValue='\"k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDQkzXAM6h9Tazrq8FyoSo/flFhGdzJfRqumAschvdn+c+Sr1ZY3Zrr3AijnnrFYL7jVqzziNnxqpUIkNJAzLQ8mW/+5o2+KgAKfULOPn3nr8ZyaBqbd5s+9uSSVwEvJ9m/hsBMnw573tJFV4vcH7q+a97iYvnswuXmtcDzkIZUxQIDAQAB\"'",
 ]
 resolve_s3 = true
 image_repositories = []
-no_fail_on_empty_changeset = true
+fail_on_empty_changeset = false
 
 [default.logs.parameters]
 stack_name = "dev-site-email"
@@ -37,7 +37,7 @@ parameter_overrides = [
 ]
 resolve_s3 = true
 image_repositories = []
-no_fail_on_empty_changeset = true
+fail_on_empty_changeset = false
 
 [live.logs.parameters]
 profile = "live_fastchargeapi"

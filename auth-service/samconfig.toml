@@ -9,7 +9,7 @@ resolve_s3 = true
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
 parameter_overrides = "MainDomain=\"devfastchargeapi.com\" Route53ZoneId=\"Z07362872NENGXHWMNLU5\" EnvDevDomain=\"1\""
 image_repositories = []
-no_fail_on_empty_changeset = true
+fail_on_empty_changeset = false
 
 [default.logs.parameters]
 stack_name = "dev-auth-service"
@@ -25,7 +25,7 @@ resolve_s3 = true
 capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
 parameter_overrides = "MainDomain=\"fastchargeapi.com\" Route53ZoneId=\"Z0358815GI2I8U5CTHXW\""
 image_repositories = []
-no_fail_on_empty_changeset = true
+fail_on_empty_changeset = false
 
 [live.logs.parameters]
 profile = "live_fastchargeapi"
