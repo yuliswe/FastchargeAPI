@@ -7,12 +7,13 @@
     "start": "docusaurus start",
     "build": "docusaurus build",
     "swizzle": "docusaurus swizzle",
-    "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
     "serve": "docusaurus serve",
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "upload": "aws s3 sync --delete --only-show-errors ./build s3://dev-fastchargeapi-doc-bucket",
+    "deploy": "npm run build && sam deploy && npm run upload"
   },
   "dependencies": {
     "@docusaurus/core": "^2.3.1",

@@ -1,0 +1,40 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "dev-fastchargeapi-doc"
+s3_prefix = "dev-fastchargeapi-doc"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = [
+    "DomainName=\"doc.devfastchargeapi.com\"",
+    "Route53ZoneId=\"Z07362872NENGXHWMNLU5\"",
+    "CachePolicyId=\"4135ea2d-6df8-44a3-9df3-4b5a84be39ad\"", # This is the managed cache policy for CachingDisabled
+]
+resolve_s3 = true
+image_repositories = []
+fail_on_empty_changeset = false
+
+[default.logs.parameters]
+stack_name = "dev-fastchargeapi-doc"
+
+[live]
+[live.deploy]
+[live.deploy.parameters]
+profile = "live_fastchargeapi"
+stack_name = "live-fastchargeapi-doc"
+s3_prefix = "live-fastchargeapi-doc"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = [
+    "DomainName=\"doc.fastchargeapi.com\"",
+    "Route53ZoneId=\"Z0358815GI2I8U5CTHXW\"",
+    "CachePolicyId=\"658327ea-f89d-4fab-a63d-7e88639e58f6\"", # This is the managed cache policy for CachingOptimized
+]
+resolve_s3 = true
+image_repositories = []
+fail_on_empty_changeset = false
+
+[live.logs.parameters]
+profile = "live_fastchargeapi"
+stack_name = "live-fastchargeapi-doc"
