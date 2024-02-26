@@ -7,7 +7,7 @@ s3_prefix = "dev-fastchargeapi-web"
 region = "us-east-1"
 capabilities = "CAPABILITY_IAM"
 parameter_overrides = [
-    "MainDomain=\"devfastchargeapi.com\"",
+    "DomainName=\"devfastchargeapi.com\"",
     "Route53ZoneId=\"Z07362872NENGXHWMNLU5\"",
     "CachePolicyId=\"4135ea2d-6df8-44a3-9df3-4b5a84be39ad\"", # This is the managed cache policy for CachingDisabled
 ]
@@ -27,7 +27,7 @@ s3_prefix = "live-fastchargeapi-web"
 region = "us-east-1"
 capabilities = "CAPABILITY_IAM"
 parameter_overrides = [
-    "MainDomain=\"fastchargeapi.com\"",
+    "DomainName=\"fastchargeapi.com\"",
     "Route53ZoneId=\"Z0358815GI2I8U5CTHXW\"",
     "CachePolicyId=\"658327ea-f89d-4fab-a63d-7e88639e58f6\"", # This is the managed cache policy for CachingOptimized
 ]
