@@ -1,5 +1,6 @@
 import { Command } from "commander";
-import { createCommonPayCommand } from "src/common/account/pay";
+import { createCommonAddMoneyCommand } from "src/common/account/addMoney";
+import { createCommonWithdrawMoneyCommand } from "src/common/account/withdrawMoney";
 import { createCommonLoginCommand } from "src/common/login";
 import { createCommonLogoutCommand } from "src/common/logout";
 import { createFastchargeAppCreateCommand } from "src/fastcharge/app/create";
@@ -28,6 +29,6 @@ const createFastchargeAppCommand = (program: Command) =>
     .addCommand(createFastchargeAppDeleteCommand(program));
 
 const createFastchargeAccountCommand = (program: Command) =>
-  createCommand({ name: "account", summary: "Manage your account", description: "Manage your account" }).addCommand(
-    createCommonPayCommand(program)
-  );
+  createCommand({ name: "account", summary: "Manage your account", description: "Manage your account" })
+    .addCommand(createCommonAddMoneyCommand(program))
+    .addCommand(createCommonWithdrawMoneyCommand(program));

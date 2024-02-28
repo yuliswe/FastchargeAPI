@@ -3,6 +3,8 @@ import { User } from "@/src/database/models/User";
 import { getParameterFromAWSSystemsManager } from "@/src/functions/aws";
 import { makeFastchargeAPIIdTokenForUser } from "@/src/functions/user";
 import { UserPK } from "@/src/pks/UserPK";
+import { createTestUser } from "@/tests/test-data/User";
+import { baseRequestContext } from "@/tests/test-utils/test-utils";
 import { createFastapiProgram } from "src/fastapi/program";
 import { createFastchargeProgram } from "src/fastcharge/program";
 import { tiChecker } from "src/tiChecker";
@@ -76,6 +78,19 @@ export async function mockLoggedInAsUser(user: User) {
     idToken: token,
     refreshToken: "",
   });
+}
+
+export async function loginAsNewTestUser() {
+  const user = await createTestUser(baseRequestContext);
+  const token = await makeFastchargeAPIIdTokenForUser({ user, expireInSeconds: 3600 });
+  jest.spyOn(authFileModule, "readAuthFile").mockResolvedValue({
+    userPK: UserPK.stringify(user),
+    email: user.email,
+    issuer: "fastchargeapi",
+    idToken: token,
+    refreshToken: "",
+  });
+  return user;
 }
 
 class ExitCalled extends Error {

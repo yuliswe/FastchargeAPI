@@ -1,9 +1,9 @@
 import { fastcharge } from "tests/utils";
 
-describe("fastcharge account pay --help", () => {
+describe("fastcharge account addmoney --help", () => {
   it("prints help", async () => {
-    const { stdout, exitCode } = await fastcharge(["account", "pay", "--help"]);
-    expect(exitCode).toBe(0);
+    const { stdout, exitCode } = await fastcharge(["account", "addmoney", "--help"]);
     expect(stdout.getOutput()).toMatchSnapshot();
+    expect(exitCode).toBe(0);
   });
 });

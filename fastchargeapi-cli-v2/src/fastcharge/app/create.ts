@@ -72,7 +72,7 @@ async function appCreateCommand(args: {
     println(chalk.blue(` ${reactHost}/app/${pk}`));
   } catch (e) {
     if (e instanceof AlreadyExistsSimpleGQLError) {
-      println("An app with this name already exists.");
+      println(`An app with this name already exists: ${options.name}.`);
       println("Please use a different name.");
       process.exit(1);
     }

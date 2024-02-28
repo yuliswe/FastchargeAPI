@@ -39,6 +39,11 @@ export type CliFastchargeAppUpdateCommandOptions = {
 
 export type CliFastchargeAppDeleteCommandOptions = {};
 
-export type CliCommonPayCommandOptions = {
+export type CliCommonAddMoneyCommandOptions = {
   amount: number;
+};
+
+export type CliCommonWithdrawMoneyCommandOptions = {
+  amount: number;
+  yes?: boolean;
 };

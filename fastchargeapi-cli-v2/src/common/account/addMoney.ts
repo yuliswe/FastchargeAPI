@@ -3,26 +3,26 @@ import { Command } from "commander";
 import opener from "opener";
 import { reactHost } from "src/env";
 import { tiChecker } from "src/tiChecker";
-import { CliCommonPayCommandOptions, CliGlobalOptions } from "src/types/cliOptions";
+import { CliCommonAddMoneyCommandOptions, CliGlobalOptions } from "src/types/cliOptions";
 import { createCommand } from "src/utils/command";
 import { println } from "src/utils/console";
 import { hex, waitForSecretContent } from "src/utils/remoteSecret";
 
-export const createCommonPayCommand = (program: Command) =>
+export const createCommonAddMoneyCommand = (program: Command) =>
   createCommand({
-    name: "pay",
+    name: "addmoney",
     summary: "Add money to your account",
     description: "Top up your account balance for API usage.",
   })
     .requiredOption("--amount <number>", "Pay amount in USD.", parseFloat)
     .action(async (options) => {
-      await payCommand({
+      await addMoneyCommand({
         globalOptions: tiChecker.CliGlobalOptions.strictFrom(program.opts()),
-        options: tiChecker.CliCommonPayCommandOptions.strictFrom(options),
+        options: tiChecker.CliCommonAddMoneyCommandOptions.strictFrom(options),
       });
     });
 
-export const payCommand = async (args: { globalOptions: CliGlobalOptions; options: CliCommonPayCommandOptions }) => {
+async function addMoneyCommand(args: { globalOptions: CliGlobalOptions; options: CliCommonAddMoneyCommandOptions }) {
   const { options } = args;
   const { amount } = options;
   const value = await waitForSecretContent({
@@ -50,4 +50,4 @@ export const payCommand = async (args: { globalOptions: CliGlobalOptions; option
     println(chalk.red("Canceled."));
     process.exit(1);
   }
-};
+}

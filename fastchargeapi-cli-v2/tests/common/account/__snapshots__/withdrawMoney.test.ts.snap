@@ -1,0 +1,35 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`fastcharge account withdraw --help prints help 1`] = `
+"Usage: fastcharge account withdraw [options]
+
+Withdraw money from your account balance.
+
+Options:
+  --amount <number>  Withdraw amount in USD.
+  -y, --yes          Skip confirmation prompt.
+  --help             Display help for command
+"
+`;
+
+exports[`fastcharge account withdraw prints error when user has insufficient funds 1`] = `
+"[31mInsufficient funds.[39m
+[33mYour balance is $0.00.[39m
+"
+`;
+
+exports[`fastcharge account withdraw prints error when user withdraw a very small amount 1`] = `
+"Unable to withdraw due to total transfer fee being $0.30.
+This means that after paying the transfer fees, the you will not receive any money.
+"
+`;
+
+exports[`fastcharge account withdraw withdraws money succesfully 1`] = `
+"[33mWithdrawing $1000.00 from your account.[39m
+[33mYou will receive $970.70 after transfer fees.[39m
+[32mRequest sent.[39m
+Note that it may take up to 1 business day for the money to arrive.
+Login to the account dashboard to track the status of your payout:
+[36mhttps://devfastchargeapi.com/account[39m
+"
+`;
