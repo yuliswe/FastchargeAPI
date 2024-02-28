@@ -1,7 +1,7 @@
 import { Theme } from "@mui/material/styles";
 import { User as FirebaseUser } from "firebase/auth";
 import React from "react";
-import { Location, NavigateFunction, Params, useSearchParams } from "react-router-dom";
+import { Location, Params, useSearchParams } from "react-router-dom";
 export type AppContext = {
   mediaQuery: {
     xs: { down: boolean; only: boolean; up: boolean };
@@ -19,7 +19,7 @@ export type AppContext = {
       /** path + search + hash */
       readonly fullpath: string;
     };
-    navigate: NavigateFunction;
+    navigate: (url: string, options?: { replace?: boolean }) => Promise<void>;
     navigateExternal: (url: string) => void;
     readonly params: Params<string>; // Gets the values of the current route's dynamic segments, for example the id of /users/:id
     readonly query: ReturnType<typeof useSearchParams>[0]; // Gets the values of the current route's query string, ie, the part after the ? in /users?search=abc

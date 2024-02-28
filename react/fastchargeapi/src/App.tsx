@@ -7,11 +7,11 @@ import { useEffect, useRef, useState } from "react";
 import { HelmetProvider } from "react-helmet-async";
 import { Provider } from "react-redux";
 import { LinkProps, RouterProvider } from "react-router-dom";
-import { getGQLClient } from "src/graphql-client";
 import { AppContext, AppContextProvider } from "src/AppContext";
 import { LinkBehavior } from "src/LinkBehavior";
 import { useRenderingTrace } from "src/debug";
 import { initializeFirebase } from "src/firebase";
+import { getGQLClient } from "src/graphql-client";
 import { createRouter } from "src/routes";
 import { reduxStore } from "src/store-config";
 import { getTheme } from "src/theme";
@@ -136,7 +136,7 @@ export function App() {
     <Provider store={reduxStore}>
       <HelmetProvider>
         <AppContextProvider value={context}>
-          <ThemeProvider theme={originalTheme}>
+          <ThemeProvider theme={modifiedTheme}>
             <CssBaseline />
             <RouterProvider router={createRouter()} />
           </ThemeProvider>

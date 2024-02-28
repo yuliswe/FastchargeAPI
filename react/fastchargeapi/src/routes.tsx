@@ -1,11 +1,11 @@
 import React, { useContext, useEffect, useState } from "react";
-import { createBrowserRouter, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { Error404Page } from "src/connected-components/Error404Page";
+import { createBrowserRouter, matchPath, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { AppContext, AppContextProvider, ReactAppContextType } from "src/AppContext";
 import { AccountPage } from "src/connected-components/AccountPage";
 import { AppDetailPage } from "src/connected-components/AppDetailPage";
 import { AuthPage } from "src/connected-components/AuthPage";
 import { DashboardPage } from "src/connected-components/DashboardPage";
+import { Error404Page } from "src/connected-components/Error404Page";
 import { HomePage } from "src/connected-components/HomePage";
 import { MyAppDetailPage } from "src/connected-components/MyAppDetailPage";
 import { MyAppsPage } from "src/connected-components/MyAppsPage";
@@ -142,6 +142,31 @@ function RoutePage(props: RouteConfig) {
   const context = useContext(ReactAppContextType);
   const location = useLocation();
   const navigate = useNavigate();
+  const wrappedNavigate = async (
+    href: string,
+    options?: {
+      replace?: boolean;
+    }
+  ) => {
+    if (href.startsWith("http")) {
+      navigateExternal(href);
+    } else {
+      const url = new URL(href.toString(), window.location.origin);
+      // Look in the routeDataFetchers to find the matching data
+      // fetching function.
+      for (const { path, fetchData } of routeDataFetchers) {
+        const match = matchPath(path, url.pathname);
+        if (match) {
+          const queryParams = url.searchParams;
+          context.loading.setIsLoading(true); // Show loading progress bar.
+          await fetchData?.(context, match.params, queryParams.entries());
+          context.loading.setIsLoading(false); // Hide loading progress bar.
+          break;
+        }
+      }
+      navigate(url, options);
+    }
+  };
   const params = useParams();
   const [searchParam, setSearchParam] = useSearchParams();
   // A state that is passed in AppContext. It determines when to show the
@@ -185,7 +210,7 @@ function RoutePage(props: RouteConfig) {
             ...location,
             fullpath: location.pathname + location.search + location.hash,
           },
-          navigate,
+          navigate: wrappedNavigate,
           navigateExternal,
           params,
           query: searchParam,

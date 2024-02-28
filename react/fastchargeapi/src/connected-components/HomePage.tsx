@@ -51,8 +51,9 @@ import { HomePageProductList } from "src/stateless-components/HomePageProductLis
 import { HomePagePublisherTutorialCarousel } from "src/stateless-components/HomePagePublisherTutorialCarousel";
 import { HomeAppState } from "src/states/HomeAppState";
 import { RootAppState } from "src/states/RootAppState";
-import { appStore, reduxStore } from "src/store-config";
+import { appStore } from "src/store-config";
 import { ReactComponent as MobileProgrammerIcon } from "src/svg/mobile-programmer.svg";
+import { resolveWhenFinishLoading } from "src/utils";
 
 type _State = {};
 
@@ -70,7 +71,7 @@ class _Home extends React.PureComponent<_Props, _State> {
     return this.context as AppContext;
   }
 
-  static isLoading(): boolean {
+  static isLoading(this: void): boolean {
     return appStore.getState().home.loadingFeaturedProducts || appStore.getState().home.loadingLatestProducts;
   }
 
@@ -80,13 +81,7 @@ class _Home extends React.PureComponent<_Props, _State> {
       appStore.dispatch(new HomePageEvent.LoadFeaturedProducts(context));
       appStore.dispatch(new HomePageEvent.LoadCategories(context));
       appStore.dispatch(new HomePageEvent.LoadPricingData(context));
-      const unsub = reduxStore.subscribe(() => {
-        if (!_Home.isLoading()) {
-          resolve();
-          unsub();
-          context.loading.setIsLoading(false);
-        }
-      });
+      resolveWhenFinishLoading(_Home.isLoading, resolve);
     });
   }
 
