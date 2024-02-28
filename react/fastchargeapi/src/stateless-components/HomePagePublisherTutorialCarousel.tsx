@@ -2,7 +2,7 @@ import { HelpOutlineRounded } from "@mui/icons-material";
 import { Box, ButtonBase, IconButton, Paper, Popover, Typography } from "@mui/material";
 import React from "react";
 import Terminal, { ColorMode, TerminalInput, TerminalOutput } from "react-terminal-ui";
-import { StepsCarousel } from "./StepsCarousel";
+import { StepsCarousel } from "src/stateless-components/StepsCarousel";
 
 type Step = {
   title: string;

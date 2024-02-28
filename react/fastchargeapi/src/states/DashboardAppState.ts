@@ -1,6 +1,6 @@
 import { AppState, PartialProps } from "react-appevent-redux";
-import { DashboardAccountActivityFragment, DashboardAccountHistoryFragment } from "../__generated__/gql/graphql";
-import { UserAccountInfo } from "../events/DashboardEvent";
+import { DashboardAccountActivityFragment, DashboardAccountHistoryFragment } from "src/__generated__/gql/graphql";
+import { UserAccountInfo } from "src/events/DashboardEvent";
 
 export class DashboardAppState extends AppState {
   loadingBalance = true;

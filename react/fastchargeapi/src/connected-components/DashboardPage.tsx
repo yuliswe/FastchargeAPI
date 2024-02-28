@@ -6,26 +6,26 @@ import { AfterEventOfType } from "react-appevent-redux";
 import { Line } from "react-chartjs-2";
 import { connect } from "react-redux";
 import Terminal, { ColorMode, TerminalInput } from "react-terminal-ui";
-import { AppContext, ReactAppContextType } from "../AppContext";
+import { AppContext, ReactAppContextType } from "src/AppContext";
 import {
   AccountActivityReason,
   AccountActivityStatus,
   AccountActivityType,
   DashboardAccountActivityFragment,
   StripeTransferStatus,
-} from "../__generated__/gql/graphql";
-import { DashboardEvent } from "../events/DashboardEvent";
-import { DashboardPageQuery, RouteURL } from "../routes";
+} from "src/__generated__/gql/graphql";
+import { DashboardEvent } from "src/events/DashboardEvent";
+import { DashboardPageQuery, RouteURL } from "src/routes";
 import {
   DocumentationDialog,
   SupportDocumentation,
   openDocumentationDialog,
   supportDocumenationDefault,
-} from "../stateless-components/DocumentationDialog";
-import { LogTable, LogTableOnChangeHandler } from "../stateless-components/LogTable";
-import { DashboardAppState } from "../states/DashboardAppState";
-import { RootAppState } from "../states/RootAppState";
-import { appStore, reduxStore } from "../store-config";
+} from "src/stateless-components/DocumentationDialog";
+import { LogTable, LogTableOnChangeHandler } from "src/stateless-components/LogTable";
+import { DashboardAppState } from "src/states/DashboardAppState";
+import { RootAppState } from "src/states/RootAppState";
+import { appStore, reduxStore } from "src/store-config";
 
 type Props = {
   dashboard: DashboardAppState;

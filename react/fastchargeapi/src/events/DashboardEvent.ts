@@ -1,15 +1,15 @@
 import { AppEvent, AppEventStream, mapState, to } from "react-appevent-redux";
 import { paymentServiceBaseURL } from "src/env";
-import { AppContext } from "../AppContext";
-import { graphql } from "../__generated__/gql";
+import { AppContext } from "src/AppContext";
+import { graphql } from "src/__generated__/gql";
 import {
   DashboardAccountActivityFragment,
   DashboardAccountHistoryFragment,
   GetAccountInfoQuery,
-} from "../__generated__/gql/graphql";
-import { fetchWithAuth } from "../fetch";
-import { getGQLClient } from "../graphql-client";
-import { RootAppState } from "../states/RootAppState";
+} from "src/__generated__/gql/graphql";
+import { fetchWithAuth } from "src/fetch";
+import { getGQLClient } from "src/graphql-client";
+import { RootAppState } from "src/states/RootAppState";
 
 export type UserAccountInfo = GetAccountInfoQuery["getUser"];
 class LoadUserInfo extends AppEvent<RootAppState> {

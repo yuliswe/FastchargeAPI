@@ -22,7 +22,7 @@ import {
 import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import React from "react";
-import { AppContext, ReactAppContextType } from "../AppContext";
+import { AppContext, ReactAppContextType } from "src/AppContext";
 
 export type LogTableOnChangeHandler = (data: { page: number; dateRange: { end: number } }) => void;
 export type LogTableProps<Activity> = {

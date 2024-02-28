@@ -1,5 +1,5 @@
 import { AppState, PartialProps } from "react-appevent-redux";
-import { AppSearchResultFragment } from "../__generated__/gql/graphql";
+import { AppSearchResultFragment } from "src/__generated__/gql/graphql";
 
 export class AppSearchResultState extends AppState {
   loading = false;

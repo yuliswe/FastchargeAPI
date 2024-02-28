@@ -1,9 +1,9 @@
 import { ApolloClient, InMemoryCache, TypedDocumentNode, createHttpLink, from as linksFrom } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
 import { EncryptJWT, JWTPayload, SignJWT } from "jose";
-import { AppContext } from "./AppContext";
-import { graphql } from "./__generated__/gql/gql";
-import { baseDomain, envVars, graphqlURL } from "./env";
+import { AppContext } from "src/AppContext";
+import { graphql } from "src/__generated__/gql/gql";
+import { baseDomain, envVars, graphqlURL } from "src/env";
 // debug
 
 if (envVars.DEV_DOMAIN) {

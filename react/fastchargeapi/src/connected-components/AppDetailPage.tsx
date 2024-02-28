@@ -10,21 +10,21 @@ import rehypeHighlight from "rehype-highlight";
 import rehypeRemoveComments from "rehype-remove-comments";
 import remarkGfm from "remark-gfm";
 import remarkGithub from "remark-github";
-import { AppContext, ReactAppContextType } from "../AppContext";
-import { SiteLayout } from "../SiteLayout";
-import { AppDetailEndpointFragment, AppDetailPricingFragment } from "../__generated__/gql/graphql";
-import { AppDetailEvent } from "../events/AppDetailEvent";
-import { AppDetailPageParams, RouteURL } from "../routes";
+import { AppContext, ReactAppContextType } from "src/AppContext";
+import { SiteLayout } from "src/SiteLayout";
+import { AppDetailEndpointFragment, AppDetailPricingFragment } from "src/__generated__/gql/graphql";
+import { AppDetailEvent } from "src/events/AppDetailEvent";
+import { AppDetailPageParams, RouteURL } from "src/routes";
 import {
   DocumentationDialog,
   SupportDocumentation,
   openDocumentationDialog,
   supportDocumenationDefault,
-} from "../stateless-components/DocumentationDialog";
-import { PricingCard } from "../stateless-components/PricingCard";
-import { AppDetailAppState } from "../states/AppDetailAppState";
-import { RootAppState } from "../states/RootAppState";
-import { appStore, reduxStore } from "../store-config";
+} from "src/stateless-components/DocumentationDialog";
+import { PricingCard } from "src/stateless-components/PricingCard";
+import { AppDetailAppState } from "src/states/AppDetailAppState";
+import { RootAppState } from "src/states/RootAppState";
+import { appStore, reduxStore } from "src/store-config";
 
 type _Props = {
   appState: AppDetailAppState;

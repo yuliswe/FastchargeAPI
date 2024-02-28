@@ -3,20 +3,20 @@ import { Box, Breadcrumbs, Button, Divider, Grid, Link, Paper, Stack, Typography
 import React from "react";
 import { connect } from "react-redux";
 import Terminal, { ColorMode, TerminalInput } from "react-terminal-ui";
-import { AppContext, ReactAppContextType } from "../AppContext";
-import { AvailablePlan, SubscriotionDetailEvent, UsageSummary } from "../events/SubscriptionDetailEvent";
-import { RouteURL, SubscriptionDetailPageParams } from "../routes";
+import { AppContext, ReactAppContextType } from "src/AppContext";
+import { AvailablePlan, SubscriotionDetailEvent, UsageSummary } from "src/events/SubscriptionDetailEvent";
+import { RouteURL, SubscriptionDetailPageParams } from "src/routes";
 import {
   DocumentationDialog,
   SupportDocumentation,
   openDocumentationDialog,
   supportDocumenationDefault,
-} from "../stateless-components/DocumentationDialog";
-import { LogTable, LogTableOnChangeHandler } from "../stateless-components/LogTable";
-import { PricingCard } from "../stateless-components/PricingCard";
-import { RootAppState } from "../states/RootAppState";
-import { SubscriptionDetailAppState } from "../states/SubscriptionDetailAppState";
-import { appStore, reduxStore } from "../store-config";
+} from "src/stateless-components/DocumentationDialog";
+import { LogTable, LogTableOnChangeHandler } from "src/stateless-components/LogTable";
+import { PricingCard } from "src/stateless-components/PricingCard";
+import { RootAppState } from "src/states/RootAppState";
+import { SubscriptionDetailAppState } from "src/states/SubscriptionDetailAppState";
+import { appStore, reduxStore } from "src/store-config";
 
 type _Props = {
   appState: SubscriptionDetailAppState;

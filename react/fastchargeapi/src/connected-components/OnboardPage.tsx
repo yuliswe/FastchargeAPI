@@ -2,10 +2,10 @@ import { Box, CircularProgress, Container, Fade, Grid, Stack, Typography } from 
 import React from "react";
 import { connect } from "react-redux";
 import { paymentServiceBaseURL } from "src/env";
-import { AppContext, ReactAppContextType } from "../AppContext";
-import { fetchWithAuth } from "../fetch";
-import { OnboardAppState } from "../states/OnBoardAppState";
-import { RootAppState } from "../states/RootAppState";
+import { AppContext, ReactAppContextType } from "src/AppContext";
+import { fetchWithAuth } from "src/fetch";
+import { OnboardAppState } from "src/states/OnBoardAppState";
+import { RootAppState } from "src/states/RootAppState";
 type _State = {};
 
 type _Props = {

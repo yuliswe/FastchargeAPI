@@ -1,6 +1,6 @@
 import { Box, Grid, Pagination, SxProps, Typography } from "@mui/material";
 import React, { ReactNode } from "react";
-import { AppContext, ReactAppContextType } from "../AppContext";
+import { AppContext, ReactAppContextType } from "src/AppContext";
 
 export type PaginatedListOnPageChangeHandler = (data: { page: number }) => void;
 

@@ -14,11 +14,11 @@ import {
 import React from "react";
 import { connect } from "react-redux";
 import type { AuthPageQuery } from "src/routes";
-import { AppContext, ReactAppContextType } from "../AppContext";
-import { setRemoteSecret } from "../graphql-client";
-import { RootAppState } from "../states/RootAppState";
-import { ReactComponent as GithubIcon } from "../svg/github.svg";
-import { ReactComponent as GoogleIcon } from "../svg/google.svg";
+import { AppContext, ReactAppContextType } from "src/AppContext";
+import { setRemoteSecret } from "src/graphql-client";
+import { RootAppState } from "src/states/RootAppState";
+import { ReactComponent as GithubIcon } from "src/svg/github.svg";
+import { ReactComponent as GoogleIcon } from "src/svg/google.svg";
 
 type _State = {
   errorMessage: string;

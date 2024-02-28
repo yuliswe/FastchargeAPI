@@ -1,7 +1,7 @@
 import React from "react";
-import { AppContext, ReactAppContextType } from "../AppContext";
-import { RouteURL } from "../routes";
-import { SearchBar } from "./SearchBar";
+import { AppContext, ReactAppContextType } from "src/AppContext";
+import { RouteURL } from "src/routes";
+import { SearchBar } from "src/stateless-components/SearchBar";
 type _State = {};
 
 type _Props = {

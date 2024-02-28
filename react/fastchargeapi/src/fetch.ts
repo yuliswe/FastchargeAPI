@@ -1,4 +1,4 @@
-import { AppContext } from "./AppContext";
+import { AppContext } from "src/AppContext";
 
 export async function fetchWithAuth(context: AppContext, url: RequestInfo, options?: RequestInit) {
   const user = await context.firebase.userPromise;

@@ -1,7 +1,7 @@
 import SearchIcon from "@mui/icons-material/Search";
 import { Button, IconButton, InputBase, Paper, Stack, Typography } from "@mui/material";
 import React from "react";
-import { AppContext, ReactAppContextType } from "../AppContext";
+import { AppContext, ReactAppContextType } from "src/AppContext";
 
 type _State = {
   searchText: string;

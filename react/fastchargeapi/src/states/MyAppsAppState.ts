@@ -1,5 +1,5 @@
 import { AppState, PartialProps } from "react-appevent-redux";
-import { UserApp } from "../events/MyAppsEvent";
+import { UserApp } from "src/events/MyAppsEvent";
 
 export class MyAppsAppState extends AppState {
   loading = true;

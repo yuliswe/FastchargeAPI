@@ -16,11 +16,11 @@ import {
 import React from "react";
 import { connect } from "react-redux";
 import { Outlet } from "react-router-dom";
-import { AppContext, ReactAppContextType } from "../AppContext";
-import { SiteLayout } from "../SiteLayout";
-import { MobileMenuItemProps } from "../stateless-components/AppBar";
-import { AccountAppState } from "../states/AccountAppState";
-import { RootAppState } from "../states/RootAppState";
+import { AppContext, ReactAppContextType } from "src/AppContext";
+import { SiteLayout } from "src/SiteLayout";
+import { MobileMenuItemProps } from "src/stateless-components/AppBar";
+import { AccountAppState } from "src/states/AccountAppState";
+import { RootAppState } from "src/states/RootAppState";
 type Props = {
   appState: AccountAppState;
 };

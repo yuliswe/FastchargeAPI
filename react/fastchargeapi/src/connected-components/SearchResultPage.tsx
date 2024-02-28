@@ -15,15 +15,15 @@ import {
 } from "@mui/material";
 import React from "react";
 import { connect } from "react-redux";
-import { AppContext, ReactAppContextType } from "../AppContext";
-import { SiteLayout } from "../SiteLayout";
-import { AppFullTextSearchOrderBy, AppSearchResultFragment } from "../__generated__/gql/graphql";
-import { AppSearchResultEvent } from "../events/AppSearchResultEvent";
-import { RouteURL } from "../routes";
-import { PaginatedList, PaginatedListOnPageChangeHandler } from "../stateless-components/PaginatedList";
-import { AppSearchResultState } from "../states/AppSearchResultState";
-import { RootAppState } from "../states/RootAppState";
-import { appStore } from "../store-config";
+import { AppContext, ReactAppContextType } from "src/AppContext";
+import { SiteLayout } from "src/SiteLayout";
+import { AppFullTextSearchOrderBy, AppSearchResultFragment } from "src/__generated__/gql/graphql";
+import { AppSearchResultEvent } from "src/events/AppSearchResultEvent";
+import { RouteURL } from "src/routes";
+import { PaginatedList, PaginatedListOnPageChangeHandler } from "src/stateless-components/PaginatedList";
+import { AppSearchResultState } from "src/states/AppSearchResultState";
+import { RootAppState } from "src/states/RootAppState";
+import { appStore } from "src/store-config";
 
 type Props = {
   searchResultState: AppSearchResultState;

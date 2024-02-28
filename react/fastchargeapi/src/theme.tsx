@@ -18,7 +18,7 @@ import { ThemeOptions, createTheme, darken, lighten } from "@mui/material/styles
 import type { Shadows } from "@mui/material/styles/shadows";
 import { deepmerge } from "@mui/utils";
 import React from "react";
-import "./App.scss";
+import "src/App.scss";
 
 declare module "@mui/material/styles" {
   interface TypographyVariants {

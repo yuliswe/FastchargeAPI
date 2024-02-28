@@ -1,6 +1,6 @@
 import * as Redux from "@reduxjs/toolkit";
 import { AppStore } from "react-appevent-redux";
-import { RootAppState } from "./states/RootAppState";
+import { RootAppState } from "src/states/RootAppState";
 
 function rootReducer(state: RootAppState | undefined, action: Redux.AnyAction) {
   return state ?? new RootAppState({});

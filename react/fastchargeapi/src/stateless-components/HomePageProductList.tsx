@@ -10,7 +10,7 @@ import {
 } from "@mui/icons-material";
 import { Avatar, Box, Button, Chip, Paper, Skeleton, Stack, Typography } from "@mui/material";
 import React from "react";
-import { RouteURL } from "../routes";
+import { RouteURL } from "src/routes";
 
 export function getRandomProductIcons(avatarSize: number, iconSize: number) {
   return [

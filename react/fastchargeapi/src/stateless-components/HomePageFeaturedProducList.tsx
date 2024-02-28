@@ -1,8 +1,8 @@
 import { ArrowForwardRounded, StarsRounded } from "@mui/icons-material";
 import { Avatar, Box, Button, Chip, Grid, Paper, Skeleton, Stack, Typography } from "@mui/material";
 import React from "react";
-import { AppContext, ReactAppContextType } from "../AppContext";
-import { getRandomProductIcons } from "./HomePageProductList";
+import { AppContext, ReactAppContextType } from "src/AppContext";
+import { getRandomProductIcons } from "src/stateless-components/HomePageProductList";
 
 export type HomePageFeaturedProductListProduct = {
   logo: string;

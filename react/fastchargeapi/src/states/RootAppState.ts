@@ -1,16 +1,16 @@
 import { AppState, PartialProps } from "react-appevent-redux";
 import { Error404AppState } from "src/states/Error404AppState";
 import { TopUpAppState } from "src/states/TopUpAppState";
-import { AccountAppState } from "./AccountAppState";
-import { AppDetailAppState } from "./AppDetailAppState";
-import { AppSearchResultState } from "./AppSearchResultState";
-import { DashboardAppState } from "./DashboardAppState";
-import { HomeAppState } from "./HomeAppState";
-import { MyAppDetailAppState } from "./MyAppDetailAppState";
-import { MyAppsAppState } from "./MyAppsAppState";
-import { SubscriptionDetailAppState } from "./SubscriptionDetailAppState";
-import { SubscriptionsAppState } from "./SubscriptionsAppState";
-import { TermsAppState } from "./TermsAppState";
+import { AccountAppState } from "src/states/AccountAppState";
+import { AppDetailAppState } from "src/states/AppDetailAppState";
+import { AppSearchResultState } from "src/states/AppSearchResultState";
+import { DashboardAppState } from "src/states/DashboardAppState";
+import { HomeAppState } from "src/states/HomeAppState";
+import { MyAppDetailAppState } from "src/states/MyAppDetailAppState";
+import { MyAppsAppState } from "src/states/MyAppsAppState";
+import { SubscriptionDetailAppState } from "src/states/SubscriptionDetailAppState";
+import { SubscriptionsAppState } from "src/states/SubscriptionsAppState";
+import { TermsAppState } from "src/states/TermsAppState";
 
 export class RootAppState extends AppState {
   home = new HomeAppState({});

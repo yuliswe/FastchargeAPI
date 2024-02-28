@@ -8,13 +8,13 @@ import { HelmetProvider } from "react-helmet-async";
 import { Provider } from "react-redux";
 import { LinkProps, RouterProvider } from "react-router-dom";
 import { getGQLClient } from "src/graphql-client";
-import { AppContext, AppContextProvider } from "./AppContext";
-import { LinkBehavior } from "./LinkBehavior";
-import { useRenderingTrace } from "./debug";
-import { initializeFirebase } from "./firebase";
-import { createRouter } from "./routes";
-import { reduxStore } from "./store-config";
-import { getTheme } from "./theme";
+import { AppContext, AppContextProvider } from "src/AppContext";
+import { LinkBehavior } from "src/LinkBehavior";
+import { useRenderingTrace } from "src/debug";
+import { initializeFirebase } from "src/firebase";
+import { createRouter } from "src/routes";
+import { reduxStore } from "src/store-config";
+import { getTheme } from "src/theme";
 
 export const sendPing = async (context: AppContext) => {
   const { client } = await getGQLClient(context);

@@ -1,5 +1,5 @@
 import { AppState, PartialProps } from "react-appevent-redux";
-import { MyAppDetail } from "../events/MyAppDetailEvent";
+import { MyAppDetail } from "src/events/MyAppDetailEvent";
 export class MyAppDetailAppState extends AppState {
   loadingAppDetail = true;
   appDetail: MyAppDetail | null = null;

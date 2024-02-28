@@ -1,17 +1,17 @@
 import { Box, Container, Stack, Typography } from "@mui/material";
 import React from "react";
-import { AppContext, ReactAppContextType } from "../AppContext";
-import { ReactComponent as BannerIconAddFiles } from "../svg/banner-icon-add-files.svg";
-import { ReactComponent as BannerIconCoding } from "../svg/banner-icon-coding.svg";
-import { ReactComponent as BannerIconLaptop } from "../svg/banner-icon-laptop.svg";
-import { ReactComponent as BannerIconScribbleArrow } from "../svg/banner-icon-scribble-arrow.svg";
-import { ReactComponent as BannerIconScribbleArrow2 } from "../svg/banner-icon-scribble-arrow2.svg";
-import { ReactComponent as BannerIconScribbleCircle } from "../svg/banner-icon-scribble-circle.svg";
-import { ReactComponent as BannerIconScribbleCloud } from "../svg/banner-icon-scribble-cloud.svg";
-import { ReactComponent as BannerIconScribbleDoubleCircle } from "../svg/banner-icon-scribble-double-circle.svg";
-import { ReactComponent as BannerIconScribbleShape } from "../svg/banner-icon-scribble-shape.svg";
-import { ReactComponent as BannerIconServer } from "../svg/banner-icon-server.svg";
-import { AppSearchBar } from "./AppSearchBar";
+import { AppContext, ReactAppContextType } from "src/AppContext";
+import { ReactComponent as BannerIconAddFiles } from "src/svg/banner-icon-add-files.svg";
+import { ReactComponent as BannerIconCoding } from "src/svg/banner-icon-coding.svg";
+import { ReactComponent as BannerIconLaptop } from "src/svg/banner-icon-laptop.svg";
+import { ReactComponent as BannerIconScribbleArrow } from "src/svg/banner-icon-scribble-arrow.svg";
+import { ReactComponent as BannerIconScribbleArrow2 } from "src/svg/banner-icon-scribble-arrow2.svg";
+import { ReactComponent as BannerIconScribbleCircle } from "src/svg/banner-icon-scribble-circle.svg";
+import { ReactComponent as BannerIconScribbleCloud } from "src/svg/banner-icon-scribble-cloud.svg";
+import { ReactComponent as BannerIconScribbleDoubleCircle } from "src/svg/banner-icon-scribble-double-circle.svg";
+import { ReactComponent as BannerIconScribbleShape } from "src/svg/banner-icon-scribble-shape.svg";
+import { ReactComponent as BannerIconServer } from "src/svg/banner-icon-server.svg";
+import { AppSearchBar } from "src/stateless-components/AppSearchBar";
 export class HomePageBanner2 extends React.PureComponent {
   static contextType = ReactAppContextType;
   get _context() {

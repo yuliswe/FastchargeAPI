@@ -1,7 +1,7 @@
 import { Box, Button, Container, Grid, Paper, Stack, Typography } from "@mui/material";
 import React from "react";
 import Terminal, { ColorMode, TerminalInput, TerminalOutput } from "react-terminal-ui";
-import { RouteURL } from "../routes";
+import { RouteURL } from "src/routes";
 
 export class HomePageBanner extends React.PureComponent {
   render() {

@@ -1,10 +1,10 @@
 import { Box, ButtonBase, Container, Grid, IconButton, Link, Stack, Typography } from "@mui/material";
 import React from "react";
-import { AppContext, ReactAppContextType } from "../AppContext";
-import { RouteURL } from "../routes";
-import { ReactComponent as DiscordIcon } from "../svg/discord.svg";
-import { ReactComponent as GithubIcon } from "../svg/github-solid.svg";
-import { ReactComponent as Logo } from "../svg/logo5.svg";
+import { AppContext, ReactAppContextType } from "src/AppContext";
+import { RouteURL } from "src/routes";
+import { ReactComponent as DiscordIcon } from "src/svg/discord.svg";
+import { ReactComponent as GithubIcon } from "src/svg/github-solid.svg";
+import { ReactComponent as Logo } from "src/svg/logo5.svg";
 
 const githubRepoLink = "https://github.com/FastchargeAPI/fastchargeapi-cli/issues";
 const discordInviteLink = "https://discord.gg/HfQDWjkJ7n";

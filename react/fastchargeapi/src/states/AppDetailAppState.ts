@@ -1,6 +1,6 @@
 import { AppState, PartialProps } from "react-appevent-redux";
-import { AppDetailEndpointFragment, AppDetailPricingFragment } from "../__generated__/gql/graphql";
-import { AppDetailInfo } from "../events/AppDetailEvent";
+import { AppDetailEndpointFragment, AppDetailPricingFragment } from "src/__generated__/gql/graphql";
+import { AppDetailInfo } from "src/events/AppDetailEvent";
 
 export class AppDetailAppState extends AppState {
   loadingAppInfo = true;

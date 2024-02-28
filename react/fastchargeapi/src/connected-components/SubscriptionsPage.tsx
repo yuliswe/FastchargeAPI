@@ -15,12 +15,12 @@ import {
 } from "@mui/material";
 import React from "react";
 import { connect } from "react-redux";
-import { AppContext, ReactAppContextType } from "../AppContext";
-import { SubscriptionEvent, UserSubscription } from "../events/SubscriptionEvent";
-import { RouteURL } from "../routes";
-import { RootAppState } from "../states/RootAppState";
-import { SubscriptionsAppState } from "../states/SubscriptionsAppState";
-import { appStore, reduxStore } from "../store-config";
+import { AppContext, ReactAppContextType } from "src/AppContext";
+import { SubscriptionEvent, UserSubscription } from "src/events/SubscriptionEvent";
+import { RouteURL } from "src/routes";
+import { RootAppState } from "src/states/RootAppState";
+import { SubscriptionsAppState } from "src/states/SubscriptionsAppState";
+import { appStore, reduxStore } from "src/store-config";
 
 type Props = {
   appState: SubscriptionsAppState;

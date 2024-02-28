@@ -1,12 +1,12 @@
 import { Box, Container, Grid, Stack, Typography } from "@mui/material";
 import React from "react";
 import { connect } from "react-redux";
-import { AppContext, ReactAppContextType } from "../AppContext";
-import { SiteLayout } from "../SiteLayout";
-import { TermsEvent } from "../events/TermsEvent";
-import { RootAppState } from "../states/RootAppState";
-import { TermsAppState } from "../states/TermsAppState";
-import { appStore, reduxStore } from "../store-config";
+import { AppContext, ReactAppContextType } from "src/AppContext";
+import { SiteLayout } from "src/SiteLayout";
+import { TermsEvent } from "src/events/TermsEvent";
+import { RootAppState } from "src/states/RootAppState";
+import { TermsAppState } from "src/states/TermsAppState";
+import { appStore, reduxStore } from "src/store-config";
 
 type _State = {};
 

@@ -24,19 +24,19 @@ import {
 import React from "react";
 import { connect } from "react-redux";
 import Terminal, { ColorMode, TerminalInput } from "react-terminal-ui";
-import { AppContext, ReactAppContextType } from "../AppContext";
-import { AppVisibility } from "../__generated__/gql/graphql";
-import { MyAppDetailEvent } from "../events/MyAppDetailEvent";
-import { MyAppDetailPageParams, RouteURL } from "../routes";
+import { AppContext, ReactAppContextType } from "src/AppContext";
+import { AppVisibility } from "src/__generated__/gql/graphql";
+import { MyAppDetailEvent } from "src/events/MyAppDetailEvent";
+import { MyAppDetailPageParams, RouteURL } from "src/routes";
 import {
   DocumentationDialog,
   SupportDocumentation,
   openDocumentationDialog,
   supportDocumenationDefault,
-} from "../stateless-components/DocumentationDialog";
-import { MyAppDetailAppState } from "../states/MyAppDetailAppState";
-import { RootAppState } from "../states/RootAppState";
-import { appStore, reduxStore } from "../store-config";
+} from "src/stateless-components/DocumentationDialog";
+import { MyAppDetailAppState } from "src/states/MyAppDetailAppState";
+import { RootAppState } from "src/states/RootAppState";
+import { appStore, reduxStore } from "src/store-config";
 type _Props = {
   appState: MyAppDetailAppState;
 };

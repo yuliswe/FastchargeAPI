@@ -17,18 +17,18 @@ import {
 import React from "react";
 import { connect } from "react-redux";
 import Terminal, { ColorMode, TerminalInput } from "react-terminal-ui";
-import { AppContext, ReactAppContextType } from "../AppContext";
-import { MyAppsEvent, UserApp } from "../events/MyAppsEvent";
-import { RouteURL } from "../routes";
+import { AppContext, ReactAppContextType } from "src/AppContext";
+import { MyAppsEvent, UserApp } from "src/events/MyAppsEvent";
+import { RouteURL } from "src/routes";
 import {
   DocumentationDialog,
   SupportDocumentation,
   openDocumentationDialog,
   supportDocumenationDefault,
-} from "../stateless-components/DocumentationDialog";
-import { MyAppsAppState } from "../states/MyAppsAppState";
-import { RootAppState } from "../states/RootAppState";
-import { appStore, reduxStore } from "../store-config";
+} from "src/stateless-components/DocumentationDialog";
+import { MyAppsAppState } from "src/states/MyAppsAppState";
+import { RootAppState } from "src/states/RootAppState";
+import { appStore, reduxStore } from "src/store-config";
 type _Props = {
   appState: MyAppsAppState;
 };

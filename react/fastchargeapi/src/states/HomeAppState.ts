@@ -1,5 +1,5 @@
 import { AppState, PartialProps } from "react-appevent-redux";
-import { HomePageProductListProduct } from "../stateless-components/HomePageProductList";
+import { HomePageProductListProduct } from "src/stateless-components/HomePageProductList";
 export type HomePageCategoryListCategory = {
   title: string;
   tag: string;

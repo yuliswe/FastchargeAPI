@@ -1,9 +1,9 @@
 import { AppEvent, AppEventStream, mapState, to } from "react-appevent-redux";
-import { AppContext } from "../AppContext";
-import { graphql } from "../__generated__/gql";
-import { GetUserSubscriptionsQuery } from "../__generated__/gql/graphql";
-import { getGQLClient } from "../graphql-client";
-import { RootAppState } from "../states/RootAppState";
+import { AppContext } from "src/AppContext";
+import { graphql } from "src/__generated__/gql";
+import { GetUserSubscriptionsQuery } from "src/__generated__/gql/graphql";
+import { getGQLClient } from "src/graphql-client";
+import { RootAppState } from "src/states/RootAppState";
 
 export type UserSubscription = GetUserSubscriptionsQuery["getUser"]["subscriptions"][0];
 

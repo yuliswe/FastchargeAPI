@@ -15,7 +15,10 @@
     "new-page": "node ../react-appevent-redux-tools/dist/index.js",
     "fix": "eslint --fix ./",
     "pretypecheck": "npm run gen",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "upload": "aws s3 sync --delete --only-show-errors ./build s3://dev-fastchargeapi-web-bucket",
+    "_deploy": "npm run build && sam deploy && npm run upload",
+    "deploy:dev": "DEV_DOMAIN=1 npm run _deploy"
   },
   "devDependencies": {
     "@apollo/client": "^3.7.9",

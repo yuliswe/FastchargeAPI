@@ -1,8 +1,8 @@
 import React, { useContext, useRef } from "react";
 import { LinkProps as RouterLinkProps, matchPath } from "react-router-dom";
 import { HashLink } from "react-router-hash-link";
-import { ReactAppContextType } from "./AppContext";
-import { routeDataFetchers } from "./routes";
+import { ReactAppContextType } from "src/AppContext";
+import { routeDataFetchers } from "src/routes";
 
 export const LinkBehavior = React.forwardRef<
   HTMLAnchorElement,

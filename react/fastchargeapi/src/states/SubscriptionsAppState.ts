@@ -1,5 +1,5 @@
 import { AppState, PartialProps } from "react-appevent-redux";
-import { UserSubscription } from "../events/SubscriptionEvent";
+import { UserSubscription } from "src/events/SubscriptionEvent";
 
 export class SubscriptionsAppState extends AppState {
   subscriptions: UserSubscription[] = [];
