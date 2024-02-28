@@ -68,6 +68,10 @@ Resources:
           CachePolicyId: !Ref CachePolicyId
           ViewerProtocolPolicy: redirect-to-https
           TargetOriginId: !Sub ${AWS::StackName}-origin
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
 
   CloudFrontOriginAccessControl:
     Type: AWS::CloudFront::OriginAccessControl
