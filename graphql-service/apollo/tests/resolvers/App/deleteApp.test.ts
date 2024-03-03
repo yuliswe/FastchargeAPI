@@ -61,7 +61,7 @@ describe("deleteApp", () => {
         getApp: {
           deleteApp: {
             deleted: true,
-            deletedAt: expect.any(Number),
+            deletedAt: expect.any(String),
           },
         },
       },

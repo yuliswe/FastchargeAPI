@@ -98,7 +98,7 @@ export const AppResolvers: GQLResolvers & {
       }
       return await context.batched.App.update(parent, {
         deleted: true,
-        deletedAt: Date.now(),
+        deletedAt: new Date(),
       });
     },
 

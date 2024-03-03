@@ -44,7 +44,7 @@ describe("listAppsByOwner", () => {
   test("Shoud not include soft deleted apps", async () => {
     await context.batched.App.update(testApp, {
       deleted: true,
-      deletedAt: Date.now(),
+      deletedAt: new Date(),
     });
     const promise = getTestGQLClient({ user: testAppOwner }).query({
       query: queryListAppsByOwner,

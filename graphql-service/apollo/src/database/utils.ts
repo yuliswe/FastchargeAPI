@@ -59,3 +59,12 @@ export const DateTime = {
   },
   get: (date: string) => new Date(date),
 };
+
+export const timestamps = {
+  createdAt: {
+    createdAt: DateTime,
+  },
+  updatedAt: {
+    updatedAt: DateTime,
+  },
+};

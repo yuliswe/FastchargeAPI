@@ -1,7 +1,7 @@
 import { AppVisibility } from "@/src/__generated__/gql/graphql";
 import { GatewayMode } from "@/src/__generated__/resolvers-types";
 import { tableConfigs } from "@/src/database/dynamodb";
-import { Item } from "@/src/database/utils";
+import { DateTime, Item, timestamps } from "@/src/database/utils";
 import { validateAppName } from "@/src/functions/app";
 import dynamoose from "dynamoose";
 
@@ -37,9 +37,9 @@ export const AppTableSchema = new dynamoose.Schema(
     visibility: { type: String, default: "private", enum: ["public", "private"] },
 
     deleted: { type: Boolean, default: false },
-    deletedAt: { type: Number, required: false },
+    deletedAt: { ...DateTime, required: false },
   },
-  { timestamps: true }
+  { timestamps }
 );
 /// When creating a new Item class, remember to add it to codegen.yml mappers
 /// config.
@@ -52,12 +52,12 @@ export class App extends Item {
   repository: string;
   homepage: string;
   readme: string;
-  updatedAt: number;
-  createdAt: number;
+  updatedAt: Date;
+  createdAt: Date;
   visibility: AppVisibility;
   logo: string;
   deleted: boolean;
-  deletedAt: number | null;
+  deletedAt: Date | null;
 }
 
 export type AppCreateProps = {

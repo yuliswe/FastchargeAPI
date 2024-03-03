@@ -5,7 +5,7 @@ exports[`getApp Anyone can get a public app 1`] = `
   "data": {
     "getApp": {
       "__typename": "App",
-      "createdAt": Any<Number>,
+      "createdAt": Any<String>,
       "description": "Test App Description",
       "endpoints": [],
       "gatewayMode": "proxy",
@@ -21,7 +21,7 @@ exports[`getApp Anyone can get a public app 1`] = `
       "repository": "https://github/myrepo",
       "tags": [],
       "title": "Test App",
-      "updatedAt": Any<Number>,
+      "updatedAt": Any<String>,
       "visibility": "public",
     },
   },

@@ -60,7 +60,7 @@ describe("getAppByName", () => {
   test("Get a deleted app should reject", async () => {
     await context.batched.App.update(testApp, {
       deleted: true,
-      deletedAt: Date.now(),
+      deletedAt: new Date(),
     });
     const promise = getTestGQLClient({ user: testOtherOwner }).query({
       query: queryGetAppByName,

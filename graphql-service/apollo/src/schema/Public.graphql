@@ -256,12 +256,12 @@ type App {
   repository: URL
   homepage: URL
   readme: URL
-  updatedAt: Timestamp!
-  createdAt: Timestamp!
+  updatedAt: DateTime!
+  createdAt: DateTime!
   visibility: AppVisibility!
   logo: URL
   deleted: Boolean!
-  deletedAt: Timestamp
+  deletedAt: DateTime
 
   endpoints: [Endpoint!]!
   pricingPlans: [Pricing!]!

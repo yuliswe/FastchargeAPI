@@ -73,8 +73,8 @@ describe("getApp", () => {
         getApp: {
           pk: expect.any(String),
           name: testApp.name,
-          createdAt: expect.any(Number),
-          updatedAt: expect.any(Number),
+          createdAt: expect.any(String),
+          updatedAt: expect.any(String),
           owner: {
             author: testAppOwner.author,
           },
@@ -86,7 +86,7 @@ describe("getApp", () => {
   test("Get a deleted app should reject", async () => {
     await context.batched.App.update(testApp, {
       deleted: true,
-      deletedAt: Date.now(),
+      deletedAt: new Date(),
     });
     const promise = getTestGQLClient({ user: testOtherOwner }).query({
       query: queryGetAppByPK,
