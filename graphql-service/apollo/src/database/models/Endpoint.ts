@@ -1,17 +1,14 @@
 import { HttpMethod } from "@/src/__generated__/gql/graphql";
 import { tableConfigs } from "@/src/database/dynamodb";
-import { PK, String_Required_NotEmpty, defaultCreatedAt } from "@/src/database/utils";
+import { PK, String_Required_NotEmpty } from "@/src/database/utils";
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
+import * as uuid from "uuid";
 
 export const EndpointTableSchema = new dynamoose.Schema(
   {
     app: { hashKey: true, ...String_Required_NotEmpty("app") },
-    createdAt: {
-      type: Number,
-      rangeKey: true,
-      default: defaultCreatedAt,
-    },
+    rangeKey: { type: String, rangeKey: true, default: uuid.v4 },
     method: {
       type: String,
       default: HttpMethod.Get,
@@ -24,13 +21,7 @@ export const EndpointTableSchema = new dynamoose.Schema(
     deletedAt: { type: Number, required: false },
   },
   {
-    timestamps: {
-      updatedAt: {
-        updatedAt: {
-          type: Number,
-        },
-      },
-    },
+    timestamps: true,
   }
 );
 /// When creating a new Item class, remember to add it to codegen.yml mappers
@@ -38,6 +29,7 @@ export const EndpointTableSchema = new dynamoose.Schema(
 
 export class Endpoint extends Item {
   app: PK;
+  rangeKey: string;
   path: string;
   method: HttpMethod;
   destination: string;

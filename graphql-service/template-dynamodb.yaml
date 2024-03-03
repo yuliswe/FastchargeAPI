@@ -80,8 +80,8 @@ Resources:
       AttributeDefinitions:
         - AttributeName: "app"
           AttributeType: "S"
-        - AttributeName: "createdAt"
-          AttributeType: "N"
+        - AttributeName: "rangeKey"
+          AttributeType: "S"
       BillingMode: "PAY_PER_REQUEST"
       TableName: !Join ["", [!Ref TablePrefix, "Endpoint"]]
       DeletionProtectionEnabled: !If [DeletionProtectionEnabled, true, false]
@@ -90,7 +90,7 @@ Resources:
       KeySchema:
         - AttributeName: "app"
           KeyType: "HASH"
-        - AttributeName: "createdAt"
+        - AttributeName: "rangeKey"
           KeyType: "RANGE"
 
   AccountHistoryTable:

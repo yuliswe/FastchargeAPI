@@ -9,7 +9,7 @@ parameter_overrides = [
     "MainDomain=\"devfastchargeapi.com\"",
     "Route53ZoneId=\"Z07362872NENGXHWMNLU5\"",
     "EnvDevDomain=\"1\"",
-    "TablePrefix=\"dev_2023_jan_7_\"",
+    "TablePrefix=\"dev_2023_mar_1_\"",
     "PointInTimeRecovery=0",
     "DeletionProtection=0",
 ]

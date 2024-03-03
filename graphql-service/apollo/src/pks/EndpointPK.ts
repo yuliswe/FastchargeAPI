@@ -2,22 +2,22 @@ import { PK } from "@/src/database/utils";
 
 export type EndpointPKContent = {
   app: PK;
-  createdAt: number;
+  rangeKey: string;
 };
 
 export class EndpointPK {
   static parse(pk: PK): EndpointPKContent {
-    const [app, createdAt] = JSON.parse(Buffer.from(pk.replace(/^endp_/, ""), "base64url").toString("utf8")) as [
+    const [app, rangeKey] = JSON.parse(Buffer.from(pk.replace(/^endp_/, ""), "base64url").toString("utf8")) as [
       string,
-      number
+      string
     ];
     return {
       app,
-      createdAt,
+      rangeKey,
     };
   }
 
   static stringify(item: EndpointPKContent): PK {
-    return "endp_" + Buffer.from(JSON.stringify([item.app, item.createdAt])).toString("base64url");
+    return "endp_" + Buffer.from(JSON.stringify([item.app, item.rangeKey])).toString("base64url");
   }
 }

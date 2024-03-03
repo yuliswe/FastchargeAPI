@@ -5,7 +5,7 @@ export const tableConfigs = {
   update: false, // do not set this to true. It will whipe the GSI.
   initialize: true,
   throughput: "ON_DEMAND" as const,
-  prefix: process.env.DEV_DOMAIN === "1" ? "dev_2023_jan_7_" : "live_",
+  prefix: process.env.DEV_DOMAIN === "1" ? "dev_2023_mar_1_" : "live_",
   suffix: "",
   waitForActive: {
     enabled: false,
