@@ -299,18 +299,10 @@ export async function computeBillableVolume(
   context: RequestContext,
   { app, subscriber, volume, pricingFreeQuota }: { app: PK; subscriber: PK; volume: number; pricingFreeQuota: number }
 ): Promise<ComputeBillableVolumeResult> {
-  const freeQuotaUsage = await context.batched.FreeQuotaUsage.getOrNull({
+  const freeQuotaUsage = await context.batched.FreeQuotaUsage.getOrCreateIfNotExists({
     subscriber,
     app,
-  }).then((item) => {
-    if (item == null) {
-      return context.batched.FreeQuotaUsage.create({
-        subscriber,
-        app,
-        usage: 0,
-      });
-    }
-    return item;
+    usage: 0,
   });
   const volumeFree = Math.min(volume, Math.max(0, pricingFreeQuota - freeQuotaUsage.usage));
   const volumeBillable = volume - volumeFree;

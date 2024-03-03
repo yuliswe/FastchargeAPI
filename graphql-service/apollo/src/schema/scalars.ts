@@ -123,6 +123,30 @@ const URLScalar = new GraphQLScalarType({
   },
 });
 
+const DateTimeScalar = new GraphQLScalarType({
+  name: "DateTime",
+
+  description: "A date and time, represented as an ISO-8601 string",
+
+  // Convert from server to client
+  serialize(value: Date): string {
+    return value.toISOString();
+  },
+
+  // Convert from client to server
+  parseValue(value: string): Date {
+    return new Date(value);
+  },
+
+  // Convert hard-coded value in the .graphql schema
+  parseLiteral(ast) {
+    if (ast.kind === Kind.STRING) {
+      return new Date(ast.value);
+    }
+    return null;
+  },
+});
+
 export default {
   NonNegativeDecimal,
   Decimal,
@@ -131,4 +155,5 @@ export default {
     name: "Timestamp",
   }),
   URL: URLScalar,
+  DateTime: DateTimeScalar,
 };

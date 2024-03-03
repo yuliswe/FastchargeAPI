@@ -6,6 +6,7 @@ import { KeyObject, ModelType } from "dynamoose/dist/General";
 import { Item } from "dynamoose/dist/Item";
 import { Query as DynamogooseQuery, Scan as DynamogooseScan } from "dynamoose/dist/ItemRetriever";
 import hash from "object-hash";
+import { inspect } from "util";
 
 /**
  * This file is a collection of functions that are used to bridge Dynamoose with
@@ -210,7 +211,7 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
 
     async function queryUnbatchable(bk: BatchKey<I>): Promise<DataLoaderResult<I>> {
       if (process.env.LOG_DATALOADER === "1") {
-        console.log("Query unbatchable", bk);
+        console.log("Unbatchable query", model.name, inspect(bk, { depth: 3 }));
       }
       let query: DynamogooseQuery<I> = model.query(bk.query).using({ auto: false });
       const { lastKey: prevLastKey } = bk.options?.cursor ?? {};
@@ -230,8 +231,8 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
     }
 
     if (process.env.LOG_DATALOADER === "1") {
-      console.log("Query batchable", batchable);
-      console.log("Query unbatchable", unbatchable);
+      console.log("Batchable query", model.name, inspect(batchable, { depth: 3 }));
+      console.log("Unbatchable query", model.name, inspect(unbatchable, { depth: 3 }));
     }
 
     /* We can batch mini-batchables and unbatchables all together. */
@@ -277,7 +278,7 @@ function stripNullKeys<T>(
     object: unknown,
     options?: { returnUndefinedIfNothingLeft?: boolean; deep?: boolean }
   ): unknown {
-    if (object === null || typeof object !== "object") {
+    if (object === null || typeof object !== "object" || object instanceof Date) {
       return object;
     }
     if (Array.isArray(object)) {
@@ -389,12 +390,21 @@ export class Batched<I extends Item, CreateProps extends Partial<I>> {
     if (item === null) {
       return await this.create(data as CreateProps);
     } else {
-      const nonPKData = { ...data };
+      const dataToUpdate = { ...data };
       for (const pkPart of Object.keys(lookupKeys)) {
-        delete nonPKData[pkPart];
+        delete dataToUpdate[pkPart];
       }
-      return await this.update(item, nonPKData);
+      return await this.update(item, dataToUpdate);
     }
+  }
+
+  async getOrCreateIfNotExists(data: Partial<I>, options?: BatchQueryOptions): Promise<I> {
+    const lookupKeys = extractKeysFromItems(this.model, data);
+    const item = await this.getOrNull(lookupKeys, options);
+    if (item === null) {
+      return await this.create(data as CreateProps);
+    }
+    return item;
   }
 
   async assertExists(key: Query<I>): Promise<void> {
@@ -518,7 +528,17 @@ export class Batched<I extends Item, CreateProps extends Partial<I>> {
     const maxAttempts = 10;
     for (let retries = 0; retries < maxAttempts; retries++) {
       try {
-        const result = await this.model.create(stripped as Partial<I>);
+        if (process.env.LOG_DATALOADER === "1") {
+          console.log("Create", this.model.name, stripped);
+        }
+        const result = await this.model
+          .create(stripped as Partial<I>)
+          // This will call all getters defined on the table schemas. See
+          // https://github.com/dynamoose/dynamoose/blob/main/packages/dynamoose/lib/ItemRetriever.ts#L79
+          .then((result) => result.conformToSchema({ modifiers: ["get"], type: "fromDynamo" }) as Promise<I>);
+        if (process.env.LOG_DATALOADER === "1") {
+          console.log(`Create ${this.model.name} response`, result);
+        }
         if (retries > 0) {
           console.warn(`Retried ${retries} times to create ${this.model.name} ${JSON.stringify(item)}`);
         }
@@ -621,7 +641,8 @@ export class Batched<I extends Item, CreateProps extends Partial<I>> {
     if (stripped === undefined) {
       return await this.get(lookup);
     }
-    return this.updateWithNull(lookup, stripped);
+    const updated = await this.updateWithNull(lookup, stripped);
+    return updated;
   }
 
   async updateWithNull(lookup: Partial<I>, newVals: UpdateQuery<I>): Promise<I> {

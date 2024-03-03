@@ -90,8 +90,8 @@ describe("getEndpoint", () => {
             method: variables.method,
             destination: variables.destination,
             description: variables.description,
-            createdAt: expect.any(Number),
-            updatedAt: expect.any(Number),
+            createdAt: expect.any(String),
+            updatedAt: expect.any(String),
             app: {
               pk: AppPK.stringify(testApp),
             },

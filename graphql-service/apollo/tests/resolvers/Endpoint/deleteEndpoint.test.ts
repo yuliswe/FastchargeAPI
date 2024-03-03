@@ -69,7 +69,7 @@ describe("getEndpoint", () => {
           deleteEndpoint: {
             pk: EndpointPK.stringify(testEndpoint),
             deleted: true,
-            deletedAt: expect.any(Number),
+            deletedAt: expect.any(String),
           },
         },
       },

@@ -75,12 +75,12 @@ describe("getEndpoint", () => {
         getEndpoint: {
           __typename: "Endpoint",
           pk: EndpointPK.stringify(testEndpoint),
-          createdAt,
+          createdAt: createdAt.toISOString(),
           description,
           destination,
           method,
           path,
-          updatedAt,
+          updatedAt: updatedAt.toISOString(),
           app: {
             __typename: "App",
             pk: AppPK.stringify(testApp),

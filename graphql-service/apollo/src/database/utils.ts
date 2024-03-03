@@ -49,3 +49,13 @@ export const validateStringDecimal = (fieldName: string) => (str: string) => {
 };
 export type Model<T extends Item> = ModelType<T>;
 export { Item } from "dynamoose/dist/Item";
+
+export const DateTime = {
+  type: {
+    value: Date,
+    settings: {
+      storage: "iso",
+    },
+  },
+  get: (date: string) => new Date(date),
+};

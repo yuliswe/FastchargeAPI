@@ -39,7 +39,7 @@ export async function incrementOrCreateRequestCounter(
     );
   } catch (e) {
     if (e instanceof NotFound) {
-      return await context.batched.GatewayRequestCounter.createOverwrite({
+      return await context.batched.GatewayRequestCounter.getOrCreateIfNotExists({
         requester: user,
         app: "<global>",
         isGlobalCounter: true,
@@ -210,9 +210,10 @@ async function checkHasSufficientFreeQuota(
   args: { app: PK; user: PK; pricing: Pricing }
 ): Promise<boolean> {
   const { app, user, pricing } = args;
-  const quota = await context.batched.FreeQuotaUsage.createOverwrite({
+  const quota = await context.batched.FreeQuotaUsage.getOrCreateIfNotExists({
     subscriber: user,
     app,
+    usage: 0,
   });
   return quota.usage < pricing.freeQuota;
 }

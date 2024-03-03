@@ -10,7 +10,7 @@ describe("incrementOrCreateRequestCounter", () => {
   });
 
   test("Should create a new counter if it doesn't exist", async () => {
-    const createOverwrite = jest.spyOn(context.batched.GatewayRequestCounter, "createOverwrite");
+    const getOrCreateIfNotExists = jest.spyOn(context.batched.GatewayRequestCounter, "getOrCreateIfNotExists");
     const gatewayRequestCounter = await context.batched.GatewayRequestCounter.getOrNull({
       requester: UserPK.stringify(testUser),
     });
@@ -18,7 +18,7 @@ describe("incrementOrCreateRequestCounter", () => {
     await incrementOrCreateRequestCounter(context, {
       user: UserPK.stringify(testUser),
     });
-    expect(createOverwrite).toHaveBeenCalledTimes(1);
+    expect(getOrCreateIfNotExists).toHaveBeenCalledTimes(1);
     context.batched.GatewayRequestCounter.clearCache();
     const newGatewayRequestCounter = context.batched.GatewayRequestCounter.getOrNull({
       requester: UserPK.stringify(testUser),

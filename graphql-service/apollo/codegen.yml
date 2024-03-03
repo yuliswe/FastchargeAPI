@@ -81,6 +81,7 @@ projects:
               scalars:
                 Email: string
                 Timestamp: number
+                DateTime: Date
                 NonNegativeDecimal: string
                 URL: string
                 Any: unknown

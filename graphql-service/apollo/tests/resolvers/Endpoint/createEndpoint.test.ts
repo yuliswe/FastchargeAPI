@@ -83,8 +83,8 @@ describe("createEndpoint", () => {
           destination,
           method,
           path,
-          createdAt: expect.any(Number),
-          updatedAt: expect.any(Number),
+          createdAt: expect.any(String),
+          updatedAt: expect.any(String),
         },
       },
     });

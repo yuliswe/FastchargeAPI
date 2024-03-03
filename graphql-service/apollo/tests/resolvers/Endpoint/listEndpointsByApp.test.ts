@@ -64,7 +64,7 @@ describe("listEndpointsByApp", () => {
   test("Should not include deleted endpoints", async () => {
     await context.batched.Endpoint.update(testEndpoint, {
       deleted: true,
-      deletedAt: Date.now(),
+      deletedAt: new Date(),
     });
     const promise = getTestGQLClient({ user: testAppOwner }).query({
       query: listEndpointsByAppQuery,

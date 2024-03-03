@@ -1,6 +1,6 @@
 import { HttpMethod } from "@/src/__generated__/gql/graphql";
 import { tableConfigs } from "@/src/database/dynamodb";
-import { PK, String_Required_NotEmpty } from "@/src/database/utils";
+import { DateTime, PK, String_Required_NotEmpty } from "@/src/database/utils";
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
 import * as uuid from "uuid";
@@ -18,10 +18,17 @@ export const EndpointTableSchema = new dynamoose.Schema(
     destination: { ...String_Required_NotEmpty("destination") },
     description: { type: String, default: "" },
     deleted: { type: Boolean, default: false },
-    deletedAt: { type: Number, required: false },
+    deletedAt: { ...DateTime, required: false },
   },
   {
-    timestamps: true,
+    timestamps: {
+      createdAt: {
+        createdAt: DateTime,
+      },
+      updatedAt: {
+        updatedAt: DateTime,
+      },
+    },
   }
 );
 /// When creating a new Item class, remember to add it to codegen.yml mappers
@@ -34,10 +41,10 @@ export class Endpoint extends Item {
   method: HttpMethod;
   destination: string;
   description: string;
-  createdAt: number;
-  updatedAt: number;
+  createdAt: Date;
+  updatedAt: Date;
   deleted: boolean;
-  deletedAt: number | null;
+  deletedAt: Date | null;
 }
 
 export type EndpointCreateProps = {

@@ -71,7 +71,7 @@ export const EndpointResolvers: GQLResolvers & {
       }
       return await context.batched.Endpoint.update(parent, {
         deleted: true,
-        deletedAt: Date.now(),
+        deletedAt: new Date(),
       });
     },
   },

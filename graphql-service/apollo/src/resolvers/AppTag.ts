@@ -56,7 +56,7 @@ export const AppTagResolvers: GQLResolvers & {
         throw new Denied();
       }
       const appObject = await context.batched.App.get(AppPK.parse(app));
-      const tagObject = await context.batched.AppTag.createOverwrite({
+      const tagObject = await context.batched.AppTag.getOrCreateIfNotExists({
         app,
         tag,
       });

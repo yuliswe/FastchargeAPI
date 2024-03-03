@@ -4,6 +4,7 @@ scalar Timestamp
 scalar URL
 scalar Any
 scalar Decimal
+scalar DateTime
 
 type Query {
   ### App
@@ -301,10 +302,10 @@ type Endpoint {
   description: String
   destination: String
   method: HttpMethod!
-  createdAt: Timestamp!
-  updatedAt: Timestamp!
+  createdAt: DateTime!
+  updatedAt: DateTime!
   deleted: Boolean!
-  deletedAt: Timestamp
+  deletedAt: DateTime
 
   updateEndpoint(method: HttpMethod, path: String, destination: String, description: String): Endpoint!
 
