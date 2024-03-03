@@ -160,7 +160,7 @@ type Mutation {
     description: String!
     settleImmediately: Boolean!
     settleAt: Timestamp
-  ): AccountActivity!
+  ): AccountActivity! @deprecated(reason: "No longer needed for testing CLI")
   flushAppSearchIndex: Int!
   createAppTag(app: ID!, tag: String!): AppTag!
   createSiteMetaData(key: String!, value: Any!): SiteMetaData!

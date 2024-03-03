@@ -141,6 +141,7 @@ export const AccountActivityResolvers: GQLResolvers & {
   },
   Mutation: {
     /**
+     * @deprecated
      * Used for adding money to a user's account for testing cli.
      */
     async createAccountActivity(
