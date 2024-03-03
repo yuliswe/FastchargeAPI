@@ -1,5 +1,5 @@
 {
-  "extends": "../tsconfig.json",
+  "extends": "../graphql-service/apollo/tsconfig.json",
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {

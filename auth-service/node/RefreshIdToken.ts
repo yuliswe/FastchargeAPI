@@ -1,8 +1,8 @@
-import { getParameterFromAWSSystemsManager } from "@/functions/aws";
+import { getParameterFromAWSSystemsManager } from "@/src/functions/aws";
 import { APIGatewayProxyStructuredResultV2, Context as LambdaContext } from "aws-lambda";
 import { Chalk } from "chalk";
 import fetch from "node-fetch";
-import { LambdaCallbackV2, LambdaEventV2, LambdaHandlerV2 } from "../utils/LambdaContext";
+import { LambdaCallbackV2, LambdaEventV2, LambdaHandlerV2 } from "utils/LambdaContext";
 
 const chalk = new Chalk({ level: 3 });
 
