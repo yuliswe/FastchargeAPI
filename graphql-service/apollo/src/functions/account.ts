@@ -106,7 +106,7 @@ export async function sqsSettleAccountActivities(
         // Only update the balance when successfully settled.
         if (activity.type === AccountActivityType.Outgoing) {
           balance = balance.sub(activity.amount);
-        } else if (activity.type === AccountActivityType.Incoming) {
+        } else {
           balance = balance.add(activity.amount);
         }
         return activity;
