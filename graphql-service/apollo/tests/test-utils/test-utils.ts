@@ -8,6 +8,7 @@ import { getUserBalance } from "@/src/functions/account";
 import { createUserWithEmail } from "@/src/functions/user";
 import { AppPK } from "@/src/pks/AppPK";
 import { UserPK } from "@/src/pks/UserPK";
+import { createTestUser } from "@/tests/test-data/User";
 import { ApolloError, GraphQLErrors } from "@apollo/client/errors";
 import Decimal from "decimal.js-light";
 import { v4 as uuid4 } from "uuid";
@@ -62,10 +63,16 @@ export async function getOrCreateTestUser(
 }
 
 export async function getAdminUser(context: RequestContext): Promise<User> {
-  return await context.batched.User.get(
+  const user = await context.batched.User.getOrNull(
     { email: "fastchargeapi@gmail.com" },
     { using: UserTableIndex.IndexByEmailOnlyPk }
   );
+  if (user) {
+    return user;
+  }
+  return createTestUser(context, {
+    email: "fastchargeapi@gmail.com",
+  });
 }
 
 export async function createOrUpdatePricing(
