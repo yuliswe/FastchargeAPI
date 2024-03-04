@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import os from "os";
 import path from "path";
 import process from "process";
+import * as authFileModule from "src/utils/authFile";
 
 async function createTestTempDir() {
   return await fs.mkdtemp(path.join(__dirname, "__tests_temp__", "testcase-"));
@@ -19,6 +20,10 @@ beforeEach(async () => {
   process.env.AWS_CONFIG_FILE = path.join(os.homedir(), ".aws", "config");
   process.env.AWS_SHARED_CREDENTIALS_FILE = path.join(os.homedir(), ".aws", "credentials");
   jest.spyOn(os, "homedir").mockReturnValue(cwd);
+
+  // This makes sure we don't accidentally log in as the default user in the
+  // test environment
+  jest.spyOn(authFileModule, "readAuthFile");
 });
 
 afterEach(() => {

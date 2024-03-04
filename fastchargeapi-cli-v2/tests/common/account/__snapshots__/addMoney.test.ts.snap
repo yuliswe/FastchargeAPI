@@ -10,3 +10,20 @@ Options:
   --help             Display help for command
 "
 `;
+
+exports[`fastcharge account addmoney opens url and waits for user to complete payment 1`] = `
+"[33mPlease continue in the browser.[39m
+If the browser does not open, please visit:
+<REDACTED:URL>
+[32mMoney added to account.[39m
+"
+`;
+
+exports[`fastcharge account addmoney opens url and waits for user to complete payment 2`] = `
+{
+  "amount": "1000",
+  "jwe": Any<String>,
+  "jwt": Any<String>,
+  "key": Any<String>,
+}
+`;
