@@ -1,9 +1,16 @@
 import * as loginModule from "src/common/login";
 import { createFastapiProgram } from "src/fastapi/program";
 import { createFastchargeProgram } from "src/fastcharge/program";
-import * as remoteSecretModule from "src/utils/remoteSecret";
-import { createRandomHex, createSecret, hex, setRemoteSecret, waitForSecretContent } from "src/utils/remoteSecret";
-import { ConsoleLogSpy, createConsoleLogSpy, fastapi, fastcharge, getAdminUserCredentials } from "tests/utils";
+import { hex } from "src/utils/remoteSecret";
+import {
+  ConsoleLogSpy,
+  createConsoleLogSpy,
+  fastapi,
+  fastcharge,
+  getAdminUserCredentials,
+  getOpenerSpy,
+  mockWaitForRemoteSecret,
+} from "tests/utils";
 
 jest.mock("opener", () => ({
   __esModule: true,
@@ -37,29 +44,12 @@ describe("loginCommand", () => {
     for (const program of [createFastapiProgram(), createFastchargeProgram()]) {
       // eslint-disable-next-line jest/valid-title
       it(`${program.name()} login` + (profile ? ` --profile ${profile}` : ""), async () => {
-        const jweSecret = createSecret();
-        const jwtSecret = createSecret();
-        const key = createRandomHex({ nchars: 32 });
         const adminUserCredentials = await getAdminUserCredentials();
-        // This would be set by the web app after user is logged in.
-        await setRemoteSecret({
-          key,
-          value: adminUserCredentials,
-          jweSecret,
-          jwtSecret,
-        });
-        const originalWaitForSecretContent = waitForSecretContent;
-        jest.spyOn(remoteSecretModule, "waitForSecretContent").mockImplementation((args) => {
-          return originalWaitForSecretContent({
-            ...args,
-            key,
-            jweSecret,
-            jwtSecret,
-          });
+        const { jweSecret, jwtSecret, key } = await mockWaitForRemoteSecret({
+          setRemoteSecretValue: adminUserCredentials,
         });
         const loginCommandSpy = jest.spyOn(loginModule, "loginCommand");
-        const openerModule = jest.requireMock("opener");
-        const opener = jest.spyOn(openerModule, "default");
+        const opener = getOpenerSpy();
         const args = ["login"];
         if (profile) {
           args.push("--profile", profile);

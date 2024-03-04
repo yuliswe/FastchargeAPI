@@ -5,6 +5,7 @@ import { makeFastchargeAPIIdTokenForUser } from "@/src/functions/user";
 import { UserPK } from "@/src/pks/UserPK";
 import { createTestUser } from "@/tests/test-data/User";
 import { baseRequestContext } from "@/tests/test-utils/test-utils";
+import type { JWTPayload } from "jose";
 import { createFastapiProgram } from "src/fastapi/program";
 import { createFastchargeProgram } from "src/fastcharge/program";
 import { tiChecker } from "src/tiChecker";
@@ -12,6 +13,8 @@ import { AuthFileContent } from "src/types/authFile";
 import * as authFileModule from "src/utils/authFile";
 import { verifyOrRefreshIdToken } from "src/utils/authFile";
 import * as consoleModule from "src/utils/console";
+import * as remoteSecretModule from "src/utils/remoteSecret";
+import { createRandomHex, createSecret, setRemoteSecret, waitForSecretContent } from "src/utils/remoteSecret";
 
 // eslint-disable-next-line  @typescript-eslint/no-explicit-any
 export const itIf = (condition: any, name: string, fn?: (...args: any[]) => any, timeout?: number) =>
@@ -131,4 +134,34 @@ export async function fastapi(args: string[]) {
     }
     throw e;
   }
+}
+
+export function getOpenerSpy() {
+  const openerModule = jest.requireMock("opener");
+  const opener = jest.spyOn(openerModule, "default");
+  return opener;
+}
+
+export async function mockWaitForRemoteSecret(args: { setRemoteSecretValue: JWTPayload }) {
+  const { setRemoteSecretValue } = args;
+  const jweSecret = createSecret();
+  const jwtSecret = createSecret();
+  const key = createRandomHex({ nchars: 32 });
+  // This would be set by the web app after user is logged in.
+  await setRemoteSecret({
+    key,
+    value: setRemoteSecretValue,
+    jweSecret,
+    jwtSecret,
+  });
+  const originalWaitForSecretContent = waitForSecretContent;
+  jest.spyOn(remoteSecretModule, "waitForSecretContent").mockImplementation((args) => {
+    return originalWaitForSecretContent({
+      ...args,
+      key,
+      jweSecret,
+      jwtSecret,
+    });
+  });
+  return { jweSecret, jwtSecret, key };
 }

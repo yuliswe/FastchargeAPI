@@ -58,6 +58,7 @@ type TypedCheckers = {
   CliFastchargeAppCreateCommandOptions: TypedChecker<cliOptions.CliFastchargeAppCreateCommandOptions>;
   CliFastchargeAppUpdateCommandOptions: TypedChecker<cliOptions.CliFastchargeAppUpdateCommandOptions>;
   CliFastchargeAppDeleteCommandOptions: TypedChecker<cliOptions.CliFastchargeAppDeleteCommandOptions>;
+  CliFastchargeApiAddCommandOptions: TypedChecker<cliOptions.CliFastchargeApiAddCommandOptions>;
   CliCommonAddMoneyCommandOptions: TypedChecker<cliOptions.CliCommonAddMoneyCommandOptions>;
   CliCommonWithdrawMoneyCommandOptions: TypedChecker<cliOptions.CliCommonWithdrawMoneyCommandOptions>;
   CliRemoteSercretResult: TypedChecker<remoteSecret.CliRemoteSercretResult>;

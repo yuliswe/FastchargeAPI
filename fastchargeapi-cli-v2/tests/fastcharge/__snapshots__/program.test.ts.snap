@@ -14,6 +14,7 @@ Commands:
   login [options]   Login as a user
   logout [options]  Logout a user
   app               Manage or create your apps
+  api               Manage your apis
   account           Manage your account
 "
 `;

@@ -47,3 +47,21 @@ export type CliCommonWithdrawMoneyCommandOptions = {
   amount: number;
   yes?: boolean;
 };
+
+export type CliFastchargeApiAddCommandOptions = {
+  app: string;
+  method: HttpMethod;
+  path: string;
+  destination: string;
+  description?: string;
+};
+
+export enum HttpMethod {
+  Delete = "DELETE",
+  Get = "GET",
+  Head = "HEAD",
+  Options = "OPTIONS",
+  Patch = "PATCH",
+  Post = "POST",
+  Put = "PUT",
+}

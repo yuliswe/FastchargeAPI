@@ -7,6 +7,11 @@ async function createTestTempDir() {
   return await fs.mkdtemp(path.join(__dirname, "__tests_temp__", "testcase-"));
 }
 
+jest.mock("opener", () => ({
+  __esModule: true,
+  default: jest.fn().mockResolvedValue(undefined),
+}));
+
 beforeEach(async () => {
   process.chdir(path.join(__dirname, "__tests_temp__"));
   const cwd = await createTestTempDir();

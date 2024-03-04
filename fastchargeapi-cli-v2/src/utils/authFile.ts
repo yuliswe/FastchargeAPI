@@ -1,3 +1,4 @@
+import chalk from "chalk";
 import { promises as fs } from "fs";
 import { glob } from "glob";
 import { decodeProtectedHeader, importX509, errors as joseErrors, jwtVerify } from "jose";
@@ -9,6 +10,7 @@ import { authServiceHost } from "src/env";
 import { getGQLClient } from "src/graphqlClient";
 import { tiChecker } from "src/tiChecker";
 import { AuthFileContent, RefreshIdTokenResult, VerifyIdTokenResult } from "src/types/authFile";
+import { println } from "src/utils/console";
 
 export async function getGoogleCert(): Promise<{ [hash: string]: string }> {
   const response = await fetch(
@@ -208,7 +210,7 @@ export async function readOrRefreshAuthFileContentOrExit(args: { profile?: strin
   try {
     return await readOrRefreshAuthFile({ profile });
   } catch (e) {
-    console.error("Login required.");
+    println(chalk.red("Login required."));
     process.exit(1);
   }
 }

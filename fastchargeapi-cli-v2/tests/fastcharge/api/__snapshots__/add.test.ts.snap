@@ -1,0 +1,40 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`fastcharge api add --help prints help 1`] = `
+"Usage: fastcharge api add [options]
+
+Add a new api to an app
+
+Options:
+  --app <name>                    App where the api will be added
+  -m --method <method>            HTTP method, eg. GET
+  -p --path <path>                Path
+  -d --destination <destination>  Destination
+  --description [description]     Description
+  --help                          Display help for command
+"
+`;
+
+exports[`fastcharge api add creates endpint successfully 1`] = `
+"[32mSuccessfully created an API endpoint '/test' ~> ''http://example.com''.[39m
+"
+`;
+
+exports[`fastcharge api add creates endpint successfully 2`] = `
+{
+  "app": Any<String>,
+  "createdAt": Any<Date>,
+  "deleted": false,
+  "description": "",
+  "destination": "'http://example.com'",
+  "method": "GET",
+  "path": "/test",
+  "rangeKey": Any<String>,
+  "updatedAt": Any<Date>,
+}
+`;
+
+exports[`fastcharge api add prints error when app does not exist 1`] = `
+"[31mApp "test-app" was not found.[39m
+"
+`;
