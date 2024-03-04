@@ -1,8 +1,8 @@
 import { RequestContext, createDefaultContextBatched } from "@/src/RequestContext";
 import { User } from "@/src/database/models/User";
 import { UserPK } from "@/src/pks/UserPK";
+import { createTestUser } from "@/tests/test-data/User";
 import { baseRequestContext } from "@/tests/test-utils/test-utils";
-import { createTestUser } from "graphql-service-apollo/tests/test-data/User";
 import {
   ErrorResponseBody,
   SuccessResponseBody,

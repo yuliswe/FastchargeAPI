@@ -2,9 +2,11 @@ import { RequestContext } from "@/src/RequestContext";
 import { StripePaymentAcceptStatus } from "@/src/__generated__/resolvers-types";
 import { StripePaymentAccept } from "@/src/database/models/StripePaymentAccept";
 import { User, UserTableIndex } from "@/src/database/models/User";
+import { getSQSDedupIdForSettleStripePaymentAccept } from "@/src/functions/payment";
 import { UserPK } from "@/src/pks/UserPK";
 import { baseDomain } from "@/src/runtime-config";
 import { SQSQueueName, getSQSClient } from "@/src/sqsClient";
+import { baseRequestContext } from "@/tests/test-utils/test-utils";
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 import { graphql } from "__generated__/gql";
 import {
@@ -15,8 +17,6 @@ import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { Chalk } from "chalk";
 import Decimal from "decimal.js-light";
 import { getPaymentAcceptedEmail } from "email-templates/payment-accepted";
-import { getSQSDedupIdForSettleStripePaymentAccept } from "graphql-service-apollo/src/functions/payment";
-import { baseRequestContext } from "graphql-service-apollo/tests/test-utils/test-utils";
 import { LambdaEventV2, LambdaHandlerV2 } from "utils/LambdaContext";
 import { parseStripeWebhookEvent } from "utils/stripe-client";
 
@@ -165,7 +165,7 @@ async function createAndFufillOrder({
   await getSQSClient({
     queueName: SQSQueueName.BillingQueue,
     groupId: UserPK.stringify(user),
-    dedupId: `CreateStripePaymentAcceptAndSettle-${UserPK.stringify(user)}-${session.id}`,
+    dedupId: `CreateStripePaymentAcceptAndSettle-${UserPK.stringify(user)}-${session.id}`.slice(0, 128),
   }).mutate({
     mutation: graphql(`
       mutation CreateStripePaymentAcceptAndSettle(
