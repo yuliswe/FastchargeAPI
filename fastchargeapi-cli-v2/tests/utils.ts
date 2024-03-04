@@ -1,10 +1,10 @@
 /* eslint-disable jest/no-export */
+import type { RequestContext } from "@/src/RequestContext";
 import { User } from "@/src/database/models/User";
 import { getParameterFromAWSSystemsManager } from "@/src/functions/aws";
 import { makeFastchargeAPIIdTokenForUser } from "@/src/functions/user";
 import { UserPK } from "@/src/pks/UserPK";
 import { createTestUser } from "@/tests/test-data/User";
-import { baseRequestContext } from "@/tests/test-utils/test-utils";
 import type { JWTPayload } from "jose";
 import { createFastapiProgram } from "src/fastapi/program";
 import { createFastchargeProgram } from "src/fastcharge/program";
@@ -83,8 +83,8 @@ export async function mockLoggedInAsUser(user: User) {
   });
 }
 
-export async function loginAsNewTestUser() {
-  const user = await createTestUser(baseRequestContext);
+export async function loginAsNewTestUser(context: RequestContext) {
+  const user = await createTestUser(context);
   const token = await makeFastchargeAPIIdTokenForUser({ user, expireInSeconds: 3600 });
   jest.spyOn(authFileModule, "readAuthFile").mockResolvedValue({
     userPK: UserPK.stringify(user),

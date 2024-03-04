@@ -4,6 +4,7 @@ import { createCommonWithdrawMoneyCommand } from "src/common/account/withdrawMon
 import { createCommonLoginCommand } from "src/common/login";
 import { createCommonLogoutCommand } from "src/common/logout";
 import { createFastchargeApiAddCommand } from "src/fastcharge/api/add";
+import { createFastchargeApiUpdateCommand } from "src/fastcharge/api/update";
 import { createFastchargeAppCreateCommand } from "src/fastcharge/app/create";
 import { createFastchargeAppDeleteCommand } from "src/fastcharge/app/delete";
 import { createFastchargeAppListCommand } from "src/fastcharge/app/list";
@@ -36,6 +37,6 @@ const createFastchargeAccountCommand = (program: Command) =>
     .addCommand(createCommonWithdrawMoneyCommand(program));
 
 const createFastchargeApiCommand = (program: Command) =>
-  createCommand({ name: "api", summary: "Manage your apis", description: "Manage your apis" }).addCommand(
-    createFastchargeApiAddCommand(program)
-  );
+  createCommand({ name: "api", summary: "Manage your apis", description: "Manage your apis" })
+    .addCommand(createFastchargeApiAddCommand(program))
+    .addCommand(createFastchargeApiUpdateCommand(program));

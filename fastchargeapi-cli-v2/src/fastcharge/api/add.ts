@@ -23,7 +23,7 @@ export const createFastchargeApiAddCommand = (program: Command) =>
   })
     .requiredOption("--app <name> ", "App where the api will be added")
     .requiredOption("-m --method <method>", "HTTP method, eg. GET", parseEnum(HttpMethod))
-    .requiredOption("-p --path <path>", "Path")
+    .requiredOption("-p --path <path>", "Path, eg. /user/:id")
     .requiredOption("-d --destination <destination>", "Destination")
     .option("--description [description]", "Description")
     .action(async (options) => {

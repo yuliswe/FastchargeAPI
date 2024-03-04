@@ -14,7 +14,7 @@ describe("fastcharge api add --help", () => {
 
 describe("fastcharge api add", () => {
   it("creates endpint successfully", async () => {
-    const testUser = await loginAsNewTestUser();
+    const testUser = await loginAsNewTestUser(context);
     const testApp = await createTestApp(context, {
       owner: UserPK.stringify(testUser),
     });
@@ -41,7 +41,7 @@ describe("fastcharge api add", () => {
   });
 
   it("prints error when app does not exist", async () => {
-    await loginAsNewTestUser();
+    await loginAsNewTestUser(context);
     const { stdout, exitCode } = await fastcharge([
       "api",
       "add",

@@ -1,0 +1,37 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`fastcharge api update --help prints help 1`] = `
+"Usage: fastcharge api update [options] <id>
+
+Update an existing api
+
+Arguments:
+  id                              ID of the api to update
+
+Options:
+  -m --method <method>            HTTP method, eg. GET
+  -p --path <path>                Path, eg. /user/:id
+  -d --destination <destination>  Destination
+  --description [description]     Description
+  --help                          Display help for command
+"
+`;
+
+exports[`fastcharge api update updates endpoint successfully 1`] = `
+{
+  "app": Any<String>,
+  "createdAt": Any<Date>,
+  "deleted": false,
+  "description": "'New description",
+  "destination": "'http://new-example.com'",
+  "method": "POST",
+  "path": "/new-test-path",
+  "rangeKey": Any<String>,
+  "updatedAt": Any<Date>,
+}
+`;
+
+exports[`fastcharge api update updates endpoint successfully 2`] = `
+"[32mAPI updated.[39m
+"
+`;

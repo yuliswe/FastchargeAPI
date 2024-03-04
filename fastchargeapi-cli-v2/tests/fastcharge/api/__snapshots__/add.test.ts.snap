@@ -8,7 +8,7 @@ Add a new api to an app
 Options:
   --app <name>                    App where the api will be added
   -m --method <method>            HTTP method, eg. GET
-  -p --path <path>                Path
+  -p --path <path>                Path, eg. /user/:id
   -d --destination <destination>  Destination
   --description [description]     Description
   --help                          Display help for command

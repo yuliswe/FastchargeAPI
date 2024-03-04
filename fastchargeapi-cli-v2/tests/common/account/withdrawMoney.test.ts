@@ -12,14 +12,14 @@ describe("fastcharge account withdraw --help", () => {
 
 describe("fastcharge account withdraw", () => {
   it("prints error when user has insufficient funds", async () => {
-    await loginAsNewTestUser();
+    await loginAsNewTestUser(context);
     const { stdout, exitCode } = await fastcharge(["account", "withdraw", "--amount", "1000"]);
     expect(stdout.getOutput()).toMatchSnapshot();
     expect(exitCode).toBe(1);
   });
 
   it("prints error when user withdraw a very small amount", async () => {
-    const testUser = await loginAsNewTestUser();
+    const testUser = await loginAsNewTestUser(context);
     await addMoneyForUser(context, {
       amount: "1",
       user: UserPK.stringify(testUser),
@@ -30,7 +30,7 @@ describe("fastcharge account withdraw", () => {
   });
 
   it("withdraws money succesfully", async () => {
-    const testUser = await loginAsNewTestUser();
+    const testUser = await loginAsNewTestUser(context);
     await addMoneyForUser(context, {
       amount: "1000",
       user: UserPK.stringify(testUser),

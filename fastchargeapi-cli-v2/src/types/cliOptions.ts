@@ -65,3 +65,10 @@ export enum HttpMethod {
   Post = "POST",
   Put = "PUT",
 }
+
+export type CliFastchargeApiUpdateCommandOptions = {
+  method: HttpMethod;
+  path: string;
+  destination: string;
+  description?: string;
+};
