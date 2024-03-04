@@ -31,15 +31,13 @@
     ".venv": true,
     ".zcompdump": true,
     ".zsh_history": true,
-    "**/.coverage": true,
     "**/.DS_Store": true,
     "**/.git": true,
     "**/.hg": true,
+    "**/.pytest_cache": true,
     "**/.svn": true,
-    "**/.symlinks/*": true,
     "**/CVS": true,
     "**/node_modules": true,
-    "**/src/build/": true,
     "**/Thumbs.db": true
   },
   "python.analysis.typeCheckingMode": "basic",
@@ -69,13 +67,18 @@
     }
   ],
   "search.exclude": {
-    "**/.coverage": true
+    "**/.coverage": true,
+    "**/build": true,
+    "**/dist": true
   },
   "files.watcherExclude": {
+    "**/build/**": true,
     "**/dist/**": true
   },
   "javascript.preferences.importModuleSpecifier": "non-relative",
   "typescript.preferences.importModuleSpecifier": "non-relative",
   "typescript.preferences.importModuleSpecifierEnding": "minimal",
-  "javascript.preferences.importModuleSpecifierEnding": "minimal"
+  "javascript.preferences.importModuleSpecifierEnding": "minimal",
+  "python.analysis.autoImportCompletions": true,
+  "typescript.preferences.preferTypeOnlyAutoImports": true
 }

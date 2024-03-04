@@ -13,7 +13,7 @@ module.exports = {
     project: ["./tsconfig.json"],
     projectFolderIgnoreList: ["**/dist/**", "**/node_modules/**", "**/build/**", "**/.aws-sam/**"],
   },
-  plugins: ["@typescript-eslint", "unused-imports", "jest", "jest-extended"],
+  plugins: ["@typescript-eslint", "unused-imports", "jest-extended", "no-relative-import-paths", "rewrite-imports"],
   root: true,
   ignorePatterns: [
     "**/dist/**",
@@ -88,13 +88,23 @@ module.exports = {
     curly: "error",
     "object-shorthand": ["error", "always"],
     "no-useless-rename": "error",
+    "no-relative-import-paths/no-relative-import-paths": "error",
+    "rewrite-imports/rewrite-imports": ["error"],
   },
   overrides: [
     {
-      files: ["**/tests/**/*.ts"],
+      files: ["**/tests/**/*.ts", "**/tests/**/*.tsx"],
       rules: {
         "no-restricted-syntax": "off",
         "@typescript-eslint/no-unsafe-assignment": "off",
+        "testing-library/await-async-query": "off",
+        "testing-library/await-sync-query": "off",
+      },
+    },
+    {
+      files: ["jest.config.ts"],
+      rules: {
+        "no-relative-import-paths/no-relative-import-paths": "off",
       },
     },
   ],

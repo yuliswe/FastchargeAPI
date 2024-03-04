@@ -24,17 +24,23 @@
     // "useDefineForClassFields": true,                  /* Emit ECMAScript-standard-compliant class fields. */
     // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
     /* Modules */
-    "module": "ES2022" /* Specify what module code is generated. */,
+    "module": "ESNext" /* Specify what module code is generated. */,
     "rootDir": "./" /* Specify the root folder within your source files. */,
     "moduleResolution": "node" /* Specify how TypeScript looks up a file from a given module specifier. */,
     "baseUrl": "./" /* Specify the base directory to resolve non-relative module names. */,
-    // "paths": {},                                      /* Specify a set of entries that re-map imports to additional lookup locations. */
+    "paths": {
+      "@/*": ["node_modules/graphql-service-apollo/*"],
+      "react": ["node_modules/@types/react"]
+    } /* Specify a set of entries that re-map imports to additional lookup locations. */,
     // "rootDirs": [], /* Allow multiple folders to be treated as one when resolving modules. */
     // "typeRoots": [], /* Specify multiple folders that act like './node_modules/@types'. */
-    "types": ["jest"] /* Specify type package names to be included without being referenced in a source file. */,
+    "types": [
+      "jest",
+      "node"
+    ] /* Specify type package names to be included without being referenced in a source file. */,
     // "allowUmdGlobalAccess": true,                     /* Allow accessing UMD globals from modules. */
     // "moduleSuffixes": [],                             /* List of file name suffixes to search when resolving a module. */
-    "resolveJsonModule": true /* Enable importing .json files. */,
+    // "resolveJsonModule": true /* Enable importing .json files. */,
     // "noResolve": true,                                /* Disallow 'import's, 'require's or '<reference>'s from expanding the number of files TypeScript should add to a project. */
     /* JavaScript Support */
     "allowJs": true /* Allow JavaScript files to be a part of your program. Use the 'checkJS' option to get errors from these files. */,
@@ -97,5 +103,10 @@
   "exclude": ["**/node_modules", "**/dist", "**/.aws-sam"],
   "include": ["**/*"],
   "files": ["global.d.ts"],
-  "lib": ["es2020"]
+  "lib": ["es2020"],
+  // Required for jest to be able to read jest.config.ts
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
+  }
 }
