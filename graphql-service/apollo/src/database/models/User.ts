@@ -1,5 +1,5 @@
 import { tableConfigs } from "@/src/database/dynamodb";
-import { validateStringDecimal } from "@/src/database/utils";
+import { timestamps, validateStringDecimal } from "@/src/database/utils";
 import dynamoose from "dynamoose";
 import { Item } from "dynamoose/dist/Item";
 
@@ -15,8 +15,9 @@ export class User extends Item {
   stripeCustomerId: string | null;
   stripeConnectAccountId: string | null;
   appTokens: { [appName: string]: string };
-  createdAt: number;
-  updatedAt: number;
+  createdAt: Date;
+  updatedAt: Date;
+  isAdmin: boolean;
 }
 
 export type UserCreateProps = {
@@ -44,10 +45,9 @@ export const UserTableSchema = new dynamoose.Schema(
     stripeCustomerId: { type: String, required: false }, // Available after the user first tops up their account
     stripeConnectAccountId: { type: String, required: false }, // Available after the user first onboards their Stripe account
     balanceLimit: { type: String, default: "100", validate: validateStringDecimal("accountLimit") },
+    isAdmin: { type: Boolean, required: false },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps }
 );
 
 export const UserModel = dynamoose.model<User>("User", UserTableSchema, {

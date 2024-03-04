@@ -3,18 +3,19 @@ import { LambdaResult, callOrCreateHandler } from "@/src/lambdaHandlerUtils";
 import { UserPK } from "@/src/pks/UserPK";
 import { SQSQueueName, getUrlFromSQSQueueName } from "@/src/sqsClient";
 import { callOrCreateSQSHandler } from "@/src/sqsHandlerUtils";
+import { mockSQS } from "@/tests/test-utils/MockSQS";
+import { exampleLambdaEvent } from "@/tests/test-utils/example-lambda-event";
 import { InMemoryCache } from "@apollo/client/cache";
 import { ApolloClient } from "@apollo/client/core";
 import { HttpLink } from "@apollo/client/link/http";
 import { SendMessageCommandInput } from "@aws-sdk/client-sqs";
 import { Context as LambdaContext } from "aws-lambda";
 import { RequestInit, Response } from "node-fetch";
-import { mockSQS } from "@/tests/test-utils/MockSQS";
-import { exampleLambdaEvent } from "@/tests/test-utils/example-lambda-event";
 
 const cache = new InMemoryCache();
 
-export function getTestGQLClient({ user, isServiceRequest }: { user?: User; isServiceRequest?: boolean }) {
+export function getTestGQLClient(args: { user?: User; isServiceRequest?: boolean }) {
+  const { user, isServiceRequest } = args;
   return new ApolloClient({
     cache,
     // Disabling cache will prevent error because we can't return a response
@@ -47,7 +48,7 @@ export function getTestGQLClient({ user, isServiceRequest }: { user?: User; isSe
               authorizer: {
                 userEmail: user?.email,
                 userPK: user && UserPK.stringify(user),
-                isAdminUser: user && UserPK.isAdmin(user) ? "true" : "false",
+                isAdminUser: user?.isAdmin ? "true" : "false",
               },
             },
           },

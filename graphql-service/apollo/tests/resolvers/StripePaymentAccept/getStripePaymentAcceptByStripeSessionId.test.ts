@@ -3,9 +3,9 @@ import { User } from "@/src/database/models/User";
 import { StripePaymentAcceptPK } from "@/src/pks/StripePaymentAccept";
 import { UserPK } from "@/src/pks/UserPK";
 import { graphql } from "@/src/typed-graphql";
+import { createTestUser } from "@/tests/test-data/User";
 import {
   baseRequestContext as context,
-  getAdminUser,
   getOrCreateTestUser,
   simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils/test-utils";
@@ -57,7 +57,7 @@ describe("getStripePaymentAcceptByStripeSessionId", () => {
   }
 
   test("Admin user can get StripePaymentAccept", async () => {
-    const promise = getTestGQLClient({ user: await getAdminUser(context) }).query({
+    const promise = getTestGQLClient({ user: await createTestUser(context, { isAdmin: true }) }).query({
       query: getStripePaymentAcceptByStripeSessionIdQuery,
       variables: getVariables(),
     });

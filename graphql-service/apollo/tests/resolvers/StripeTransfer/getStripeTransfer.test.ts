@@ -5,9 +5,9 @@ import { Can } from "@/src/permissions";
 import { StripeTransferPK } from "@/src/pks/StripeTransferPK";
 import { UserPK } from "@/src/pks/UserPK";
 import { graphql } from "@/src/typed-graphql";
+import { createTestUser } from "@/tests/test-data/User";
 import {
   baseRequestContext as context,
-  getAdminUser,
   getOrCreateTestUser,
   simplifyGraphQLPromiseRejection,
   sortGraphQLErrors,
@@ -87,7 +87,7 @@ describe("getStripeTransfer", () => {
   });
 
   test("Admin can get StripeTransfer", async () => {
-    const promise = getTestGQLClient({ user: await getAdminUser(context) }).query({
+    const promise = getTestGQLClient({ user: await createTestUser(context, { isAdmin: true }) }).query({
       query: getStripeTransferQuery,
       variables: {
         pk: StripeTransferPK.stringify(testStripeTransfer),

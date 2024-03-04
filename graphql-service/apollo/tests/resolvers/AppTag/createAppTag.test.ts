@@ -3,9 +3,9 @@ import { User } from "@/src/database/models/User";
 import { AppPK } from "@/src/pks/AppPK";
 import { UserPK } from "@/src/pks/UserPK";
 import { graphql } from "@/src/typed-graphql";
+import { createTestUser } from "@/tests/test-data/User";
 import {
   baseRequestContext as context,
-  getAdminUser,
   getOrCreateTestUser,
   simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils/test-utils";
@@ -38,7 +38,7 @@ describe("createAppTag", () => {
 
   test("Admin user can create app tag", async () => {
     const variables = { app: AppPK.stringify(testApp), tag: "testtag" + uuid.v4() };
-    const promise = getTestGQLClient({ user: await getAdminUser(context) }).mutate({
+    const promise = getTestGQLClient({ user: await createTestUser(context, { isAdmin: true }) }).mutate({
       mutation: createAppTagMutation,
       variables,
     });

@@ -4,7 +4,8 @@ import { AccountActivityReason, AccountActivityType } from "@/src/__generated__/
 import { User } from "@/src/database/models/User";
 import { UserPK } from "@/src/pks/UserPK";
 import { graphql } from "@/src/typed-graphql";
-import { getAdminUser, getGraphQLDataOrError, getOrCreateTestUser } from "@/tests/test-utils/test-utils";
+import { createTestUser } from "@/tests/test-data/User";
+import { getGraphQLDataOrError, getOrCreateTestUser } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
 import { v4 as uuidv4 } from "uuid";
 
@@ -68,7 +69,7 @@ function accountActivityProps() {
 
 describe("createAccountActivity", () => {
   test("Admin user can create account activity", async () => {
-    const promise = getTestGQLClient({ user: await getAdminUser(context) }).mutate({
+    const promise = getTestGQLClient({ user: await createTestUser(context, { isAdmin: true }) }).mutate({
       mutation: createAccountActivityMutation,
       variables: accountActivityProps(),
     });
@@ -110,7 +111,7 @@ describe("createAccountActivity", () => {
       user: UserPK.stringify(testUser),
     });
     expect(oldAccountHistory.length).toBe(0);
-    await getTestGQLClient({ user: await getAdminUser(context) }).mutate({
+    await getTestGQLClient({ user: await createTestUser(context, { isAdmin: true }) }).mutate({
       mutation: createAccountActivityMutation,
       variables: {
         ...accountActivityProps(),

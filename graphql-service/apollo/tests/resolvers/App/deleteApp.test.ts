@@ -2,14 +2,12 @@ import { AppVisibility } from "@/src/__generated__/gql/graphql";
 import { GatewayMode } from "@/src/__generated__/resolvers-types";
 import { App } from "@/src/database/models/App";
 import { User } from "@/src/database/models/User";
+import { enableDBLogging } from "@/src/database/utils";
 import { AppPK } from "@/src/pks/AppPK";
 import { UserPK } from "@/src/pks/UserPK";
 import { graphql } from "@/src/typed-graphql";
-import {
-  baseRequestContext,
-  getOrCreateTestUser,
-  simplifyGraphQLPromiseRejection,
-} from "@/tests/test-utils/test-utils";
+import { createTestUser } from "@/tests/test-data/User";
+import { baseRequestContext, simplifyGraphQLPromiseRejection } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
 import { v4 as uuidv4 } from "uuid";
 
@@ -30,12 +28,8 @@ describe("deleteApp", () => {
   let testOwner: User;
   let testOtherUser: User;
   beforeEach(async () => {
-    testOwner = await getOrCreateTestUser(context, {
-      email: `testOwner_${uuidv4()}@gmail_mock.com`,
-    });
-    testOtherUser = await getOrCreateTestUser(context, {
-      email: `testOtherUser_${uuidv4()}@gmail_mock.com`,
-    });
+    testOwner = await createTestUser(context);
+    testOtherUser = await createTestUser(context);
     testApp = await context.batched.App.create({
       name: `testapp-${uuidv4()}`,
       owner: UserPK.stringify(testOwner),

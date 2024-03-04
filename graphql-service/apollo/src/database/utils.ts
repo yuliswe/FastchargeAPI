@@ -57,7 +57,19 @@ export const DateTime = {
       storage: "iso",
     },
   },
-  get: (date: string) => new Date(date),
+  get: (date: string) => {
+    return new Date(date);
+  },
+  set: (date: Date | boolean, old?: Date) => {
+    if (typeof date === "string") {
+      return date;
+    }
+    // Receives true when the item is being created
+    if (typeof date === "boolean") {
+      return new Date().toISOString();
+    }
+    return date.toISOString();
+  },
 };
 
 export const timestamps = {

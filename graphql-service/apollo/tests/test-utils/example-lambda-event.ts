@@ -18,7 +18,6 @@ export const exampleLambdaEvent: LambdaEvent = {
     "X-Forwarded-Port": "443",
     "X-Forwarded-Proto": "https",
     "x-service-name": "gateway",
-    "x-user-email": "user_3a780e06e56465ae13a592f075628c08",
   },
   multiValueHeaders: {
     "accept-encoding": ["gzip"],
@@ -35,7 +34,6 @@ export const exampleLambdaEvent: LambdaEvent = {
     "X-Forwarded-Port": ["443"],
     "X-Forwarded-Proto": ["https"],
     "x-service-name": ["gateway"],
-    "x-user-email": ["user_3a780e06e56465ae13a592f075628c08"],
   },
   queryStringParameters: null,
   multiValueQueryStringParameters: null,
@@ -77,19 +75,6 @@ export const exampleLambdaEvent: LambdaEvent = {
     domainName: "api.graphql.fastchargeapi.com",
     apiId: "d8we8h9ish",
   },
-  body: JSON.stringify({
-    query:
-      "\n" +
-      "query CheckUserIsAllowedToCallEndpoint ($user: ID!, $app: ID!) {\n" +
-      "\tcheckUserIsAllowedForGatewayRequest(user: $user, app: $app) {\n" +
-      "\t\tallowed\n" +
-      "\t\treason\n" +
-      "\t\tpricingPK\n" +
-      "\t\tuserPK\n" +
-      "\t}\n" +
-      "}\n",
-    variables: { user: "user_3a780e06e56465ae13a592f075628c08", app: "myapp" },
-    operationName: "CheckUserIsAllowedToCallEndpoint",
-  }),
+  body: "",
   isBase64Encoded: false,
 } as unknown as LambdaEvent;

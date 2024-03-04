@@ -83,10 +83,11 @@ export async function getCurrentUser(
 }
 
 export function getIsAdminUser(currentUser: User | undefined, authorizerContext: AuthorizerContext | undefined) {
+  // is this still necessary?
   if (authorizerContext?.["isAdminUser"] === "true") {
     return true;
   }
-  if (currentUser && UserPK.isAdmin(currentUser)) {
+  if (currentUser?.isAdmin) {
     return true;
   }
   return false;

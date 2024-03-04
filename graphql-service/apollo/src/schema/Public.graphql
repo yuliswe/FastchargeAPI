@@ -207,8 +207,8 @@ type User {
   email: Email!
   author: String!
   subscriptions: [Subscribe!]!
-  createdAt: Timestamp!
-  updatedAt: Timestamp!
+  createdAt: DateTime!
+  updatedAt: DateTime!
   balance: String!
   balanceLimit: String!
   stripeCustomerId: String

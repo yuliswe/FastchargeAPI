@@ -5,7 +5,8 @@ import { AppPK } from "@/src/pks/AppPK";
 import { AppTagPK } from "@/src/pks/AppTagPK";
 import { UserPK } from "@/src/pks/UserPK";
 import { graphql } from "@/src/typed-graphql";
-import { baseRequestContext as context, getAdminUser, getOrCreateTestUser } from "@/tests/test-utils/test-utils";
+import { createTestUser } from "@/tests/test-data/User";
+import { baseRequestContext as context, getOrCreateTestUser } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
 import * as uuid from "uuid";
 
@@ -40,7 +41,7 @@ describe("listAppTagsByApp", () => {
 
   test("Anyone can list app tags by app", async () => {
     const variables = { app: AppPK.stringify(testApp) };
-    const promise = getTestGQLClient({ user: await getAdminUser(context) }).query({
+    const promise = getTestGQLClient({ user: await createTestUser(context, { isAdmin: true }) }).query({
       query: listAppTagsByAppQuery,
       variables,
     });

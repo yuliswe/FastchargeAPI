@@ -2,11 +2,8 @@ import { User } from "@/src/database/models/User";
 import { UserPK } from "@/src/pks/UserPK";
 import { StripePaymentAcceptResolvers } from "@/src/resolvers/StripePaymentAccept";
 import { graphql } from "@/src/typed-graphql";
-import {
-  baseRequestContext as context,
-  getOrCreateTestUser,
-  simplifyGraphQLPromiseRejection,
-} from "@/tests/test-utils/test-utils";
+import { createTestUser } from "@/tests/test-data/User";
+import { baseRequestContext as context, simplifyGraphQLPromiseRejection } from "@/tests/test-utils/test-utils";
 import { getTestGQLClient } from "@/tests/test-utils/testGQLClients";
 import * as uuid from "uuid";
 
@@ -51,7 +48,7 @@ describe("createStripePaymentAccept", () => {
 
   let testOwnerUser: User;
   beforeEach(async () => {
-    testOwnerUser = await getOrCreateTestUser(context, { email: "testuser" });
+    testOwnerUser = await createTestUser(context);
   });
 
   function getVariables() {

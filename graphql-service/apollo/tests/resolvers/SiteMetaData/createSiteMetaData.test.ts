@@ -1,9 +1,9 @@
 import { SiteMetaDataKey } from "@/src/__generated__/resolvers-types";
 import { User } from "@/src/database/models/User";
 import { graphql } from "@/src/typed-graphql";
+import { createTestUser } from "@/tests/test-data/User";
 import {
   baseRequestContext as context,
-  getAdminUser,
   getOrCreateTestUser,
   simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils/test-utils";
@@ -29,7 +29,7 @@ describe("createSiteMetaData", () => {
 
   test("Admin can create site meta data", async () => {
     const variables = { key: ("testkey" + uuid.v4()) as SiteMetaDataKey, value: "testvalue" + uuid.v4() };
-    const promise = getTestGQLClient({ user: await getAdminUser(context) }).mutate({
+    const promise = getTestGQLClient({ user: await createTestUser(context, { isAdmin: true }) }).mutate({
       mutation: createSiteMetaDataMutation,
       variables,
     });

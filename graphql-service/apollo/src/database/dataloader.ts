@@ -7,7 +7,6 @@ import { Item } from "dynamoose/dist/Item";
 import { Query as DynamogooseQuery, Scan as DynamogooseScan } from "dynamoose/dist/ItemRetriever";
 import hash from "object-hash";
 import { inspect } from "util";
-
 /**
  * This file is a collection of functions that are used to bridge Dynamoose with
  * DataLoader.
@@ -231,8 +230,12 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
     }
 
     if (process.env.LOG_DATALOADER === "1") {
-      console.log("Batchable query", model.name, inspect(batchable, { depth: 3 }));
-      console.log("Unbatchable query", model.name, inspect(unbatchable, { depth: 3 }));
+      if (batchable.length > 0) {
+        console.log("Batchable query", model.name, inspect(batchable, { depth: 3 }));
+      }
+      if (unbatchable.length > 0) {
+        console.log("Unbatchable query", model.name, inspect(unbatchable, { depth: 3 }));
+      }
     }
 
     /* We can batch mini-batchables and unbatchables all together. */
@@ -242,9 +245,6 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
         if (arg instanceof Array) {
           // arg is 100 keys mini batch
           const keys = arg.map((b) => b.ko);
-          if (process.env.LOG_DATALOADER === "1") {
-            console.log("BatchGet", keys);
-          }
           const batchResult = await model.batchGet(keys);
           const { unprocessedKeys } = batchResult;
           if (unprocessedKeys.length > 0) {
@@ -263,7 +263,7 @@ function createBatchGet<I extends Item>(model: ModelType<I>) {
     );
 
     if (process.env.LOG_DATALOADER === "1") {
-      console.log("dataloader load results", results);
+      console.log("Query results", inspect(results, { depth: 5 }));
     }
     return results;
   };

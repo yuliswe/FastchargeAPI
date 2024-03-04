@@ -1,12 +1,7 @@
 import { RequestContext, createDefaultContextBatched } from "@/src/RequestContext";
-import { App } from "@/src/database/models/App";
-import { FreeQuotaUsage } from "@/src/database/models/FreeQuotaUsage";
-import { Pricing } from "@/src/database/models/Pricing";
 import { User, UserTableIndex } from "@/src/database/models/User";
-import { PK } from "@/src/database/utils";
 import { getUserBalance } from "@/src/functions/account";
 import { createUserWithEmail } from "@/src/functions/user";
-import { AppPK } from "@/src/pks/AppPK";
 import { UserPK } from "@/src/pks/UserPK";
 import { createTestUser } from "@/tests/test-data/User";
 import { ApolloError, GraphQLErrors } from "@apollo/client/errors";
@@ -75,45 +70,6 @@ export async function getAdminUser(context: RequestContext): Promise<User> {
   });
 }
 
-export async function createOrUpdatePricing(
-  context: RequestContext,
-  { name, app }: { name: string; app: App },
-  props: Partial<Pricing>
-): Promise<Pricing> {
-  let pricing = await context.batched.Pricing.getOrNull({ name, app: AppPK.stringify(app) });
-  if (pricing === null) {
-    pricing = await context.batched.Pricing.create({
-      name,
-      app: AppPK.stringify(app),
-      ...props,
-    });
-  } else {
-    pricing = await context.batched.Pricing.update(pricing, props);
-  }
-  return pricing;
-}
-
-export async function getOrCreateFreeQuotaUsage(
-  context: RequestContext,
-  {
-    subscriber,
-    app,
-  }: {
-    subscriber: PK;
-    app: PK;
-  }
-): Promise<FreeQuotaUsage> {
-  let freeQuotaUsage = await context.batched.FreeQuotaUsage.getOrNull({ subscriber, app });
-  if (freeQuotaUsage === null) {
-    freeQuotaUsage = await context.batched.FreeQuotaUsage.create({
-      subscriber,
-      app,
-      usage: 0,
-    });
-  }
-  return freeQuotaUsage;
-}
-
 type SimplifiedGraphQLError = { message: string; code: string; path: string };
 
 export function sortGraphQLErrors<T extends Partial<SimplifiedGraphQLError>>(errors: T[]): T[] {
@@ -132,7 +88,7 @@ export function sortGraphQLErrors<T extends Partial<SimplifiedGraphQLError>>(err
   return sortedErrors;
 }
 
-export function simplifyGraphQLError(errors: GraphQLErrors) {
+function simplifyGraphQLError(errors: GraphQLErrors) {
   const simpleErrors: SimplifiedGraphQLError[] = [];
   for (const e of errors) {
     simpleErrors.push({
@@ -144,6 +100,9 @@ export function simplifyGraphQLError(errors: GraphQLErrors) {
   return sortGraphQLErrors(simpleErrors);
 }
 
+/**
+ * @deprecated Use getGraphQLDataOrError instead.
+ */
 export async function simplifyGraphQLPromiseRejection<T>(response: Promise<T>): Promise<T> {
   try {
     return await response;

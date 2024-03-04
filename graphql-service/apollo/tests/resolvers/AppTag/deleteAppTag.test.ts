@@ -5,9 +5,9 @@ import { AppPK } from "@/src/pks/AppPK";
 import { AppTagPK } from "@/src/pks/AppTagPK";
 import { UserPK } from "@/src/pks/UserPK";
 import { graphql } from "@/src/typed-graphql";
+import { createTestUser } from "@/tests/test-data/User";
 import {
   baseRequestContext as context,
-  getAdminUser,
   getOrCreateTestUser,
   simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils/test-utils";
@@ -70,7 +70,7 @@ describe("deleteAppTag", () => {
   });
 
   test("Admin can delete app tag", async () => {
-    const promise = getTestGQLClient({ user: await getAdminUser(context) }).mutate({
+    const promise = getTestGQLClient({ user: await createTestUser(context, { isAdmin: true }) }).mutate({
       mutation: deleteAppTagMutation,
       variables: { pk: AppTagPK.stringify(testAppTag) },
     });

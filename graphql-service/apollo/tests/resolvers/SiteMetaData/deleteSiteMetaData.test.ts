@@ -2,9 +2,9 @@ import { SiteMetaDataKey } from "@/src/__generated__/resolvers-types";
 import { SiteMetaData } from "@/src/database/models/SiteMetaData";
 import { User } from "@/src/database/models/User";
 import { graphql } from "@/src/typed-graphql";
+import { createTestUser } from "@/tests/test-data/User";
 import {
   baseRequestContext as context,
-  getAdminUser,
   getOrCreateTestUser,
   simplifyGraphQLPromiseRejection,
 } from "@/tests/test-utils/test-utils";
@@ -35,7 +35,7 @@ describe("deleteSiteMetaData", () => {
   });
 
   test("Admin can update site meta data", async () => {
-    const promise = getTestGQLClient({ user: await getAdminUser(context) }).mutate({
+    const promise = getTestGQLClient({ user: await createTestUser(context, { isAdmin: true }) }).mutate({
       mutation: deleteSiteMetaDataMutation,
       variables: { key: testSiteMetaData.key },
     });
