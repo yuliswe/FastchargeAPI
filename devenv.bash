@@ -16,7 +16,7 @@ fi
 
 pathadd() {
     if [ -d "$1" ] && [[ ":$PATH:" != *":$1:"* ]]; then
-        PATH="${PATH:+"$PATH:"}$1"
+        export PATH="$1${PATH:+":$PATH"}"
     fi
 }
 
@@ -28,3 +28,7 @@ export DEV_DOMAIN=1
 export NODE_OPTIONS="--max-old-space-size=3008"
 
 alias run-ts="npx node -r esbuild-register --loader esbuild-register/loader"
+alias fastcharge="npm run fastcharge --"
+alias fastapi="npm run fastapi --"
+
+export DEV_DOMAIN=1
