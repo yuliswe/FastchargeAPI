@@ -11,7 +11,9 @@ export const esmModules = ["chalk", "crypto-hash"];
 const jestConfig: JestConfigWithTsJest = {
   preset: "ts-jest/presets/js-with-ts",
   testEnvironment: "node",
-  setupFiles: [`${projectRoot}/graphql-service/apollo/tests/test.env.ts`],
+  globalSetup: `${projectRoot}/graphql-service/apollo/tests/test.globalSetup.ts`,
+  globalTeardown: `${projectRoot}/graphql-service/apollo/tests/test.globalTeardown.ts`,
+  setupFiles: [`${projectRoot}/graphql-service/apollo/tests/test.setupBeforeEnv.ts`],
   setupFilesAfterEnv: [
     "jest-extended/all",
     `${projectRoot}/graphql-service/apollo/tests/test.setupAfterEnv.ts`, // runs before every test suite
