@@ -3,6 +3,8 @@
   "compilerOptions": {
     "strictFunctionTypes": false,
     "strictPropertyInitialization": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]

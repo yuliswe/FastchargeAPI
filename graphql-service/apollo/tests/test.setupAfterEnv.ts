@@ -1,4 +1,5 @@
 import { setUpTraceConsole } from "@/src/console";
+import { createTypedormConnection } from "@/src/database/connection";
 import * as sqsClientModule from "@/src/sqsClient";
 import { extendJest } from "@/tests/jest-extend";
 import { mockSQS } from "@/tests/test-utils/MockSQS";
@@ -39,6 +40,7 @@ the lambdaHandler.ts  */
 }
 
 muteConsoleDuringTests();
+createTypedormConnection();
 
 afterEach(() => {
   jest.clearAllTimers();
